@@ -64,7 +64,7 @@ function multiObjectTracking()
     
         obj.blobAnalyser = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
         'AreaOutputPort', true, 'CentroidOutputPort', true, ...
-        'MinimumBlobArea', 100);
+        'MinimumBlobArea', 400);
     end
 
     function tracks = initializeTracks()
@@ -100,7 +100,7 @@ function multiObjectTracking()
 
         % Apply morphological operations to remove noise and fill in holes.
         mask = imopen(mask, strel('disk', 3, 0));
-        mask = imclose(mask, strel('disk', 12, 0));
+        mask = imclose(mask, strel('disk', 20, 0));
         mask = imfill(mask, 'holes');
 
         % Perform blob analysis to find connected components.
@@ -239,7 +239,7 @@ function multiObjectTracking()
         frame = im2uint8(frame);
         mask = uint8(repmat(mask, [1, 1, 3])) .* 255;
 
-        minVisibleCount = 8;
+        minVisibleCount = 5;
         if ~isempty(tracks)
 
             % Noisy detections tend to result in short-lived tracks.
