@@ -33,7 +33,7 @@ function multiObjectTracking()
         % objects in each frame, and playing the video.
 
         % Create a video file reader.
-        obj.reader = vision.VideoFileReader('R0000compressedsnip.avi');
+        obj.reader = vision.VideoFileReader('R0016_01_s.avi');
 
         % Create two video players, one to display the video,
         % and one to display the foreground mask.
