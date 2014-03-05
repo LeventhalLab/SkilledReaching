@@ -33,7 +33,7 @@ function multiObjectTracking()
         % objects in each frame, and playing the video.
 
         % Create a video file reader.
-        obj.reader = vision.VideoFileReader('R0016compressed.avi');
+        obj.reader = vision.VideoFileReader('R0000compressedsnip.avi');
 
         % Create two video players, one to display the video,
         % and one to display the foreground mask.
@@ -64,7 +64,7 @@ function multiObjectTracking()
     
         obj.blobAnalyser = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
         'AreaOutputPort', true, 'CentroidOutputPort', true, ...
-        'MinimumBlobArea', 400);
+        'MinimumBlobArea', 150);
     end
 
     function tracks = initializeTracks()
@@ -88,19 +88,22 @@ function multiObjectTracking()
         mask = obj.detector.step(frame);
         
         % Matt
-        redImage = frame(:, :, 1);
-        % Set an arbitrary threshold, remember it gets inverted!
-        redMask = logical(~im2bw(redImage, .4));
-
-        imshow(~redMask);
+        %%redImage = frame(:, :, 1);
+        greenImage = frame(:,:,2);
         
-        manualMask = logical(imread('avi-mask-1020-543.png'));
-        mask = redMask & manualMask & mask;
+        % Set an arbitrary threshold
+        %%redMask = logical(~im2bw(redImage, .4));
+        greenMask = logical(~im2bw(greenImage, .4));
+        
+        imshow(~greenMask);
+        
+        manualMask = logical(imread('green-mask-1020-543.png'));
+        mask = greenMask & mask & manualMask;
         
 
         % Apply morphological operations to remove noise and fill in holes.
         mask = imopen(mask, strel('disk', 3, 0));
-        mask = imclose(mask, strel('disk', 20, 0));
+        mask = imclose(mask, strel('disk', 12, 0));
         mask = imfill(mask, 'holes');
 
         % Perform blob analysis to find connected components.
