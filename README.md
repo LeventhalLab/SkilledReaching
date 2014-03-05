@@ -1,0 +1,1 @@
+This is a bunch of code that attempts to locate a rat paw in a video for use in behavioral analysis.
