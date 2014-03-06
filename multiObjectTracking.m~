@@ -88,17 +88,7 @@ function multiObjectTracking()
         mask = obj.detector.step(frame);
         
         % Matt
-        hsv = rgb2hsv(frame);
-
-        h = hsv(:,:,1);
-        s = hsv(:,:,2);
-        v = hsv(:,:,3);
-
-        h(h < .25 | h > .35) = 0;
-        h(s < .07) = 0;
-        h(v < .07) = 0;
-
-        greenMask = logical(h);
+        
         
         imshow(~greenMask);
         
