@@ -1,22 +1,16 @@
 function multiObjectTracking()
-
-    % Create system objects used for reading video, detecting moving objects,
-    % and displaying the results.
     obj = setupSystemObjects();
-
-    tracks = initializeTracks(); % Create an empty array of tracks.
-
-    nextId = 1; % ID of the next track
+    tracks = initializeTracks();
+    nextId = 1; %i ID of next track
     
     frameCount = 0;
-    
-    %Create Video
+
     output = VideoWriter('R0016_20140306_13-05-30_005_s_track.avi', 'Motion JPEG AVI');
     output.Quality = 60;
     output.FrameRate = 30;
     open(output);
 
-    % Detect moving objects, and track them across video frames.
+    % Let's do this...
     while ~isDone(obj.reader)
         frameCount = frameCount + 1;
         frame = readFrame();
@@ -36,47 +30,18 @@ function multiObjectTracking()
     close(output);
 
     function obj = setupSystemObjects()
-        % Initialize Video I/O
-        % Create objects for reading a video from a file, drawing the tracked
-        % objects in each frame, and playing the video.
-
-        % Create a video file reader.
         obj.reader = vision.VideoFileReader('R0016_20140306_13-05-30_005_s.avi');
-
-        % Create two video players, one to display the video,
-        % and one to display the foreground mask.
 %         obj.videoPlayer = vision.VideoPlayer('Position', [20, 900, 900, 600]);
-        %obj.maskPlayer = vision.VideoPlayer('Position', [940, 900, 900, 600]);
-
-        % Create system objects for foreground detection and blob analysis
-
-        % The foreground detector is used to segment moving objects from
-        % the background. It outputs a binary mask, where the pixel value
-        % of 1 corresponds to the foreground and the value of 0 corresponds
-        % to the background.
-
-        %obj.detector = vision.ForegroundDetector('NumGaussians', 3, ...
-        %    'NumTrainingFrames', 40, 'MinimumBackgroundRatio', 0.7);
         
         obj.detector = vision.ForegroundDetector('NumGaussians', 3, ...
             'NumTrainingFrames', 10, 'MinimumBackgroundRatio', .7);
-
-        % Connected groups of foreground pixels are likely to correspond to moving
-        % objects.  The blob analysis system object is used to find such groups
-        % (called 'blobs' or 'connected components'), and compute their
-        % characteristics, such as area, centroid, and the bounding box.
-
-        %obj.blobAnalyser = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
-        %'AreaOutputPort', true, 'CentroidOutputPort', true, ...
-        %'MinimumBlobArea', 600);
-    
+        
         obj.blobAnalyser = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
         'AreaOutputPort', true, 'CentroidOutputPort', true, ...
         'MinimumBlobArea', 150);
     end
 
     function tracks = initializeTracks()
-        % create an empty array of tracks
         tracks = struct(...
             'id', {}, ...
             'bbox', {}, ...
@@ -91,16 +56,16 @@ function multiObjectTracking()
     end
 
     function [centroids, bboxes, mask] = detectObjects(frame)
-        % Frame is an image!
-        % Detect foreground.
+        % Rememeber, frame is an image
+        % Detect object using mask
         mask = obj.detector.step(frame);
 
-        % Apply morphological operations to remove noise and fill in holes.
+        % Morph mask a bit
         mask = imopen(mask, strel('disk', 10, 0));
-        %mask = imclose(mask, strel('disk', 15, 0));
         mask = imfill(mask, 'holes');
         
-        % Matt
+        % Build green mask for color extraction using HSV color space
+        % and windowing/thresholds
         hsv = rgb2hsv(frame);
 
         h = hsv(:,:,1);
@@ -112,7 +77,6 @@ function multiObjectTracking()
         h(v < .07) = 0;
         
         h = imopen(h, strel('disk', 3, 0));
-        %h = imclose(h, strel('disk', 2, 0));
         h = imfill(h, 'holes');
         h = imdilate(h, strel('disk', 1, 0));
 
@@ -129,7 +93,7 @@ function multiObjectTracking()
         
         %writeVideo(output, im2frame(uint8(frame)));
         
-        % Perform blob analysis to find connected components.
+        % perform blob analysis to find connected components
         [~, centroids, bboxes] = obj.blobAnalyser.step(mask);
     end
 
@@ -137,11 +101,10 @@ function multiObjectTracking()
         for i = 1:length(tracks)
             bbox = tracks(i).bbox;
 
-            % Predict the current location of the track.
+            % predict the current location of the track.
             predictedCentroid = predict(tracks(i).kalmanFilter);
 
-            % Shift the bounding box so that its center is at
-            % the predicted location.
+            % shift the bounding box so that its centered
             predictedCentroid = int32(predictedCentroid) - bbox(3:4) / 2;
             tracks(i).bbox = [predictedCentroid, bbox(3:4)];
         end
@@ -287,9 +250,7 @@ function multiObjectTracking()
                 % Get ids.
                 ids = int32([reliableTracks(:).id]);
 
-                % Create labels for objects indicating the ones for
-                % which we display the predicted rather than the actual
-                % location.
+                % Create labels for objects
                 labels = cellstr(int2str(ids'));
                 predictedTrackInds = ...
                     [reliableTracks(:).consecutiveInvisibleCount] > 0;
@@ -302,15 +263,10 @@ function multiObjectTracking()
                     bboxes, '.', 'TextBoxOpacity', 0);
                 writeVideo(output, im2frame(frame));
 
-                % Draw the objects on the mask.
-%                 mask = insertObjectAnnotation(mask, 'rectangle', ...
-%                     bboxes, labels);
                 
             end
         end
 
-        % Display the mask and the frame.
-%         obj.maskPlayer.step(mask);
 %         obj.videoPlayer.step(frame);
     end
 
