@@ -1,5 +1,5 @@
-input = VideoReader('R0016_01.avi');
-output = VideoWriter('R0016_01_s.avi', 'Motion JPEG AVI');
+input = VideoReader('R0016_20140306_13-06-25_013.avi');
+output = VideoWriter('R0016_20140306_13-06-25_013_s.avi', 'Motion JPEG AVI');
 output.Quality = 75;
 output.FrameRate = 150;
 open(output);
@@ -10,7 +10,7 @@ for i = 1:input.NumberOfFrames
     imageData = imresize(image, 0.5);
     % white balance
     pageSize = size(imageData,1) * size(imageData,2);
-    avg_rgb = mean( reshape(imageData, [pageSize,3]) );
+    avg_rgb = mean(reshape(imageData, [pageSize,3]));
     avg_all = mean(avg_rgb);
     scaleArray = max(avg_all, 128)./avg_rgb;
     scaleArray = reshape(scaleArray,1,1,3);

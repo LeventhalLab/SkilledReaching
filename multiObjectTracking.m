@@ -9,6 +9,12 @@ function multiObjectTracking()
     nextId = 1; % ID of the next track
     
     frameCount = 0;
+    
+    %Create Video
+    output = VideoWriter('R0016_20140306_13-06-25_013_s_t_track.avi', 'Motion JPEG AVI');
+    output.Quality = 75;
+    output.FrameRate = 30;
+    open(output);
 
     % Detect moving objects, and track them across video frames.
     while ~isDone(obj.reader)
@@ -26,6 +32,8 @@ function multiObjectTracking()
 
         displayTrackingResults();
     end
+    
+    close(output);
 
     function obj = setupSystemObjects()
         % Initialize Video I/O
@@ -33,7 +41,7 @@ function multiObjectTracking()
         % objects in each frame, and playing the video.
 
         % Create a video file reader.
-        obj.reader = vision.VideoFileReader('R0000compressedsnipwb.avi');
+        obj.reader = vision.VideoFileReader('R0016_20140306_13-06-25_013_s_t.avi');
 
         % Create two video players, one to display the video,
         % and one to display the foreground mask.
@@ -83,9 +91,14 @@ function multiObjectTracking()
     end
 
     function [centroids, bboxes, mask] = detectObjects(frame)
-
+        % Frame is an image!
         % Detect foreground.
         mask = obj.detector.step(frame);
+        
+        % Apply morphological operations to remove noise and fill in holes.
+        mask = imopen(mask, strel('disk', 10, 0));
+        %mask = imclose(mask, strel('disk', 15, 0));
+        mask = imfill(mask, 'holes');
         
         % Matt
         hsv = rgb2hsv(frame);
@@ -94,23 +107,28 @@ function multiObjectTracking()
         s = hsv(:,:,2);
         v = hsv(:,:,3);
 
-        h(h < .25 | h > .35) = 0;
-        h(s < .07) = 0;
+        h(h < .25 | h > .45) = 0;
+        h(s < .15) = 0;
         h(v < .07) = 0;
+        
+        h = imopen(h, strel('disk', 3, 0));
+        %h = imclose(h, strel('disk', 2, 0));
+        h = imfill(h, 'holes');
+        h = imdilate(h, strel('disk', 1, 0));
 
         greenMask = logical(h);
         
-        imshow(~greenMask);
+        manualMask = logical(imread('R0016_20140306_13-06-25_013_s_mask.png'));
+        mask = greenMask & manualMask;
         
-        manualMask = logical(imread('green-mask-1020-543.png'));
-        mask = greenMask & mask;
+        rframe = frame(:,:,1);
+        rframe(edge(mask)) = 255;
+        frame(:,:,1) = rframe;
+        imshow(frame);
+        class(frame)
+        size(frame)
+        writeVideo(output, im2frame(uint8(frame)));
         
-
-        % Apply morphological operations to remove noise and fill in holes.
-        mask = imopen(mask, strel('disk', 3, 0));
-        mask = imclose(mask, strel('disk', 12, 0));
-        mask = imfill(mask, 'holes');
-
         % Perform blob analysis to find connected components.
         [~, centroids, bboxes] = obj.blobAnalyser.step(mask);
     end
