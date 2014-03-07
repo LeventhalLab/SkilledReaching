@@ -11,8 +11,8 @@ function multiObjectTracking()
     frameCount = 0;
     
     %Create Video
-    output = VideoWriter('R0016_20140306_13-06-25_013_s_t_track.avi', 'Motion JPEG AVI');
-    output.Quality = 75;
+    output = VideoWriter('R0016_20140306_13-05-30_005_s_track.avi', 'Motion JPEG AVI');
+    output.Quality = 60;
     output.FrameRate = 30;
     open(output);
 
@@ -41,12 +41,12 @@ function multiObjectTracking()
         % objects in each frame, and playing the video.
 
         % Create a video file reader.
-        obj.reader = vision.VideoFileReader('R0016_20140306_13-06-25_013_s_t.avi');
+        obj.reader = vision.VideoFileReader('R0016_20140306_13-05-30_005_s.avi');
 
         % Create two video players, one to display the video,
         % and one to display the foreground mask.
-        obj.videoPlayer = vision.VideoPlayer('Position', [20, 900, 900, 600]);
-        obj.maskPlayer = vision.VideoPlayer('Position', [940, 900, 900, 600]);
+%         obj.videoPlayer = vision.VideoPlayer('Position', [20, 900, 900, 600]);
+        %obj.maskPlayer = vision.VideoPlayer('Position', [940, 900, 900, 600]);
 
         % Create system objects for foreground detection and blob analysis
 
@@ -94,7 +94,7 @@ function multiObjectTracking()
         % Frame is an image!
         % Detect foreground.
         mask = obj.detector.step(frame);
-        
+
         % Apply morphological operations to remove noise and fill in holes.
         mask = imopen(mask, strel('disk', 10, 0));
         %mask = imclose(mask, strel('disk', 15, 0));
@@ -121,13 +121,13 @@ function multiObjectTracking()
         manualMask = logical(imread('R0016_20140306_13-06-25_013_s_mask.png'));
         mask = greenMask & manualMask;
         
-        rframe = frame(:,:,1);
-        rframe(edge(mask)) = 255;
-        frame(:,:,1) = rframe;
-        imshow(frame);
-        class(frame)
-        size(frame)
-        writeVideo(output, im2frame(uint8(frame)));
+%         rframe = frame(:,:,1);
+%         rframe(edge(mask)) = 255;
+%         frame(:,:,1) = rframe;
+%         frame = im2uint8(frame);
+%         imshow(frame);
+        
+        %writeVideo(output, im2frame(uint8(frame)));
         
         % Perform blob analysis to find connected components.
         [~, centroids, bboxes] = obj.blobAnalyser.step(mask);
@@ -157,7 +157,7 @@ function multiObjectTracking()
             csize = size(centroids);
             for i=1:csize(1);
                 frame = insertObjectAnnotation(frame, 'circle',... 
-                    [centroids(i,:), 15], '.', 'Color', 'red',...
+                    [centroids(i,:), 3], '.', 'Color', 'blue',...
                     'TextBoxOpacity', 0, 'FontSize', 8);
             end
         end
@@ -263,6 +263,9 @@ function multiObjectTracking()
     function displayTrackingResults()
         % Convert the frame and the mask to uint8 RGB.
         frame = im2uint8(frame);
+        rframe = frame(:,:,1);
+        rframe(edge(mask)) = 255;
+        frame(:,:,1) = rframe;
         mask = uint8(repmat(mask, [1, 1, 3])) .* 255;
 
         minVisibleCount = 5;
@@ -297,17 +300,18 @@ function multiObjectTracking()
                 % Draw the objects on the frame.
                 frame = insertObjectAnnotation(frame, 'rectangle', ...
                     bboxes, '.', 'TextBoxOpacity', 0);
+                writeVideo(output, im2frame(frame));
 
                 % Draw the objects on the mask.
-                mask = insertObjectAnnotation(mask, 'rectangle', ...
-                    bboxes, labels);
+%                 mask = insertObjectAnnotation(mask, 'rectangle', ...
+%                     bboxes, labels);
                 
             end
         end
 
         % Display the mask and the frame.
-        obj.maskPlayer.step(mask);
-        obj.videoPlayer.step(frame);
+%         obj.maskPlayer.step(mask);
+%         obj.videoPlayer.step(frame);
     end
 
 end
