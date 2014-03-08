@@ -1,4 +1,4 @@
-function multiObjectTracking()
+function multiObjectTracking(videoFile, initMaskFile)
     obj = setupSystemObjects();
     tracks = initializeTracks();
     nextId = 1; %i ID of next track
@@ -49,7 +49,7 @@ function multiObjectTracking()
     save('data_mask.mat', 'data_mask');
 
     function obj = setupSystemObjects()
-        obj.reader = vision.VideoFileReader('test.avi');
+        obj.reader = vision.VideoFileReader(videoFile);
         obj.videoPlayer = vision.VideoPlayer('Position', [20, 900, 900, 600]);
         
         obj.detector = vision.ForegroundDetector('NumGaussians', 5, ...
@@ -78,7 +78,7 @@ function multiObjectTracking()
     function [centroids, bboxes, mask] = detectObjects(frame)
         % Rememeber, frame is an image
         % Detect object using mask
-%         mask = obj.detector.step(frame);
+        %mask = obj.detector.step(frame);
 
         % Morph mask a bit
 %         mask = imopen(mask, strel('disk', 10, 0));
@@ -86,24 +86,8 @@ function multiObjectTracking()
         
         % Build green mask for color extraction using HSV color space
         % and windowing/thresholds
-        %manualMask = logical(imread('R0016_20140306_13-06-25_013_s_mask.png'));
-        %
-        testavg = imread('testavg.jpg');
-        hsv = rgb2hsv(testavg);
 
-        h = hsv(:,:,1);
-        s = hsv(:,:,2);
-        v = hsv(:,:,3);
-
-        h(h < .25 | h > .45) = 0;
-        h(s < .15) = 0;
-        h(v < .07) = 0;
-        
-        h = imclose(h, strel('disk', 5, 0));
-        h = imdilate(h, strel('disk', 5, 0));
-        h = imfill(h, 'holes');
-        
-        initMask = logical(h);
+        initMask = logical(imread(initMaskFile));
         
         % mask 2
         hsv = rgb2hsv(frame);
@@ -122,10 +106,10 @@ function multiObjectTracking()
 
         greenMask = logical(h);
         
-        mask = greenMask & ~initMask;
+        mask = greenMask & initMask;
         mask = imfill(mask, 'holes');
+        imshow(mask)
         
-        %imshow(mask)
         
 %         rframe = frame(:,:,1);
 %         rframe(edge(mask)) = 255;

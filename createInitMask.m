@@ -42,5 +42,7 @@ function createInitMask(videoFile, saveInitMaskAs)
 
     avgMask = ~logical(h);
 
-    imwrite((colorMask & avgMask), saveInitMaskAs);
+    %imwrite((colorMask & avgMask), saveInitMaskAs);
+    % not sure if averaging will work, rat my sit in same place for a while
+    imwrite((colorMask), saveInitMaskAs);
 end

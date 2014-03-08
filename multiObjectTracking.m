@@ -1,4 +1,4 @@
-function multiObjectTracking()
+function multiObjectTracking(videoFile, initMaskFile, saveTrackingVideoAs)
     obj = setupSystemObjects();
     tracks = initializeTracks();
     nextId = 1; %i ID of next track
@@ -8,14 +8,13 @@ function multiObjectTracking()
     data_bboxes = [];
     data_mask = [];
 
-%     output = VideoWriter('R0016_20140306_13-05-30_005_s_track.avi', 'Motion JPEG AVI');
-%     output.Quality = 60;
-%     output.FrameRate = 30;
-%     open(output);
+    trackingVideo = VideoWriter(saveTrackingVideoAs, 'Motion JPEG AVI');
+    trackingVideo.Quality = 60;
+    trackingVideo.FrameRate = 30;
+    open(trackingVideo);
 
     % Let's do this...
     while ~isDone(obj.reader)
-    %for i = 1:20
         frameCount = frameCount + 1;
         frame = readFrame();
         [centroids, bboxes, mask] = detectObjects(frame);
@@ -43,14 +42,14 @@ function multiObjectTracking()
         displayTrackingResults();
     end
     
-%     close(output);
+    close(trackingVideo);
     save('data_centroids.mat', 'data_centroids');
     save('data_bboxes.mat', 'data_bboxes');
     save('data_mask.mat', 'data_mask');
 
     function obj = setupSystemObjects()
-        obj.reader = vision.VideoFileReader('test.avi');
-        obj.videoPlayer = vision.VideoPlayer('Position', [20, 900, 900, 600]);
+        obj.reader = vision.VideoFileReader(videoFile);
+        %obj.videoPlayer = vision.VideoPlayer('Position', [20, 900, 900, 600]);
         
         obj.detector = vision.ForegroundDetector('NumGaussians', 5, ...
             'NumTrainingFrames', 5, 'MinimumBackgroundRatio', .7,...
@@ -86,27 +85,9 @@ function multiObjectTracking()
         
         % Build green mask for color extraction using HSV color space
         % and windowing/thresholds
-        
-        manualMask = logical(imread('testautomask.jpg'));
 
-        testavg = imread('testavg.jpg');
-        hsv = rgb2hsv(testavg);
-
-        h = hsv(:,:,1);
-        s = hsv(:,:,2);
-        v = hsv(:,:,3);
-
-        h(h < .25 | h > .45) = 0;
-        h(s < .15) = 0;
-        h(v < .07) = 0;
-        
-        h = imclose(h, strel('disk', 5, 0));
-        h = imdilate(h, strel('disk', 5, 0));
-        h = imfill(h, 'holes');
-        
-        initMask = ~logical(h);
-        %imshow(initMask);
-        
+        initMask = logical(imread(initMaskFile));
+        imshow(initMask)
         
         % mask 2
         hsv = rgb2hsv(frame);
@@ -125,9 +106,9 @@ function multiObjectTracking()
 
         greenMask = logical(h);
         
-        mask = greenMask & manualMask & initMask;
+        mask = greenMask & ~initMask;
         mask = imfill(mask, 'holes');
-        imshow(mask)
+        
         
         
 %         rframe = frame(:,:,1);
@@ -306,13 +287,13 @@ function multiObjectTracking()
                 % Draw the objects on the frame.
                 frame = insertObjectAnnotation(frame, 'rectangle', ...
                     bboxes, '.', 'TextBoxOpacity', 0);
-                %writeVideo(output, im2frame(frame));
+                writeVideo(trackingVideo, im2frame(frame));
 
                 
             end
         end
 
-        obj.videoPlayer.step(frame);
+        %obj.videoPlayer.step(frame);
     end
 
 end
