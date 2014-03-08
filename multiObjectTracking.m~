@@ -78,7 +78,7 @@ function multiObjectTracking()
     function [centroids, bboxes, mask] = detectObjects(frame)
         % Rememeber, frame is an image
         % Detect object using mask
-        %mask = obj.detector.step(frame);
+%         mask = obj.detector.step(frame);
 
         % Morph mask a bit
 %         mask = imopen(mask, strel('disk', 10, 0));
@@ -86,9 +86,8 @@ function multiObjectTracking()
         
         % Build green mask for color extraction using HSV color space
         % and windowing/thresholds
-        
-        manualMask = logical(imread('testautomask.jpg'));
-
+        %manualMask = logical(imread('R0016_20140306_13-06-25_013_s_mask.png'));
+        %
         testavg = imread('testavg.jpg');
         hsv = rgb2hsv(testavg);
 
@@ -104,9 +103,7 @@ function multiObjectTracking()
         h = imdilate(h, strel('disk', 5, 0));
         h = imfill(h, 'holes');
         
-        initMask = ~logical(h);
-        %imshow(initMask);
-        
+        initMask = logical(h);
         
         % mask 2
         hsv = rgb2hsv(frame);
@@ -125,10 +122,10 @@ function multiObjectTracking()
 
         greenMask = logical(h);
         
-        mask = greenMask & manualMask & initMask;
+        mask = greenMask & ~initMask;
         mask = imfill(mask, 'holes');
-        imshow(mask)
         
+        %imshow(mask)
         
 %         rframe = frame(:,:,1);
 %         rframe(edge(mask)) = 255;

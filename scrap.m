@@ -1,13 +1,7 @@
-input = VideoReader('R0016.avi');
-image = read(input, 1);
-figure;
-imshow(image);
-title('Rat');
-boxPoints = detectSURFFeatures(image);
-grayImage = rgb2gray(image);
-imshow(grayImage)
-imshow(grayImage);
-hold on;
-plot(boxPoints.selectStrongest(100));
+obj = VideoReader('test.avi');
+image = read(obj, 1);
+for i = 2:obj.NumberOfFrames
+    image = (image + read(obj, i))/2;
+end
 
-imwrite(image, 'test.jpg');
+imwrite(image, 'testavg.jpg');

@@ -4,7 +4,7 @@ output.Quality = 75;
 output.FrameRate = 150;
 open(output);
 
-for i = 70:input.NumberOfFrames
+for i = 1:input.NumberOfFrames
     image = read(input, i); 
     % resize
     imageData = imresize(image, 0.5);
