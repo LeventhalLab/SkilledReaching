@@ -5,10 +5,10 @@ function cropVideo(videoFile, saveVideoAs, bounds)
     outgoingVideo.FrameRate = 150;
     open(outgoingVideo);
     
-    left = bounds(1,1);
-    top = bounds(1,2);
-    width = bounds(2,1);
-    height = bounds(2,2);
+    left = bounds(1);
+    top = bounds(2);
+    width = bounds(3);
+    height = bounds(4);
     
     for i = 1:incomingVideo.NumberOfFrames
         % read

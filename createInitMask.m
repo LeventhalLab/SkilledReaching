@@ -7,7 +7,7 @@ function createInitMask(videoFile, saveInitMaskAs)
 
     for i = 1:obj.NumberOfFrames
         image = read(obj, i);
-        avgImage = (avgImage + image)/2;
+%         avgImage = (avgImage + image)/2;
         hsv = rgb2hsv(image);
 
         h = hsv(:,:,1);
@@ -26,21 +26,21 @@ function createInitMask(videoFile, saveInitMaskAs)
         colorMask = colorMask | logical(h);
     end
     
-    hsv = rgb2hsv(avgImage);
-
-    h = hsv(:,:,1);
-    s = hsv(:,:,2);
-    v = hsv(:,:,3);
-
-    h(h < .25 | h > .45) = 0;
-    h(s < .15) = 0;
-    h(v < .07) = 0;
-
-    h = imclose(h, strel('disk', 5, 0));
-    h = imdilate(h, strel('disk', 5, 0));
-    h = imfill(h, 'holes');
-
-    avgMask = ~logical(h);
+%     hsv = rgb2hsv(avgImage);
+% 
+%     h = hsv(:,:,1);
+%     s = hsv(:,:,2);
+%     v = hsv(:,:,3);
+% 
+%     h(h < .25 | h > .45) = 0;
+%     h(s < .15) = 0;
+%     h(v < .07) = 0;
+% 
+%     h = imclose(h, strel('disk', 5, 0));
+%     h = imdilate(h, strel('disk', 5, 0));
+%     h = imfill(h, 'holes');
+% 
+%     avgMask = ~logical(h);
 
     %imwrite((colorMask & avgMask), saveInitMaskAs);
     % not sure if averaging will work, rat my sit in same place for a while
