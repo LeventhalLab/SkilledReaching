@@ -12,7 +12,7 @@ function plotCentroids(data_centroids)
     x = x.*xfilt;
     y = y.*yfilt;
     
-    %figure;
+    figure;
     plot(x, max(y)-y, 'Color', 'green');
     hold on;
     plot(x(1), max(y)-y(1), '*');

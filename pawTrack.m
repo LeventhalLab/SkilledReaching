@@ -16,6 +16,7 @@ function pawTrack(videoFile, hsvBounds, saveTrackingVideoAs)
     % Let's do this...
     while ~isDone(obj.reader)
         frameCount = frameCount + 1;
+        disp(frameCount);
         frame = readFrame();
         [centroids, bboxes, mask] = detectObjects(frame);
         
@@ -27,7 +28,7 @@ function pawTrack(videoFile, hsvBounds, saveTrackingVideoAs)
         end
         
         %data_bboxes(:,:,frameCount) = mean(bboxes);
-        %data_mask(:,:,frameCount) = mask;
+        data_mask(:,:,frameCount) = mask;
         
     
         predictNewLocationsOfTracks();
@@ -49,11 +50,11 @@ function pawTrack(videoFile, hsvBounds, saveTrackingVideoAs)
 
     function obj = setupSystemObjects()
         obj.reader = vision.VideoFileReader(videoFile);
-        obj.videoPlayer = vision.VideoPlayer();
+        %obj.videoPlayer = vision.VideoPlayer();
         
         obj.blobAnalyser = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
         'AreaOutputPort', true, 'CentroidOutputPort', true, ...
-        'MinimumBlobArea', 100);
+        'MinimumBlobArea', 150);
     end
 
     function tracks = initializeTracks()
@@ -89,13 +90,14 @@ function pawTrack(videoFile, hsvBounds, saveTrackingVideoAs)
         blobMask = imfill(blobMask, 'holes');
         blobMask = imdilate(blobMask, strel('disk', 17, 0));
         blobMask = logical(blobMask);
+        %imshow(blobMask);
         
         % mask used for paw shape
-        pawMask = imopen(h, strel('disk', 3, 0));
+        pawMask = imclose(h, strel('disk', 1, 0));
         pawMask = imfill(pawMask, 'holes');
-        pawMask = imdilate(pawMask, strel('disk', 2, 0));
+        pawMask = imdilate(pawMask, strel('disk', 3, 0));
         pawMask = logical(pawMask);
-        imshow(pawMask);
+        
         
         mask = blobMask & pawMask;
         mask = imfill(mask, 'holes');
@@ -185,8 +187,8 @@ function pawTrack(videoFile, hsvBounds, saveTrackingVideoAs)
             return;
         end
 
-        invisibleForTooLong = 4;
-        ageThreshold = 4;
+        invisibleForTooLong = 3;
+        ageThreshold = 3;
 
         % Compute the fraction of the track's age for which it was visible.
         ages = [tracks(:).age];
@@ -274,7 +276,7 @@ function pawTrack(videoFile, hsvBounds, saveTrackingVideoAs)
             end
         end
         writeVideo(trackingVideo, im2frame(frame));
-        obj.videoPlayer.step(frame);
+        %obj.videoPlayer.step(frame);
     end
 
 end
