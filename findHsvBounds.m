@@ -5,13 +5,23 @@ function [hBounds, sBounds, vBounds] = findHsvBounds(imageFile)
     h = hsv(:,:,1);
     s = hsv(:,:,2);
     v = hsv(:,:,3);
+
+    % get rid of extremes
+    s(s < .05 | s > .95) = 0;
+    v(v < .05 | v > .95) = 0;
     
-    % get rid of pure white
-    h = h(h > 0 & h < 1);
-    s = s(s > .01 & s < .98);
-    v = v(v > .01 & v < .98);
-    
-    hBounds = [mean(h) - std(h), mean(h) + std(h)];
-    sBounds = [mean(s) - std(s), mean(s) + std(s)];
-    vBounds = [mean(v) - std(v), mean(v) + std(v)];
+    % make mask so bad entries are removed from all arrays
+    mask = s & v;
+    h = h.*mask;
+    s = s.*mask;
+    v = v.*mask;
+ 
+    % remove zeros and put into a single dimension array
+    hRmZero = h(h >0);
+    sRmZero = s(s >0);
+    vRmZero = v(v >0);
+
+    hBounds = [mean(hRmZero) - std(hRmZero), mean(hRmZero) + std(hRmZero)];
+    sBounds = [mean(sRmZero) - std(sRmZero), mean(sRmZero) + std(sRmZero)];
+    vBounds = [mean(vRmZero) - std(vRmZero), mean(vRmZero) + std(vRmZero)];
 end

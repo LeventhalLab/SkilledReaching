@@ -14,9 +14,9 @@ function createInitMask(videoFile, saveInitMaskAs, hsvBounds)
         s = hsv(:,:,2);
         v = hsv(:,:,3);
 
-        h = h(h > hsvBounds(1) & h < hsvBounds(2));
-        s = s(s > hsvBounds(3) & s < hsvBounds(4));
-        v = v(v > hsvBounds(5) & v < hsvBounds(6));
+        h(h > hsvBounds(1) & h < hsvBounds(2)) = 1;
+        s(s > hsvBounds(3) & s < hsvBounds(4)) = 1;
+        v(v > hsvBounds(5) & v < hsvBounds(6)) = 1;
 
         h = imopen(h, strel('disk', 10, 0));
         h = imfill(h, 'holes');

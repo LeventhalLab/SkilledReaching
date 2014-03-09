@@ -1,4 +1,4 @@
-function multiObjectTracking(videoFile, initMaskFile, saveTrackingVideoAs, hueBounds)
+function pawTrack(videoFile, hsvBounds, saveTrackingVideoAs)
     obj = setupSystemObjects();
     tracks = initializeTracks();
     nextId = 1; %i ID of next track
@@ -26,8 +26,8 @@ function multiObjectTracking(videoFile, initMaskFile, saveTrackingVideoAs, hueBo
                 mean(centroids(:,2))];
         end
         
-        data_bboxes(:,:,:,:,frameCount) = mean(bboxes);
-        data_mask(:,:,frameCount) = mask;
+        %data_bboxes(:,:,frameCount) = mean(bboxes);
+        %data_mask(:,:,frameCount) = mask;
         
     
         predictNewLocationsOfTracks();
@@ -53,7 +53,7 @@ function multiObjectTracking(videoFile, initMaskFile, saveTrackingVideoAs, hueBo
         
         obj.blobAnalyser = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
         'AreaOutputPort', true, 'CentroidOutputPort', true, ...
-        'MinimumBlobArea', 150);
+        'MinimumBlobArea', 100);
     end
 
     function tracks = initializeTracks()
@@ -71,27 +71,33 @@ function multiObjectTracking(videoFile, initMaskFile, saveTrackingVideoAs, hueBo
     end
 
     function [centroids, bboxes, mask] = detectObjects(frame)
-        initMask = logical(imread(initMaskFile));
-        
-        % mask 2
         hsv = rgb2hsv(frame);
 
         h = hsv(:,:,1);
         s = hsv(:,:,2);
         v = hsv(:,:,3);
-
-        % green = .25-.45
-        h(h < hueBounds(1) | h > hueBounds(2)) = 0;
-        h(s < .15) = 0;
-        h(v < .07) = 0;
         
-        h = imopen(h, strel('disk', 3, 0));
-        h = imfill(h, 'holes');
-        h = imdilate(h, strel('disk', 1, 0));
-
-        greenMask = logical(h);
+        % bound the hue element using all three bounds
+        h(h < hsvBounds(1) | h > hsvBounds(2)) = 0;
+        h(s < hsvBounds(3) | s > hsvBounds(4)) = 0;
+        h(v < hsvBounds(5) | v > hsvBounds(6)) = 0;
         
-        mask = greenMask & initMask;
+        % this is an attempt to remove any small color noise using imopen
+        % to first close those colors, then open them. Finally, the
+        % dilation creates large boundaries for the paw to move within
+        blobMask = imopen(h, strel('disk', 1, 0));
+        blobMask = imfill(blobMask, 'holes');
+        blobMask = imdilate(blobMask, strel('disk', 17, 0));
+        blobMask = logical(blobMask);
+        
+        % mask used for paw shape
+        pawMask = imopen(h, strel('disk', 3, 0));
+        pawMask = imfill(pawMask, 'holes');
+        pawMask = imdilate(pawMask, strel('disk', 2, 0));
+        pawMask = logical(pawMask);
+        imshow(pawMask);
+        
+        mask = blobMask & pawMask;
         mask = imfill(mask, 'holes');
         %imshow(mask)
         
@@ -179,7 +185,7 @@ function multiObjectTracking(videoFile, initMaskFile, saveTrackingVideoAs, hueBo
             return;
         end
 
-        invisibleForTooLong = 8;
+        invisibleForTooLong = 4;
         ageThreshold = 4;
 
         % Compute the fraction of the track's age for which it was visible.
