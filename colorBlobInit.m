@@ -1,4 +1,6 @@
 function colorBlobInit()
+
+    % SETUP FILE STRUCTURE
     workingDirectory = uigetdir;
     copyfile(fullfile(pwd,'defaults.mat'),workingDirectory);
     allVideos = dir(fullfile(workingDirectory,'*.avi'));
@@ -16,8 +18,8 @@ function colorBlobInit()
         % move each video into its own folder
         newVideoFolder = fullfile(workingDirectory,videoName);
         mkdir(newVideoFolder);
-        newVideoPath = fullfile(workingDirectory,videoName,allVideos(1).name);
-        movefile(fullfile(workingDirectory,allVideos(1).name),newVideoPath);
+        saveVideoAs = fullfile(workingDirectory,videoName,allVideos(1).name);
+        movefile(fullfile(workingDirectory,allVideos(1).name),saveVideoAs);
     end
     
     disp('File structure created...');
@@ -38,10 +40,22 @@ function colorBlobInit()
     disp('Defaults saved...');
     disp(S);
     
+    % CROP VIDEOS
+    % probably just read video files in this new directory, allVideos is
+    % not useful
     for i=1:size(allVideos,1)
         [videoPath,videoName,videoExt] = fileparts(allVideos(i).name);
         curVideoDirectory = fullfile(workingDirectory,videoName);
-        cropVideo(fullfile(curVideoDirectory,allVideos(i).name), S.pixelBounds);
+        savedVideoPaths = cropVideo(fullfile(curVideoDirectory,allVideos(i).name), S.pixelBounds);
+        
+        savedVideoFields = fieldnames(savedVideoPaths);
+        for j=1:size(savedVideoFields,1)
+            [colorData] = colorBlobs(savedVideoPaths.(savedVideoFields{j}), S.hsvBounds);
+            save(fullfile(curVideoDirectory,...
+                strcat('colorData_',char(savedVideoFields{j}),'_',videoName)), 'colorData');
+        end
     end
+    
+    % EXTRACT COLOR DATA
     
 end

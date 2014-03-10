@@ -1,12 +1,21 @@
-function [masks, centroids] = colorBlob(videoFile, hsvBounds)
+function [colorData] = colorBlobs(videoFile, hsvBounds)
     video = VideoReader(videoFile);
-    masks = zeros(video.Height, video.Width, video.NumberOfFrames);
-    centroids = zeros(video.NumberOfFrames, 2);
-    for i = 1:video.NumberOfFrames
+    
+    colorData = struct;
+    fields = fieldnames(hsvBounds);
+    for i=1:size(fields,1)
+       colorData.(fields{i}).masks = zeros(video.Height, video.Width, video.NumberOfFrames);
+       colorData.(fields{i}).centroids = zeros(video.NumberOfFrames, 2);
+    end
+
+    for i=1:video.NumberOfFrames
         disp(i)
-        [mask, centroid] = isolatedColorMask(read(video, i), hsvBounds);
-        masks(:,:,i) = mask;
-        centroids(i,:) = centroid;
+        image = read(video, i);
+        for j=1:size(fields,1)
+            [colorData.(fields{j}).masks(:,:,i),colorData.(fields{j}).centroids(i,:)]...
+                = isolatedColorMask(image,hsvBounds.(fields{j}));
+            
+        end
     end
 end
 
@@ -39,7 +48,7 @@ function [mask, centroid] = isolatedColorMask(image, hsvBounds)
         for i=1:size(centroids,1)
             if(pdist([centroids(maxIndex,:);centroids(i,:)])>250)
                 % remove centroids
-                centroids = removerows(centroids, i);
+                %centroids = removerows(centroids, i);
                 % black out far pixels
                 mask(CC.PixelIdxList{i}) = 0;
             end
