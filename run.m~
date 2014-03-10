@@ -1,15 +1,14 @@
-blueMask = colorBlob('R0016_front.avi', [.577 .666 .22 .57 .24 .35]);
+blueMask = colorBlob('R0000_20140308_11-49-12_008_MIDDLE.avi', [.577 .666 .22 .57 .24 .35]);
 save('blueMask.mat', 'blueMask');
-greenMask = colorBlob('R0016_front.avi', [.208 .2638 .27 .44 .35 .51]);
+greenMask = colorBlob('R0000_20140308_11-49-12_008_MIDDLE.avi', [.208 .2638 .27 .44 .35 .51]);
 save('greenMask.mat', 'greenMask');
-yellowMask = colorBlob('R0016_front.avi', [.122 .1666 .42 .65 .57 .9]);
-save('yellowMask.mat', 'yellowMask');
-redMask = colorBlob('R0016_front.avi', [0 .0277 .5 .85 .6 1]);
-save('redMask.mat', 'redMask');
+yellowMask = colorBlob('R0000_20140308_11-49-12_008_MIDDLE.avi', [.122 .1666 .42 .65 .57 .9]);
+save('blueMask.mat', 'blueMask');
+redMask = colorBlob('R0000_20140308_11-49-12_008_MIDDLE.avi', [0 .0277 .5 .85 .6 1]);
 
 %save('session1.mat');
 
-% videoFromMasks(blueMask, 'R0016_front.avi', .62, '1.avi');
+% videoFromMasks(blueMask, 'R0000_20140308_11-49-12_008_MIDDLE.avi', .62, '1.avi');
 % videoFromMasks(greenMask, '1.avi', .235, '2.avi');
 % videoFromMasks(yellowMask, '2.avi', .152, '3.avi');
 % videoFromMasks(redMask, '3.avi', .014, '4.avi');
@@ -30,7 +29,7 @@ blobAnalyser = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
     'MinimumBlobArea', 40, 'MajorAxisLengthOutputPort', true,...
     'MinorAxisLengthOutputPort', true, 'OrientationOutputPort', true);
 
-video = VideoReader('R0016_front.avi');
+video = VideoReader('R0000_20140308_11-49-12_008_MIDDLE.avi');
 figure
 for i=100:200
     disp(i)
