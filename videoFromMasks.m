@@ -1,4 +1,4 @@
-function videoFromMasks(masks, videoFile, hue, saveVideoAs)
+function videoFromMasks(masks, videoFile, hues, saveVideoAs)
     video = VideoReader(videoFile);
     
     saveVideo = VideoWriter(saveVideoAs);
@@ -6,11 +6,14 @@ function videoFromMasks(masks, videoFile, hue, saveVideoAs)
     saveVideo.FrameRate = 25;
     open(saveVideo);
     
-    maskSize = size(masks);
-    for i=1:maskSize(3)
+    for i=1:375
         image = read(video, i);
-        coloredImage = applyColorMask(image, masks(:,:,i), hue);
-        imshow(coloredImage)
+        coloredImage = image;
+        for j=1:4
+            mask = masks(j);
+            coloredImage = applyColorMask(coloredImage, mask(:,:,i), hues(j));
+            %imshow(coloredImage)
+        end
         writeVideo(saveVideo, coloredImage);
         disp(i)
     end
@@ -20,7 +23,6 @@ end
 function [coloredImage] = applyColorMask(image, mask, hue)
     hsv = rgb2hsv(image);
     edgeMask = edge(mask);
-    edgeMask = imdilate(edgeMask, strel('disk', 1, 0));
     h = hsv(:,:,1);
     s = hsv(:,:,2);
     v = hsv(:,:,3);

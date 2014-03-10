@@ -1,9 +1,9 @@
 function allMasks = colorBlob(videoFile, hsvBounds)
     video = VideoReader(videoFile);
-    allMasks = zeros(video.Height, video.Width, 10);%video.NumberOfFrames);
-    for i = 1:10%video.NumberOfFrames
-        allMasks(:,:,i) = isolatedColorMask(read(video, i), hsvBounds);
+    allMasks = zeros(video.Height, video.Width, video.NumberOfFrames);
+    for i = 1:video.NumberOfFrames
         disp(i)
+        allMasks(:,:,i) = isolatedColorMask(read(video, i), hsvBounds);
     end
 end
 
@@ -18,22 +18,28 @@ function [mask] = isolatedColorMask(image, hsvBounds)
     h(h < hsvBounds(1) | h > hsvBounds(2)) = 0;
     h(s < hsvBounds(3) | s > hsvBounds(4)) = 0;
     h(v < hsvBounds(5) | v > hsvBounds(6)) = 0;
-
-    % this is an attempt to remove any small color noise using imopen
-    % to first close those colors, then open them. Finally, the
-    % dilation creates large boundaries for the paw to move within
-    blobMask = imopen(h, strel('disk', 1, 0));
-    blobMask = imfill(blobMask, 'holes');
-    blobMask = imdilate(blobMask, strel('disk', 17, 0));
-    blobMask = logical(blobMask);
-    %imshow(blobMask);
-
-    % mask used for paw shape
-    pawMask = imclose(h, strel('disk', 1, 0));
-    pawMask = imfill(pawMask, 'holes');
-    pawMask = imdilate(pawMask, strel('disk', 3, 0));
-    pawMask = logical(pawMask);
-
-    mask = blobMask & pawMask;
+    
+    mask = bwdist(h) < 10;
     mask = imfill(mask, 'holes');
+    mask = imerode(mask, strel('disk',7));
+    
+    % if multiple regions are found and one is larger than the other, this
+    % builds a radius mask, essentially to fight off stray noise. It
+    % 'follows' the largest blog around if needed.
+    L = labelmatrix(bwconncomp(mask));
+    props = regionprops(L, 'Area', 'Centroid');
+    if(~isempty(props))
+        maxArea = max([props.Area]);
+        maxIndex = find([props.Area]==maxArea);
+        %centroids = reshape([props.Centroid],numel([props.Centroid])/2,2);
+
+        centroids = [props.Centroid];
+        noiseMask = mask.*0;
+        if(maxArea > 50)
+            noiseMask = insertShape(noiseMask, 'FilledCircle',...
+                [centroids(maxIndex:maxIndex+1) 40], 'Color', 'white');
+        end
+        mask = mask & im2bw(noiseMask,0);
+    end
+    %imshow(mask)
 end
