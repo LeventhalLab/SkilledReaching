@@ -10,9 +10,10 @@ function videoFromMasks(masks, videoFile, hues, saveVideoAs)
         image = read(video, i);
         coloredImage = image;
         for j=1:4
-            mask = masks(j);
+            mask = masks{j};
             coloredImage = applyColorMask(coloredImage, mask(:,:,i), hues(j));
             %imshow(coloredImage)
+            disp(j)
         end
         writeVideo(saveVideo, coloredImage);
         disp(i)
