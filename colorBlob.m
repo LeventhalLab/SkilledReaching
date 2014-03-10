@@ -1,13 +1,16 @@
-function allMasks = colorBlob(videoFile, hsvBounds)
+function [masks, centroids] = colorBlob(videoFile, hsvBounds)
     video = VideoReader(videoFile);
-    allMasks = zeros(video.Height, video.Width, video.NumberOfFrames);
+    masks = zeros(video.Height, video.Width, video.NumberOfFrames);
+    centroids = zeros(video.NumberOfFrames, 2);
     for i = 1:video.NumberOfFrames
         disp(i)
-        allMasks(:,:,i) = isolatedColorMask(read(video, i), hsvBounds);
+        [mask, centroid] = isolatedColorMask(read(video, i), hsvBounds);
+        masks(:,:,i) = mask;
+        centroids(i,:) = centroid;
     end
 end
 
-function [mask] = isolatedColorMask(image, hsvBounds)
+function [mask, centroid] = isolatedColorMask(image, hsvBounds)
     hsv = rgb2hsv(image);
 
     h = hsv(:,:,1);
@@ -25,21 +28,29 @@ function [mask] = isolatedColorMask(image, hsvBounds)
     
     % if multiple regions are found and one is larger than the other, this
     % builds a radius mask, essentially to fight off stray noise. It
-    % 'follows' the largest blog around if needed.
-    L = labelmatrix(bwconncomp(mask));
+    % 'follows' the largest blob around if needed.
+    CC = bwconncomp(mask);
+    L = labelmatrix(CC);
     props = regionprops(L, 'Area', 'Centroid');
     if(~isempty(props))
         maxArea = max([props.Area]);
         maxIndex = find([props.Area]==maxArea);
-        %centroids = reshape([props.Centroid],numel([props.Centroid])/2,2);
-
-        centroids = [props.Centroid];
-        noiseMask = mask.*0;
-        if(maxArea > 50)
-            noiseMask = insertShape(noiseMask, 'FilledCircle',...
-                [centroids(maxIndex:maxIndex+1) 40], 'Color', 'white');
+        centroids = vec2mat([props.Centroid],2);
+        for i=1:size(centroids,1)
+            if(pdist([centroids(maxIndex,:);centroids(i,:)])>250)
+                % remove centroids
+                centroids = removerows(centroids, i);
+                % black out far pixels
+                mask(CC.PixelIdxList{i}) = 0;
+            end
         end
-        mask = mask & im2bw(noiseMask,0);
+        centroid = [mean(centroids(:,1)), mean(centroids(:,2))];
+    else
+        centroid = [NaN NaN];
     end
-    %imshow(mask)
+%     temp = image;
+%     r=image(:,:,1);
+%     r(mask > 0) = 1;
+%     temp(:,:,1)=r;
+%     imshow(temp)
 end

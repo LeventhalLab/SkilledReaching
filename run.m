@@ -1,11 +1,14 @@
-% blueMask = colorBlob('R0016_front.avi', [.577 .666 .22 .57 .24 .35]);
-% save('blueMask.mat', 'blueMask');
-greenMask = colorBlob('R0016_front.avi', [.208 .27 .25 .49 .35 .55]);
-save('greenMask.mat', 'greenMask');
-% yellowMask = colorBlob('R0016_front.avi', [.122 .1666 .42 .65 .57 .9]);
-% save('yellowMask.mat', 'yellowMask');
-% redMask = colorBlob('R0016_front.avi', [0 .0277 .5 .85 .6 1]);
-% save('redMask.mat', 'redMask');
+[blueMask, blueCentroids] = colorBlob('R0016_front.avi', [.577 .666 .22 .57 .24 .35]);
+save('blue.mat','blueMask','blueCentroids');
+
+[greenMask, greenCentroids] = colorBlob('R0016_front.avi', [.208 .27 .25 .49 .35 .55]);
+save('green.mat','greenMask','greenCentroids');
+
+[yellowMask, yellowCentroids] = colorBlob('R0016_front.avi', [.122 .1666 .42 .65 .57 .9]);
+save('yellow.mat','yellowMask', 'yellowCentroids');
+
+[redMask redCentroids] = colorBlob('R0016_front.avi', [0 .0277 .5 .85 .6 1]);
+save('red.mat','redMask', 'redCentroids');
 
 % videoFromMasks({blueMask greenMask yellowMask redMask},'R0016_front.avi',...
 %     [.61 .23 .14 .01], 'all_masks.avi');
