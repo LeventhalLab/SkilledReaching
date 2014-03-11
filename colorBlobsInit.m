@@ -1,4 +1,5 @@
-function colorBlobInit()
+function colorBlobsInit()
+    % change defaults: m = matfile('defaults','Writable',true);
 
     % SETUP FILE STRUCTURE
     workingDirectory = uigetdir;

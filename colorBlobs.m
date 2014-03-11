@@ -57,9 +57,9 @@ function [mask, centroid] = isolatedColorMask(image, hsvBounds)
     else
         centroid = [NaN NaN];
     end
-%     temp = image;
-%     r=image(:,:,1);
-%     r(mask > 0) = 1;
-%     temp(:,:,1)=r;
-%     imshow(temp)
+    temp = image;
+    r=image(:,:,1);
+    r(mask > 0) = 1;
+    temp(:,:,1)=r;
+    imshow(temp)
 end

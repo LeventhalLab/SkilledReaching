@@ -1,4 +1,4 @@
-image = imread('R0000_20140308_11-49-12_008_MIDDLE_f250.jpg');
+image = imread('test.jpg');
 hsv = rgb2hsv(image);
 
 h = hsv(:,:,1);
