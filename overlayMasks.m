@@ -1,4 +1,4 @@
-function overlayCentroids(colorData, videoFile, saveVideoFileAs)
+function overlayMasks(colorData, videoFile, saveVideoFileAs)
     video = VideoReader(videoFile);
 
     newVideo = VideoWriter(saveVideoFileAs, 'Motion JPEG AVI');
@@ -10,8 +10,10 @@ function overlayCentroids(colorData, videoFile, saveVideoFileAs)
     for i = 1:video.NumberOfFrames
         image = read(video, i);
         for j=1:size(fields,1)
-           clean = cleanCentroids(colorData.(fields{j}).centroids);
-           image = insertShape(image,'Circle',[clean(i,:),4],'Color',fields{j});
+           temp = zeros(1,1,3);
+           temp = insertShape(temp,'Rectangle',[1 1 1 1],'Color',char(fields(j)));
+           mask = colorData.(fields{j}).masks(:,:,i);
+           image = imoverlay(image,edge(mask),reshape(temp(1,1,:),1,3));
         end
         writeVideo(newVideo,image);
     end

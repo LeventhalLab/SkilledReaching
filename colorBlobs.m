@@ -3,18 +3,17 @@ function [colorData] = colorBlobs(videoFile, hsvBounds)
     
     colorData = struct;
     fields = fieldnames(hsvBounds);
+    % setup zero matrices as placeholders
     for i=1:size(fields,1)
        colorData.(fields{i}).masks = zeros(video.Height, video.Width, video.NumberOfFrames);
        colorData.(fields{i}).centroids = zeros(video.NumberOfFrames, 2);
     end
 
-    for i=1:video.NumberOfFrames
+    for i=1:50%video.NumberOfFrames
         disp(i)
         image = read(video, i);
         for j=1:size(fields,1)
-            [colorData.(fields{j}).masks(:,:,i),colorData.(fields{j}).centroids(i,:)]...
-                = isolatedColorMask(image,hsvBounds.(fields{j}));
-            
+            [colorData.(fields{j}).masks(:,:,i),colorData.(fields{j}).centroids(i,:)] = isolatedColorMask(image,hsvBounds.(fields{j}));
         end
     end
 end
@@ -57,9 +56,9 @@ function [mask, centroid] = isolatedColorMask(image, hsvBounds)
     else
         centroid = [NaN NaN];
     end
-    temp = image;
-    r=image(:,:,1);
-    r(mask > 0) = 1;
-    temp(:,:,1)=r;
-    imshow(temp)
+%     temp = image;
+%     r=image(:,:,1);
+%     r(mask > 0) = 1;
+%     temp(:,:,1)=r;
+%     imshow(temp)
 end

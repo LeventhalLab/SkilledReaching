@@ -1,26 +1,16 @@
-function [centroids] = plotCentroids(centroids)
-    centroids = inpaint_nans(centroids);
-    medianWindow = 7;
-    averageWindow = 3;
-    
-    x = centroids(:,1);
-    y = centroids(:,2);
-    
-%     for i=1:15
-%         [x ip] = func_despike_phasespace3d(x,0,2);
-%         [y ip] = func_despike_phasespace3d(y,0,2);
-%     end
-%     
-    x = medfilt1(x, medianWindow);
-    y = medfilt1(y, medianWindow);
-    x = smooth(x, averageWindow);
-    y = smooth(y, averageWindow);
-    
-%     figure;
-%     plot(x, max(y)-y, 'Color', 'green');
-%     hold on;
-%     plot(x(1), max(y)-y(1), '*');
-    
-    centroids(:,1) = x;
-    centroids(:,2) = y;
+function plotCentroids(colorData, savePath, saveName)
+    fields = fieldnames(colorData);
+    maxY = 350; % an estimate, could use a min function if needed
+    h = figure;
+    for i=1:size(fields,1)
+       clean = cleanCentroids(colorData.(fields{i}).centroids);
+       plot(clean(:,1),maxY-clean(:,2),'--','Color',fields{i});
+       hold on;
+       plot(clean(1,1),maxY-clean(1,2),'*','Color',fields{i});
+       set(gca,'Color',[0 0 0]);
+       set(gcf, 'InvertHardCopy', 'off');
+    end
+    print(h,'-djpeg',fullfile(savePath,strcat('plot_',saveName,'.jpg')));
+    save(fullfile(savePath,strcat('figure_',saveName,'.fig')));
+    close;
 end

@@ -1,4 +1,4 @@
-function colorBlobsInit()
+function initColorBlobs()
     % change defaults: m = matfile('defaults','Writable',true);
 
     % SETUP FILE STRUCTURE
@@ -13,7 +13,7 @@ function colorBlobsInit()
            video = VideoReader(fullfile(workingDirectory,allVideos(1).name));
            imwrite(read(video,1),fullfile(workingDirectory,...
                strcat(videoName,'_f1.jpg')));
-           clearvars video
+           clearvars video;
         end
         
         % move each video into its own folder
@@ -41,22 +41,38 @@ function colorBlobsInit()
     disp('Defaults saved...');
     disp(S);
     
-    % CROP VIDEOS
+    % CROP VIDEOS AND EXTRACT COLOR DATA
     % probably just read video files in this new directory, allVideos is
     % not useful
     for i=1:size(allVideos,1)
         [videoPath,videoName,videoExt] = fileparts(allVideos(i).name);
         curVideoDirectory = fullfile(workingDirectory,videoName);
-        savedVideoPaths = cropVideo(fullfile(curVideoDirectory,allVideos(i).name), S.pixelBounds);
+        pixelBoundsFields = fieldnames(S.pixelBounds);
+
+        %crops videos, they are placed into their folder
+        savedVideoPaths = cropVideo(S.pixelBounds,fullfile(curVideoDirectory,allVideos(i).name));
         
         savedVideoFields = fieldnames(savedVideoPaths);
         for j=1:size(savedVideoFields,1)
+            % get color data
             [colorData] = colorBlobs(savedVideoPaths.(savedVideoFields{j}), S.hsvBounds);
-            save(fullfile(curVideoDirectory,...
-                strcat('colorData_',char(savedVideoFields{j}),'_',videoName)), 'colorData');
+            [savedVideoPath,savedVideoName,savedVideoExt] = fileparts(savedVideoPaths.(savedVideoFields{j}));
+            % save data to matlab file
+            save(fullfile(savedVideoPath,...
+                strcat('colorData_',char(savedVideoFields{j}),'_',savedVideoName)), 'colorData');
+            % plot and save figure
+            plotCentroids(colorData,savedVideoPath,...
+                strcat(char(savedVideoFields{j}),'_',videoName));
+            % create centroid video
+            overlayCentroids(colorData,savedVideoPaths.(savedVideoFields{j}),...
+                fullfile(savedVideoPath,strcat('centroids_',char(savedVideoFields{j}),savedVideoName)));
+            % create masks video
+            overlayMasks(colorData,savedVideoPaths.(savedVideoFields{j}),...
+                fullfile(savedVideoPath,strcat('masks_',char(savedVideoFields{j}),savedVideoName)));
+            
+            clearvars colorData;
         end
     end
     
-    % EXTRACT COLOR DATA
     
 end

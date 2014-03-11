@@ -1,13 +1,15 @@
-function [savedVideoPaths] = cropVideo(videoFile, pixelBounds)
+function [savedVideoPaths] = cropVideo(pixelBounds, videoFile)
     video = VideoReader(videoFile);
-    [videoPath videoName videoExt] = fileparts(videoFile);
+    [videoPath,videoName,videoExt] = fileparts(videoFile);
     
     savedVideoPaths = struct;
     writeVideos = struct;
     % setup video writers
     fields = fieldnames(pixelBounds);
     for i=1:size(fields,1)
-        saveVideoAs = fullfile(videoPath,strcat(videoName,'_',char(fields(i)),videoExt));
+        newDir = fullfile(videoPath,char(fields(i)));
+        mkdir(newDir);
+        saveVideoAs = fullfile(newDir,strcat('cropped_',char(fields(i)),'_',videoName,videoExt));
         savedVideoPaths.(fields{i}) = saveVideoAs;
         writeVideos.(fields{i}) = VideoWriter(saveVideoAs, 'Motion JPEG AVI');
         writeVideos.(fields{i}).Quality = 100;
@@ -15,7 +17,7 @@ function [savedVideoPaths] = cropVideo(videoFile, pixelBounds)
         open(writeVideos.(fields{i}));
     end
     
-    for i = 1:video.NumberOfFrames
+    for i=101:150%video.NumberOfFrames
         disp(i)
         image = read(video, i);
         % white balance
