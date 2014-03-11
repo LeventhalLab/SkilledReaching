@@ -9,7 +9,7 @@ function [colorData] = colorBlobs(videoFile, hsvBounds)
        colorData.(fields{i}).centroids = zeros(video.NumberOfFrames, 2);
     end
 
-    for i=1:50%video.NumberOfFrames
+    for i=1:video.NumberOfFrames
         disp(i)
         image = read(video, i);
         for j=1:size(fields,1)
