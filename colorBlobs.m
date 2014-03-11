@@ -1,24 +1,28 @@
-function [colorData] = colorBlobs(videoFile, hsvBounds)
+function [colorData] = colorBlobs(videoFile, hsvBounds, manualMaskCoords)
     video = VideoReader(videoFile);
     
     colorData = struct;
     fields = fieldnames(hsvBounds);
     % setup zero matrices as placeholders
     for i=1:size(fields,1)
-       colorData.(fields{i}).masks = zeros(video.Height, video.Width, video.NumberOfFrames);
-       colorData.(fields{i}).centroids = zeros(video.NumberOfFrames, 2);
+       colorData.(fields{i}).masks = zeros(video.Height,video.Width,video.NumberOfFrames);
+       colorData.(fields{i}).centroids = zeros(video.NumberOfFrames,2);
     end
+    
+    % create manual mask
+    manualMask = createMask(manualMaskCoords,zeros(video.Height,video.Width));
 
-    for i=1:video.NumberOfFrames
+    for i=1:50%video.NumberOfFrames
         disp(i)
         image = read(video, i);
         for j=1:size(fields,1)
-            [colorData.(fields{j}).masks(:,:,i),colorData.(fields{j}).centroids(i,:)] = isolatedColorMask(image,hsvBounds.(fields{j}));
+            [colorData.(fields{j}).masks(:,:,i),colorData.(fields{j}).centroids(i,:)] = ...
+                isolatedColorMask(image,hsvBounds.(fields{j}),manualMask);
         end
     end
 end
 
-function [mask, centroid] = isolatedColorMask(image, hsvBounds)
+function [mask, centroid] = isolatedColorMask(image, hsvBounds, manualMask)
     hsv = rgb2hsv(image);
 
     h = hsv(:,:,1);
@@ -29,6 +33,8 @@ function [mask, centroid] = isolatedColorMask(image, hsvBounds)
     h(h < hsvBounds(1) | h > hsvBounds(2)) = 0;
     h(s < hsvBounds(3) | s > hsvBounds(4)) = 0;
     h(v < hsvBounds(5) | v > hsvBounds(6)) = 0;
+    
+    h(manualMask==0) = 0;
     
     mask = bwdist(h) < 10;
     mask = imfill(mask, 'holes');

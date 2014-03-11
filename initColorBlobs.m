@@ -55,7 +55,8 @@ function initColorBlobs()
         savedVideoFields = fieldnames(savedVideoPaths);
         for j=1:size(savedVideoFields,1)
             % get color data
-            [colorData] = colorBlobs(savedVideoPaths.(savedVideoFields{j}), S.hsvBounds);
+            [colorData] = colorBlobs(savedVideoPaths.(savedVideoFields{j}),S.hsvBounds,...
+                S.manualMaskCoords.(pixelBoundsFields{j}));
             [savedVideoPath,savedVideoName,savedVideoExt] = fileparts(savedVideoPaths.(savedVideoFields{j}));
             % save data to matlab file
             save(fullfile(savedVideoPath,...
