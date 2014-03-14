@@ -43,9 +43,17 @@ function [mask, centroid] = isolatedColorMask(image, hsvBounds, manualMask)
     % if multiple regions are found and one is larger than the other, this
     % builds a radius mask, essentially to fight off stray noise. It
     % 'follows' the largest blob around if needed.
+    mask = imopen(mask, strel('disk', 15, 0));
+    mask = imclose(mask, strel('disk', 15, 0));
     CC = bwconncomp(mask);
     L = labelmatrix(CC);
-    props = regionprops(L, 'Area', 'Centroid');
+    props = regionprops(L, 'Area', 'Centroid','MinorAxisLength','MajorAxisLength','Orientation');
+    ellipse(props.MajorAxisLength,props.MinorAxisLength,deg2rad(props.Orientation),...
+        props.Centroid(1,1),props.Centroid(1,2));
+    
+    
+    
+    
     if(~isempty(props))
         maxArea = max([props.Area]);
         maxIndex = find([props.Area]==maxArea);
