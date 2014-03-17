@@ -17,7 +17,7 @@ function [savedVideoPaths] = cropVideo(pixelBounds, videoFile)
         open(writeVideos.(fields{i}));
     end
     
-    for i=101:150%video.NumberOfFrames
+    for i=1:video.NumberOfFrames
         disp(i)
         image = read(video, i);
         % white balance

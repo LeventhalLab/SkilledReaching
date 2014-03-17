@@ -12,7 +12,7 @@ function [colorData] = colorBlobs(videoFile, hsvBounds, manualMaskCoords)
     % create manual mask
     manualMask = createMask(manualMaskCoords,zeros(video.Height,video.Width));
 
-    for i=1:50%video.NumberOfFrames
+    for i=1:video.NumberOfFrames
         disp(i)
         image = read(video, i);
         for j=1:size(fields,1)
