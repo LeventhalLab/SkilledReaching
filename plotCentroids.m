@@ -3,7 +3,8 @@ function plotCentroids(colorData, savePath, saveName)
     maxY = 350; % an estimate, could use a min function if needed
     h = figure;
     for i=1:size(fields,1)
-       clean = cleanCentroids(colorData.(fields{i}).centroids);
+       %clean = cleanCentroids(colorData.(fields{i}).centroids);
+       clean = colorData.(fields{i}).centroids;
        plot(clean(:,1),maxY-clean(:,2),'--','Color',fields{i});
        hold on;
        plot(clean(1,1),maxY-clean(1,2),'*','Color',fields{i});

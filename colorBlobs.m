@@ -12,7 +12,7 @@ function [colorData] = colorBlobs(videoFile, hsvBounds, manualMaskCoords)
     % create manual mask
     manualMask = createMask(manualMaskCoords,zeros(video.Height,video.Width));
 
-    for i=1:video.NumberOfFrames
+    for i=1:125%video.NumberOfFrames
         disp(i)
         image = read(video, i);
         for j=1:size(fields,1)
@@ -34,7 +34,7 @@ function [mask, centroid] = isolatedColorMask(image, hsvBounds, manualMask)
     h(s < hsvBounds(3) | s > hsvBounds(4)) = 0;
     h(v < hsvBounds(5) | v > hsvBounds(6)) = 0;
     
-    h(manualMask==0) = 0;
+    %h(manualMask==0) = 0;
     
     mask = bwdist(h) < 10;
     mask = imfill(mask, 'holes');
