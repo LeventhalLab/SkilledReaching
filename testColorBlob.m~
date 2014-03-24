@@ -1,10 +1,10 @@
 function testColorBlob(videoFile,hsvBounds)
     video = VideoReader(videoFile);
     
-    newVideo = VideoWriter('r_processed.avi', 'Motion JPEG AVI');
-    newVideo.Quality = 90;
-    newVideo.FrameRate = 30;
-    open(newVideo);
+%     newVideo = VideoWriter('r_processed.avi', 'Motion JPEG AVI');
+%     newVideo.Quality = 90;
+%     newVideo.FrameRate = 30;
+%     open(newVideo);
     
     for i=1:video.NumberOfFrames
         disp(i)
@@ -90,5 +90,5 @@ function testColorBlob(videoFile,hsvBounds)
         end
         %imshow(mask)
     end
-    close(newVideo);
+%     close(newVideo);
 end

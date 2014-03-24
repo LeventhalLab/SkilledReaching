@@ -1,13 +1,13 @@
-function [mask] = motionMask(videoFile, hsvBounds)
+function [out] = motionMask(videoFile,hsvBounds)
     video = VideoReader(videoFile);
-    videoSource = vision.VideoFileReader(videoFile,'ImageColorSpace','Intensity','VideoOutputDataType','uint8');
+
     detector = vision.ForegroundDetector(...
        'NumTrainingFrames', 5, ... % 5 because of short video
        'InitialVariance', 30*30); % initial standard deviation of 30
     blob = vision.BlobAnalysis(...
        'CentroidOutputPort', false, 'AreaOutputPort', false, ...
        'BoundingBoxOutputPort', true, ...
-       'MinimumBlobAreaSource', 'Property', 'MinimumBlobArea', 250);
+       'MinimumBlobAreaSource', 'Property', 'MinimumBlobArea', 200);
    
    shapeInserter = vision.ShapeInserter('BorderColor','White');
    
