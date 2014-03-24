@@ -13,12 +13,12 @@ function [savedVideoPaths] = cropVideo(pixelBounds, videoFile)
         savedVideoPaths.(fields{i}) = saveVideoAs;
         writeVideos.(fields{i}) = VideoWriter(saveVideoAs, 'Motion JPEG AVI');
         writeVideos.(fields{i}).Quality = 100;
-        writeVideos.(fields{i}).FrameRate = 150;
+        writeVideos.(fields{i}).FrameRate = 30;
         open(writeVideos.(fields{i}));
     end
     
     for i=1:video.NumberOfFrames
-        disp(i)
+        disp(['Writing... ' num2str(i)])
         image = read(video, i);
         % white balance
         pageSize = size(image,1) * size(image,2);
@@ -29,9 +29,9 @@ function [savedVideoPaths] = cropVideo(pixelBounds, videoFile)
         wbImage = uint8(bsxfun(@times,double(image),scaleArray));
         % crop
         for j=1:size(fields,1)
-            coords = pixelBounds.(fields{j}); % left top width height
-            croppedImage = wbImage(coords(2):(coords(2)+coords(4)),...
-                coords(1):(coords(1)+coords(3)),:);
+            coords = pixelBounds.(fields{j}); % x1 y1 x2 y2
+            croppedImage = wbImage(coords(2):coords(4),...
+                coords(1):coords(3),:);
             writeVideo(writeVideos.(fields{j}), croppedImage);
         end
     end

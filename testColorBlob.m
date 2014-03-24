@@ -70,7 +70,7 @@ function [centers,hulls] = testColorBlob(videoFile,hsvBounds)
     
     centers = cleanCentroids(centers);
     
-    newVideo = VideoWriter('cropped_processed_right_r.avi', 'Motion JPEG AVI');
+    newVideo = VideoWriter('right/cropped_right_R0016_20140306_13-06-25_013_processed.avi', 'Motion JPEG AVI');
     newVideo.Quality = 90;
     newVideo.FrameRate = 30;
     open(newVideo);
