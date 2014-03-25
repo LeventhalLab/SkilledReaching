@@ -11,6 +11,8 @@ function [pawCenters,pawHulls,pelletCenters] = skilledReachingVideo(...
     newVideo.FrameRate = 30;
     open(newVideo);
     
+    graspSwitch = 0;
+    
     for i=1:video.NumberOfFrames
         disp(['Writing Video... ' num2str(i)])
         image = read(video,i);
@@ -35,18 +37,6 @@ function [pawCenters,pawHulls,pelletCenters] = skilledReachingVideo(...
             end
         end
         
-        if(~isnan(pelletCenters(i,:)))
-            image = insertShape(image,'FilledCircle',[pelletCenters(i,:) 5],'Color','blue');
-            image = insertText(image,[10 10],'No Pellet Grasp','BoxColor','red');
-        else
-            % you know your at the end of tracking, NaN from here on out
-            if(pelletClassify(pelletCenters,pawHulls))
-                image = insertText(image,[10 10],'Pellet Grasped!','BoxColor','green');
-            else
-                image = insertText(image,[10 10],'No Pellet Grasp','BoxColor','red');
-            end
-        end
-        
         writeVideo(newVideo,image);
 
 %         [northPole,southPole] = poles(hull);
@@ -57,6 +47,24 @@ function [pawCenters,pawHulls,pelletCenters] = skilledReachingVideo(...
 %             image = insertShape(image,'FilledCircle',[southPole 3]);
 %         end
     end
+    
+%      grasp = inhull(pelletCenter,pawHulls{i});
+%         graspSwitch = graspSwitch | grasp;
+%         if(~isnan(pelletCenters(i,:)))
+%             image = insertShape(image,'FilledCircle',[pelletCenters(i,:) 5],'Color','blue');
+%             if(graspSwitch)
+%                 image = insertText(image,[10 10],'No Pellet Grasp - Deflected','BoxColor','yellow');
+%             else
+%                 image = insertText(image,[10 10],'No Pellet Grasp','BoxColor','red');
+%             end
+%         else
+%             % you know your at the end of tracking, NaN from here on out
+%             if(graspSwitch)
+%                 image = insertText(image,[10 10],'Pellet Grasped!','BoxColor','green');
+%             else
+%                 image = insertText(image,[10 10],'No Pellet Grasp','BoxColor','red');
+%             end
+%         end
     
     close(newVideo);
 end

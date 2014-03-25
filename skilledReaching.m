@@ -24,7 +24,6 @@ function [pawCenters,pawHulls,pelletCenters] = skilledReaching(videoFile,hsvBoun
                 predictedCount = predictedCount + 1;
             end
             pelletCenter = round(pelletCenter);
-            image = insertShape(image,'FilledCircle',[pelletCenter 5],'Color','blue');
         else
             % pellet is lost forever, this means the last allowed
             % predictions are probably null centers, reset those
