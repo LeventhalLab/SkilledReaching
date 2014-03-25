@@ -11,7 +11,9 @@ function [pawCenters,pawHulls,pelletCenters] = skilledReaching(videoFile,hsvBoun
         disp(['Masking... ' num2str(i)])
         image = read(video,i);
         [pawCenters(i,:),pawHulls{i}] = pawData(image,hsvBounds);
-        if(predictedCount < 5)
+        
+        allowPredictions = 5;
+        if(predictedCount < allowPredictions)
             [pelletCenter] = pelletData(image,pelletCenter);
             if(~isnan(pelletCenter))
                 predict(kalmanFilter);
@@ -24,7 +26,11 @@ function [pawCenters,pawHulls,pelletCenters] = skilledReaching(videoFile,hsvBoun
             pelletCenter = round(pelletCenter);
             image = insertShape(image,'FilledCircle',[pelletCenter 5],'Color','blue');
         else
-            % pellet is lost forever
+            % pellet is lost forever, this means the last allowed
+            % predictions are probably null centers, reset those
+            for j=(i-allowPredictions):i
+               pelletCenters(j,:) = NaN(1,2); 
+            end
             pelletCenter = NaN(1,2);
         end
         pelletCenters(i,:) = pelletCenter;

@@ -46,7 +46,6 @@ function [pawCenters,pawHulls,pelletCenters] = skilledReachingVideo(...
                 image = insertText(image,[10 10],'No Pellet Grasp','BoxColor','red');
             end
         end
-        imshow(image)
         
         writeVideo(newVideo,image);
 
