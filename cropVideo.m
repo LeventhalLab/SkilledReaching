@@ -1,4 +1,4 @@
-function [savedVideoPaths] = cropVideo(pixelBounds, videoFile)
+function [savedVideoPaths] = cropVideo(videoFile, pixelBounds)
     video = VideoReader(videoFile);
     [videoPath,videoName,videoExt] = fileparts(videoFile);
     

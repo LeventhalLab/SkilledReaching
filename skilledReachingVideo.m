@@ -36,9 +36,17 @@ function [pawCenters,pawHulls,pelletCenters] = skilledReachingVideo(...
         end
         
         if(~isnan(pelletCenters(i,:)))
-            image = insertShape(image,'FilledCircle',...
-                [pelletCenters(i,:) 5],'Color','blue');
+            image = insertShape(image,'FilledCircle',[pelletCenters(i,:) 5],'Color','blue');
+            image = insertText(image,[10 10],'No Pellet Grasp','BoxColor','red');
+        else
+            % you know your at the end of tracking, NaN from here on out
+            if(pelletClassify(pelletCenters,pawHulls))
+                image = insertText(image,[10 10],'Pellet Grasped!','BoxColor','green');
+            else
+                image = insertText(image,[10 10],'No Pellet Grasp','BoxColor','red');
+            end
         end
+        imshow(image)
         
         writeVideo(newVideo,image);
 
