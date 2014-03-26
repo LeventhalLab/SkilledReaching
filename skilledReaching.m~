@@ -1,4 +1,4 @@
-function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReaching(videoFile,hsvBounds,pelletCenter)
+function [pawCenters,pawHulls,pelletCenters] = skilledReaching(videoFile,hsvBounds,pelletCenter)
     video = VideoReader(videoFile);
 
     pawCenters = NaN(video.NumberOfFrames,2);
@@ -21,9 +21,10 @@ function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReaching(vide
             if(~isnan(pelletCenter))
                 predict(kalmanFilter);
                 pelletCenter = correct(kalmanFilter,pelletCenter);
-                % only record good and known pellet locations, interpolate later
-                pelletCenters(i,:) = round(pelletCenter);
-                pelletBboxes(i,:) = round(pelletBbox);
+                % only record good, known pellet locations, interp later
+                pelletCenters(i,:) = pelletCenter;
+                pelletBboxes(i,:) = pelletBbox;
+                
                 predictedCount = 0;
             else
                 pelletCenter = predict(kalmanFilter);

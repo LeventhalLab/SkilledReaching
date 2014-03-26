@@ -1,4 +1,4 @@
-function [pelletCenter] = pelletData(image,pelletCenter)
+function [pelletCenter,pelletBbox] = pelletData(image,pelletCenter)
     % consider allowing 2-3 NaN entries come by as a buffer
     if(isnan(pelletCenter(1)))
        return 
@@ -10,25 +10,25 @@ function [pelletCenter] = pelletData(image,pelletCenter)
     v = hsv(:,:,3);
 
     % bound the hue element using all three bounds
-    h(s > .15) = 0;
-    h(v < .65) = 0;
+    h(s > .12) = 0;
+    h(v < .70) = 0;
 
-    % bounds
+    % bound the pellet based on starting position
     boundsMask = zeros(size(h));
-    boundsMask = insertShape(boundsMask,'FilledCircle',[pelletCenter 35],'Color','white');
-    h = h&rgb2gray(boundsMask);
+    boundsMask = insertShape(boundsMask,'FilledCircle',[pelletCenter 50],'Color','white');
+    % doesn't need further masking, too small of an area
+    mask = h&rgb2gray(boundsMask);
+    
+    % get blob properties
+    props = regionprops(mask,'Area','Centroid','BoundingBox');
+    [maxArea,maxIndex] = max([props.Area]);
 
-    mask = bwdist(h) < 3;
-    mask = imfill(mask, 'holes');
-    mask = imerode(mask, strel('disk',1));
-    bwmask = bwdist(~mask);
-    [maxGravityValue,~] = max(bwmask(:));
-    if(maxGravityValue > 4)
-        [centerGravityColumns,centerGravityRows] = find(bwmask == maxGravityValue);
-        centerGravityRow = mean(centerGravityRows);
-        centerGravityColumn = mean(centerGravityColumns);
-        pelletCenter = round([centerGravityRow centerGravityColumn]);
+    % make sure this is a pellet by windowing area
+    if(maxArea > 100 && maxArea < 1200)
+        pelletCenter = props(maxIndex).Centroid;
+        pelletBbox = props(maxIndex).BoundingBox;
     else
         pelletCenter = NaN(1,2);
+        pelletBbox = NaN(1,4);
     end
 end

@@ -44,12 +44,12 @@ function [pawCenter,pawHull] = pawData(image,hsvBounds)
         networkMask = imdilate(networkMask,strel('disk',2));
 
         % this convex hull needs to belong to the largest centroid
+        % probably don't need CC,L, just pass in mask
         CC = bwconncomp(networkMask|mask);
         L = labelmatrix(CC);
         props = regionprops(L,'Area','ConvexHull');
         [maxArea,maxIndex] = max([props.Area]);
         pawHull = props(maxIndex).ConvexHull;
-%       maxCentroid = props(maxIndex).Centroid;
     else
         pawCenter = NaN(1,2);
         pawHull = NaN(1,2);
