@@ -15,12 +15,13 @@ function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReaching(vide
     for i=1:video.NumberOfFrames
         disp(['Masking... ' num2str(i)])
         image = read(video,i);
+        % paw data
         [pawCenters(i,:),pawHulls{i}] = pawData(image,hsvBounds);
         
         % only allow a few predictions, the bounding pellet mask can trail
         % into other areas that might register as a pellet
         allowPredictions = 5;
-        if(predictedCount < allowPredictions)
+        if(predictedCount < allowPredictions && i > 180 && i < 250)
             [pelletCenter,pelletBbox] = pelletData(image,pelletCenter,searchRadius);
             if(~isnan(pelletCenter))
                 predict(kalmanFilter);

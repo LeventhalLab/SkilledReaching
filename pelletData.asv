@@ -10,15 +10,15 @@ function [pelletCenter,pelletBbox] = pelletData(image,pelletCenter,searchRadius)
     s = hsv(:,:,2);
     v = hsv(:,:,3);
 
-    % bound starting with the saturation channel
-    s(s > .15) = 0;
-    s(v < .7) = 0;
+    % bound the 
+    h(s > .15) = 0;
+    h(v < .7) = 0;
 
     % bound the pellet based on starting position
-    boundsMask = zeros(size(s));
+    boundsMask = zeros(size(h));
     boundsMask = insertShape(boundsMask,'FilledCircle',[pelletCenter searchRadius],'Color','white');
     % doesn't need further masking, too small of an area
-    mask = s&rgb2gray(boundsMask);
+    mask = h&rgb2gray(boundsMask);
     %imshow(mask);
     
     % get blob properties

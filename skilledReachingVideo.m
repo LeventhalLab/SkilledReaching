@@ -34,24 +34,24 @@ function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReachingVideo
         end
         
         % pellet bbox
-        if(~isnan(pelletBboxes(i,1)))
-            image = insertShape(image,'Rectangle',pelletBboxes(i,:),'Color','blue');
-        end
-        
-        if(size(graspIndexes,1)==0 || i < min(graspIndexes))
-           image = insertText(image,[20 20],'No Pellet Grasp','BoxColor','red');
-        else
-           % if grasping in this image
-           if(i < max(graspIndexes))
-               image = insertText(image,[20 20],'Pellet Grasping...','BoxColor','blue');
-           else
-               if(success)
-                   image = insertText(image,[20 20],'Pellet Grasped!','BoxColor','green');
-               else
-                  image = insertText(image,[20 20],'Pellet Deflected','BoxColor','yellow'); 
-               end
-           end
-        end
+%         if(~isnan(pelletBboxes(i,1)))
+%             image = insertShape(image,'Rectangle',pelletBboxes(i,:),'Color','blue');
+%         end
+%         
+%         if(size(graspIndexes,1)==0 || i < min(graspIndexes))
+%            image = insertText(image,[20 20],'No Pellet Grasp','BoxColor','red');
+%         else
+%            % if grasping in this image
+%            if(i < max(graspIndexes))
+%                image = insertText(image,[20 20],'Pellet Grasping...','BoxColor','blue');
+%            else
+%                if(success)
+%                    image = insertText(image,[20 20],'Pellet Grasped!','BoxColor','green');
+%                else
+%                   image = insertText(image,[20 20],'Pellet Deflected','BoxColor','yellow'); 
+%                end
+%            end
+%         end
         
         %imshow(image)
         writeVideo(newVideo,image);
