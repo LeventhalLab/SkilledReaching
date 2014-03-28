@@ -11,15 +11,17 @@ function [pawCenter,pawHull] = pawData(image,hsvBounds)
     h(v < hsvBounds(5) | v > hsvBounds(6)) = 0;
 
     mask = bwdist(h) < 3;
-    mask = imfill(mask, 'holes');
-    mask = imerode(mask, strel('disk',1));
+    SE = strel('disk',3);
+    mask = imopen(mask,SE);
+    mask = imfill(mask,'holes');
+    %mask = imerode(mask,SE);
 
     % find "center of gravity"
     bwmask = bwdist(~mask);
     [maxGravityValue,~] = max(bwmask(:));
 
     % make sure there is actually a reliable "center"
-    if(maxGravityValue > 3)
+    if(maxGravityValue > 5)
         [centerGravityColumns,centerGravityRows] = find(bwmask == maxGravityValue);
         centerGravityRow = mean(centerGravityRows);
         centerGravityColumn = mean(centerGravityColumns);
@@ -35,7 +37,7 @@ function [pawCenter,pawHull] = pawData(image,hsvBounds)
         for j=1:regions
             % only draw lines to centroids near center of gravity
             % (eliminates noise)
-            if(pdist([centerGravityRow centerGravityColumn;props(j).Centroid]) < 100)
+            if(pdist([centerGravityRow centerGravityColumn;props(j).Centroid]) < 50)
                 networkMask = insertShape(networkMask,'Line',[centerGravityRow centerGravityColumn...
                     props(j).Centroid],'Color','White');
             end

@@ -1,4 +1,7 @@
 function [pelletCenter,pelletBbox] = pelletData(image,pelletCenter)
+    pelletCenter = NaN(1,2);
+    pelletBbox = NaN(1,4);
+    
     % consider allowing 2-3 NaN entries come by as a buffer
     if(isnan(pelletCenter(1)))
        return 
@@ -21,14 +24,12 @@ function [pelletCenter,pelletBbox] = pelletData(image,pelletCenter)
     
     % get blob properties
     props = regionprops(mask,'Area','Centroid','BoundingBox');
-    [maxArea,maxIndex] = max([props.Area]);
-
-    % make sure this is a pellet by windowing area
-    if(maxArea > 100 && maxArea < 1200)
-        pelletCenter = props(maxIndex).Centroid;
-        pelletBbox = props(maxIndex).BoundingBox;
-    else
-        pelletCenter = NaN(1,2);
-        pelletBbox = NaN(1,4);
+    if(~isempty(props))
+        [maxArea,maxIndex] = max([props.Area]);
+        % make sure this is a pellet by windowing area
+        if(maxArea > 100 && maxArea < 1200)
+            pelletCenter = props(maxIndex).Centroid;
+            pelletBbox = props(maxIndex).BoundingBox;
+        end
     end
 end
