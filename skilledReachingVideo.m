@@ -1,5 +1,5 @@
-function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReachingVideo(...
-    videoFile,hsvBounds,pelletCenter,saveVideoAs)
+function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = ...
+    skilledReachingVideo(videoFile,hsvBounds,pelletCenter,saveVideoAs)
 
     [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReaching(videoFile,hsvBounds,pelletCenter);
     pawCenters = cleanCentroids(pawCenters);
@@ -14,23 +14,22 @@ function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReachingVideo
 
     for i=1:video.NumberOfFrames
         disp(['Writing Video... ' num2str(i)])
-        image = read(video,i);
+        im = read(video,i);
         
         if(~isnan(pawCenters(i,1)))
-            image = insertShape(image,'FilledCircle',[pawCenters(i,:) 8]);
+            im = insertShape(im,'FilledCircle',[pawCenters(i,:) 8]);
         end
         
+        % pawCenters are always set when there is a pawHull, but the hull
+        % can not exist without the center
         if(~isnan(pawHulls{i}(1)))
-            simpleHullIndexes = convhull(pawHulls{i},'simplify',true);
-            for j=1:(size(simpleHullIndexes)-1)
-                % lines to hull points
-                image = insertShape(image,'Line',[pawCenters(i,:)... 
-                    pawHulls{i}(simpleHullIndexes(j),1) pawHulls{i}(simpleHullIndexes(j),2)]);
-                % hull points
-                image = insertShape(image,'FilledCircle',...
-                    [pawHulls{i}(simpleHullIndexes(j),1) pawHulls{i}(simpleHullIndexes(j),2) 3],'Color','red');
-
-            end
+            im = insertShape(im,'Line',[repmat(pawCenters(i,:),[size(pawHulls{i},1),1]) pawHulls{i}]);
+            im = insertShape(im,'FilledCircle',...
+                    [pawHulls{i} repmat(3,size(pawHulls{i},1),1)],'Color','red');
+           
+            [triPoints,maxArea] = maxTri(pawHulls{i},pawCenters(i,:));
+                disp(['Area:' num2str(maxArea)])
+            im = insertShape(im,'FilledCircle',[triPoints repmat(5,2,1)],'Color','white');
         end
         
         % pellet bbox
@@ -54,7 +53,7 @@ function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReachingVideo
 %         end
         
         %imshow(image)
-        writeVideo(newVideo,image);
+        writeVideo(newVideo,im);
 
 %         [northPole,southPole] = poles(hull);
 %         if(abs(mean(northPole-southPole)) > 10)

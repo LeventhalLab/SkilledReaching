@@ -1,4 +1,4 @@
-function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = skilledReaching(videoFile,hsvBounds,pelletCenter)
+function [pawCenters,pawHulls,pelletCenters,pelletBboxes]=skilledReaching(videoFile,hsvBounds,pelletCenter)
     video = VideoReader(videoFile);
 
     pawCenters = NaN(video.NumberOfFrames,2);

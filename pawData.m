@@ -52,6 +52,7 @@ function [pawCenter,pawHull] = pawData(image,hsvBounds)
         props = regionprops(L,'Area','ConvexHull');
         [maxArea,maxIndex] = max([props.Area]);
         pawHull = props(maxIndex).ConvexHull;
+        pawHull = cleanHull(pawHull);
     else
         pawCenter = NaN(1,2);
         pawHull = NaN(1,2);
