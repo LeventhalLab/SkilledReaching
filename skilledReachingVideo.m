@@ -1,3 +1,5 @@
+% Controls video creation and step-by-step creation of data
+
 function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = ...
     skilledReachingVideo(videoFile,hsvBounds,pelletCenter,saveVideoAs)
 
@@ -27,9 +29,8 @@ function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = ...
             im = insertShape(im,'FilledCircle',...
                     [pawHulls{i} repmat(3,size(pawHulls{i},1),1)],'Color','red');
            
-            [triPoints,maxArea] = maxTri(pawHulls{i},pawCenters(i,:));
-                disp(['Area:' num2str(maxArea)])
-            im = insertShape(im,'FilledCircle',[triPoints repmat(5,2,1)],'Color','white');
+            maxIndexes = maxSpread(pawCenters(i,:),pawHulls{i});
+            im = insertShape(im,'FilledCircle',[pawHulls{i}(maxIndexes,:) repmat(5,2,1)],'Color','white');
         end
         
         % pellet bbox
@@ -65,4 +66,7 @@ function [pawCenters,pawHulls,pelletCenters,pelletBboxes] = ...
     end
     
     close(newVideo);
+    
+    [~,name,~] = fileparts(videoFile);
+    save(['sessions/' name '_' datestr(now,'ddmmyyyy_HHMM')],'pawCenters','pawHulls','pelletCenters','pelletBboxes');
 end

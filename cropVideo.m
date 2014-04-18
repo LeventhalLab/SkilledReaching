@@ -1,4 +1,4 @@
-function [savedVideoPaths] = cropVideo(videoFile, pixelBounds)
+function [savedVideoPaths] = cropVideo(videoFile,pixelBounds)
     video = VideoReader(videoFile);
     [videoPath,videoName,videoExt] = fileparts(videoFile);
     
@@ -11,7 +11,7 @@ function [savedVideoPaths] = cropVideo(videoFile, pixelBounds)
         mkdir(newDir);
         saveVideoAs = fullfile(newDir,strcat('cropped_',char(fields(i)),'_',videoName,videoExt));
         savedVideoPaths.(fields{i}) = saveVideoAs;
-        writeVideos.(fields{i}) = VideoWriter(saveVideoAs, 'Motion JPEG AVI');
+        writeVideos.(fields{i}) = VideoWriter(saveVideoAs,'Motion JPEG AVI');
         writeVideos.(fields{i}).Quality = 100;
         writeVideos.(fields{i}).FrameRate = 30;
         open(writeVideos.(fields{i}));

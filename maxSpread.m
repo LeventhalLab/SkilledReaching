@@ -1,20 +1,13 @@
-function [hullPoints,maxArea]=maxSpread(hull,centerPoint)
-    
+function [maxIndexes,maxDistB]=maxSpread(point,dataSet)
+    [maxDistA,maxIndexA] = pdistMax(point(1,:),dataSet);
+    [maxDistB,maxIndexB] = pdistMax(dataSet(maxIndexA,:),dataSet);
+    maxIndexes = [maxIndexA maxIndexB];
+end
 
-    maxArea = 0;
-    for i=1:size(hull,1)
-        firstPoint = hull(i,:);
-        for j=1:size(hull)
-            if(i==j)
-                continue;
-            end
-            secondPoint = hull(j,:);
-            allPoints = [centerPoint;firstPoint;secondPoint];
-            triArea = polyarea(allPoints(:,1),allPoints(:,2));
-            if(triArea>maxArea)
-                maxArea=triArea;
-                hullPoints = allPoints(2:3,:);
-            end
-        end
+function [maxDist,maxIndex]=pdistMax(point,dataSet)
+    allDist = zeros(size(dataSet,1),1);
+    for i=1:size(dataSet,1)
+        allDist(i) = pdist([point;dataSet(i,:)]);
     end
+    [maxDist,maxIndex] = max(allDist);
 end

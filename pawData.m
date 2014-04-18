@@ -22,6 +22,7 @@ function [pawCenter,pawHull] = pawData(image,hsvBounds)
 
     % make sure there is actually a reliable "center"
     if(maxGravityValue > 5)
+        % get center coordinates
         [centerGravityColumns,centerGravityRows] = find(bwmask == maxGravityValue);
         centerGravityRow = mean(centerGravityRows);
         centerGravityColumn = mean(centerGravityColumns);
