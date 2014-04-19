@@ -1,5 +1,5 @@
-function [pawCenter,pawHull] = pawData(image,hsvBounds)
-    hsv = rgb2hsv(image);
+function [pawCenter,pawHull] = pawData(im,hsvBounds)
+    hsv = rgb2hsv(im);
 
     h = hsv(:,:,1);
     s = hsv(:,:,2);
@@ -24,12 +24,12 @@ function [pawCenter,pawHull] = pawData(image,hsvBounds)
     if(maxGravityValue > 5)
         % get center coordinates
         [centerGravityColumns,centerGravityRows] = find(bwmask == maxGravityValue);
-        centerGravityRow = mean(centerGravityRows);
-        centerGravityColumn = mean(centerGravityColumns);
+        centerGravityRow = round(mean(centerGravityRows));
+        centerGravityColumn = round(mean(centerGravityColumns));
         pawCenter = [centerGravityRow centerGravityColumn];
 
         % draw lines between blobs and centroid
-        networkMask = zeros(size(image,1),size(image,2),3);
+        networkMask = zeros(size(im,1),size(im,2),3);
         CC = bwconncomp(mask);
         L = labelmatrix(CC);
         props = regionprops(L,'Centroid');
@@ -38,9 +38,9 @@ function [pawCenter,pawHull] = pawData(image,hsvBounds)
         for j=1:regions
             % only draw lines to centroids near center of gravity
             % (eliminates noise)
-            if(pdist([centerGravityRow centerGravityColumn;props(j).Centroid]) < 50)
+            if(pdist([centerGravityRow centerGravityColumn;round(props(j).Centroid)]) < 50)
                 networkMask = insertShape(networkMask,'Line',[centerGravityRow centerGravityColumn...
-                    props(j).Centroid],'Color','White');
+                    round(props(j).Centroid)],'Color','White');
             end
         end
         networkMask = im2bw(rgb2gray(networkMask));
