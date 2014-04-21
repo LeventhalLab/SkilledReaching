@@ -6,12 +6,13 @@ function [pawCenters,pawHulls] = createVideo(videoFile,hsvBounds)
     [pathstr,name,ext] = fileparts(videoFile);
     
     video = VideoReader(videoFile);
-    newVideo = VideoWriter(fullfile(pathstr,'processed',['processed' name]),'Motion JPEG AVI');
+    mkdir(fullfile(pathstr,'processed'));
+    newVideo = VideoWriter(fullfile(pathstr,'processed',['processed_' name]),'Motion JPEG AVI');
     newVideo.Quality = 100;
     newVideo.FrameRate = 20;
     open(newVideo);
 
-    for i=1:video.NumberOfFrames
+    for i=200:250%video.NumberOfFrames
         disp(['Writing Video... ' num2str(i)])
         im = read(video,i);
         
@@ -30,10 +31,10 @@ function [pawCenters,pawHulls] = createVideo(videoFile,hsvBounds)
             im = insertShape(im,'FilledCircle',[pawHulls{i}(maxIndexes,:) repmat(5,2,1)],'Color','white');
         end
         
-        imshow(image)
         writeVideo(newVideo,im);
     end
     
     close(newVideo);
+    mkdir(fullfile(pathstr,'sessions'));
     save(fullfile(pathstr,'sessions',name),'pawCenters','pawHulls');
 end
