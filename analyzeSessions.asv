@@ -1,0 +1,13 @@
+function analyzeSessions(frameRate,pxToMm,pelletCoords)
+    workingDirectory = uigetdir;
+    leftSessions = dir(fullfile(workingDirectory,'left','sessions','*.mat'));
+    centerSessions = dir(fullfile(workingDirectory,'center','sessions','*.mat'));
+    rightSessions = dir(fullfile(workingDirectory,'right','sessions','*.mat'));
+    
+    % should do some basic checks on quantity and display error if session count is unequal
+    
+    for i=1:numel(sessions)
+        load(fullfile(workingDirectory,sessions(i).name));
+        plotDistanceVsTime(pawCenters,frameRate,pxToMm,pelletCoords);
+    end
+end

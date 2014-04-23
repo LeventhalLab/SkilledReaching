@@ -1,3 +1,4 @@
+% pixelBounds is a struct with 3 fields, hsvBounds is an array
 function runFolder(pixelBounds,hsvBounds)
     workingDirectory = uigetdir;
     
@@ -15,7 +16,7 @@ function runFolder(pixelBounds,hsvBounds)
         fieldVideos = dir(fullfile(fieldDirectory,'*.avi'));
         for j=1:size(fieldVideos,1)
             videoFile = fullfile(fieldDirectory,fieldVideos(j).name);
-            createVideo(videoFile,hsvBounds.(fields{i}));
+            createVideo(videoFile,hsvBounds);
         end
     end
 end

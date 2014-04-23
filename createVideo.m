@@ -2,7 +2,7 @@
 function [pawCenters,pawHulls] = createVideo(videoFile,hsvBounds)
 
     [pawCenters,pawHulls] = getDataFromVideo(videoFile,hsvBounds);
-    pawCenters = cleanCentroids(pawCenters);
+    %pawCenters = cleanCentroids(pawCenters); %cant do this here, only after session save
     [pathstr,name,ext] = fileparts(videoFile);
     
     video = VideoReader(videoFile);
@@ -12,7 +12,7 @@ function [pawCenters,pawHulls] = createVideo(videoFile,hsvBounds)
     newVideo.FrameRate = 20;
     open(newVideo);
 
-    for i=200:250%video.NumberOfFrames
+    for i=2:video.NumberOfFrames
         disp(['Writing Video... ' num2str(i)])
         im = read(video,i);
         
@@ -36,5 +36,5 @@ function [pawCenters,pawHulls] = createVideo(videoFile,hsvBounds)
     
     close(newVideo);
     mkdir(fullfile(pathstr,'sessions'));
-    save(fullfile(pathstr,'sessions',name),'pawCenters','pawHulls');
+    save(fullfile(pathstr,'sessions',name),'pawCenters','pawHulls','hsvBounds');
 end

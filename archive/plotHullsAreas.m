@@ -5,5 +5,5 @@ function plotHullsAreas(pawHulls)
     for i=1:size(polyAreas,1)
         polyAreas(i)=polyarea(pawHulls{i}(:,1),pawHulls{i}(:,2));
     end
-    plot(1:size(polyAreas,1),smooth(polyAreas.^2,25),'Color',cmap(round(rand*100),:));
+    plot(1:size(polyAreas,1),smooth(polyAreas,25),'Color',cmap(round(rand*100),:));
 end

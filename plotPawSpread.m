@@ -1,8 +1,12 @@
-function allDist=plotSpread(pawCenters,pawHulls,color)
+function allDist=plotPawSpread(pawCenters,pawHulls,color)
     allDist = zeros(size(pawCenters,1),1);
     for i=1:size(pawCenters,1)
         [maxIndexes,maxDist] = maxSpread(pawCenters(i,:),pawHulls{i});
-        allDist(i,1) = maxDist;
+        if(isempty(maxDist))
+            allDist(i,1) = NaN;
+        else
+            allDist(i,1) = maxDist;
+        end
     end
     hold on;
 
