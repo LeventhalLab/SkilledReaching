@@ -10,7 +10,6 @@ function plotDistanceVsTime(pawCenters,frameRate,pxToMm,pelletCoords)
     
     for i=1:numel(allDist)
         if(allDist(i) < 10)
-           shiftIndex = i;
            break;
         end
     end
