@@ -1,61 +1,80 @@
 % >> analyzeSessions(150,0.1053,STRUCT(left,center,right))
+
+% This function requires that a video has already been cropped and pawData has already been saved
+% into the sessions folder for each of 3 viewing angles
 function analyzeSessions(frameRate,pxToMm,pelletCoords)
     workingDirectory = uigetdir;
+    % load all the .mat sessions created for each video, from each angle
     leftSessions = dir(fullfile(workingDirectory,'left','sessions','*.mat'));
     centerSessions = dir(fullfile(workingDirectory,'center','sessions','*.mat'));
     rightSessions = dir(fullfile(workingDirectory,'right','sessions','*.mat'));
     
-    % should do some basic checks on quantity and display error if session count is unequal
-    
-    allLeftPawCenters = loadPawCenters(leftSessions,fullfile(workingDirectory,'left','sessions'));
-    allCenterPawCenters = loadPawCenters(centerSessions,fullfile(workingDirectory,'center','sessions'));
-    allRightPawCenters = loadPawCenters(rightSessions,fullfile(workingDirectory,'right','sessions'));
-    
-    allXyzPawCenters = cell(1,numel(leftSessions));
-    for i=1:numel(leftSessions)
-        allXyzPawCenters{i} = createXyzPawCenters(allLeftPawCenters{i},allCenterPawCenters{i},...
-            allRightPawCenters{i},pelletCoords);
-        allXyzPawCenters{i} = allXyzPawCenters{i}.*pxToMm;
-        %xyzPawCenters = smoothn(xyzPawCenters);
-    end
-    
-    allXyzDistPawCenters = cell(1,numel(leftSessions));
-    for i=1:numel(leftSessions)
-        allXyzDistPawCenters{i} = createXyzDistPawCenters(allXyzPawCenters{i});
-    end
+    % just make sure there are equal session for each angle
+    if(numel(leftSessions) == numel(centerSessions) && numel(leftSessions) == numel(rightSessions))
+        % load the pawCenter variables from the session files
+        allLeftPawCenters = loadPawCenters(leftSessions,fullfile(workingDirectory,'left','sessions'));
+        allCenterPawCenters = loadPawCenters(centerSessions,fullfile(workingDirectory,'center','sessions'));
+        allRightPawCenters = loadPawCenters(rightSessions,fullfile(workingDirectory,'right','sessions'));
 
-    allAlignedXyzPawCenters = cell(1,numel(leftSessions));
-    allAlignedXyzDistPawCenters = cell(1,numel(leftSessions));
-    for i=25:numel(leftSessions)
-        [allAlignedXyzPawCenters{i},allAlignedXyzDistPawCenters{i}] = alignData(allXyzPawCenters{i},allXyzDistPawCenters{i});
-    end
-    
-    mkdir(fullfile(workingDirectory,'_xyzData'));
-    save(fullfile(workingDirectory,'_xyzData','xyzData'),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
-        'allXyzPawCenters','allXyzDistPawCenters');
-    
-    h1 = plot1dDistance(allAlignedXyzDistPawCenters);
-    saveas(h1,fullfile(workingDirectory,'_xyzData','1dDistancePlot'),'png');
-    saveas(h1,fullfile(workingDirectory,'_xyzData','1dDistancePlot'),'fig');
+        % combines the paw centers from each video into an nx3 matrix, where n=numberOfFrames in the
+        % video, and 3=[x y z] data in relation to the pellet
+        allXyzPawCenters = cell(1,numel(leftSessions)); % number of videos
+        for i=1:numel(leftSessions)
+            allXyzPawCenters{i} = createXyzPawCenters(allLeftPawCenters{i},allCenterPawCenters{i},...
+                allRightPawCenters{i},pelletCoords);
+            allXyzPawCenters{i} = allXyzPawCenters{i}.*pxToMm; % convert pixels to distance
+        end
 
-    h2 = plot3dDistance(allAlignedXyzPawCenters);
-    % use view() to rotate and save a couple angles
-    saveas(h2,fullfile(workingDirectory,'_xyzData','3dDistancePlot'),'png');
-    saveas(h2,fullfile(workingDirectory,'_xyzData','3dDistancePlot'),'fig');
+        % takes the [x y z] data just created and calculates a single distance based on all three
+        % coordinates in relation to the pellet
+        allXyzDistPawCenters = cell(1,numel(leftSessions));
+        for i=1:numel(leftSessions)
+            allXyzDistPawCenters{i} = createXyzDistPawCenters(allXyzPawCenters{i});
+        end
+
+        % aligns data based on distance threshold, ultimately compresses the data set slightly (see
+        % alignData function for more)
+        allAlignedXyzPawCenters = cell(1,numel(leftSessions));
+        allAlignedXyzDistPawCenters = cell(1,numel(leftSessions));
+        for i=25:numel(leftSessions)
+            [allAlignedXyzPawCenters{i},allAlignedXyzDistPawCenters{i}] = alignData(allXyzPawCenters{i},allXyzDistPawCenters{i});
+        end
+
+        % save data
+        mkdir(fullfile(workingDirectory,'_xyzData'));
+        save(fullfile(workingDirectory,'_xyzData','xyzData'),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
+            'allXyzPawCenters','allXyzDistPawCenters');
+
+        % create plots and save images/figures
+        h1 = plot1dDistance(allAlignedXyzDistPawCenters);
+        saveas(h1,fullfile(workingDirectory,'_xyzData','1dDistancePlot'),'png');
+        saveas(h1,fullfile(workingDirectory,'_xyzData','1dDistancePlot'),'fig');
+
+        h2 = plot3dDistance(allAlignedXyzPawCenters);
+        % use view() to rotate and save a couple angles
+        saveas(h2,fullfile(workingDirectory,'_xyzData','3dDistancePlot'),'png');
+        saveas(h2,fullfile(workingDirectory,'_xyzData','3dDistancePlot'),'fig');
+    else
+        disp('The session counts do not match, why not? Fix that and try again');
+    end
 end
 
+% Re-aligns data based on a distance threshold, useful for aberant recordings and mis-firing of the
+% reach sensor. Also compresses the data set.
 function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters,xyzDistPawCenters)
     % find frame index that distance crosses a minimum distance threshold
     for shiftIndex=1:numel(xyzDistPawCenters)
-        if(xyzDistPawCenters(shiftIndex) < 10)
+        if(xyzDistPawCenters(shiftIndex) < 10) % distance threshold
            break;
         end
     end
     % apply the shift index if it sits somewhere near the middle of the video, otherwise we can
     % assume it is bad data
-    alignedXyzPawCenters = NaN(200,3);
-    alignedXyzDistPawCenters = NaN(200,1);
-    if(shiftIndex > 100 && shiftIndex < 200) % less than this is a bad reach/data
+    alignedXyzPawCenters = NaN(200,3); % final size of the data set
+    alignedXyzDistPawCenters = NaN(200,1); % final size of the data set
+    % make sure the distance threshold was met somewhere in the middle of the video otherwise the
+    % data is considered junk
+    if(shiftIndex > 100 && shiftIndex < 200)
         alignedXyzPawCenters(1:numel(xyzDistPawCenters(shiftIndex-50:end)),:) =...
             xyzPawCenters(shiftIndex-50:end,:);
         alignedXyzDistPawCenters(1:numel(xyzDistPawCenters(shiftIndex-50:end))) =...
@@ -63,7 +82,8 @@ function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters
     end
 end
 
-% xyzPawCenters is a cell above, but a is just a single array here
+% If all three [x y z] coordinates are present, this returns a single-valued distance-to-pellet
+% measurement, otherwise it returns NaN.
 function xyzDistPawCenters=createXyzDistPawCenters(xyzPawCenters)
     frameCount = size(xyzPawCenters,1);
     xyzDistPawCenters = NaN(frameCount,1);
@@ -79,9 +99,10 @@ function xyzDistPawCenters=createXyzDistPawCenters(xyzPawCenters)
     end
 end
 
-% creates xyz data for a single session (a.k.a. single video)
+% Creates [x y z] data for a single session/video. Not the most elegant way of handling the logic,
+% but intended to remain readable and workable.
 function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,rightPawCenters,pelletCoords)
-    % x=C, y=mean(L,R), z=mean(L,C,R)
+    % x=C, y=mean(L,R), z=mean(L,C,R), *where L, C, and R are not NaN
     frameCount = size(leftPawCenters,1);
     xyzPawCenters = NaN(frameCount,3);
     for i=1:frameCount
@@ -105,7 +126,7 @@ function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,right
         else
             xyzPawCenters(i,2) = NaN;
         end
-        % calculate z, not the most elegant way, but at least it is readable
+        % calculate z
         if(~isnan(leftPawCenters(i,1)) && ~isnan(centerPawCenters(i,1)) && ~isnan(rightPawCenters(i,1)))
             leftDist = pelletCoords.left(2)-leftPawCenters(i,2); % y-axis
             centerDist = pelletCoords.center(2)-centerPawCenters(i,2); % y-axis
@@ -135,6 +156,7 @@ function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,right
     end
 end
 
+% Load and return the pawCenters variable from a session file (one video).
 function allPawCenters=loadPawCenters(sessions,sessionsPath)
     allPawCenters = cell(1,numel(sessions));
     for i=1:numel(sessions)
