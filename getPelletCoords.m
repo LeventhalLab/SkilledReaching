@@ -6,7 +6,7 @@ function pelletCoords=getPelletCoords(boundNames)
         videoFile = fullfile(videoPath,videoName);
         video = VideoReader(videoFile);
         figure;
-        imshow(read(video,1));
+        imshow(read(video,5));
         disp('Identify pellet, press ENTER when done...');
         [x,y] = ginput;
         close;

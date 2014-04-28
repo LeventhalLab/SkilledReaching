@@ -22,9 +22,9 @@ function analyzeTrials(frameRate,pxToMm,pelletCoords)
         % video, and 3=[x y z] data in relation to the pellet
         allXyzPawCenters = cell(1,numel(leftTrials)); % number of videos
         for i=1:numel(leftTrials)
+            % returns values in millimeters
             allXyzPawCenters{i} = createXyzPawCenters(allLeftPawCenters{i},allCenterPawCenters{i},...
-                allRightPawCenters{i},pelletCoords);
-            allXyzPawCenters{i} = allXyzPawCenters{i}.*pxToMm; % convert pixels to distance
+                allRightPawCenters{i},pxToMm,pelletCoords);
         end
 
         % takes the [x y z] data just created and calculates a single distance based on all three
@@ -67,7 +67,7 @@ end
 function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters,xyzDistPawCenters)
     % find frame index that distance crosses a minimum distance threshold
     for shiftIndex=1:numel(xyzDistPawCenters)
-        if(xyzDistPawCenters(shiftIndex) < 10) % distance threshold
+        if(xyzDistPawCenters(shiftIndex) < 15) % distance threshold
            break;
         end
     end
@@ -103,15 +103,16 @@ function xyzDistPawCenters=createXyzDistPawCenters(xyzPawCenters)
 end
 
 % Creates [x y z] data for a single trial/video. Not the most elegant way of handling the logic,
-% but intended to remain readable and workable.
-function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,rightPawCenters,pelletCoords)
+% but intended to remain readable and workable. All values are returned in millimeters based on the
+% conversion factor for each angle.
+function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,rightPawCenters,pxToMm,pelletCoords)
     % x=C, y=mean(L,R), z=mean(L,C,R), *where L, C, and R are not NaN
     frameCount = size(leftPawCenters,1);
     xyzPawCenters = NaN(frameCount,3);
     for i=1:frameCount
         % calculate x
         if(~isnan(centerPawCenters(i,1)))
-            xyzPawCenters(i,1) = pelletCoords.center(1)-centerPawCenters(i,1); % x-axis
+            xyzPawCenters(i,1) = (pelletCoords.center(1)-centerPawCenters(i,1))*pxToMm.center; % x-axis
         else
             xyzPawCenters(i,1) = NaN;
         end
@@ -119,40 +120,40 @@ function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,right
         if(~isnan(leftPawCenters(i,1)) && ~isnan(rightPawCenters(i,1)))
             % these equations are intentionally reversed to account for the mirroring, making the
             % x-axis always more negative as it extends inwards into the box
-            leftDist = pelletCoords.left(1)-leftPawCenters(i,1); % x-axis
-            rightDist = rightPawCenters(i,1)-pelletCoords.right(1); % x-axis
+            leftDist = (pelletCoords.left(1)-leftPawCenters(i,1))*pxToMm.left; % x-axis
+            rightDist = (rightPawCenters(i,1)-pelletCoords.right(1))*pxToMm.right; % x-axis
             xyzPawCenters(i,2) = mean([leftDist,rightDist]);
         elseif(~isnan(leftPawCenters(i,1)))
-            xyzPawCenters(i,2) = pelletCoords.left(1)-leftPawCenters(i,1); % x-axis
+            xyzPawCenters(i,2) = (pelletCoords.left(1)-leftPawCenters(i,1))*pxToMm.left; % x-axis
         elseif(~isnan(rightPawCenters(i,1)))
-            xyzPawCenters(i,2) = rightPawCenters(i,1)-pelletCoords.right(1); % x-axis
+            xyzPawCenters(i,2) = (rightPawCenters(i,1)-pelletCoords.right(1))*pxToMm.right; % x-axis
         else
             xyzPawCenters(i,2) = NaN;
         end
         % calculate z
         if(~isnan(leftPawCenters(i,1)) && ~isnan(centerPawCenters(i,1)) && ~isnan(rightPawCenters(i,1)))
-            leftDist = pelletCoords.left(2)-leftPawCenters(i,2); % y-axis
-            centerDist = pelletCoords.center(2)-centerPawCenters(i,2); % y-axis
-            rightDist = pelletCoords.right(2)-rightPawCenters(i,2); % y-axis
+            leftDist = (pelletCoords.left(2)-leftPawCenters(i,2))*pxToMm.left; % y-axis
+            centerDist = (pelletCoords.center(2)-centerPawCenters(i,2))*pxToMm.center; % y-axis
+            rightDist = (pelletCoords.right(2)-rightPawCenters(i,2))*pxToMm.right; % y-axis
             xyzPawCenters(i,3) = mean([leftDist,centerDist,rightDist]);
         elseif(~isnan(leftPawCenters(i,1)) && ~isnan(centerPawCenters(i,1)))
-            leftDist = pelletCoords.left(2)-leftPawCenters(i,2); % y-axis
-            centerDist = pelletCoords.center(2)-centerPawCenters(i,2); % y-axis
+            leftDist = (pelletCoords.left(2)-leftPawCenters(i,2))*pxToMm.left; % y-axis
+            centerDist = (pelletCoords.center(2)-centerPawCenters(i,2))*pxToMm.center; % y-axis
             xyzPawCenters(i,3) = mean([leftDist,centerDist]);
         elseif(~isnan(centerPawCenters(i,1)) && ~isnan(rightPawCenters(i,1)))
-            centerDist = pelletCoords.center(2)-centerPawCenters(i,2); % y-axis
-            rightDist = pelletCoords.right(2)-rightPawCenters(i,2); % y-axis
+            centerDist = (pelletCoords.center(2)-centerPawCenters(i,2))*pxToMm.center; % y-axis
+            rightDist = (pelletCoords.right(2)-rightPawCenters(i,2))*pxToMm.right; % y-axis
             xyzPawCenters(i,3) = mean([centerDist,rightDist]);
         elseif(~isnan(leftPawCenters(i,1)) && ~isnan(rightPawCenters(i,1)))
-            leftDist = pelletCoords.left(2)-leftPawCenters(i,2); % y-axis
-            rightDist = pelletCoords.right(2)-rightPawCenters(i,2); % y-axis
+            leftDist = (pelletCoords.left(2)-leftPawCenters(i,2))*pxToMm.left; % y-axis
+            rightDist = (pelletCoords.right(2)-rightPawCenters(i,2))*pxToMm.right; % y-axis
             xyzPawCenters(i,3) = mean([leftDist,rightDist]);
         elseif(~isnan(leftPawCenters(i,1)))
-            xyzPawCenters(i,3) = pelletCoords.left(2)-leftPawCenters(i,2); % y-axis
+            xyzPawCenters(i,3) = (pelletCoords.left(2)-leftPawCenters(i,2))*pxToMm.left; % y-axis
         elseif(~isnan(centerPawCenters(i,1)))
-            xyzPawCenters(i,3) = pelletCoords.center(2)-centerPawCenters(i,2); % y-axis
+            xyzPawCenters(i,3) = (pelletCoords.center(2)-centerPawCenters(i,2))*pxToMm.center; % y-axis
         elseif(~isnan(rightPawCenters(i,1)))
-            xyzPawCenters(i,3) = pelletCoords.right(2)-rightPawCenters(i,2); % y-axis
+            xyzPawCenters(i,3) = (pelletCoords.right(2)-rightPawCenters(i,2))*pxToMm.right; % y-axis
         else
             xyzPawCenters(i,3) = NaN;
         end
