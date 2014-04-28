@@ -1,27 +1,27 @@
-% >> analyzeSessions(150,0.1053,STRUCT(left,center,right))
+% >> analyzeTrials(150,0.1053,STRUCT(left,center,right))
 
 % This function requires that a video has already been cropped and pawData has already been saved
-% into the sessions folder for each of 3 viewing angles
+% into the trials folder for each of 3 viewing angles
 function analyzeTrials(frameRate,pxToMm,pelletCoords)
     workingDirectory = uigetdir;
     workingDirectoryParts = strsplit(workingDirectory,filesep);
-    sessionName = workingDirectoryParts(end);
+    trialName = workingDirectoryParts{end);
     % load all the .mat trials created for each video, from each angle
-    leftSessions = dir(fullfile(workingDirectory,'left','sessions','*.mat'));
-    centerSessions = dir(fullfile(workingDirectory,'center','sessions','*.mat'));
-    rightSessions = dir(fullfile(workingDirectory,'right','sessions','*.mat'));
+    leftTrials = dir(fullfile(workingDirectory,'left','trials','*.mat'));
+    centerTrials = dir(fullfile(workingDirectory,'center','trials','*.mat'));
+    rightTrials = dir(fullfile(workingDirectory,'right','trials','*.mat'));
     
-    % just make sure there are equal session for each angle
-    if(numel(leftSessions) == numel(centerSessions) && numel(leftSessions) == numel(rightSessions))
-        % load the pawCenter variables from the session files
-        allLeftPawCenters = loadPawCenters(leftSessions,fullfile(workingDirectory,'left','sessions'));
-        allCenterPawCenters = loadPawCenters(centerSessions,fullfile(workingDirectory,'center','sessions'));
-        allRightPawCenters = loadPawCenters(rightSessions,fullfile(workingDirectory,'right','sessions'));
+    % just make sure there are equal trial for each angle
+    if(numel(leftTrials) == numel(centerTrials) && numel(leftTrials) == numel(rightTrials))
+        % load the pawCenter variables from the trial files
+        allLeftPawCenters = loadPawCenters(leftTrials,fullfile(workingDirectory,'left','trials'));
+        allCenterPawCenters = loadPawCenters(centerTrials,fullfile(workingDirectory,'center','trials'));
+        allRightPawCenters = loadPawCenters(rightTrials,fullfile(workingDirectory,'right','trials'));
 
         % combines the paw centers from each video into an nx3 matrix, where n=numberOfFrames in the
         % video, and 3=[x y z] data in relation to the pellet
-        allXyzPawCenters = cell(1,numel(leftSessions)); % number of videos
-        for i=1:numel(leftSessions)
+        allXyzPawCenters = cell(1,numel(leftTrials)); % number of videos
+        for i=1:numel(leftTrials)
             allXyzPawCenters{i} = createXyzPawCenters(allLeftPawCenters{i},allCenterPawCenters{i},...
                 allRightPawCenters{i},pelletCoords);
             allXyzPawCenters{i} = allXyzPawCenters{i}.*pxToMm; % convert pixels to distance
@@ -29,35 +29,35 @@ function analyzeTrials(frameRate,pxToMm,pelletCoords)
 
         % takes the [x y z] data just created and calculates a single distance based on all three
         % coordinates in relation to the pellet
-        allXyzDistPawCenters = cell(1,numel(leftSessions));
-        for i=1:numel(leftSessions)
+        allXyzDistPawCenters = cell(1,numel(leftTrials));
+        for i=1:numel(leftTrials)
             allXyzDistPawCenters{i} = createXyzDistPawCenters(allXyzPawCenters{i});
         end
 
         % aligns data based on distance threshold, ultimately compresses the data set slightly (see
         % alignData function for more)
-        allAlignedXyzPawCenters = cell(1,numel(leftSessions));
-        allAlignedXyzDistPawCenters = cell(1,numel(leftSessions));
-        for i=25:numel(leftSessions)
+        allAlignedXyzPawCenters = cell(1,numel(leftTrials));
+        allAlignedXyzDistPawCenters = cell(1,numel(leftTrials));
+        for i=25:numel(leftTrials)
             [allAlignedXyzPawCenters{i},allAlignedXyzDistPawCenters{i}] = alignData(allXyzPawCenters{i},allXyzDistPawCenters{i});
         end
 
         % save data
         mkdir(fullfile(workingDirectory,'_xyzData'));
-        save(fullfile(workingDirectory,'_xyzData',sessionName,'_xyzData'),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
+        save(fullfile(workingDirectory,'_xyzData',trialName,'_xyzData'),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
             'allXyzPawCenters','allXyzDistPawCenters');
 
         % create plots and save images/figures
         h1 = plot1dDistance(allAlignedXyzDistPawCenters);
-        saveas(h1,fullfile(workingDirectory,'_xyzData',sessionName,'_1dDistancePlot'),'png');
-        saveas(h1,fullfile(workingDirectory,'_xyzData',sessionName,'_1dDistancePlot'),'fig');
+        saveas(h1,fullfile(workingDirectory,'_xyzData',trialName,'_1dDistancePlot'),'png');
+        saveas(h1,fullfile(workingDirectory,'_xyzData',trialName,'_1dDistancePlot'),'fig');
 
         h2 = plot3dDistance(allAlignedXyzPawCenters);
         % use view() to rotate and save a couple angles
-        saveas(h2,fullfile(workingDirectory,'_xyzData',sessionName,'_3dDistancePlot'),'png');
-        saveas(h2,fullfile(workingDirectory,'_xyzData',sessionName,'_3dDistancePlot'),'fig');
+        saveas(h2,fullfile(workingDirectory,'_xyzData',trialName,'_3dDistancePlot'),'png');
+        saveas(h2,fullfile(workingDirectory,'_xyzData',trialName,'_3dDistancePlot'),'fig');
     else
-        disp('The session counts do not match, why not? Fix that and try again');
+        disp('The trial counts do not match, why not? Fix that and try again');
     end
 end
 
@@ -101,7 +101,7 @@ function xyzDistPawCenters=createXyzDistPawCenters(xyzPawCenters)
     end
 end
 
-% Creates [x y z] data for a single session/video. Not the most elegant way of handling the logic,
+% Creates [x y z] data for a single trial/video. Not the most elegant way of handling the logic,
 % but intended to remain readable and workable.
 function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,rightPawCenters,pelletCoords)
     % x=C, y=mean(L,R), z=mean(L,C,R), *where L, C, and R are not NaN
@@ -158,11 +158,11 @@ function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,right
     end
 end
 
-% Load and return the pawCenters variable from a session file (one video).
-function allPawCenters=loadPawCenters(sessions,sessionsPath)
-    allPawCenters = cell(1,numel(sessions));
-    for i=1:numel(sessions)
-        load(fullfile(sessionsPath,sessions(i).name));
+% Load and return the pawCenters variable from a trial file (one video).
+function allPawCenters=loadPawCenters(trials,trialsPath)
+    allPawCenters = cell(1,numel(trials));
+    for i=1:numel(trials)
+        load(fullfile(trialsPath,trials(i).name));
         allPawCenters{i} = pawCenters; % "pawCenters" variable is loaded via .mat file
     end
 end

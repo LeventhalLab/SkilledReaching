@@ -5,15 +5,15 @@
 function analyzeTrials(frameRate,pxToMm,pelletCoords)
     workingDirectory = uigetdir;
     workingDirectoryParts = strsplit(workingDirectory,filesep);
-    sessionName = workingDirectoryParts(end);
+    trialName = workingDirectoryParts{end};
     % load all the .mat trials created for each video, from each angle
     leftTrials = dir(fullfile(workingDirectory,'left','trials','*.mat'));
     centerTrials = dir(fullfile(workingDirectory,'center','trials','*.mat'));
     rightTrials = dir(fullfile(workingDirectory,'right','trials','*.mat'));
     
-    % just make sure there are equal session for each angle
+    % just make sure there are equal trial for each angle
     if(numel(leftTrials) == numel(centerTrials) && numel(leftTrials) == numel(rightTrials))
-        % load the pawCenter variables from the session files
+        % load the pawCenter variables from the trial files
         allLeftPawCenters = loadPawCenters(leftTrials,fullfile(workingDirectory,'left','trials'));
         allCenterPawCenters = loadPawCenters(centerTrials,fullfile(workingDirectory,'center','trials'));
         allRightPawCenters = loadPawCenters(rightTrials,fullfile(workingDirectory,'right','trials'));
@@ -38,26 +38,27 @@ function analyzeTrials(frameRate,pxToMm,pelletCoords)
         % alignData function for more)
         allAlignedXyzPawCenters = cell(1,numel(leftTrials));
         allAlignedXyzDistPawCenters = cell(1,numel(leftTrials));
-        for i=25:numel(leftTrials)
+        for i=1:numel(leftTrials)
             [allAlignedXyzPawCenters{i},allAlignedXyzDistPawCenters{i}] = alignData(allXyzPawCenters{i},allXyzDistPawCenters{i});
         end
 
         % save data
         mkdir(fullfile(workingDirectory,'_xyzData'));
-        save(fullfile(workingDirectory,'_xyzData',sessionName,'_xyzData'),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
+        save(fullfile(workingDirectory,'_xyzData',[trialName,'_xyzData']),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
             'allXyzPawCenters','allXyzDistPawCenters');
-
+        
+        plotFrames = 300;
         % create plots and save images/figures
-        h1 = plot1dDistance(allAlignedXyzDistPawCenters);
-        saveas(h1,fullfile(workingDirectory,'_xyzData',sessionName,'_1dDistancePlot'),'png');
-        saveas(h1,fullfile(workingDirectory,'_xyzData',sessionName,'_1dDistancePlot'),'fig');
+        h1 = plot1dDistance(allAlignedXyzDistPawCenters,plotFrames);
+        saveas(h1,fullfile(workingDirectory,'_xyzData',[trialName,'_1dDistancePlot']),'png');
+        saveas(h1,fullfile(workingDirectory,'_xyzData',[trialName,'_1dDistancePlot']),'fig');
 
-        h2 = plot3dDistance(allAlignedXyzPawCenters);
+        h2 = plot3dDistance(allAlignedXyzPawCenters,plotFrames);
         % use view() to rotate and save a couple angles
-        saveas(h2,fullfile(workingDirectory,'_xyzData',sessionName,'_3dDistancePlot'),'png');
-        saveas(h2,fullfile(workingDirectory,'_xyzData',sessionName,'_3dDistancePlot'),'fig');
+        saveas(h2,fullfile(workingDirectory,'_xyzData',[trialName,'_3dDistancePlot']),'png');
+        saveas(h2,fullfile(workingDirectory,'_xyzData',[trialName,'_3dDistancePlot']),'fig');
     else
-        disp('The session counts do not match, why not? Fix that and try again');
+        disp('The trial counts do not match, why not? Fix that and try again.');
     end
 end
 
@@ -72,8 +73,8 @@ function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters
     end
     % apply the shift index if it sits somewhere near the middle of the video, otherwise we can
     % assume it is bad data
-    alignedXyzPawCenters = NaN(200,3); % final size of the data set
-    alignedXyzDistPawCenters = NaN(200,1); % final size of the data set
+    alignedXyzPawCenters = NaN(1,3); % final size of the data set
+    alignedXyzDistPawCenters = NaN(1,1); % final size of the data set
     % make sure the distance threshold was met somewhere in the middle of the video otherwise the
     % data is considered junk
     if(shiftIndex > 100 && shiftIndex < 200)
@@ -101,7 +102,7 @@ function xyzDistPawCenters=createXyzDistPawCenters(xyzPawCenters)
     end
 end
 
-% Creates [x y z] data for a single session/video. Not the most elegant way of handling the logic,
+% Creates [x y z] data for a single trial/video. Not the most elegant way of handling the logic,
 % but intended to remain readable and workable.
 function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,rightPawCenters,pelletCoords)
     % x=C, y=mean(L,R), z=mean(L,C,R), *where L, C, and R are not NaN
@@ -158,7 +159,7 @@ function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,right
     end
 end
 
-% Load and return the pawCenters variable from a session file (one video).
+% Load and return the pawCenters variable from a trial file (one video).
 function allPawCenters=loadPawCenters(trials,trialsPath)
     allPawCenters = cell(1,numel(trials));
     for i=1:numel(trials)
