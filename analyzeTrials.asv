@@ -2,9 +2,11 @@
 
 % This function requires that a video has already been cropped and pawData has already been saved
 % into the sessions folder for each of 3 viewing angles
-function analyzeSessions(frameRate,pxToMm,pelletCoords)
+function analyzeTrials(frameRate,pxToMm,pelletCoords)
     workingDirectory = uigetdir;
-    % load all the .mat sessions created for each video, from each angle
+    workingDirectoryParts = strsplit(workingDirectory,filesep);
+    sessionName = workingDirectoryParts(end);
+    % load all the .mat trials created for each video, from each angle
     leftSessions = dir(fullfile(workingDirectory,'left','sessions','*.mat'));
     centerSessions = dir(fullfile(workingDirectory,'center','sessions','*.mat'));
     rightSessions = dir(fullfile(workingDirectory,'right','sessions','*.mat'));
@@ -42,18 +44,18 @@ function analyzeSessions(frameRate,pxToMm,pelletCoords)
 
         % save data
         mkdir(fullfile(workingDirectory,'_xyzData'));
-        save(fullfile(workingDirectory,'_xyzData','xyzData'),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
+        save(fullfile(workingDirectory,'_xyzData',sessionName,'_xyzData'),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
             'allXyzPawCenters','allXyzDistPawCenters');
 
         % create plots and save images/figures
         h1 = plot1dDistance(allAlignedXyzDistPawCenters);
-        saveas(h1,fullfile(workingDirectory,'_xyzData','1dDistancePlot'),'png');
-        saveas(h1,fullfile(workingDirectory,'_xyzData','1dDistancePlot'),'fig');
+        saveas(h1,fullfile(workingDirectory,'_xyzData',sessionName,'_1dDistancePlot'),'png');
+        saveas(h1,fullfile(workingDirectory,'_xyzData',sessionName,'_1dDistancePlot'),'fig');
 
         h2 = plot3dDistance(allAlignedXyzPawCenters);
         % use view() to rotate and save a couple angles
-        saveas(h2,fullfile(workingDirectory,'_xyzData','3dDistancePlot'),'png');
-        saveas(h2,fullfile(workingDirectory,'_xyzData','3dDistancePlot'),'fig');
+        saveas(h2,fullfile(workingDirectory,'_xyzData',sessionName,'_3dDistancePlot'),'png');
+        saveas(h2,fullfile(workingDirectory,'_xyzData',sessionName,'_3dDistancePlot'),'fig');
     else
         disp('The session counts do not match, why not? Fix that and try again');
     end
@@ -99,9 +101,10 @@ function xyzDistPawCenters=createXyzDistPawCenters(xyzPawCenters)
     end
 end
 
-% Creates [x y z] data for a single session/video
+% Creates [x y z] data for a single session/video. Not the most elegant way of handling the logic,
+% but intended to remain readable and workable.
 function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,rightPawCenters,pelletCoords)
-    % x=C, y=mean(L,R), z=mean(L,C,R), *where L, C, and R are 
+    % x=C, y=mean(L,R), z=mean(L,C,R), *where L, C, and R are not NaN
     frameCount = size(leftPawCenters,1);
     xyzPawCenters = NaN(frameCount,3);
     for i=1:frameCount
@@ -125,7 +128,7 @@ function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,right
         else
             xyzPawCenters(i,2) = NaN;
         end
-        % calculate z, not the most elegant way, but at least it is readable
+        % calculate z
         if(~isnan(leftPawCenters(i,1)) && ~isnan(centerPawCenters(i,1)) && ~isnan(rightPawCenters(i,1)))
             leftDist = pelletCoords.left(2)-leftPawCenters(i,2); % y-axis
             centerDist = pelletCoords.center(2)-centerPawCenters(i,2); % y-axis
@@ -155,6 +158,7 @@ function xyzPawCenters=createXyzPawCenters(leftPawCenters,centerPawCenters,right
     end
 end
 
+% Load and return the pawCenters variable from a session file (one video).
 function allPawCenters=loadPawCenters(sessions,sessionsPath)
     allPawCenters = cell(1,numel(sessions));
     for i=1:numel(sessions)

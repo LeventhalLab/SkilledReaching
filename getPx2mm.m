@@ -1,4 +1,4 @@
-function pxToMm=px2mm(knownDistMm)
+function pxToMm=getPx2mm(knownDistMm)
     [videoName,videoPath] = uigetfile('*.avi');
     videoFile = fullfile(videoPath,videoName);
     video = VideoReader(videoFile);

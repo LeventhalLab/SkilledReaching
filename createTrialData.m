@@ -1,13 +1,13 @@
 % pixelBounds is a struct with 3 fields, hsvBounds is an array
-function runFolder(pixelBounds,hsvBounds)
+function createTrialData(pixelBounds,hsvBounds)
     workingDirectory = uigetdir;
     
     % crop videos
-%     originalVideos = dir(fullfile(workingDirectory,'*.avi'));
-%     for i=1:size(originalVideos,1)
-%        videoFile = fullfile(workingDirectory,originalVideos(i).name);
-%        cropVideo(videoFile,pixelBounds); 
-%     end
+    originalVideos = dir(fullfile(workingDirectory,'*.avi'));
+    for i=1:size(originalVideos,1)
+       videoFile = fullfile(workingDirectory,originalVideos(i).name);
+       cropVideo(videoFile,pixelBounds); 
+    end
     
     % get data from all crops
     fields = fieldnames(pixelBounds);

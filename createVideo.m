@@ -2,7 +2,6 @@
 function [pawCenters,pawHulls] = createVideo(videoFile,hsvBounds)
 
     [pawCenters,pawHulls] = getDataFromVideo(videoFile,hsvBounds);
-    %pawCenters = cleanCentroids(pawCenters); %cant do this here, only after session save
     [pathstr,name,ext] = fileparts(videoFile);
     
     video = VideoReader(videoFile);
@@ -35,6 +34,6 @@ function [pawCenters,pawHulls] = createVideo(videoFile,hsvBounds)
     end
     
     close(newVideo);
-    mkdir(fullfile(pathstr,'sessions'));
-    save(fullfile(pathstr,'sessions',name),'pawCenters','pawHulls','hsvBounds');
+    mkdir(fullfile(pathstr,'trials'));
+    save(fullfile(pathstr,'trials',name),'pawCenters','pawHulls','hsvBounds');
 end
