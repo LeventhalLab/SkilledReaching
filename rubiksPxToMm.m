@@ -6,9 +6,9 @@ function pxToMm=rubiksPxToMm(boundNames)
     imHsv = rgb2hsv(im);
     
     pxToMm = {};
+    figure;
     for i=1:size(boundNames,2)
         disp(['Select Rubiks squares for "',boundNames{i},'", press ENTER when done...']);
-        figure;
         imshow(im);
         [xList,yList] = ginput;
 

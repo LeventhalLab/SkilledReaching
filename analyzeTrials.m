@@ -47,7 +47,7 @@ function analyzeTrials(frameRate,pxToMm,pelletCoords)
         save(fullfile(workingDirectory,'_xyzData',[trialName,'_xyzData']),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
             'allXyzPawCenters','allXyzDistPawCenters');
         
-        plotFrames = 300;
+        plotFrames = 200;
         % create plots and save images/figures
         h1 = plot1dDistance(allAlignedXyzDistPawCenters,plotFrames);
         saveas(h1,fullfile(workingDirectory,'_xyzData',[trialName,'_1dDistancePlot']),'png');
@@ -73,8 +73,8 @@ function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters
     end
     % apply the shift index if it sits somewhere near the middle of the video, otherwise we can
     % assume it is bad data
-    alignedXyzPawCenters = NaN(1,3); % final size of the data set
-    alignedXyzDistPawCenters = NaN(1,1); % final size of the data set
+    alignedXyzPawCenters = []; % final size of the data set
+    alignedXyzDistPawCenters = []; % final size of the data set
     % make sure the distance threshold was met somewhere in the middle of the video otherwise the
     % data is considered junk
     if(shiftIndex > 100 && shiftIndex < 200)
