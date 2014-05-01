@@ -1,14 +1,13 @@
-function h=plot1dDistanceScores(allAlignedXyzDistPawCenters,plotFrames,superTitle,lineColor)
+function h=plot1dDistanceScores(allAlignedXyzDistPawCenters,plotFrames,superTitle)
     disp('Select the scoring CSV file...');
     [scoreFile,scorePath] = uigetfile({'.csv'});
     %scoreFile = 'Quant scoring R28 20140426.csv'; %REMOVE
     %scorePath = 'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140426a\'; %REMOVE
     scoreData = csvread(fullfile(scorePath,scoreFile));
 
-    if(~isempty(superTitle))
-        h = figure('Position', [0,0,1800,800]);
-        suptitle(superTitle);
-    end
+    if(superTitle == '')
+%     h = figure('Position', [0,0,1800,800]);
+%     suptitle(superTitle);
 
     startFrame = 2;
 %     plot1Indexes = find(ismember(scoreData(:,2),[1]));
@@ -19,7 +18,7 @@ function h=plot1dDistanceScores(allAlignedXyzDistPawCenters,plotFrames,superTitl
     plot2Indexes = ismember(scoreData(:,2),[2,3,4,7]);
     for i=1:numel(allAlignedXyzDistPawCenters)
         % nans or empties? figure this out!!!
-        if(~isempty(allAlignedXyzDistPawCenters{i}) && isa(allAlignedXyzDistPawCenters{i},'double'))
+        if(~isempty(allAlignedXyzDistPawCenters{i}) & ~isnan(allAlignedXyzDistPawCenters{i}))
             distData = allAlignedXyzDistPawCenters{i}(startFrame:plotFrames);
             switch scoreData(i,2)
                 case 1
@@ -52,18 +51,19 @@ function h=plot1dDistanceScores(allAlignedXyzDistPawCenters,plotFrames,superTitl
         grid(h(k));
         box(h(k));
         axis(h(k),[0 plotFrames 0 70]); % x y z
+        lineColor = 'blue';
         hold on;
         switch k
             case 1
                 title(h(k),'First Trial Success - 1');
                 plot1Data = allDistData(plot1Indexes,:);
-                plot(startFrame:plotFrames,mean(plot1Data),'Color',lineColor,'Marker','o');
+                plot(startFrame:plotFrames,mean(plot1Data),'Color',lineColor);
                 plot(startFrame:plotFrames,mean(plot1Data)+std(plot1Data),'Color',lineColor,'LineStyle','--');
                 plot(startFrame:plotFrames,mean(plot1Data)-std(plot1Data),'Color',lineColor,'LineStyle','--');
             case 2
                 title(h(k),'Unsuccessful - {2,3,4,7}');
                 plot2Data = allDistData(plot2Indexes,:);
-                plot(startFrame:plotFrames,mean(plot2Data),'Color',lineColor,'Marker','o');
+                plot(startFrame:plotFrames,mean(plot2Data),'Color',lineColor);
                 plot(startFrame:plotFrames,mean(plot2Data)+std(plot2Data),'Color',lineColor,'LineStyle','--');
                 plot(startFrame:plotFrames,mean(plot2Data)-std(plot2Data),'Color',lineColor,'LineStyle','--');
         end
