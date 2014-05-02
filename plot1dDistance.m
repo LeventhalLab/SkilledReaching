@@ -9,7 +9,7 @@ function h=plot1dDistance(allAlignedXyzDistPawCenters,plotFrames)
     for i=1:numel(allAlignedXyzDistPawCenters)
         alignedXyzDistPawCenters = allAlignedXyzDistPawCenters{i};
         % [] (empty) means that data wasn't ran for a video, this can be used to filter bad data
-        if(~isnan(alignedXyzDistPawCenters))
+        if(size(alignedXyzDistPawCenters,2) > 5)
             hold on;
             %colormapline(1:numel(alignedXyzDistPawCenters),smoothn((alignedXyzDistPawCenters),10,'robust'),[]);
             colormapline(startFrame:plotFrames,smoothn((alignedXyzDistPawCenters(startFrame:plotFrames)),10,'robust'),[]);

@@ -9,7 +9,7 @@ function h=plot3dDistance(allAlignedXyzPawCenters,plotFrames)
     startFrame = 10;
     for i=1:numel(allAlignedXyzPawCenters)
         alignedXyzPawCenters = allAlignedXyzPawCenters{i};
-        if(~isnan(alignedXyzPawCenters))
+        if(size(alignedXyzPawCenters,1) > 5)
             xfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,1),4);
             yfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,2),4);
             zfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,3),4);
