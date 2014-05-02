@@ -1,16 +1,15 @@
-function h=plot1dDistanceScores(allAlignedXyzDistPawCenters,plotFrames,superTitle,lineColor)
-    disp('Select the scoring CSV file...');
-    [scoreFile,scorePath] = uigetfile({'.csv'});
-    %scoreFile = 'Quant scoring R28 20140426.csv'; %REMOVE
-    %scorePath = 'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140426a\'; %REMOVE
-    scoreData = csvread(fullfile(scorePath,scoreFile));
-
+function [h1,h2]=plot1dDistanceScores(folderPath,plotFrames,superTitle,lineColor,diffn)
+    scoreLookup = dir(fullfile(folderPath,'*.csv'));
+    scoreData = csvread(fullfile(folderPath,scoreLookup(1).name));
+    matLookup = dir(fullfile(folderPath,'_xyzData','*.mat'));
+    load(fullfile(folderPath,'_xyzData',matLookup(1).name));
+    
     if(~isempty(superTitle))
         h = figure('Position', [0,0,1800,800]);
         suptitle(superTitle);
     end
 
-    startFrame = 2;
+    startFrame = 1;
 %     plot1Indexes = find(ismember(scoreData(:,2),[1]));
 %     plot2Indexes = find(ismember(scoreData(:,2),[2,3,4,7]));
 %     plot1Cells = allAlignedXyzDistPawCenters(plot1Indexes);
@@ -18,8 +17,7 @@ function h=plot1dDistanceScores(allAlignedXyzDistPawCenters,plotFrames,superTitl
     plot1Indexes = ismember(scoreData(:,2),1);
     plot2Indexes = ismember(scoreData(:,2),[2,3,4,7]);
     for i=1:numel(allAlignedXyzDistPawCenters)
-        % nans or empties? figure this out!!!
-        if(~isempty(allAlignedXyzDistPawCenters{i}) && isa(allAlignedXyzDistPawCenters{i},'double'))
+        if(size(allAlignedXyzDistPawCenters{i},2) > 1)
             distData = allAlignedXyzDistPawCenters{i}(startFrame:plotFrames);
             switch scoreData(i,2)
                 case 1
@@ -36,6 +34,7 @@ function h=plot1dDistanceScores(allAlignedXyzDistPawCenters,plotFrames,superTitl
             hold on;
         else
             disp(['skipped session: ',num2str(i)]);
+            % use indexes as a flag to skip over bad sessions
             plot1Indexes(i) = 0;
             plot2Indexes(i) = 0;
         end
@@ -46,26 +45,47 @@ function h=plot1dDistanceScores(allAlignedXyzDistPawCenters,plotFrames,superTitl
         %view(h(k),[37.5,30]); % az,el
         %view(h(k),azel); % az,el
         xlabel(h(k),'frames');
-        ylabel(h(k),'distance (mm)');
         %zlabel(h(k),'z');
         %legend on;
         grid(h(k));
         box(h(k));
-        axis(h(k),[0 plotFrames 0 70]); % x y z
+        switch diffn
+            case 0
+                axis(h(k),[0 plotFrames 0 70]); % x y z
+                ylabel(h(k),'distance (mm)');
+            case 1
+                axis(h(k),[0 (plotFrames-diffn) -5 3]); % x y z
+                ylabel(h(k),'d/t');
+            otherwise
+                axis(h(k),[0 (plotFrames-diffn) -0.25 .5]); % x y z
+                ylabel(h(k),'d/t');
+        end
         hold on;
+        
         switch k
             case 1
                 title(h(k),'First Trial Success - 1');
-                plot1Data = allDistData(plot1Indexes,:);
-                plot(startFrame:plotFrames,mean(plot1Data),'Color',lineColor,'Marker','o');
-                plot(startFrame:plotFrames,mean(plot1Data)+std(plot1Data),'Color',lineColor,'LineStyle','--');
-                plot(startFrame:plotFrames,mean(plot1Data)-std(plot1Data),'Color',lineColor,'LineStyle','--');
+                h1 = plotLine(allDistData(plot1Indexes,:),startFrame,plotFrames,lineColor,diffn);
             case 2
                 title(h(k),'Unsuccessful - {2,3,4,7}');
-                plot2Data = allDistData(plot2Indexes,:);
-                plot(startFrame:plotFrames,mean(plot2Data),'Color',lineColor,'Marker','o');
-                plot(startFrame:plotFrames,mean(plot2Data)+std(plot2Data),'Color',lineColor,'LineStyle','--');
-                plot(startFrame:plotFrames,mean(plot2Data)-std(plot2Data),'Color',lineColor,'LineStyle','--');
+                h2 = plotLine(allDistData(plot2Indexes,:),startFrame,plotFrames,lineColor,diffn);
         end
     end
+end
+
+% simply allows zeros to be pass into the diff function
+function data=ezDiff(data,diffn)
+    if(diffn > 0)
+        data = diff(data,diffn,2);
+    end
+end
+
+function h=plotLine(plotData,startFrame,plotFrames,lineColor,diffn)
+    plotData = ezDiff(plotData,diffn);
+    dataMean = mean(plotData);
+    dataStd = std(plotData);
+    
+    h = plot(startFrame:(plotFrames-diffn),dataMean,'Color',lineColor,'Marker','o','MarkerSize',5);
+    %plot(startFrame:(plotFrames-diffn),dataMean+dataStd,'Color',lineColor,'LineStyle','--');
+    %plot(startFrame:(plotFrames-diffn),dataMean-dataStd,'Color',lineColor,'LineStyle','--');
 end
