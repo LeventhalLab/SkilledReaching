@@ -8,6 +8,6 @@ function [video,im]=readVideo(frameNumber)
         figure;
         imshow(im);
     else
-        im = read(video,1);
+        im = read(video,frameNumber);
     end
 end

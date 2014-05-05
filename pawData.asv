@@ -19,6 +19,8 @@ function [pawCenter,pawHull] = pawData(im,hsvBounds)
 
     % find "center of gravity"
     bwmask = bwdist(~mask);
+    figure;
+imshow(bwmask);
     [maxGravityValue,~] = max(bwmask(:));
 
     % make sure there is actually a reliable "center"
@@ -42,17 +44,15 @@ function [pawCenter,pawHull] = pawData(im,hsvBounds)
             end
         end
         networkMask = im2bw(rgb2gray(networkMask));
-        % this is mainly so the inserted lines
-        networkMask = imdilate(networkMask,strel('disk',2));
+        figure;
+imshow(networkMask|mask);
+        %networkMask = imdilate(networkMask,strel('disk',2));
 
-        % find convex hull which encapsulates the max gravity area
-        props = regionprops(networkMask|mask,'ConvexHull','PixelList');
-        for i=1:size(props,1)
-            memberInfo = ismember(pawCenter,props(i).PixelList);
-            if(memberInfo(1)&&memberInfo(2) == 1)
-                pawHull = cleanHull(props(i).ConvexHull);
-            end
-        end
+        % find convex hull which encapsulates the maz gravity area
+        props = regionprops(networkMask|mask,'Area','ConvexHull');
+        [maxArea,maxIndex] = max([props.Area]);
+        pawHull = props(maxIndex).ConvexHull;
+        pawHull = cleanHull(pawHull);
     else
         pawCenter = NaN(1,2);
         pawHull = NaN(1,2);

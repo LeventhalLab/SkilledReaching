@@ -37,21 +37,22 @@ function h=getHsvBounds(step,h)
     end
     
     xvalues = 0:.01:1;
-    plotColor = [0 .6 .6];
     if(~exist('h','var'))
-        h = figure('Position', [0,0,800,800]);
+        h = figure('Position', [0,0,500,800]);
     end
+    figure(h);
+    subplot(3,1,1);
+    hist(allh,xvalues);
+    set(gca,'xlim',[0 1])
+    title('Hue');
     
-    data = {allh,alls,allv};
-    titles = {'Hue','Saturation','Value'};
-    for i=1:3
-        figure(h);
-        subplot(3,1,i);
-        hold on;
-        set(gca,'xlim',[0 1]);
-        hist(data{i},xvalues);
-        title(titles{i});
-        hsub = findobj(gca,'Type','patch');
-        set(hsub,'FaceColor',plotColor,'EdgeColor','w');
-    end
+    subplot(3,1,2);
+    hist(alls,xvalues);
+    set(gca,'xlim',[0 1])
+    title('Saturation');
+    
+    subplot(3,1,3);
+    hist(allv,xvalues);
+    set(gca,'xlim',[0 1])
+    title('Value');
 end

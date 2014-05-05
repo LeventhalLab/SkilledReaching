@@ -86,6 +86,6 @@ function h=plotLine(plotData,startFrame,plotFrames,lineColor,diffn)
     dataStd = std(plotData);
     
     h = plot(startFrame:(plotFrames-diffn),dataMean,'Color',lineColor,'Marker','o','MarkerSize',5);
-    %plot(startFrame:(plotFrames-diffn),dataMean+dataStd,'Color',lineColor,'LineStyle','--');
-    %plot(startFrame:(plotFrames-diffn),dataMean-dataStd,'Color',lineColor,'LineStyle','--');
+    plot(startFrame:(plotFrames-diffn),dataMean+dataStd,'Color',lineColor,'LineStyle','--');
+    plot(startFrame:(plotFrames-diffn),dataMean-dataStd,'Color',lineColor,'LineStyle','--');
 end
