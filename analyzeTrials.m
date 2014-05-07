@@ -2,7 +2,7 @@
 
 % This function requires that a video has already been cropped and pawData has already been saved
 % into the trials folder for each of 3 viewing angles
-function analyzeTrials(frameRate,pxToMm,pelletCoords)
+function analyzeTrials(pxToMm,pelletCoords)
     workingDirectory = uigetdir;
     workingDirectoryParts = strsplit(workingDirectory,filesep);
     trialName = workingDirectoryParts{end};

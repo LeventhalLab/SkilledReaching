@@ -3,9 +3,14 @@ function runPlot()
         'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140425a',...
         'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140426a',...
         'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140427a',...
-        'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140428a'};
+        'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140428a',...
+        'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140429a',...
+        'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140501d',...
+        'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140502a',...
+%         'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140505a',...
+        };
     
-    hue = (150/360):((150/360)/(numel(folderPaths)-1)):(300/360);
+    hue = (150/360):((170/360)/(numel(folderPaths)-1)):(320/360);
     saturation = .2:(.70/(numel(folderPaths)-1)):.9;
     value = fliplr(saturation);
     plotFrames = 150;
@@ -26,12 +31,12 @@ function runPlot()
     end
     legend(hs,folderPaths);
     
-    superTitle = 'Acceleration vs. Frames';
-    for i=1:numel(folderPaths)
-        hs(i) = plot1dDistanceScores(folderPaths{i},plotFrames,superTitle,hsv2rgb([hue(i),saturation(i),value(i)]),2);
-        superTitle = '';
-    end
-    legend(hs,folderPaths);
+%     superTitle = 'Acceleration vs. Frames';
+%     for i=1:numel(folderPaths)
+%         hs(i) = plot1dDistanceScores(folderPaths{i},plotFrames,superTitle,hsv2rgb([hue(i),saturation(i),value(i)]),2);
+%         superTitle = '';
+%     end
+%     legend(hs,folderPaths);
     
     % 3d
 % %     superTitle = '3D Distance';

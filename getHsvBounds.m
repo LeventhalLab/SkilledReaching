@@ -1,4 +1,4 @@
-function h=getHsvBounds(step,h)
+function h=getHsvBounds(h)
     [videoName,videoPath] = uigetfile('*.avi');
     videoFile = fullfile(videoPath,videoName);
     video = VideoReader(videoFile);
@@ -6,9 +6,9 @@ function h=getHsvBounds(step,h)
     allh = [];
     alls = [];
     allv = [];
-
-    for i=1:step:video.NumberOfFrames
-        im = read(video,i);
+    steps = [100,250];
+    for i=1:numel(steps)
+        im = read(video,steps(i));
         figure;
         h_im = imshow(im);
         mask = createMask(imfreehand,h_im); %imrect

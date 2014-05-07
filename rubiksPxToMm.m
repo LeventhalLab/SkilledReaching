@@ -56,5 +56,6 @@ function pxToMm=rubiksPxToMm(boundNames)
         
         pxToMm.(boundNames{i}) = avgPxToMm;
         imshow(im);
+        disp('All done.');
     end
 end
