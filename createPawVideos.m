@@ -1,27 +1,23 @@
-function createPawVideos(nVideos,saveVideoAs)
-    matchScore = 2;
-    disp('Select folder...');
-    workingDirectory = uigetdir;
-    scoreLookup = dir(fullfile(workingDirectory,'*.csv'));
-    scoreData = csvread(fullfile(workingDirectory,scoreLookup(1).name));
-    successIndexes = find(scoreData(:,2)==matchScore);
-    videoIndexes = zeros(nVideos,1);
-    maxVideos = min([nVideos,numel(successIndexes)]);
+function createPawVideos(nVideos,saveVideoAs,matchScore)
+    disp('Select vidoes folder...');
+    videosDirectory = uigetdir;
+    disp('Select score file...');
+	[f,p] = uigetfile('*.csv');
+    scoreData = scoreVideoData(fullfile(p,f),videosDirectory);
+    
+    videoIndexes = find([scoreData{:,2}]==matchScore);
+    maxVideos = min([nVideos,numel(videoIndexes)]);
     % get random sample of videos
-    for i=1:maxVideos
-        videoIndexes(i) = datasample(successIndexes,1);
-        % remove so it is not double sampled
-        successIndexes = removerows(successIndexes,find(successIndexes==videoIndexes(i)));
-    end
+    randomVideoTrials = datasample(videoIndexes,maxVideos,'Replace',false)';
+
 
     newVideo = VideoWriter(saveVideoAs,'Motion JPEG AVI');
     newVideo.Quality = 100;
     newVideo.FrameRate = 20;
     open(newVideo);
     cropPixels = 100;
-    allVideos = dir(fullfile(workingDirectory,'center','*.avi'));
     for i=1:maxVideos
-        video = VideoReader(fullfile(workingDirectory,'center',allVideos(videoIndexes(i)).name));
+        video = VideoReader(scoreData{randomVideoTrials(i),3});
         if(i==1)
             figure;
             imshow(read(video,150));
@@ -31,12 +27,12 @@ function createPawVideos(nVideos,saveVideoAs)
             y = round(y);
             close;
         end
-        disp(['Writing i=',num2str(i),', trial=',num2str(videoIndexes(i))]);
-        workingDirectoryParts = strsplit(workingDirectory,filesep);
-        for j=140:200
+        disp(['Writing i=',num2str(i),', trial=',num2str(randomVideoTrials(i))]);
+        workingDirectoryParts = strsplit(videosDirectory,filesep);
+        for j=140:240
             im = read(video,j);
             im = im((y-cropPixels):(y+cropPixels),(x-cropPixels):(x+cropPixels),:);
-            trialTitle = [workingDirectoryParts{end},', v',num2str(videoIndexes(i))];
+            trialTitle = [workingDirectoryParts{end},', t',num2str(randomVideoTrials(i))];
             im = insertText(im,[1 1],trialTitle);
             writeVideo(newVideo,im);
         end

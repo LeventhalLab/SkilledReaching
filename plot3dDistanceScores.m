@@ -74,4 +74,5 @@ function h=plot3dDistanceScores(folderPath,plotFrames,superTitle,azel,lineColor)
                 plot3(plot2Avg{1},plot2Avg{2},plot2Avg{3},'Color',lineColor,'Marker','o');
         end
     end
+    h=h(1);
 end
