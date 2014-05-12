@@ -10,7 +10,6 @@ function createPawVideos(nVideos,saveVideoAs,matchScore)
     % get random sample of videos
     randomVideoTrials = datasample(videoIndexes,maxVideos,'Replace',false)';
 
-
     newVideo = VideoWriter(saveVideoAs,'Motion JPEG AVI');
     newVideo.Quality = 100;
     newVideo.FrameRate = 20;
