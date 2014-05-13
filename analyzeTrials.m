@@ -3,7 +3,7 @@
 % This function requires that a video has already been cropped and pawData has already been saved
 % into the trials folder for each of 3 viewing angles
 function analyzeTrials(pxToMm,pelletCoords)
-    workingDirectory = uigetdir;
+    workingDirectory = uigetdir('\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project');
     workingDirectoryParts = strsplit(workingDirectory,filesep);
     trialName = workingDirectoryParts{end};
     % load all the .mat trials created for each video, from each angle
@@ -67,7 +67,7 @@ end
 function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters,xyzDistPawCenters)
     % find frame index that distance crosses a minimum distance threshold
     for shiftIndex=1:numel(xyzDistPawCenters)
-        if(xyzDistPawCenters(shiftIndex) < 15) % distance threshold
+        if(xyzDistPawCenters(shiftIndex) < 30) % distance threshold
            break;
         end
     end

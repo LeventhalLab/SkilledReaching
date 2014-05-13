@@ -1,7 +1,7 @@
 function pelletCoords=getPelletCoords(boundNames)
     pelletCoords = {};
     disp('Select the session directory...');
-    workingDirectory = uigetdir;
+    workingDirectory = uigetdir('\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project');
     for i=1:size(boundNames,2)
         fieldVideos = dir(fullfile(workingDirectory,boundNames{i},'*.avi'));
         videoFile = fullfile(workingDirectory,boundNames{i},fieldVideos(randi(10)+10).name);
