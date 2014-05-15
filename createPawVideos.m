@@ -1,8 +1,8 @@
 function createPawVideos(nVideos,saveVideoAs,matchScore)
     disp('Select vidoes folder...');
-    videosDirectory = uigetdir;
+    videosDirectory = uigetdir('\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project');
     disp('Select score file...');
-	[f,p] = uigetfile('*.csv');
+	[f,p] = uigetfile({'*.csv'},'csv','\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project');
     scoreData = scoreVideoData(fullfile(p,f),videosDirectory);
     
     videoIndexes = find([scoreData{:,2}]==matchScore);
@@ -28,9 +28,13 @@ function createPawVideos(nVideos,saveVideoAs,matchScore)
         end
         disp(['Writing i=',num2str(i),', trial=',num2str(randomVideoTrials(i))]);
         workingDirectoryParts = strsplit(videosDirectory,filesep);
+        xshift = 0; %in case pixels run into edge
+        if(x-cropPixels<1)
+            xshift = abs(x-cropPixels)+1;
+        end
         for j=140:240
             im = read(video,j);
-            im = im((y-cropPixels):(y+cropPixels),(x-cropPixels):(x+cropPixels),:);
+            im = im((y-cropPixels):(y+cropPixels),(x-cropPixels+xshift):(x+cropPixels+xshift),:);
             trialTitle = [workingDirectoryParts{end},', t',num2str(randomVideoTrials(i))];
             im = insertText(im,[1 1],trialTitle);
             writeVideo(newVideo,im);
