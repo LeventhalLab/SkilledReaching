@@ -1,5 +1,6 @@
-function plotHullVelocity()
+function plotHullEccentricity()
     % 0430-crappy performance (no food restrict), 0501-files named incorrectly
+    
 % %     folderPaths = {...
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140505a\left',...
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140506a\left',...
@@ -7,6 +8,10 @@ function plotHullVelocity()
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140508a\left',...
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140509c\left',...
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140512a\left',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140513a\left',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140514a\left',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140515b\left',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140516b\left',...
 % %         };
 % %     scorePaths = {...
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140505a',...
@@ -15,7 +20,29 @@ function plotHullVelocity()
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140508a',...
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140509c',...
 % %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140512a',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140513a',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140514a',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140515b',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0029\R0029-rawdata\R0029_20140516b',...
 % %         };
+% %     xDefaults = [];
+
+
+% %     folderPaths = {...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140512a\left',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140513a\left',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140514a\left',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140515a\left',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140516a\left',...
+% %         };
+% %     scorePaths = {...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140512a',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140513a',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140514a',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140515a',...
+% %         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0027\R0027-rawdata\R0027_20140516a',...
+% %         };
+% %     xDefaults = [191,140,134,163,162];
 
 
     folderPaths = {...
@@ -32,6 +59,9 @@ function plotHullVelocity()
         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140508a\left',...
         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140509a\left',...
         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140512a\left',...
+        '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140513a\left',...
+        '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140514a\left',...
+        '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140516a\left',...
         };
     scorePaths = {...
         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140424a',...
@@ -47,35 +77,39 @@ function plotHullVelocity()
         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140508a',...
         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140509a',...
         '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140512a',...
+        '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140513a',...
+        '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140514a',...
+        '\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project\R0030\R0030-rawdata\R0030_20140516a',...
         };
+    xDefaults = [122,157,152,187,185,177,210,201,197,197,201,191,192,139,156,161];
 
     eValPeakIndexAll = NaN(100,numel(folderPaths));
+    eValPeakAll = NaN(100,numel(folderPaths));
     for f=1:numel(folderPaths)
-        if(f>3)
-            lineColor = 'magenta';
-        else
-            lineColor = 'blue';
-        end
         disp(['Scoring: ',scorePaths{f}]);
         scoreLookup = dir(fullfile(scorePaths{f},'*.csv'));
         scoreData = scoreVideoData(fullfile(scorePaths{f},scoreLookup(1).name),folderPaths{f});
         trialData = getTrialData(fullfile(folderPaths{f},'trials'));
         if(f==1)
             hevals = figure('Position',[100 100 1000 600]);
-% %             hDistance = figure('Position',[100 100 1000 600]);
-% %             hVelocity = figure('Position',[150 100 1000 600]);
-% %             hAvgDistance = figure('Position',[200 100 1000 600]);
-% %             hAvgVelocity = figure('Position',[250 100 1000 600]);
+            title('Eccentricity vs. Frames');
+% %             hevalsdiff = figure('Position',[150 100 1000 600]);
+% %             title('diff:Eccentricity vs. Frames');
         end
         % open one video to get x-value
-        videos = dir(fullfile(folderPaths{f},'*.avi'));
-        video = VideoReader(fullfile(folderPaths{f},videos(10).name));
-        im = read(video,100);
-        disp('Select front-outside of box, where paw extends out of...');
-        h_im = figure;
-        imshow(im);
-        [x,y] = ginput;
-        close;
+        if(numel(xDefaults)<f)
+            videos = dir(fullfile(folderPaths{f},'*.avi'));
+            video = VideoReader(fullfile(folderPaths{f},videos(10).name));
+            im = read(video,100);
+            disp('Select front-outside of box, where paw extends out of...');
+            h_im = figure;
+            imshow(im);
+            [x,y] = ginput;
+            disp(['f:',num2str(f),' x:',num2str(x)]);
+            close;
+        else
+            x = xDefaults(f);
+        end
         xValsAll = NaN(size(trialData,1),450); %for averaging
         for i=1:size(trialData,1)
             indexSwitch = 0;
@@ -106,22 +140,14 @@ function plotHullVelocity()
                 end
                 hold on;
                 figure(hevals);
-                plot(smoothn(eVals(1:50),1),'Color',getColor(f,numel(folderPaths)));
-% %                 figure(hDistance);
-% %                 plot(smoothn(xVals(1:50),1,'robust'),'Color',getColor(f,numel(folderPaths)));
+                plot(smoothn(eVals(1:50),2),'Color',getColor(f,numel(folderPaths)));
 % %                 hold on;
-% %                 figure(hVelocity);
-% %                 plot(diff(smoothn(xVals(1:50),1,'robust')),'Color',getColor(f,numel(folderPaths)));
-% %                 xValsSmooth = smoothn(xVals,4,'robust');
-% %                 if(indexCount==1)
-% %                     xValsAvg = xValsSmooth;
-% %                 else
-% %                     xValsAvg = mean([xVals xValsSmooth],2);
-% %                 end
-% %                 xValsAll(i,:) = xValsSmooth';\
+% %                 figure(hevalsdiff);
+% %                 plot(smoothn(diff(smoothn(eVals(1:50),2)),1),'Color',getColor(f,numel(folderPaths)));
 
                 [maxValue,maxIndex] = max(eVals(1:50));
                 eValPeakIndexAll(i,f) = maxIndex;
+                eValPeakAll(i,f) = maxValue;
             end
         end
 % %         hold on;
@@ -149,9 +175,28 @@ function plotHullVelocity()
         e(1,i) = std(eValPeakIndexAll(nonNanIndexes,i));
     end
     figure;
+    %set(gca,'xtick',1:numel(folderPaths));
+    errorbar(y,e);
+    hold on;
+    plot(m,'Color','r');
+    hold on;
+    title('Max Mean Eccentricity Frame vs. Session');
+    
+    y = NaN(1,numel(folderPaths));
+    m = NaN(1,numel(folderPaths));
+    e = NaN(1,numel(folderPaths));
+    for i=1:numel(folderPaths)
+        nonNanIndexes = ~isnan(eValPeakAll(:,i));
+        y(1,i) = mean(eValPeakAll(nonNanIndexes,i));
+        m(1,i) = median(eValPeakAll(nonNanIndexes,i));
+        e(1,i) = std(eValPeakAll(nonNanIndexes,i));
+    end
+    figure;
     %plot(eValPeaks);
     %set(gca,'xtick',1:numel(folderPaths));
     errorbar(y,e);
     hold on;
     plot(m,'Color','r');
+    hold on;
+    title('Max Mean Eccentricity vs. Session');
 end
