@@ -1,3 +1,5 @@
+% Evaluates the eccentricity (width/height) of the paw hull during reaches.
+
 function plotHullEccentricity()
     % 0430-crappy performance (no food restrict), 0501-files named incorrectly
     
@@ -83,6 +85,8 @@ function plotHullEccentricity()
         };
     xDefaults = [122,157,152,187,185,177,210,201,197,197,201,191,192,139,156,161];
 
+    % these variables are used to store both the index (aka. frame) that the peak eccentricity
+    % occurs at, as well as the value of that peak
     eValPeakIndexAll = NaN(100,numel(folderPaths));
     eValPeakAll = NaN(100,numel(folderPaths));
     for f=1:numel(folderPaths)
@@ -112,13 +116,12 @@ function plotHullEccentricity()
         end
         xValsAll = NaN(size(trialData,1),450); %for averaging
         for i=1:size(trialData,1)
-            indexSwitch = 0;
+            indexSwitch = 0; % on/off
             indexCount = 1;
-            eValPeak = 0;
             if(scoreData{i,2} == 1) %if success
                 load(trialData{i,2});
-                xVals = NaN(size(pawHulls,2),1);
-                eVals = NaN(size(pawHulls,2),1);
+                xVals = NaN(size(pawHulls,2),1); % the x-coordinate values
+                eVals = NaN(size(pawHulls,2),1); % the eccentricity values
                 for j=1:size(pawHulls,2) %loop through all frames
 %                     disp(['j: ',num2str(j)]);
                     if(size(pawHulls{j},1)>2) %not NaNs
