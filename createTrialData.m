@@ -1,6 +1,6 @@
 % pixelBounds is a struct with 3 fields, hsvBounds is an array
 function createTrialData(pixelBounds,hsvBounds)
-    workingDirectory = uigetdir;
+    workingDirectory = uigetdir('\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project');
     
     % crop videos
     originalVideos = dir(fullfile(workingDirectory,'*.avi'));

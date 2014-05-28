@@ -1,3 +1,7 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
 % Controls video creation and step-by-step creation of data
 function [pawCenters,pawHulls] = createVideo(videoFile,hsvBounds)
 

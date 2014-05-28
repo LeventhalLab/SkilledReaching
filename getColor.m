@@ -1,20 +1,11 @@
-function color=getColor(number)
-    switch number
-        case 1
-            color = [1 1 0];
-        case 2
-            color = [1 0 1];
-        case 3
-            color = [0 1 1];
-        case 4
-            color = [1 0 0];
-        case 5
-            color = [0 1 0];
-        case 6
-            color = [0 0 1];
-        case 7
-            color = [1 1 1];
-        otherwise
-            color = [0 0 0]
-    end
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% Generates a unique color between shades of blue and yellow based on the ratio (iCurrent/iTotal).
+function color=getColor(iCurrent,iTotal)
+    hue = (100/360):((200/360)/(iTotal-1)):(300/360);
+    saturation = .4:(.50/(iTotal-1)):.9;
+    value = fliplr(saturation);
+    color = [hue(iCurrent),saturation(iCurrent),value(iCurrent)];
 end

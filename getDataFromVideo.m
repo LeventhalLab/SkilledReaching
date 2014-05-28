@@ -1,3 +1,8 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% A wrapper on top of the pawData function, which is at the core of all analysis
 function [pawCenters,pawHulls]=getDataFromVideo(videoFile,hsvBounds)
     video = VideoReader(videoFile);
 
