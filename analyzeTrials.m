@@ -11,6 +11,12 @@ function analyzeTrials(pxToMm,pelletCoords)
     centerTrials = dir(fullfile(workingDirectory,'center','trials','*.mat'));
     rightTrials = dir(fullfile(workingDirectory,'right','trials','*.mat'));
     
+    % Read .csv file for trial frame rate and frame when camera is
+    % triggered
+    trialInfo = getTrialInfo(workingDirectory);
+    frameRate = trialInfo.frameRate;
+    triggerFrame = trialInfo.triggerFrame;
+    
     % just make sure there are equal trial for each angle
     if(numel(leftTrials) == numel(centerTrials) && numel(leftTrials) == numel(rightTrials))
         % load the pawCenter variables from the trial files
@@ -39,7 +45,7 @@ function analyzeTrials(pxToMm,pelletCoords)
         allAlignedXyzPawCenters = cell(1,numel(leftTrials));
         allAlignedXyzDistPawCenters = cell(1,numel(leftTrials));
         for i=1:numel(leftTrials)
-            [allAlignedXyzPawCenters{i},allAlignedXyzDistPawCenters{i}] = alignData(allXyzPawCenters{i},allXyzDistPawCenters{i});
+            [allAlignedXyzPawCenters{i},allAlignedXyzDistPawCenters{i}] = alignData(allXyzPawCenters{i},allXyzDistPawCenters{i},triggerFrame);
         end
 
         % save data
@@ -47,7 +53,8 @@ function analyzeTrials(pxToMm,pelletCoords)
         save(fullfile(workingDirectory,'_xyzData',[trialName,'_xyzData']),'allAlignedXyzPawCenters','allAlignedXyzDistPawCenters',...
             'allXyzPawCenters','allXyzDistPawCenters');
         
-        plotFrames = 200;
+        plotFrames = round(200*(triggerFrame/150));
+
         % create plots and save images/figures
         h1 = plot1dDistance(allAlignedXyzDistPawCenters,plotFrames);
         saveas(h1,fullfile(workingDirectory,'_xyzData',[trialName,'_1dDistancePlot']),'png');
@@ -64,7 +71,7 @@ end
 
 % Re-aligns data based on a distance threshold, useful for aberant recordings and mis-firing of the
 % reach sensor. Also compresses the data set.
-function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters,xyzDistPawCenters)
+function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters,xyzDistPawCenters,triggerFrame)
     % find frame index that distance crosses a minimum distance threshold
     for shiftIndex=1:numel(xyzDistPawCenters)
         if(xyzDistPawCenters(shiftIndex) < 15) % distance threshold
@@ -77,11 +84,15 @@ function [alignedXyzPawCenters,alignedXyzDistPawCenters]=alignData(xyzPawCenters
     alignedXyzDistPawCenters = []; % final size of the data set
     % make sure the distance threshold was met somewhere in the middle of the video otherwise the
     % data is considered junk
-    if(shiftIndex > 100 && shiftIndex < 200)
-        alignedXyzPawCenters(1:numel(xyzDistPawCenters(shiftIndex-50:end)),:) =...
-            xyzPawCenters(shiftIndex-50:end,:);
-        alignedXyzDistPawCenters(1:numel(xyzDistPawCenters(shiftIndex-50:end))) =...
-            xyzDistPawCenters(shiftIndex-50:end);
+   
+    frameCutoff = round([100, 200].*(triggerFrame/150));
+    alignShift = round(50.*(triggerFrame/150));
+    
+    if(shiftIndex > frameCutoff(1) && shiftIndex < frameCutoff(2))
+        alignedXyzPawCenters(1:numel(xyzDistPawCenters(shiftIndex-alignShift:end)),:) =...
+            xyzPawCenters(shiftIndex-alignShift:end,:);
+        alignedXyzDistPawCenters(1:numel(xyzDistPawCenters(shiftIndex-alignShift:end))) =...
+            xyzDistPawCenters(shiftIndex-alignShift:end);
     end
 end
 

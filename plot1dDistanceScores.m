@@ -17,7 +17,7 @@ function [h1,h2]=plot1dDistanceScores(folderPath,plotFrames,superTitle,lineColor
     plot1Indexes = ismember(scoreData(:,2),1);
     plot2Indexes = ismember(scoreData(:,2),[2,3,4,7]);
     for i=1:numel(allAlignedXyzDistPawCenters)
-        if(size(allAlignedXyzDistPawCenters{i},2) > 1)
+        if(size(allAlignedXyzDistPawCenters{i},2) > 0)
             distData = allAlignedXyzDistPawCenters{i}(startFrame:plotFrames);
             switch scoreData(i,2)
                 case 1
