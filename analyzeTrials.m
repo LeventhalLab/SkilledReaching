@@ -1,4 +1,6 @@
-% >> analyzeTrials(150,0.1053,STRUCT(left,center,right))
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
 
 % This function requires that a video has already been cropped and pawData has already been saved
 % into the trials folder for each of 3 viewing angles

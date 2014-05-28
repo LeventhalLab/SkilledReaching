@@ -1,3 +1,8 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% Work in progress
 function h=plot3dDistanceScores(folderPath,plotFrames,superTitle,azel,lineColor)
     scoreLookup = dir(fullfile(folderPath,'*.csv'));
     scoreData = csvread(fullfile(folderPath,scoreLookup(1).name));

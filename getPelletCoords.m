@@ -1,3 +1,10 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% Gives the user a crosshair to mark the center of the pellet on a given video frame. Using
+% boundNames was an attempt at being fully modular, but this can likely be hard-coded for left,
+% center, and right views.
 function pelletCoords=getPelletCoords(boundNames)
     pelletCoords = {};
     disp('Select the session directory...');

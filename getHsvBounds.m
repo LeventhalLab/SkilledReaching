@@ -1,3 +1,7 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
 function h=getHsvBounds(h)
     [videoName,videoPath] = uigetfile('*.avi');
     videoFile = fullfile(videoPath,videoName);

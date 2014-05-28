@@ -1,3 +1,9 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% Crops a video into different views and places those video files into different folders, see
+% documentation for usage
 function [savedVideoPaths] = cropVideo(videoFile,pixelBounds)
     video = VideoReader(videoFile);
     [videoPath,videoName,videoExt] = fileparts(videoFile);

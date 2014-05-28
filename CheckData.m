@@ -1,3 +1,7 @@
+% Andrew Toader, actoader@umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
 function checkData(RatDir)
 % Run without any input to select a folder
 if(nargin == 0)

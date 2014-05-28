@@ -1,3 +1,7 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
 function h=plot3dDistance(allAlignedXyzPawCenters,plotFrames)
     h = figure;
     view(37.5,30);

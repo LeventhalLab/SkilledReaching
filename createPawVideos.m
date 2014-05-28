@@ -1,3 +1,8 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% Creates a video montage of several videos based on a quantified score
 function createPawVideos(nVideos,saveVideoAs,matchScore)
     disp('Select vidoes folder...');
     videosDirectory = uigetdir('\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project');
