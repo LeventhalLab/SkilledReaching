@@ -1,3 +1,8 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% deprecated
 function allDist=plotPawSpread(pawCenters,pawHulls,color)
     allDist = zeros(size(pawCenters,1),1);
     for i=1:size(pawCenters,1)

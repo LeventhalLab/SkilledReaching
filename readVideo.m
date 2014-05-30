@@ -1,3 +1,8 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% simple function to streamline reading a video, and displaying an accompanying frame image
 function [video,im]=readVideo(frameNumber)
     [videoName,videoPath] = uigetfile('*.avi');
     videoFile = fullfile(videoPath,videoName);

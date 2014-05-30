@@ -1,3 +1,8 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% analyzes the top-most hull point during the reach to see if the paw height changes over time
 function h=plotTopHull()
     folderPaths = {'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140424a\left',...
         'C:\Users\Spike Sorter\Documents\MATLAB\SkilledReaching\videos\R0030_20140425a\left',...

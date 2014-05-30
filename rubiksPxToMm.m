@@ -1,3 +1,9 @@
+% Matt Gaidica, mgaidica@med.umich.edu
+% Leventhal Lab, University of Michigan
+% --- release: beta ---
+
+% Allows the user to select squares on a Rubik's cube and provides a pixels-to-millimetere
+% conversion factor.
 function pxToMm=rubiksPxToMm(boundNames)
     knownMm = 15; % each square is 15mm
     [imageName,imagePath] = uigetfile({'.PNG'});
