@@ -10,22 +10,22 @@ function h=plot3dDistanceScores(folderPath,plotFrames,superTitle,azel,lineColor)
     load(fullfile(folderPath,'_xyzData',matLookup(1).name));
     
     if(~isempty(superTitle))
-        h = figure('Position', [0,0,1800,800]);
+        h = figure('Position', [0,0,500,500]);
         suptitle(superTitle);
     end
 
-    startFrame = 2;
+    startFrame = 50;
     plot1Avg = {};
     plot2Avg = {};
     for i=1:numel(allAlignedXyzPawCenters)
         alignedXyzPawCenters = allAlignedXyzPawCenters{i};
         if(size(alignedXyzPawCenters,1) > 5) %why are some [NaN NaN Nan] and others empty?
-            xfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,1),4);
-            xfilt = smoothn(xfilt,3,'robust');
-            yfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,2),4);
-            yfilt = smoothn(yfilt,3,'robust');
-            zfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,3),4);
-            zfilt = smoothn(zfilt,3,'robust');
+            xfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,1),2);
+            xfilt = smoothn(xfilt,2,'robust');
+            yfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,2),2);
+            yfilt = smoothn(yfilt,2,'robust');
+            zfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,3),2);
+            zfilt = smoothn(zfilt,2,'robust');
             hold on;
             
             if(ismember(scoreData(i,2),[1,2,3,4,7]))
@@ -40,6 +40,7 @@ function h=plot3dDistanceScores(folderPath,plotFrames,superTitle,azel,lineColor)
                             plot1Avg{2} = mean([yfilt,plot1Avg{2}],2);
                             plot1Avg{3} = mean([zfilt,plot1Avg{3}],2);
                         end
+                        plot3(xfilt,yfilt,zfilt,'color','b');
                     case {2,3,4,7}
                         if(isempty(plot2Avg))
                             plot2Avg{1} = xfilt;
@@ -50,12 +51,15 @@ function h=plot3dDistanceScores(folderPath,plotFrames,superTitle,azel,lineColor)
                             plot2Avg{2} = mean([yfilt,plot2Avg{2}],2);
                             plot2Avg{3} = mean([zfilt,plot2Avg{3}],2);
                         end
+                        plot3(xfilt,yfilt,zfilt,'color','r');
                 end
-                %colormapline(xfilt,yfilt,zfilt);
                 hold on;
+%                 colormapline(xfilt,yfilt,zfilt);
             end
         end
     end
+    grid on;
+    view([37.5,30]);
 
     for k=1:2
         h(k) = subplot(1,2,k);
@@ -73,10 +77,10 @@ function h=plot3dDistanceScores(folderPath,plotFrames,superTitle,azel,lineColor)
         switch k
             case 1
                 title(h(k),'First Trial Success - 1');
-                plot3(plot1Avg{1},plot1Avg{2},plot1Avg{3},'Color',lineColor,'Marker','o');
+                plot3(plot1Avg{1},plot1Avg{2},plot1Avg{3},'Color',lineColor,'lineWidth',3,'Marker','o');
             case 2
                 title(h(k),'Unsuccessful - {2,3,4,7}');
-                plot3(plot2Avg{1},plot2Avg{2},plot2Avg{3},'Color',lineColor,'Marker','o');
+                plot3(plot2Avg{1},plot2Avg{2},plot2Avg{3},'Color',lineColor,'lineWidth',3,'Marker','o');
         end
     end
     h=h(1);
