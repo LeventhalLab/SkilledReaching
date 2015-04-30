@@ -5,9 +5,9 @@
 % Creates a video montage of several videos based on a quantified score
 function createPawVideos(nVideos,saveVideoAs,matchScore)
     disp('Select vidoes folder...');
-    videosDirectory = uigetdir('\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project');
+    videosDirectory = uigetdir('/Users/mattgaidica/Documents/Data/SkilledReaching');
     disp('Select score file...');
-	[f,p] = uigetfile({'*.csv'},'csv','\\141.214.45.212\RecordingsLeventhal1\Skilled Reaching Project');
+	[f,p] = uigetfile({'*.csv'},'csv','/Users/mattgaidica/Documents/Data/SkilledReaching');
     scoreData = scoreVideoData(fullfile(p,f),videosDirectory);
     
     videoIndexes = find([scoreData{:,2}]==matchScore);
@@ -19,7 +19,7 @@ function createPawVideos(nVideos,saveVideoAs,matchScore)
     newVideo.Quality = 100;
     newVideo.FrameRate = 20;
     open(newVideo);
-    cropPixels = 100;
+    cropPixels = 200;
     for i=1:maxVideos
         video = VideoReader(scoreData{randomVideoTrials(i),3});
         if(i==1)
@@ -37,7 +37,7 @@ function createPawVideos(nVideos,saveVideoAs,matchScore)
         if(x-cropPixels<1)
             xshift = abs(x-cropPixels)+1;
         end
-        for j=140:240
+        for j=150:350
             im = read(video,j);
             im = im((y-cropPixels):(y+cropPixels),(x-cropPixels+xshift):(x+cropPixels+xshift),:);
             trialTitle = [workingDirectoryParts{end},', t',num2str(randomVideoTrials(i))];
@@ -47,5 +47,4 @@ function createPawVideos(nVideos,saveVideoAs,matchScore)
     end
     
     close(newVideo);
-    winopen(saveVideoAs);
 end
