@@ -2,24 +2,20 @@
 
 function plot3din2d(folderPathEarly,folderPathLate)
 
-startFrame = 75;
-endFrame = 175;
+startFrame = 10;
+endFrame = 100;
 
 ht = figure('position',[100 100 1100 400]);
 h = figure('position',[400 400 800 800]);
 
 hs(1) = subplot(221); title('Early Miss / Early Success'); hold on; grid on; view([22,40]);
-xlabel('x'); ylabel('y'); zlabel('z');
-% xlim([-5 30]); ylim([-80 20]); zlim([-30 30]);
+xlabel('x'); ylabel('y'); zlabel('z'); xlim([-5 30]); ylim([-80 20]); zlim([-30 30]);
 hs(2) = subplot(222); title('Late Miss / Late Success'); hold on; grid on; view([22,40]); 
-xlabel('x'); ylabel('y'); zlabel('z');
-% xlim([-5 30]); ylim([-80 20]); zlim([-30 30]);
+xlabel('x'); ylabel('y'); zlabel('z'); xlim([-5 30]); ylim([-80 20]); zlim([-30 30]);
 hs(3) = subplot(223); title('Early Miss / Late Miss'); hold on; grid on; view([22,40]); 
-xlabel('x'); ylabel('y'); zlabel('z');
-% xlim([-5 30]); ylim([-80 20]); zlim([-30 30]);
+xlabel('x'); ylabel('y'); zlabel('z'); xlim([-5 30]); ylim([-80 20]); zlim([-30 30]);
 hs(4) = subplot(224); title('Early Success / Late Success'); hold on; grid on; view([22,40]); 
-xlabel('x'); ylabel('y'); zlabel('z');
-% xlim([-5 30]); ylim([-80 20]); zlim([-30 30]);
+xlabel('x'); ylabel('y'); zlabel('z'); xlim([-5 30]); ylim([-80 20]); zlim([-30 30]);
 
 xfiltsSuccess = [];
 yfiltsSuccess = [];
@@ -49,7 +45,7 @@ for iFolder=1:2
             1,'robust');
  
             lw = 1;
-            ea = .25;
+            ea = .5;
 %             ht=figure;
 %             plot(linspace(startFrame,endFrame,endFrame-startFrame),u{3}); hold on; plot(u2{3}); hold on; plot(alignedXyzPawCenters(startFrame:plotFrames,3));
 %             close(ht);
@@ -62,29 +58,23 @@ for iFolder=1:2
                             subplot(224);
                             patchline(u{1},u{2},u{3},'edgecolor',[30/255 83/255 130/255],'linewidth',lw,'edgealpha',ea);
                             
-%                             figure(ht);
-%                             subplot(121);
-%                             hold on;
-%                             colormapline(u{1},u{2},u{3});
-%                             figure(h);
                             figure(ht);
-                            subplot(231); hold on; patchline(linspace(startFrame,endFrame,endFrame-startFrame),u{1},'edgecolor',[30/255 83/255 130/255],'edgealpha',ea);
-                            xlim([startFrame endFrame]); title('x');
-                            subplot(232); hold on; patchline(linspace(startFrame,endFrame,endFrame-startFrame),u{2},'edgecolor',[30/255 83/255 130/255],'edgealpha',ea);
-                            xlim([startFrame endFrame]); title('y');
-                            subplot(233); hold on; patchline(linspace(startFrame,endFrame,endFrame-startFrame),u{3},'edgecolor',[30/255 83/255 130/255],'edgealpha',ea);
-                            xlim([startFrame endFrame]); title('z');
-                            figure(h);
+                            subplot(121);
+                            colormapline(u{1},u{2},u{3});
+%                             figure(ht);
+%                             subplot(131); hold on; plot(linspace(startFrame,endFrame,endFrame-startFrame),u{1},'color',[30/255 83/255 130/255]); xlim([startFrame endFrame]); title('x');
+%                             subplot(132); hold on; plot(linspace(startFrame,endFrame,endFrame-startFrame),u{2},'color',[30/255 83/255 130/255]); xlim([startFrame endFrame]); title('y');
+%                             subplot(133); hold on; plot(linspace(startFrame,endFrame,endFrame-startFrame),u{3},'color',[30/255 83/255 130/255]); xlim([startFrame endFrame]); title('z');
+%                             figure(h);
                         else
                             subplot(222);
                             patchline(u{1},u{2},u{3},'edgecolor',[30/255 83/255 255/255],'linewidth',lw,'edgealpha',ea);
                             subplot(224);
                             patchline(u{1},u{2},u{3},'edgecolor',[30/255 83/255 255/255],'linewidth',lw,'edgealpha',ea);
-
 %                             figure(ht);
-%                             subplot(122);
-%                             hold on;
-%                             colormapline(u{1},u{2},u{3});
+%                             subplot(131); hold on; plot(linspace(startFrame,endFrame,endFrame-startFrame),u{1},'color',[30/255 83/255 255/255]); xlim([startFrame endFrame]); title('x');
+%                             subplot(132); hold on; plot(linspace(startFrame,endFrame,endFrame-startFrame),u{2},'color',[30/255 83/255 255/255]); xlim([startFrame endFrame]); title('y');
+%                             subplot(133); hold on; plot(linspace(startFrame,endFrame,endFrame-startFrame),u{3},'color',[30/255 83/255 255/255]); xlim([startFrame endFrame]); title('z');
 %                             figure(h);
                         end
                         xfiltsSuccess = [xfiltsSuccess;u{1}'];
@@ -96,36 +86,11 @@ for iFolder=1:2
                             patchline(u{1},u{2},u{3},'edgecolor',[159/255 30/255 30/255],'linewidth',lw,'edgealpha',ea);
                             subplot(223);
                             patchline(u{1},u{2},u{3},'edgecolor',[159/255 30/255 30/255],'linewidth',lw,'edgealpha',ea);
-                            
-                            figure(ht);
-                            subplot(234); hold on; patchline(linspace(startFrame,endFrame,endFrame-startFrame),u{1},'edgecolor',[159/255 30/255 30/255],'edgealpha',ea);
-                            xlim([startFrame endFrame]); title('x');
-                            subplot(235); hold on; patchline(linspace(startFrame,endFrame,endFrame-startFrame),u{2},'edgecolor',[159/255 30/255 30/255],'edgealpha',ea);
-                            xlim([startFrame endFrame]); title('y');
-                            subplot(236); hold on; patchline(linspace(startFrame,endFrame,endFrame-startFrame),u{3},'edgecolor',[159/255 30/255 30/255],'edgealpha',ea);
-                            xlim([startFrame endFrame]); title('z');
-                            figure(h);
-
-%                             figure(ht);
-%                             subplot(121);
-%                             title('Early');
-%                             grid on;
-%                             hold on;
-%                             colormapline(u{1},u{2},u{3});
-%                             figure(h);
                         else
                             subplot(222);
                             patchline(u{1},u{2},u{3},'edgecolor',[251/255 30/255 30/255],'linewidth',lw,'edgealpha',ea);
                             subplot(223);
                             patchline(u{1},u{2},u{3},'edgecolor',[251/255 30/255 30/255],'linewidth',lw,'edgealpha',ea);
-                            
-%                             figure(ht);
-%                             subplot(122);
-%                             title('Late');
-%                             grid on;
-%                             hold on;
-%                             colormapline(u{1},u{2},u{3});
-%                             figure(h);
                         end
                         xfiltsMiss = [xfiltsMiss;u{1}'];
                         yfiltsMiss = [yfiltsMiss;u{2}'];
