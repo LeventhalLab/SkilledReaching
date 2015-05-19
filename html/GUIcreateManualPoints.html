@@ -1,0 +1,994 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Create Position Data for Joints of Rat's Paw to Determine Fine Motor Movement</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-05-15"><meta name="DC.source" content="GUIcreateManualPoints.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Create Position Data for Joints of Rat's Paw to Determine Fine Motor Movement</h1><!--introduction--><p>This function creates a guided user interface (GUI) that instructs the user in placing markers on the various joints of a rat's paw. It proceeds through the 40 frames following the start frame (see GUIcreateManualPoints_OpeningFcn), according to the interval set by the variable Interval (default setting is 10 frames, so 5 frames are shown in total when including the start frame). The GUI can be edited as needed by opening the .fig file in GUIDE. The format for calling the function is as follows:</p><pre>                output = GUIcreateManualPoints(RatData,i,j,StartFrame)</pre><p>where...</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Input</a></li><li><a href="#2">Output</a></li><li><a href="#5">Opening Function</a></li><li><a href="#8">Output Function</a></li><li><a href="#11">Irrelevant functions (with respect to user and GUI output)</a></li><li><a href="#14">Function executed upon pressing Begin button</a></li><li><a href="#17">More irrelevant functions (with respect to user and GUI output)</a></li></ul></div><h2>Input<a name="1"></a></h2><div><ol><li>RatData: Structure created by createManualPawData.m with fields titled           Date Folders -- All the folders within a rat's raw data folder, one for every day of experimentation           Video Files -- A structure containing information about all the .avi files in a given date folder           Date -- The date for a given date folder, written out in mm/dd/yy format</li><li>i: Indicates which date folder in RatData contains video to be analyzed (same as i in createManualPawData.m)</li><li>j: Indicates which video file in date folder will be analyzed (same as j in createManualPawData.m)</li></ol></div><h2>Output<a name="2"></a></h2><div><ol><li>AllFramesMarkerLocData: Cell array containing a # of structures equal to the number of frames analyzed (default = 5). Each structure contained in AllFramesMarkerLocData contains 3 substructures corresponding to the three views used to place markers (Left, Center, Right). Each of those substructures contains 5 tables corresponding to the different categories of markers placed (pellet center, paw center, metacarpal phalanges- proximal phalanges joint, proximal phalanges-middle phalanges joint, middle phalanges-distal phalanges joint). Finally, each of these tables in turn contains coordinates, either simply one pair (in the case of pellet center and paw center) or four pairs corresponding to the four digits of the rat's paw (Index, Middle, Ring, Pinky; in that order).</li></ol></div><p>Other Outputs to Base Workspace (but not the actual output of function)</p><div><ol><li>LastMarkedMarkerData: Temporarily keeps track of the markers completed for a given region of a frame thus far. Resets when a frame region is completed. If function is completed correctly, it should match the data contained in the structure for the right region of the end frame.</li></ol></div><div><ol><li>LastMarkedFrameData: Temporarily keeps track of all the markers completed for a given frame thus far; resets when frame is completed. If the function is completed correctly, it should match the data contained in the final cell of the output (i.e. the data for the end frame).</li></ol></div><div><ol><li>CumFrameData: Temporarily keeps track of all the markers for all the frames completed thus far; ends when function ends. Thus, CumFrameData should look exactly like the output if the function is completed correctly.</li></ol></div><pre class="codeinput"><span class="keyword">function</span> varargout = GUIcreateManualPoints(varargin)
+</pre><pre class="codeinput"><span class="comment">% GUICREATEMANUALPOINTS MATLAB code for GUIcreateManualPoints.fig</span>
+<span class="comment">%      GUICREATEMANUALPOINTS, by itself, creates a new GUICREATEMANUALPOINTS or raises the existing</span>
+<span class="comment">%      singleton*.</span>
+<span class="comment">%</span>
+<span class="comment">%      H = GUICREATEMANUALPOINTS returns the handle to a new GUICREATEMANUALPOINTS or the handle to</span>
+<span class="comment">%      the existing singleton*.</span>
+<span class="comment">%</span>
+<span class="comment">%      GUICREATEMANUALPOINTS('CALLBACK',hObject,eventData,handles,...) calls the local</span>
+<span class="comment">%      function named CALLBACK in GUICREATEMANUALPOINTS.M with the given input arguments.</span>
+<span class="comment">%</span>
+<span class="comment">%      GUICREATEMANUALPOINTS('Property','Value',...) creates a new GUICREATEMANUALPOINTS or raises the</span>
+<span class="comment">%      existing singleton*.  Starting from the left, property value pairs are</span>
+<span class="comment">%      applied to the GUI before GUIcreateManualPoints_OpeningFcn gets called.  An</span>
+<span class="comment">%      unrecognized property name or invalid value makes property application</span>
+<span class="comment">%      stop.  All inputs are passed to GUIcreateManualPoints_OpeningFcn via varargin.</span>
+<span class="comment">%</span>
+<span class="comment">%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one</span>
+<span class="comment">%      instance to run (singleton)".</span>
+<span class="comment">%</span>
+<span class="comment">% See also: GUIDE, GUIDATA, GUIHANDLES</span>
+
+<span class="comment">% Edit the above text to modify the response to help GUIcreateManualPoints</span>
+
+<span class="comment">% Last Modified by GUIDE v2.5 14-May-2015 14:50:54</span>
+
+<span class="comment">% Begin initialization code - DO NOT EDIT</span>
+gui_Singleton = 1;
+gui_State = struct(<span class="string">'gui_Name'</span>,       mfilename, <span class="keyword">...</span>
+    <span class="string">'gui_Singleton'</span>,  gui_Singleton, <span class="keyword">...</span>
+    <span class="string">'gui_OpeningFcn'</span>, @GUIcreateManualPoints_OpeningFcn, <span class="keyword">...</span>
+    <span class="string">'gui_OutputFcn'</span>,  @GUIcreateManualPoints_OutputFcn, <span class="keyword">...</span>
+    <span class="string">'gui_LayoutFcn'</span>,  [] , <span class="keyword">...</span>
+    <span class="string">'gui_Callback'</span>,   []);
+<span class="keyword">if</span> nargin &amp;&amp; ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+<span class="keyword">else</span>
+    gui_mainfcn(gui_State, varargin{:});
+<span class="keyword">end</span>
+<span class="comment">% End initialization code - DO NOT EDIT</span>
+</pre><h2>Opening Function<a name="5"></a></h2><p>Establishes variables used in later parts of function.</p><pre class="codeinput"><span class="comment">% --- Executes just before GUIcreateManualPoints is made visible.</span>
+</pre><pre class="codeinput"><span class="keyword">function</span> GUIcreateManualPoints_OpeningFcn(hObject, eventdata, handles, varargin)
+</pre><pre class="codeinput"><span class="comment">% This function has no output args, see OutputFcn.</span>
+<span class="comment">% hObject    handle to figure</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+<span class="comment">% varargin   command line arguments to GUIcreateManualPoints (see % VARARGIN)</span>
+
+<span class="comment">% Convert input variables into variables in function workspace. Determine</span>
+<span class="comment">% end frame and import video to be analyzed</span>
+<span class="keyword">if</span> nargin &gt; 0;
+    RatData = varargin{1};
+    i = varargin{2};
+    j = varargin{3};
+    StartFrame = varargin{4};
+<span class="keyword">end</span>
+EndFrame = StartFrame+40;
+video = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
+
+<span class="comment">% Create cell array of marker names to be displayed one-by-one in GUI</span>
+MarkerPoints = {<span class="string">'Pellet Center'</span>,<span class="keyword">...</span>
+    <span class="string">'Center of Back Surface of Paw'</span>,<span class="keyword">...</span>
+    <span class="string">'Far Index Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Middle Index Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Near Index Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Far Middle Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Middle Middle Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Near Middle Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Far Ring Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Middle Ring Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Near Ring Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Far Pinky Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Middle Pinky Finger Joint'</span>,<span class="keyword">...</span>
+    <span class="string">'Near Pinky Finger Joint'</span>};
+
+<span class="comment">% Create cell array of anatomical marker names to be displayed with corresponding common name in GUI</span>
+MarkerPoints2 = {<span class="string">''</span>,<span class="keyword">...</span>
+    <span class="string">''</span>,<span class="keyword">...</span>
+    <span class="string">'(Metacarpal-Proximal Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Proximal-Middle Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Middle-Distal Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Metacarpal-Proximal Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Proximal-Middle Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Middle-Distal Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Metacarpal-Proximal Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Proximal-Middle Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Middle-Distal Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Metacarpal-Proximal Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Proximal-Middle Phalanges)'</span>,<span class="keyword">...</span>
+    <span class="string">'(Middle-Distal Phalanges)'</span>};
+
+<span class="comment">% Cell array that will show in GUI which view the user should be placing</span>
+<span class="comment">% markers in (left, center, or right)</span>
+FrameRegionInFocus = {<span class="string">'(Video) Left'</span>,<span class="string">'Center'</span>,<span class="string">'(Video) Right'</span>};
+
+<span class="comment">% Add these variables created to the handles structure so the other</span>
+<span class="comment">% callback functions for the various buttons and text boxes in the GUI can</span>
+<span class="comment">% access it</span>
+handles.RatData = RatData;
+handles.i = i;
+handles.j = j;
+handles.StartFrame = StartFrame;
+handles.EndFrame = EndFrame;
+handles.video = video;
+handles.MarkerPoints = MarkerPoints;
+handles.MarkerPoints2 = MarkerPoints2;
+handles.FrameRegionInFocus = FrameRegionInFocus;
+
+<span class="comment">% Choose default command line output for GUIcreateManualPoints</span>
+handles.output = hObject;
+
+<span class="comment">% Update handles structure</span>
+guidata(hObject, handles);
+<span class="comment">% UIWAIT makes GUIcreateManualPoints wait for user response (see UIRESUME)</span>
+<span class="comment">% This is part of what forces the function to wait until all the markers</span>
+<span class="comment">% for all the frames have been placed before producing the output.</span>
+uiwait(handles.figure1);
+</pre><pre class="codeoutput error">Index exceeds matrix dimensions.
+
+Error in GUIcreateManualPoints&gt;GUIcreateManualPoints_OpeningFcn (line 113)
+    RatData = varargin{1};
+
+Error in gui_mainfcn (line 220)
+    feval(gui_State.gui_OpeningFcn, gui_hFigure, [], guidata(gui_hFigure), varargin{:});
+
+Error in GUIcreateManualPoints (line 95)
+    gui_mainfcn(gui_State, varargin{:});
+</pre><h2>Output Function<a name="8"></a></h2><p>Tells function to close the GUI and export AllFramesMarkerLocData (created in begin_button_Callback function below).</p><pre class="codeinput"><span class="comment">% --- Outputs from this function are returned to the command line.</span>
+</pre><pre class="codeinput"><span class="keyword">function</span> varargout = GUIcreateManualPoints_OutputFcn(hObject, eventdata, handles)
+</pre><pre class="codeinput"><span class="comment">% varargout  cell array for returning output args (see VARARGOUT);</span>
+<span class="comment">% hObject    handle to figure</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Get default command line output from handles structure</span>
+<span class="comment">% varargout{1} = handles.output;</span>
+    close(handles.figure1);
+    varargout{1} = handles.AllFramesMarkerLocData;
+    delete(handles.figure1);
+    close <span class="string">all</span>;
+</pre><h2>Irrelevant functions (with respect to user and GUI output)<a name="11"></a></h2><p>correspond to the marker indicator text box</p><pre class="codeinput"><span class="keyword">function</span> marker_indicator_txtbox_Callback(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to marker_indicator_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Hints: get(hObject,'String') returns contents of marker_indicator_txtbox as text</span>
+<span class="comment">%        str2double(get(hObject,'String')) returns contents of marker_indicator_txtbox as a double</span>
+
+<span class="comment">% --- Executes during object creation, after setting all properties.</span>
+<span class="keyword">function</span> marker_indicator_txtbox_CreateFcn(hObject, eventdata, handles)
+</pre><pre class="codeinput"><span class="comment">% hObject    handle to marker_indicator_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+
+<span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+<span class="comment">%       See ISPC and COMPUTER.</span>
+<span class="keyword">if</span> ispc &amp;&amp; isequal(get(hObject,<span class="string">'BackgroundColor'</span>), get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>))
+    set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+<span class="keyword">end</span>
+</pre><h2>Function executed upon pressing Begin button<a name="14"></a></h2><p>Ultimately leads to creation of output, AllFramesMarkerLocData (see top)</p><pre class="codeinput"><span class="comment">% --- Executes on button press in begin_button.</span>
+</pre><pre class="codeinput"><span class="keyword">function</span> begin_button_Callback(hObject, eventdata, handles)
+</pre><pre class="codeinput"><span class="comment">% hObject    handle to begin_button (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Import relevant variables from handles structure which were created in</span>
+<span class="comment">% opening function</span>
+
+StartFrame = handles.StartFrame;
+EndFrame = handles.EndFrame;
+video = handles.video;
+MarkerPoints = handles.MarkerPoints;
+MarkerPoints2 = handles.MarkerPoints2;
+FrameRegionInFocus = handles.FrameRegionInFocus;
+
+<span class="comment">% Set interval for frame analysis after start frame. Create empty</span>
+<span class="comment">% AllFramesMarkerLocData cell array</span>
+Interval = 10;
+AllFramesMarkerLocData = cell(1,((EndFrame-StartFrame)./Interval));
+
+<span class="comment">% Create relevant substructures for AllFramesMarkerLocData.</span>
+<span class="comment">% NOTE: IF A MARKER'S LOCATION HAS NOT BEEN RECORDED, IT WILL APPEAR AS '0'</span>
+<span class="comment">% IN THE FINAL OUTPUT. IF THE USER INDICATES IT IS NOT VISIBLE IN A</span>
+<span class="comment">% PARTICULAR REGION OF THE FRAME, IT WILL APPEAR AS 'NaN' IN OUTPUT. IF IT</span>
+<span class="comment">% IS CORRECTLY RECORDED, IT'S COORDINATES WILL BE RECORDED BOTH IN THE</span>
+<span class="comment">% FINAL OUTPUT AND THE "TEMPORARY" VARIABLES EXPLAINED BELOW</span>
+
+x = 0;
+y = 0;
+PelletCenter = table(x,y);
+PawCenter = table(x,y);
+x = zeros(4,1);
+y = zeros(4,1);
+ProximalPhalanges_MiddlePhalangesHulls = table(x,y,<span class="string">'RowNames'</span>,{<span class="string">'Index'</span>,<span class="string">'Middle'</span>,<span class="string">'Ring'</span>,<span class="string">'Pinky'</span>});
+MiddlePhalanges_DistalPhalangesHulls = table(x,y,<span class="string">'RowNames'</span>,{<span class="string">'Index'</span>,<span class="string">'Middle'</span>,<span class="string">'Ring'</span>,<span class="string">'Pinky'</span>});
+Metacarpal_ProximalPhalangesHulls = table(x,y,<span class="string">'RowNames'</span>,{<span class="string">'Index'</span>,<span class="string">'Middle'</span>,<span class="string">'Ring'</span>,<span class="string">'Pinky'</span>});
+
+MarkerLocData = struct(<span class="string">'PelletCenter'</span>, PelletCenter,<span class="keyword">...</span>
+    <span class="string">'PawCenter'</span>, PawCenter,<span class="keyword">...</span>
+    <span class="string">'MetacarpalPhalanges_ProximalPhalangesHulls'</span>, Metacarpal_ProximalPhalangesHulls,<span class="keyword">...</span>
+    <span class="string">'ProximalPhalanges_MiddlePhalangesHulls'</span>, ProximalPhalanges_MiddlePhalangesHulls,<span class="keyword">...</span>
+    <span class="string">'MiddlePhalanges_DistalPhalangesHulls'</span>, MiddlePhalanges_DistalPhalangesHulls);
+<span class="comment">% The code below is what controls marker placement.</span>
+r = 1;
+<span class="comment">%  Starting with the start % frame and proceeding according to the interval</span>
+<span class="comment">%  set by Interval to the end frame ...</span>
+<span class="keyword">for</span> k = StartFrame:Interval:EndFrame;
+    <span class="comment">% the function displays the frame image...</span>
+    im = read(video,k);
+    figure;
+    imshow(im);
+    <span class="comment">% creates the Frame Data substructure (with further substructures Left,</span>
+    <span class="comment">% Center, and Right; corresponds to regions of frame under analysis)...</span>
+    FrameData = struct(<span class="string">'Left'</span>,[],<span class="string">'Center'</span>,[],<span class="string">'Right'</span>,[]);
+    <span class="keyword">for</span> q = 1:3;
+        n = 1;
+        o = 1;
+        p = 1;
+        <span class="comment">% displays in the GUI which region of the frame the user should be</span>
+        <span class="comment">% marking...</span>
+        set(handles.frame_reg_in_focus_txtbox,<span class="string">'String'</span>,FrameRegionInFocus{q})
+        <span class="comment">% proceeds through all the relevant markers...</span>
+        <span class="keyword">for</span> m = 1:length(MarkerPoints);
+            <span class="comment">% first displaying the marker's name and anatomical name in the</span>
+            <span class="comment">% GUI...</span>
+            set(handles.marker_indicator_txtbox,<span class="string">'String'</span>,MarkerPoints{m});
+            set(handles.marker_indicator2_txtbox,<span class="string">'String'</span>,MarkerPoints2{m});
+            <span class="comment">% then recording where the user clicks on the frame image to</span>
+            <span class="comment">% indicate the marker (detailed instructions in GUI)...</span>
+            [x,y] = getpts;
+            <span class="comment">% for the pellet center marker...</span>
+            <span class="keyword">if</span> m == 1;
+                <span class="comment">% if the user does not click and presses Enter (indicating</span>
+                <span class="comment">% the marker is not visible), the function inserts a NaN</span>
+                <span class="comment">% into the relevant table</span>
+                <span class="keyword">if</span> isempty(x)||isempty(y);
+                    MarkerLocData.PelletCenter(1,1) = {NaN};
+                    MarkerLocData.PelletCenter(1,2) = {NaN};
+                <span class="comment">% otherwise, function records position data and displays a</span>
+                <span class="comment">% BLUE circle temporarily where the user indicated the</span>
+                <span class="comment">% pellet center is</span>
+                <span class="keyword">else</span>
+                    MarkerLocData.PelletCenter(1,1) = num2cell(x);
+                    MarkerLocData.PelletCenter(1,2) = num2cell(y);
+                    PelletMarkerCircle = insertShape(im, <span class="string">'FilledCircle'</span>, [x,y,8], <span class="string">'Color'</span>, <span class="string">'Blue'</span>);
+                    imshow(PelletMarkerCircle);
+                <span class="keyword">end</span>
+            <span class="comment">% for the paw center marker...</span>
+            <span class="keyword">elseif</span> m == 2;
+                <span class="comment">% if the user does not click and presses Enter (indicating</span>
+                <span class="comment">% the marker is not visible), the function inserts a NaN</span>
+                <span class="comment">% into the relevant table</span>
+                <span class="keyword">if</span> isempty(x)||isempty(y);
+                    MarkerLocData.PawCenter(1,1) = {NaN};
+                    MarkerLocData.PawCenter(1,2) = {NaN};
+                <span class="comment">% otherwise, function records position data and displays a</span>
+                <span class="comment">% RED circle temporarily where the user indicated the</span>
+                <span class="comment">% paw center is</span>
+                <span class="keyword">else</span>
+                    MarkerLocData.PawCenter(1,1) = num2cell(x);
+                    MarkerLocData.PawCenter(1,2) = num2cell(y);
+                    PawCenterMarkerCircle = insertShape(im, <span class="string">'FilledCircle'</span>, [x,y,8], <span class="string">'Color'</span>, <span class="string">'Red'</span>);
+                    imshow(PawCenterMarkerCircle);
+                <span class="keyword">end</span>
+            <span class="comment">% for the metacarpal phalanges-proximal phalanges (McPh-pPh) joints...</span>
+            <span class="keyword">elseif</span> m == 3 || m == 6 || m == 9 || m == 12;
+                <span class="comment">% if the user does not click and presses Enter (indicating</span>
+                <span class="comment">% the marker is not visible), the function inserts a NaN</span>
+                <span class="comment">% into the relevant table. It then increments so on the next iteration it proceeds to</span>
+                <span class="comment">% the joint for the next finger (in the order Index,</span>
+                <span class="comment">% Middle, Ring, Pinky).</span>
+                <span class="keyword">if</span> isempty(x)||isempty(y);
+                    MarkerLocData.MetacarpalPhalanges_ProximalPhalangesHulls(n,1) = {NaN};
+                    MarkerLocData.MetacarpalPhalanges_ProximalPhalangesHulls(n,2) = {NaN};
+                    n = n+1;
+                <span class="comment">% otherwise, function records position data and displays a</span>
+                <span class="comment">% GREEN circle temporarily where the user indicated the</span>
+                <span class="comment">% McPh-pPh joint center is. It then increments so on the next iteration it proceeds to</span>
+                <span class="comment">% the joint for the next finger (in the order Index,</span>
+                <span class="comment">% Middle, Ring, Pinky).</span>
+                <span class="keyword">else</span>
+                    MarkerLocData.MetacarpalPhalanges_ProximalPhalangesHulls(n,1) = num2cell(x);
+                    MarkerLocData.MetacarpalPhalanges_ProximalPhalangesHulls(n,2) = num2cell(y);
+                    McPh_pPhCenterMarkerCircle = insertShape(im, <span class="string">'FilledCircle'</span>, [x,y,8], <span class="string">'Color'</span>, <span class="string">'Green'</span>);
+                    imshow(McPh_pPhCenterMarkerCircle);
+                    n = n+1;
+                <span class="keyword">end</span>
+            <span class="comment">% for the proximal phalanges-middle phalanges (pPh-mPh) joints...</span>
+            <span class="keyword">elseif</span> m == 4 || m == 7 || m == 10 || m == 13;
+                <span class="comment">% if the user does not click and presses Enter (indicating</span>
+                <span class="comment">% the marker is not visible), the function inserts a NaN</span>
+                <span class="comment">% into the relevant table. It then increments so on the next iteration it proceeds to</span>
+                <span class="comment">% the joint for the next finger (in the order Index,</span>
+                <span class="comment">% Middle, Ring, Pinky).</span>
+                <span class="keyword">if</span> isempty(x)||isempty(y);
+                    MarkerLocData.ProximalPhalanges_MiddlePhalangesHulls(o,1) = {NaN};
+                    MarkerLocData.ProximalPhalanges_MiddlePhalangesHulls(o,2) = {NaN};
+                    o = o+1;
+                <span class="comment">% otherwise, function records position data and displays a</span>
+                <span class="comment">% cyan circle temporarily where the user indicated the</span>
+                <span class="comment">% pPh-mPh joint center is. It then increments so on the next iteration it proceeds to</span>
+                <span class="comment">% the joint for the next finger (in the order Index,</span>
+                <span class="comment">% Middle, Ring, Pinky).</span>
+                <span class="keyword">else</span>
+                    MarkerLocData.ProximalPhalanges_MiddlePhalangesHulls(o,1) = num2cell(x);
+                    MarkerLocData.ProximalPhalanges_MiddlePhalangesHulls(o,2) = num2cell(y);
+                    pPh_mPhCenterMarkerCircle = insertShape(im, <span class="string">'FilledCircle'</span>, [x,y,8], <span class="string">'Color'</span>, <span class="string">'Cyan'</span>);
+                    imshow(pPh_mPhCenterMarkerCircle);
+                    o = o+1;
+                <span class="keyword">end</span>
+            <span class="comment">% for the middle phalanges-distal phalanges (mPh-dPh) joints...</span>
+            <span class="keyword">elseif</span> m == 5 || m == 8 || m == 11 || m == 14;
+                <span class="comment">% if the user does not click and presses Enter (indicating</span>
+                <span class="comment">% the marker is not visible), the function inserts a NaN</span>
+                <span class="comment">% into the relevant table. It then increments so on the next iteration it proceeds to</span>
+                <span class="comment">% the joint for the next finger (in the order Index,</span>
+                <span class="comment">% Middle, Ring, Pinky).</span>
+                <span class="keyword">if</span> isempty(x)||isempty(y);
+                    MarkerLocData.MiddlePhalanges_DistalPhalangesHulls(p,1) = {NaN};
+                    MarkerLocData.MiddlePhalanges_DistalPhalangesHulls(p,2) = {NaN};
+                    p = p+1;
+                <span class="comment">% otherwise, function records position data and displays a</span>
+                <span class="comment">% magenta circle temporarily where the user indicated the</span>
+                <span class="comment">% mPh-dPh joint center is. It then increments so on the next iteration it proceeds to</span>
+                <span class="comment">% the joint for the next finger (in the order Index,</span>
+                <span class="comment">% Middle, Ring, Pinky).</span>
+                <span class="keyword">else</span>
+                    MarkerLocData.MiddlePhalanges_DistalPhalangesHulls(p,1) = num2cell(x);
+                    MarkerLocData.MiddlePhalanges_DistalPhalangesHulls(p,2) = num2cell(y);
+                    mPh_dPhCenterMarkerCircle = insertShape(im, <span class="string">'FilledCircle'</span>, [x,y,8], <span class="string">'Color'</span>, <span class="string">'Magenta'</span>);
+                    imshow(mPh_dPhCenterMarkerCircle);
+                    p = p+1;
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
+            <span class="comment">% the last marked marker position data is exported to the base</span>
+            <span class="comment">% workspace in the structure LastMarkedMarkerData, which builds</span>
+            <span class="comment">% until it is filled for a given frame region, then resets</span>
+            assignin(<span class="string">'base'</span>,<span class="string">'LastMarkedMarkerLocData'</span>, MarkerLocData);
+        <span class="keyword">end</span>
+        <span class="comment">% the frame region marker data is put in the appropriate structure</span>
+        <span class="keyword">if</span> q == 1;
+            FrameData.Left = MarkerLocData;
+        <span class="keyword">elseif</span> q == 2;
+            FrameData.Center = MarkerLocData;
+        <span class="keyword">elseif</span> q == 3;
+            FrameData.Right = MarkerLocData;
+        <span class="keyword">end</span>
+        <span class="comment">% All the markers for a given frame region for a given frame are exported to the base</span>
+        <span class="comment">% workspace in the structure LastMarkedFrameData, which resets when</span>
+        <span class="comment">% a frame is completed.</span>
+        assignin(<span class="string">'base'</span>,<span class="string">'LastMarkedFrameData'</span>, FrameData);
+    <span class="keyword">end</span>
+    <span class="comment">% the total frame data for all regions is put into the output structure</span>
+    <span class="comment">% AllFramesMarkerLocData</span>
+    AllFramesMarkerLocData{r} = FrameData;
+    <span class="comment">% After a frame is done, all of its data is exported to the base</span>
+    <span class="comment">% workspace in the structure CumFrameData, which builds until all</span>
+    <span class="comment">% frames are completed. So, ideally, when the program is completed,</span>
+    <span class="comment">% CumFrameData should look exactly like the output</span>
+    <span class="comment">% AllFramesMarkerLocData. If it is ended prematurely, it saves up to</span>
+    <span class="comment">% the last completed frame.</span>
+    assignin(<span class="string">'base'</span>,<span class="string">'CumFrameData'</span>,AllFramesMarkerLocData);
+    r = r+1;
+    handles.k = k;
+    <span class="comment">% output (AllFramesMarkerLocData) updated in handles structure with</span>
+    <span class="comment">% every frame completion</span>
+    handles.AllFramesMarkerLocData = AllFramesMarkerLocData;
+    guidata(hObject, handles);
+    close;
+<span class="keyword">end</span>
+<span class="comment">% Once all frames are completed, proceed to output function by allowing the</span>
+<span class="comment">% GUI to resume</span>
+uiresume(handles.figure1);
+</pre><h2>More irrelevant functions (with respect to user and GUI output)<a name="17"></a></h2><pre class="codeinput"><span class="comment">% --- Executes during object creation, after setting all properties.</span>
+</pre><pre class="codeinput"><span class="keyword">function</span> frame_display_CreateFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to frame_display (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+
+<span class="comment">% Hint: place code in OpeningFcn to populate frame_display</span>
+
+
+
+<span class="keyword">function</span> frame_reg_in_focus_txtbox_Callback(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to frame_reg_in_focus_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Hints: get(hObject,'String') returns contents of frame_reg_in_focus_txtbox as text</span>
+<span class="comment">%        str2double(get(hObject,'String')) returns contents of frame_reg_in_focus_txtbox as a double</span>
+
+
+<span class="comment">% --- Executes during object creation, after setting all properties.</span>
+<span class="keyword">function</span> frame_reg_in_focus_txtbox_CreateFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to frame_reg_in_focus_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+
+<span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+<span class="comment">%       See ISPC and COMPUTER.</span>
+<span class="keyword">if</span> ispc &amp;&amp; isequal(get(hObject,<span class="string">'BackgroundColor'</span>), get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>))
+    set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+<span class="keyword">end</span>
+
+
+<span class="keyword">function</span> marker_indicator2_txtbox_Callback(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to marker_indicator2_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Hints: get(hObject,'String') returns contents of marker_indicator2_txtbox as text</span>
+<span class="comment">%        str2double(get(hObject,'String')) returns contents of marker_indicator2_txtbox as a double</span>
+
+
+<span class="comment">% --- Executes during object creation, after setting all properties.</span>
+<span class="keyword">function</span> marker_indicator2_txtbox_CreateFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to marker_indicator2_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+
+<span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+<span class="comment">%       See ISPC and COMPUTER.</span>
+<span class="keyword">if</span> ispc &amp;&amp; isequal(get(hObject,<span class="string">'BackgroundColor'</span>), get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>))
+    set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+<span class="keyword">end</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Create Position Data for Joints of Rat's Paw to Determine Fine Motor Movement
+% This function creates a guided user interface (GUI) that instructs the
+% user in placing markers on the various joints of a rat's paw. It proceeds
+% through the 40 frames following the start frame (see GUIcreateManualPoints_OpeningFcn),
+% according to the interval set by the variable Interval (default setting
+% is 10 frames, so 5 frames are shown in total when including the start
+% frame). The GUI can be edited as needed by opening the .fig file in
+% GUIDE.
+% The format for calling the function is as follows:
+%
+%                  output = GUIcreateManualPoints(RatData,i,j,StartFrame)
+%
+% where...
+%% Input
+% # RatData: Structure created by createManualPawData.m with fields titled 
+%           Date Folders REPLACE_WITH_DASH_DASH All the folders within a rat's raw data folder, one for every day of experimentation
+%           Video Files REPLACE_WITH_DASH_DASH A structure containing information about all the .avi files in a given date folder
+%           Date REPLACE_WITH_DASH_DASH The date for a given date folder, written out in mm/dd/yy format
+% # i: Indicates which date folder in RatData contains video to be analyzed (same as i in createManualPawData.m)
+% # j: Indicates which video file in date folder will be analyzed (same as j in createManualPawData.m)
+%% Output
+% # AllFramesMarkerLocData: Cell array containing a # of structures equal
+% to the number of frames analyzed (default = 5). Each structure contained
+% in AllFramesMarkerLocData contains 3 substructures corresponding to the
+% three views used to place markers (Left, Center, Right). Each of those 
+% substructures contains 5 tables corresponding to the different categories
+% of markers placed (pellet center, paw center, metacarpal phalanges-
+% proximal phalanges joint, proximal phalanges-middle phalanges joint,
+% middle phalanges-distal phalanges joint). Finally, each of these tables
+% in turn contains coordinates, either simply one pair (in the case of
+% pellet center and paw center) or four pairs corresponding to the four
+% digits of the rat's paw (Index, Middle, Ring, Pinky; in that order).
+%
+% Other Outputs to Base Workspace (but not the actual output of function)
+%
+% # LastMarkedMarkerData: Temporarily keeps track of the markers completed for a given
+% region of a frame thus far. Resets when a frame region is completed. If
+% function is completed correctly, it should match the data contained in
+% the structure for the right region of the end frame.
+%
+% # LastMarkedFrameData: Temporarily keeps track of all the markers
+% completed for a given frame thus far; resets when frame is completed. If 
+% the function is completed correctly, it should match the data contained 
+% in the final cell of the output (i.e.
+% the data for the end frame).
+%
+% # CumFrameData: Temporarily keeps track of all the markers for all the
+% frames completed thus far; ends when function ends. Thus, CumFrameData
+% should look exactly like the output if the function is completed
+% correctly.
+            
+%%
+
+function varargout = GUIcreateManualPoints(varargin)
+% GUICREATEMANUALPOINTS MATLAB code for GUIcreateManualPoints.fig
+%      GUICREATEMANUALPOINTS, by itself, creates a new GUICREATEMANUALPOINTS or raises the existing
+%      singleton*.
+%
+%      H = GUICREATEMANUALPOINTS returns the handle to a new GUICREATEMANUALPOINTS or the handle to
+%      the existing singleton*.
+%
+%      GUICREATEMANUALPOINTS('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in GUICREATEMANUALPOINTS.M with the given input arguments.
+%
+%      GUICREATEMANUALPOINTS('Property','Value',...) creates a new GUICREATEMANUALPOINTS or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before GUIcreateManualPoints_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to GUIcreateManualPoints_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
+
+% Edit the above text to modify the response to help GUIcreateManualPoints
+
+% Last Modified by GUIDE v2.5 14-May-2015 14:50:54
+
+% Begin initialization code - DO NOT EDIT
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @GUIcreateManualPoints_OpeningFcn, ...
+    'gui_OutputFcn',  @GUIcreateManualPoints_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+%% Opening Function
+% Establishes variables used in later parts of function.
+
+% REPLACE_WITH_DASH_DASH- Executes just before GUIcreateManualPoints is made visible.
+function GUIcreateManualPoints_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to GUIcreateManualPoints (see % VARARGIN)
+
+% Convert input variables into variables in function workspace. Determine
+% end frame and import video to be analyzed
+if nargin > 0;                                               
+    RatData = varargin{1};
+    i = varargin{2};
+    j = varargin{3};
+    StartFrame = varargin{4};
+end
+EndFrame = StartFrame+40;
+video = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
+
+% Create cell array of marker names to be displayed one-by-one in GUI
+MarkerPoints = {'Pellet Center',...
+    'Center of Back Surface of Paw',...
+    'Far Index Finger Joint',...
+    'Middle Index Finger Joint',...
+    'Near Index Finger Joint',...
+    'Far Middle Finger Joint',...
+    'Middle Middle Finger Joint',...
+    'Near Middle Finger Joint',...
+    'Far Ring Finger Joint',...
+    'Middle Ring Finger Joint',...
+    'Near Ring Finger Joint',...
+    'Far Pinky Finger Joint',...
+    'Middle Pinky Finger Joint',...
+    'Near Pinky Finger Joint'};
+
+% Create cell array of anatomical marker names to be displayed with corresponding common name in GUI 
+MarkerPoints2 = {'',...
+    '',...
+    '(Metacarpal-Proximal Phalanges)',...
+    '(Proximal-Middle Phalanges)',...
+    '(Middle-Distal Phalanges)',...
+    '(Metacarpal-Proximal Phalanges)',...
+    '(Proximal-Middle Phalanges)',...
+    '(Middle-Distal Phalanges)',...
+    '(Metacarpal-Proximal Phalanges)',...
+    '(Proximal-Middle Phalanges)',...
+    '(Middle-Distal Phalanges)',...
+    '(Metacarpal-Proximal Phalanges)',...
+    '(Proximal-Middle Phalanges)',...
+    '(Middle-Distal Phalanges)'};
+
+% Cell array that will show in GUI which view the user should be placing
+% markers in (left, center, or right)
+FrameRegionInFocus = {'(Video) Left','Center','(Video) Right'};
+
+% Add these variables created to the handles structure so the other
+% callback functions for the various buttons and text boxes in the GUI can
+% access it
+handles.RatData = RatData;
+handles.i = i;
+handles.j = j;
+handles.StartFrame = StartFrame;
+handles.EndFrame = EndFrame;
+handles.video = video;
+handles.MarkerPoints = MarkerPoints;
+handles.MarkerPoints2 = MarkerPoints2;
+handles.FrameRegionInFocus = FrameRegionInFocus;
+
+% Choose default command line output for GUIcreateManualPoints
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+% UIWAIT makes GUIcreateManualPoints wait for user response (see UIRESUME)
+% This is part of what forces the function to wait until all the markers
+% for all the frames have been placed before producing the output.
+uiwait(handles.figure1);
+
+%% Output Function
+% Tells function to close the GUI and export AllFramesMarkerLocData
+% (created in begin_button_Callback function below). 
+
+% REPLACE_WITH_DASH_DASH- Outputs from this function are returned to the command line.
+function varargout = GUIcreateManualPoints_OutputFcn(hObject, eventdata, handles)
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+% varargout{1} = handles.output;
+    close(handles.figure1);
+    varargout{1} = handles.AllFramesMarkerLocData;
+    delete(handles.figure1);
+    close all;
+
+%% Irrelevant functions (with respect to user and GUI output)
+% correspond to the marker indicator text box
+
+function marker_indicator_txtbox_Callback(hObject, eventdata, handles)
+% hObject    handle to marker_indicator_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of marker_indicator_txtbox as text
+%        str2double(get(hObject,'String')) returns contents of marker_indicator_txtbox as a double
+
+% REPLACE_WITH_DASH_DASH- Executes during object creation, after setting all properties.
+function marker_indicator_txtbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to marker_indicator_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+%% Function executed upon pressing Begin button
+% Ultimately leads to creation of output, AllFramesMarkerLocData (see top)
+
+% REPLACE_WITH_DASH_DASH- Executes on button press in begin_button.
+function begin_button_Callback(hObject, eventdata, handles)
+% hObject    handle to begin_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Import relevant variables from handles structure which were created in
+% opening function
+
+StartFrame = handles.StartFrame;
+EndFrame = handles.EndFrame;
+video = handles.video;
+MarkerPoints = handles.MarkerPoints;
+MarkerPoints2 = handles.MarkerPoints2;
+FrameRegionInFocus = handles.FrameRegionInFocus;
+
+% Set interval for frame analysis after start frame. Create empty
+% AllFramesMarkerLocData cell array
+Interval = 10;
+AllFramesMarkerLocData = cell(1,((EndFrame-StartFrame)./Interval));
+
+% Create relevant substructures for AllFramesMarkerLocData.
+% NOTE: IF A MARKER'S LOCATION HAS NOT BEEN RECORDED, IT WILL APPEAR AS '0'
+% IN THE FINAL OUTPUT. IF THE USER INDICATES IT IS NOT VISIBLE IN A 
+% PARTICULAR REGION OF THE FRAME, IT WILL APPEAR AS 'NaN' IN OUTPUT. IF IT
+% IS CORRECTLY RECORDED, IT'S COORDINATES WILL BE RECORDED BOTH IN THE
+% FINAL OUTPUT AND THE "TEMPORARY" VARIABLES EXPLAINED BELOW
+
+x = 0;
+y = 0;
+PelletCenter = table(x,y);
+PawCenter = table(x,y);
+x = zeros(4,1);
+y = zeros(4,1);
+ProximalPhalanges_MiddlePhalangesHulls = table(x,y,'RowNames',{'Index','Middle','Ring','Pinky'});
+MiddlePhalanges_DistalPhalangesHulls = table(x,y,'RowNames',{'Index','Middle','Ring','Pinky'});
+Metacarpal_ProximalPhalangesHulls = table(x,y,'RowNames',{'Index','Middle','Ring','Pinky'});
+
+MarkerLocData = struct('PelletCenter', PelletCenter,...
+    'PawCenter', PawCenter,...
+    'MetacarpalPhalanges_ProximalPhalangesHulls', Metacarpal_ProximalPhalangesHulls,...
+    'ProximalPhalanges_MiddlePhalangesHulls', ProximalPhalanges_MiddlePhalangesHulls,...
+    'MiddlePhalanges_DistalPhalangesHulls', MiddlePhalanges_DistalPhalangesHulls);
+% The code below is what controls marker placement. 
+r = 1;
+%  Starting with the start % frame and proceeding according to the interval
+%  set by Interval to the end frame ...
+for k = StartFrame:Interval:EndFrame;
+    % the function displays the frame image...
+    im = read(video,k);
+    figure;
+    imshow(im);
+    % creates the Frame Data substructure (with further substructures Left,
+    % Center, and Right; corresponds to regions of frame under analysis)...
+    FrameData = struct('Left',[],'Center',[],'Right',[]);
+    for q = 1:3;
+        n = 1; 
+        o = 1; 
+        p = 1;
+        % displays in the GUI which region of the frame the user should be
+        % marking...
+        set(handles.frame_reg_in_focus_txtbox,'String',FrameRegionInFocus{q})       
+        % proceeds through all the relevant markers...
+        for m = 1:length(MarkerPoints);
+            % first displaying the marker's name and anatomical name in the
+            % GUI...
+            set(handles.marker_indicator_txtbox,'String',MarkerPoints{m});
+            set(handles.marker_indicator2_txtbox,'String',MarkerPoints2{m});
+            % then recording where the user clicks on the frame image to
+            % indicate the marker (detailed instructions in GUI)...
+            [x,y] = getpts;
+            % for the pellet center marker...
+            if m == 1;
+                % if the user does not click and presses Enter (indicating
+                % the marker is not visible), the function inserts a NaN
+                % into the relevant table
+                if isempty(x)||isempty(y);
+                    MarkerLocData.PelletCenter(1,1) = {NaN};
+                    MarkerLocData.PelletCenter(1,2) = {NaN};                    
+                % otherwise, function records position data and displays a
+                % BLUE circle temporarily where the user indicated the
+                % pellet center is
+                else
+                    MarkerLocData.PelletCenter(1,1) = num2cell(x);
+                    MarkerLocData.PelletCenter(1,2) = num2cell(y);
+                    PelletMarkerCircle = insertShape(im, 'FilledCircle', [x,y,8], 'Color', 'Blue');
+                    imshow(PelletMarkerCircle);
+                end
+            % for the paw center marker...    
+            elseif m == 2;
+                % if the user does not click and presses Enter (indicating
+                % the marker is not visible), the function inserts a NaN
+                % into the relevant table
+                if isempty(x)||isempty(y);
+                    MarkerLocData.PawCenter(1,1) = {NaN};
+                    MarkerLocData.PawCenter(1,2) = {NaN};
+                % otherwise, function records position data and displays a
+                % RED circle temporarily where the user indicated the
+                % paw center is
+                else
+                    MarkerLocData.PawCenter(1,1) = num2cell(x);
+                    MarkerLocData.PawCenter(1,2) = num2cell(y);
+                    PawCenterMarkerCircle = insertShape(im, 'FilledCircle', [x,y,8], 'Color', 'Red');
+                    imshow(PawCenterMarkerCircle);
+                end
+            % for the metacarpal phalanges-proximal phalanges (McPh-pPh) joints...    
+            elseif m == 3 || m == 6 || m == 9 || m == 12;
+                % if the user does not click and presses Enter (indicating
+                % the marker is not visible), the function inserts a NaN
+                % into the relevant table. It then increments so on the next iteration it proceeds to
+                % the joint for the next finger (in the order Index,
+                % Middle, Ring, Pinky).
+                if isempty(x)||isempty(y);
+                    MarkerLocData.MetacarpalPhalanges_ProximalPhalangesHulls(n,1) = {NaN};
+                    MarkerLocData.MetacarpalPhalanges_ProximalPhalangesHulls(n,2) = {NaN};
+                    n = n+1;
+                % otherwise, function records position data and displays a
+                % GREEN circle temporarily where the user indicated the
+                % McPh-pPh joint center is. It then increments so on the next iteration it proceeds to
+                % the joint for the next finger (in the order Index,
+                % Middle, Ring, Pinky). 
+                else
+                    MarkerLocData.MetacarpalPhalanges_ProximalPhalangesHulls(n,1) = num2cell(x);
+                    MarkerLocData.MetacarpalPhalanges_ProximalPhalangesHulls(n,2) = num2cell(y);
+                    McPh_pPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [x,y,8], 'Color', 'Green');
+                    imshow(McPh_pPhCenterMarkerCircle);
+                    n = n+1;
+                end
+            % for the proximal phalanges-middle phalanges (pPh-mPh) joints...                   
+            elseif m == 4 || m == 7 || m == 10 || m == 13;
+                % if the user does not click and presses Enter (indicating
+                % the marker is not visible), the function inserts a NaN
+                % into the relevant table. It then increments so on the next iteration it proceeds to
+                % the joint for the next finger (in the order Index,
+                % Middle, Ring, Pinky).
+                if isempty(x)||isempty(y);
+                    MarkerLocData.ProximalPhalanges_MiddlePhalangesHulls(o,1) = {NaN};
+                    MarkerLocData.ProximalPhalanges_MiddlePhalangesHulls(o,2) = {NaN};
+                    o = o+1;
+                % otherwise, function records position data and displays a
+                % cyan circle temporarily where the user indicated the
+                % pPh-mPh joint center is. It then increments so on the next iteration it proceeds to
+                % the joint for the next finger (in the order Index,
+                % Middle, Ring, Pinky). 
+                else
+                    MarkerLocData.ProximalPhalanges_MiddlePhalangesHulls(o,1) = num2cell(x);
+                    MarkerLocData.ProximalPhalanges_MiddlePhalangesHulls(o,2) = num2cell(y);
+                    pPh_mPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [x,y,8], 'Color', 'Cyan');
+                    imshow(pPh_mPhCenterMarkerCircle);
+                    o = o+1;
+                end
+            % for the middle phalanges-distal phalanges (mPh-dPh) joints...    
+            elseif m == 5 || m == 8 || m == 11 || m == 14;
+                % if the user does not click and presses Enter (indicating
+                % the marker is not visible), the function inserts a NaN
+                % into the relevant table. It then increments so on the next iteration it proceeds to
+                % the joint for the next finger (in the order Index,
+                % Middle, Ring, Pinky).
+                if isempty(x)||isempty(y);
+                    MarkerLocData.MiddlePhalanges_DistalPhalangesHulls(p,1) = {NaN};
+                    MarkerLocData.MiddlePhalanges_DistalPhalangesHulls(p,2) = {NaN};
+                    p = p+1;
+                % otherwise, function records position data and displays a
+                % magenta circle temporarily where the user indicated the
+                % mPh-dPh joint center is. It then increments so on the next iteration it proceeds to
+                % the joint for the next finger (in the order Index,
+                % Middle, Ring, Pinky).
+                else
+                    MarkerLocData.MiddlePhalanges_DistalPhalangesHulls(p,1) = num2cell(x);
+                    MarkerLocData.MiddlePhalanges_DistalPhalangesHulls(p,2) = num2cell(y);
+                    mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [x,y,8], 'Color', 'Magenta');
+                    imshow(mPh_dPhCenterMarkerCircle);
+                    p = p+1;
+                end                
+            end
+            % the last marked marker position data is exported to the base
+            % workspace in the structure LastMarkedMarkerData, which builds
+            % until it is filled for a given frame region, then resets
+            assignin('base','LastMarkedMarkerLocData', MarkerLocData);
+        end
+        % the frame region marker data is put in the appropriate structure 
+        if q == 1;
+            FrameData.Left = MarkerLocData;
+        elseif q == 2;
+            FrameData.Center = MarkerLocData;
+        elseif q == 3;
+            FrameData.Right = MarkerLocData;
+        end
+        % All the markers for a given frame region for a given frame are exported to the base
+        % workspace in the structure LastMarkedFrameData, which resets when
+        % a frame is completed. 
+        assignin('base','LastMarkedFrameData', FrameData);
+    end
+    % the total frame data for all regions is put into the output structure
+    % AllFramesMarkerLocData
+    AllFramesMarkerLocData{r} = FrameData;
+    % After a frame is done, all of its data is exported to the base
+    % workspace in the structure CumFrameData, which builds until all
+    % frames are completed. So, ideally, when the program is completed,
+    % CumFrameData should look exactly like the output
+    % AllFramesMarkerLocData. If it is ended prematurely, it saves up to
+    % the last completed frame. 
+    assignin('base','CumFrameData',AllFramesMarkerLocData);
+    r = r+1;
+    handles.k = k;
+    % output (AllFramesMarkerLocData) updated in handles structure with
+    % every frame completion
+    handles.AllFramesMarkerLocData = AllFramesMarkerLocData;
+    guidata(hObject, handles);
+    close;    
+end
+% Once all frames are completed, proceed to output function by allowing the
+% GUI to resume
+uiresume(handles.figure1);
+
+%% More irrelevant functions (with respect to user and GUI output)
+
+% REPLACE_WITH_DASH_DASH- Executes during object creation, after setting all properties.
+function frame_display_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to frame_display (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: place code in OpeningFcn to populate frame_display
+
+
+
+function frame_reg_in_focus_txtbox_Callback(hObject, eventdata, handles)
+% hObject    handle to frame_reg_in_focus_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of frame_reg_in_focus_txtbox as text
+%        str2double(get(hObject,'String')) returns contents of frame_reg_in_focus_txtbox as a double
+
+
+% REPLACE_WITH_DASH_DASH- Executes during object creation, after setting all properties.
+function frame_reg_in_focus_txtbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to frame_reg_in_focus_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function marker_indicator2_txtbox_Callback(hObject, eventdata, handles)
+% hObject    handle to marker_indicator2_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of marker_indicator2_txtbox as text
+%        str2double(get(hObject,'String')) returns contents of marker_indicator2_txtbox as a double
+
+
+% REPLACE_WITH_DASH_DASH- Executes during object creation, after setting all properties.
+function marker_indicator2_txtbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to marker_indicator2_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+##### SOURCE END #####
+--></body></html>
