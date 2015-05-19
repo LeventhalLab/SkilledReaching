@@ -1,7 +1,9 @@
-function logData = readLogData(directory)
-dirs=dir(fullfile(directory,'*.log'));
-fname= dirs(1).name;
-%
+function logData = readLogData(directory,fname)
+% Why were the two lines below here? This function is passed a filename, not
+% directory... looks like a hack.
+% dirs=dir(fullfile(directory,'*.log'));
+% fname= dirs(1).name;
+
 % usage: logData = readLogData( fname )
 %
 % INPUTS:
