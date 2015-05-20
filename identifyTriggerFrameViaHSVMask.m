@@ -5,5 +5,13 @@ for i = 1:x.numberOfFrames;
     im = read(x,i);    
     [BW,maskedRGBImage] = createMaskR0027051314001(im);
     if side == 'right';
-        sum(BW(85:115),
+        TriggerFramePotential(i) = sum(BW(85:115,524:540));
+    elseif side == 'left';
+        TriggerFramePotential(i) = sum(BW(1796:1806,527:532))
+    end
 end
+figure;
+plot(TriggerFramePotential);
+
+figure;
+imshow(maskedRGBImage)
