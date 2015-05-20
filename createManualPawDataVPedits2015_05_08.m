@@ -41,7 +41,7 @@ end
 
 for i = 1: length(RatData);
     for j = 1: length(RatData(i).VideoFiles);
-        StartFrame(i,j) = GUIcreateFrameStartVP2(RatData,i,j,RatDir,RatLookUp,RatID);        
+%         StartFrame(i,j) = GUIcreateFrameStartVP2(RatData,i,j,RatDir,RatLookUp,RatID);        
         % Load video, save video data(frames, frame rate, height, width, etc.), and play it
 %         vidObj = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
 %         vidHeight = vidObj.Height;
