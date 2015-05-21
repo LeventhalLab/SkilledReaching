@@ -35,16 +35,13 @@ for i = 1:(length(RatLookUp)-3)
      RatData(i).DateFolders = fullfile(RatDir,RatLookUp(i+3).name);  
      RatData(i).VideoFiles = dir(fullfile(RatData(i).DateFolders,'*.avi'));
      RatData(i).Date = datetime(RatData(i).DateFolders(end-8:end-1),'InputFormat','yyyyMMdd','Format','MM/dd/yy');
-     CSVfile = dir(fullfile(pathstr,[sprintf('%s',RatID) '-processed'],sprintf('%s',RatData(i).DateFolders(end-14:end)),'*.csv'))
-     CSVfile = xlsread(CSVfile(2).name);
-     StartFrames = CSVfile(:,3);
 end
 
 %% Load video file, determine start frame. Save start frames externally.
 
 for i = [27 38]; %1: length(RatData);
     for j = 1: length(RatData(i).VideoFiles);
-        cd(fullfile(pathstr,[sprintf('%s',RatID) '-processed'],sprintf('%s',RatData(i).DateFolders(end-14:end))));
+        cd(fullfile(pathstr,[sprintf('%s',RatID) '-processed'],RatData(i).DateFolders(
 %         StartFrame(i,j) = GUIcreateFrameStartVP2(RatData,i,j,RatDir,RatLookUp,RatID);        
         % Load video, save video data(frames, frame rate, height, width, etc.), and play it
 %         vidObj = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
