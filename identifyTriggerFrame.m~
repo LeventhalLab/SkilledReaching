@@ -49,11 +49,7 @@ else
 end
 
 [BG_hist, histBins] = imhist(BG_ROI);
-binLimits = zeros(1,2);
-binLimits(1) = find(abs(grayLimit(1) - histBins) == min(abs(grayLimit(1) - histBins)));
-binLimits(2) = find(abs(grayLimit(2) - histBins) == min(abs(grayLimit(2) - histBins)));
-BGsum = sum(BG_hist(binLimits(1):binLimits(2)));
-
+binLimits = 
 for iFrame = 1 : numFrames
 %     iFrame
     img = read(video, iFrame);
