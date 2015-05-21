@@ -32,12 +32,17 @@ end
 BGimg = uint8(squeeze(mean(BGframes, 1)));
 
 % identify the frames where the paw is visible over the shelf
-BG_lft = uint8(BGimg(ROI_to_find_trigger_frame(1,2):ROI_to_find_trigger_frame(1,2) + ROI_to_find_trigger_frame(1,4), ...
+if strcmpi(pawPref,'left')
+    % use the right mirror for triggering
+    BG_ROI = uint8(BGimg(ROI_to_find_trigger_frame(2,2):ROI_to_find_trigger_frame(2,2) + ROI_to_find_trigger_frame(2,4), ...
+                         ROI_to_find_trigger_frame(2,1):ROI_to_find_trigger_frame(2,1) + ROI_to_find_trigger_frame(2,3), :));
+else
+    % use the left mirror for triggering
+    BG_ROI = uint8(BGimg(ROI_to_find_trigger_frame(1,2):ROI_to_find_trigger_frame(1,2) + ROI_to_find_trigger_frame(1,4), ...
                      ROI_to_find_trigger_frame(1,1):ROI_to_find_trigger_frame(1,1) + ROI_to_find_trigger_frame(1,3), :));
-BG_rgt = uint8(BGimg(ROI_to_find_trigger_frame(2,2):ROI_to_find_trigger_frame(2,2) + ROI_to_find_trigger_frame(2,4), ...
-                     ROI_to_find_trigger_frame(2,1):ROI_to_find_trigger_frame(2,1) + ROI_to_find_trigger_frame(2,3), :));
+end
 
-mean_BG_subt_values = zeros(2,numFrames);
+
 for iFrame = 1 : numFrames
 %     iFrame
     img = read(video, iFrame);
