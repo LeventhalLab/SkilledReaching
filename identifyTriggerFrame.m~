@@ -86,15 +86,14 @@ end
 histDiff_delta = diff(histDiff);
 
 triggerFrame = find(histDiff_delta > first_diff_threshold, 1, 'first') + 1;
-peakFrame    = find(
+peakFrame    = find(histDiff(triggerFrame : triggerFrame+frames_before_max) == ...
+                    max(histDiff(triggerFrame : triggerFrame+frames_before_max)));
+peakFrame = peakFrame + triggerFrame - 1;
 
-maxDiffFrame = find(mean_BG_subt_values(mirror_idx,:) == max(mean_BG_subt_values(mirror_idx,:)));
-maxDeltaFrame = find(diffFrame_delta(maxDiffFrame-frames_before_max:maxDiffFrame) == ...
-                     max(diffFrame_delta(maxDiffFrame-frames_before_max:maxDiffFrame)));
-triggerFrame = maxDeltaFrame + (maxDiffFrame-frames_before_max);
-% now find the frame with the first significant deviation from baseline
+% plot his
 figure
-plot(mean_BG_subt_values(1,:))
+plot(histDiff)
 hold on
-plot(mean_BG_subt_values(2,:),'r')
-plot(triggerFrame, mean_BG_subt_values(mirror_idx,triggerFrame),'linestyle','none','marker','*')
+plot(histDiff_delta,'r')
+plot(triggerFrame, histDiff(triggerFrame),'linestyle','none','marker','*')
+plot(peakFrame, histDiff(peakFrame),'linestyle','none','marker','*')

@@ -1,5 +1,7 @@
 function [triggerFrame, peakFrame] = identifyTriggerFrame( video, pawPref, varargin )
 %
+% usage: [triggerFrame, peakFrame] = identifyTriggerFrame( video, pawPref, varargin )
+%
 % INPUTS:
 %   video - a VideoReader object for the relevant video
 %
@@ -12,9 +14,20 @@ function [triggerFrame, peakFrame] = identifyTriggerFrame( video, pawPref, varar
 %   grylimits - 2-element vector containing the lower and upper limits of
 %       the gray scale histogram to look for differences between the
 %       background and trigger images
+%   firstdiffthreshold - threshold above which the first difference of the
+%       time series of differences in the histogram between baseline and
+%       the current frame is considered to be a trigger
 %
 % OUTPUTS:
 %   triggerFrame - the frame at which the paw is fully through the slot
+%   peakFrame - the frame at which the paw occupies the maximum fraction of
+%       the trigger window immediately following the trigger frame
+%
+% function to determine when the paw has come through the slot for the
+% purposes of triggering data analysis. It works by converting the image to
+% grayscale, examining a small region in front of the reaching slot, and
+% looking for the first time when the grayscale histogram deviates
+% significantly from baseline. 
 
 numFrames = video.numberOfFrames;
 numBGFrames = 50;
@@ -88,12 +101,12 @@ histDiff_delta = diff(histDiff);
 triggerFrame = find(histDiff_delta > first_diff_threshold, 1, 'first') + 1;
 peakFrame    = find(histDiff(triggerFrame : triggerFrame+frames_before_max) == ...
                     max(histDiff(triggerFrame : triggerFrame+frames_before_max)));
-peakFrame = peakFrame + triggerFrame;
+peakFrame = peakFrame + triggerFrame - 1;
 
-% now find the frame with the first significant deviation from baseline
-figure
-plot(histDiff)
-hold on
-plot(histDiff_delta,'r')
-plot(triggerFrame, histDiff(triggerFrame),'linestyle','none','marker','*')
-plot(peakFrame, histDiff(peakFrame),'linestyle','none','marker','*')
+% plot histogram differences, trigger frame, peak frame
+% figure
+% plot(histDiff)
+% hold on
+% plot(histDiff_delta,'r')
+% plot(triggerFrame, histDiff(triggerFrame),'linestyle','none','marker','*')
+% plot(peakFrame, histDiff(peakFrame),'linestyle','none','marker','*')
