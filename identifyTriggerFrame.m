@@ -6,6 +6,9 @@ function triggerFrame = identifyTriggerFrame( video, pawPref, varargin )
 % VARARGs:
 %   numbgframes - number of frames to use at the beginning of the video to
 %       calculate the background
+%   trigger_roi - 2 x 4 matrix containing coordinates of the region of
+%       interest in which to look for the paw to determine the trigger 
+%       frame
 %
 % OUTPUTS:
 %   triggerFrame - the frame at which the paw is fully through the slot
@@ -39,21 +42,24 @@ if strcmpi(pawPref,'left')
 else
     % use the left mirror for triggering
     BG_ROI = uint8(BGimg(ROI_to_find_trigger_frame(1,2):ROI_to_find_trigger_frame(1,2) + ROI_to_find_trigger_frame(1,4), ...
-                     ROI_to_find_trigger_frame(1,1):ROI_to_find_trigger_frame(1,1) + ROI_to_find_trigger_frame(1,3), :));
+                         ROI_to_find_trigger_frame(1,1):ROI_to_find_trigger_frame(1,1) + ROI_to_find_trigger_frame(1,3), :));
 end
 
-
+BG_hist = 
 for iFrame = 1 : numFrames
 %     iFrame
     img = read(video, iFrame);
     
-    lft_mirror_img = img(ROI_to_find_trigger_frame(1,2):ROI_to_find_trigger_frame(1,2) + ROI_to_find_trigger_frame(1,4), ...
-                         ROI_to_find_trigger_frame(1,1):ROI_to_find_trigger_frame(1,1) + ROI_to_find_trigger_frame(1,3), :);
-    rgt_mirror_img = img(ROI_to_find_trigger_frame(2,2):ROI_to_find_trigger_frame(2,2) + ROI_to_find_trigger_frame(2,4), ...
-                         ROI_to_find_trigger_frame(2,1):ROI_to_find_trigger_frame(2,1) + ROI_to_find_trigger_frame(2,3), :);
-                
-%     lft_mirror_img = rgb2gray(lft_mirror_img);
-%     rgt_mirror_img = rgb2gray(rgt_mirror_img);
+    if strcmpi(pawPref,'left')
+        ROI_img = img(ROI_to_find_trigger_frame(2,2):ROI_to_find_trigger_frame(2,2) + ROI_to_find_trigger_frame(2,4), ...
+                      ROI_to_find_trigger_frame(2,1):ROI_to_find_trigger_frame(2,1) + ROI_to_find_trigger_frame(2,3), :);
+    else
+        ROI_img = img(ROI_to_find_trigger_frame(1,2):ROI_to_find_trigger_frame(1,2) + ROI_to_find_trigger_frame(1,4), ...
+                      ROI_to_find_trigger_frame(1,1):ROI_to_find_trigger_frame(1,1) + ROI_to_find_trigger_frame(1,3), :);
+    end
+                     
+    ROI_gry = rgb2gray(ROI_img);
+    rgt_mirror_img = rgb2gray(rgt_mirror_img);
     
     lft_mirror_BG = imabsdiff(lft_mirror_img, BG_lft);
     rgt_mirror_BG = imabsdiff(rgt_mirror_img, BG_rgt);
