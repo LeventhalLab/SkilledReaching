@@ -34,14 +34,49 @@ RatData().VideoFiles = zeros(length(RatLookUp)-3);
 for i = 1:(length(RatLookUp)-3)
      RatData(i).DateFolders = fullfile(RatDir,RatLookUp(i+3).name);  
      RatData(i).VideoFiles = dir(fullfile(RatData(i).DateFolders,'*.avi'));
-     RatData(i).Date = datetime(RatData(i).DateFolders(end-8:end-1),'InputFormat','yyyyMMdd','Format','MM/dd/yy');
+     RatData(i).Date = datetime(RatData(i).DateFolders(end-8:end-1),'InputFormat','yyyyMMdd','Format','MM/dd/yy');     
 end
 
 %% Load video file, determine start frame. Save start frames externally.
-
-for i = [27 38]; %1: length(RatData);
-    for j = 1: length(RatData(i).VideoFiles);
-        cd(fullfile(pathstr,[sprintf('%s',RatID) '-processed'],RatData(i).DateFolders(
+for i = 27:27; %[27 38]; %1: length(RatData);
+    for j = 1:1; %1:length(RatData(i).VideoFiles);        
+        CSVfile = dir(fullfile(pathstr,[sprintf('%s',RatID) '-processed'],sprintf('%s',RatData(i).DateFolders(end-14:end)),'*.csv'));
+        cd(fullfile(pathstr,[sprintf('%s',RatID) '-processed'],sprintf('%s',RatData(i).DateFolders(end-14:end))));
+        CSVfile = xlsread(CSVfile(2).name);
+        RatData(i).VideoFiles(j).ManualStartFrames = CSVfile(j,3);
+        cd('C:\Users\Administrator\Documents\GitHub\SkilledReaching');
+        video = fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name);
+        RatData(i).VideoFiles(j).Object = VideoReader(video);
+        if j == 1 && isnan(RatData(i).VideoFiles(j).ManualStartFrames) == 0;
+            pawpref = input(sprintf('Please input paw preference for video file \n%s: ',video));
+        end
+        if strcmp(CSVfile(j,4),'non-dominant paw') == 1;
+            if strcmpi(pawpref,'right') == 1;
+                pawpref = 'left';
+            elseif strcmpi(pawpref,'left') == 1;
+                pawpref = 'right';
+            end
+        end
+        AutomaticStartFrame = zeros(length(RatData(i).VideoFiles),1);
+        [AutomaticStartFrame(i,j), ~] = identifyTriggerFrame(RatData(i).VideoFiles(j).Object,pawpref);
+        RatData(i).VideoFiles(j).AutomaticStartFrame = AutomaticStartFrame(i,j);
+        while abs(RatData(i).VideoFiles(j).AutomaticStartFrame - RatData(i).VideoFiles(j).ManualStartFrames) > 5;
+            im = read(RatData(i).VideoFiles(j).Object,RatData(i).VideoFiles(j).ManualStartFrames);
+            if strcmpi(pawpref,'right') == 1; 
+            uiwait(msgbox(sprintf('There is a significant discrepancy between the automatically determined start frame (%d)\nand the manually determined start frame (%d).\nPlease draw a rectangle over the correct ROI in the following image.\nThe ROI should be located in the left mirror',...
+                RatData(i).VideoFiles(j).AutomaticStartFrame,...
+                RatData(i).VideoFiles(j).ManualStartFrames,'modal')));
+            elseif strcmpi(pawpref,'left') == 1; 
+            uiwait(msgbox(sprintf('There is a significant discrepancy between the automatically determined start frame (%d)\nand the manually determined start frame (%d).\nPlease draw a rectangle over the correct ROI in the following image.\nThe ROI should be located in the right mirror',...
+                RatData(i).VideoFiles(j).AutomaticStartFrame,...
+                RatData(i).VideoFiles(j).ManualStartFrames,'modal')));
+            end       
+        imshow(im);
+        ROI_to_find_trigger_frame(1,:) = getrect;
+        ROI_to_find_trigger_frame = round(ROI_to_find_trigger_frame);
+        [AutomaticStartFrame(i,j), ~] = identifyTriggerFrame(RatData(i).VideoFiles(j).Object,pawpref,'trigger_roi',ROI_to_find_trigger_frame);
+        RatData(i).VideoFiles(j).AutomaticStartFrame = AutomaticStartFrame(i,j);
+        end            
 %         StartFrame(i,j) = GUIcreateFrameStartVP2(RatData,i,j,RatDir,RatLookUp,RatID);        
         % Load video, save video data(frames, frame rate, height, width, etc.), and play it
 %         vidObj = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
@@ -66,7 +101,7 @@ end
 
 for i = 1:length(RatData)
     for j = 1:length(RatData(i).VideoFiles);
-        [pellet_center_x{i,j}, pellet_center_y{i,j},manual_paw_centers{i,j},mcp_hulls{i,j},mph_hulls{i,j},dph_hulls{i,j}] = createManualPointsVPedits(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name),StartFrame(i,j))
+        [pellet_center_x{i,j}, pellet_center_y{i,j},manual_paw_centers{i,j},mcp_hulls{i,j},mph_hulls{i,j},dph_hulls{i,j}] = createManualPointsVPedits(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name),StartFrame(i,j));
     end
 end
 
