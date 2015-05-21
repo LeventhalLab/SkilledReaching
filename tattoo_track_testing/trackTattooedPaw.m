@@ -28,7 +28,7 @@ BGimg = extractBGimg( video, 'numbgframes', numBGframes);
                                                   'bgimg', BGimg, ...
                                                   'trigger_roi',ROI_to_find_trigger_frame,...
                                                   'grylimits',gray_paw_limits);
-triggerFrame = 510;peakFrame = 540;   % hard code to speed up analysis
+% triggerFrame = 510;peakFrame = 540;   % hard code to speed up analysis
 
 % find a mask for the paw in the lateral, central, and right mirrors for
 % the peak frame
@@ -36,6 +36,10 @@ triggerFrame = 510;peakFrame = 540;   % hard code to speed up analysis
 im_trigger = read(video,triggerFrame);
 im_peak = read(video,peakFrame);
 
+figure
+imshow(im_trigger);
+figure
+imshow(im_peak);
 end    % end function trackTattooedPaw( video )
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
