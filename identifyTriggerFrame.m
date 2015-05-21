@@ -54,6 +54,7 @@ binLimits(1) = find(abs(grayLimit(1) - histBins) == min(abs(grayLimit(1) - histB
 binLimits(2) = find(abs(grayLimit(2) - histBins) == min(abs(grayLimit(2) - histBins)));
 BGsum = sum(BG_hist(binLimits(1):binLimits(2)));
 
+histDiff = zeros(1, numFrames);
 for iFrame = 1 : numFrames
 %     iFrame
     img = read(video, iFrame);
@@ -65,29 +66,18 @@ for iFrame = 1 : numFrames
         ROI_img = img(ROI_to_find_trigger_frame(1,2):ROI_to_find_trigger_frame(1,2) + ROI_to_find_trigger_frame(1,4), ...
                       ROI_to_find_trigger_frame(1,1):ROI_to_find_trigger_frame(1,1) + ROI_to_find_trigger_frame(1,3), :);
     end
-                     
+
     ROI_gry = rgb2gray(ROI_img);
-    ROI_hist = imhist(rgb2gray);
+    ROI_hist = imhist(ROI_gry);
     ROI_sum = sum(ROI_hist(binLimits(1):binLimits(2)));
     
-    lft_values = reshape(lft_mirror_gry, [1, numel(lft_mirror_gry)]);
-    rgt_values = reshape(rgt_mirror_gry, [1, numel(rgt_mirror_gry)]);
-    mean_BG_subt_values(1, iFrame) = mean(lft_values);
-    mean_BG_subt_values(2, iFrame) = mean(rgt_values);
-    
-end
+    histDiff(iFrame) = ROI_sum - BGsum;
 
-if strcmpi(pawPref,'left')
-    % use the right mirror for triggering
-    mirror_idx = 2;
-else
-    % use the left mirror for triggering
-    mirror_idx = 1;
 end
 
 % find frame with maximum difference between background and current frame
 % in the region of interest
-diffFrame_delta = diff(mean_BG_subt_values(mirror_idx,:));
+histDiff_delta = diff(histDiff);
 maxDiffFrame = find(mean_BG_subt_values(mirror_idx,:) == max(mean_BG_subt_values(mirror_idx,:)));
 maxDeltaFrame = find(diffFrame_delta(maxDiffFrame-frames_before_max:maxDiffFrame) == ...
                      max(diffFrame_delta(maxDiffFrame-frames_before_max:maxDiffFrame)));
