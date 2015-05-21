@@ -67,13 +67,8 @@ for iFrame = 1 : numFrames
     end
                      
     ROI_gry = rgb2gray(ROI_img);
-    rgt_mirror_img = rgb2gray(rgt_mirror_img);
-    
-    lft_mirror_BG = imabsdiff(lft_mirror_img, BG_lft);
-    rgt_mirror_BG = imabsdiff(rgt_mirror_img, BG_rgt);
-    
-	lft_mirror_gry = rgb2gray(lft_mirror_BG);
-    rgt_mirror_gry = rgb2gray(rgt_mirror_BG);
+    ROI_hist = imhist(rgb2gray);
+    ROI_sum = sum(ROI_hist(binLimits(1):binLimits(2)));
     
     lft_values = reshape(lft_mirror_gry, [1, numel(lft_mirror_gry)]);
     rgt_values = reshape(rgt_mirror_gry, [1, numel(rgt_mirror_gry)]);
