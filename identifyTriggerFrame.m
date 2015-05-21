@@ -9,6 +9,9 @@ function [triggerFrame, peakFrame] = identifyTriggerFrame( video, pawPref, varar
 %   trigger_roi - 2 x 4 matrix containing coordinates of the region of
 %       interest in which to look for the paw to determine the trigger 
 %       frame
+%   grylimits - 2-element vector containing the lower and upper limits of
+%       the gray scale histogram to look for differences between the
+%       background and trigger images
 %
 % OUTPUTS:
 %   triggerFrame - the frame at which the paw is fully through the slot
@@ -47,8 +50,8 @@ else
     BG_ROI = uint8(BGimg(ROI_to_find_trigger_frame(1,2):ROI_to_find_trigger_frame(1,2) + ROI_to_find_trigger_frame(1,4), ...
                          ROI_to_find_trigger_frame(1,1):ROI_to_find_trigger_frame(1,1) + ROI_to_find_trigger_frame(1,3), :));
 end
-
-[BG_hist, histBins] = imhist(BG_ROI);
+BG_ROI_gry = rgb2gray(BG_ROI);
+[BG_hist, histBins] = imhist(BG_ROI_gry);
 binLimits = zeros(1,2);
 binLimits(1) = find(abs(grayLimit(1) - histBins) == min(abs(grayLimit(1) - histBins)));
 binLimits(2) = find(abs(grayLimit(2) - histBins) == min(abs(grayLimit(2) - histBins)));

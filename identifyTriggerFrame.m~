@@ -9,6 +9,7 @@ function [triggerFrame, peakFrame] = identifyTriggerFrame( video, pawPref, varar
 %   trigger_roi - 2 x 4 matrix containing coordinates of the region of
 %       interest in which to look for the paw to determine the trigger 
 %       frame
+%   grylimits - 2-element vector
 %
 % OUTPUTS:
 %   triggerFrame - the frame at which the paw is fully through the slot
@@ -49,7 +50,12 @@ else
 end
 
 [BG_hist, histBins] = imhist(BG_ROI);
-binLimits = 
+binLimits = zeros(1,2);
+binLimits(1) = find(abs(grayLimit(1) - histBins) == min(abs(grayLimit(1) - histBins)));
+binLimits(2) = find(abs(grayLimit(2) - histBins) == min(abs(grayLimit(2) - histBins)));
+BGsum = sum(BG_hist(binLimits(1):binLimits(2)));
+
+histDiff = zeros(1, numFrames);
 for iFrame = 1 : numFrames
 %     iFrame
     img = read(video, iFrame);
@@ -61,34 +67,18 @@ for iFrame = 1 : numFrames
         ROI_img = img(ROI_to_find_trigger_frame(1,2):ROI_to_find_trigger_frame(1,2) + ROI_to_find_trigger_frame(1,4), ...
                       ROI_to_find_trigger_frame(1,1):ROI_to_find_trigger_frame(1,1) + ROI_to_find_trigger_frame(1,3), :);
     end
-                     
-    ROI_gry = rgb2gray(ROI_img);
-    rgt_mirror_img = rgb2gray(rgt_mirror_img);
-    
-    lft_mirror_BG = imabsdiff(lft_mirror_img, BG_lft);
-    rgt_mirror_BG = imabsdiff(rgt_mirror_img, BG_rgt);
-    
-	lft_mirror_gry = rgb2gray(lft_mirror_BG);
-    rgt_mirror_gry = rgb2gray(rgt_mirror_BG);
-    
-    lft_values = reshape(lft_mirror_gry, [1, numel(lft_mirror_gry)]);
-    rgt_values = reshape(rgt_mirror_gry, [1, numel(rgt_mirror_gry)]);
-    mean_BG_subt_values(1, iFrame) = mean(lft_values);
-    mean_BG_subt_values(2, iFrame) = mean(rgt_values);
-    
-end
 
-if strcmpi(pawPref,'left')
-    % use the right mirror for triggering
-    mirror_idx = 2;
-else
-    % use the left mirror for triggering
-    mirror_idx = 1;
+    ROI_gry = rgb2gray(ROI_img);
+    ROI_hist = imhist(ROI_gry);
+    ROI_sum = sum(ROI_hist(binLimits(1):binLimits(2)));
+    
+    histDiff(iFrame) = ROI_sum - BGsum;
+
 end
 
 % find frame with maximum difference between background and current frame
 % in the region of interest
-diffFrame_delta = diff(mean_BG_subt_values(mirror_idx,:));
+histDiff_delta = diff(histDiff);
 maxDiffFrame = find(mean_BG_subt_values(mirror_idx,:) == max(mean_BG_subt_values(mirror_idx,:)));
 maxDeltaFrame = find(diffFrame_delta(maxDiffFrame-frames_before_max:maxDiffFrame) == ...
                      max(diffFrame_delta(maxDiffFrame-frames_before_max:maxDiffFrame)));
