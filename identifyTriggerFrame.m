@@ -19,10 +19,11 @@ function [triggerFrame, peakFrame] = identifyTriggerFrame( video, pawPref, varar
 numFrames = video.numberOfFrames;
 numBGFrames = 50;
 frames_before_max = 50;
-grayLimit = [50 150];
+grayLimit = [50 150];       % intensity values to look between for differences between background and current frame
+first_diff_threshold = 50;  % minimum difference between adjacent frames
 
-ROI_to_find_trigger_frame = [  0030         0570         0120         0095
-                               1880         0550         0120         0095];
+ROI_to_find_trigger_frame = [0030         0570         0120         0095
+                             1880         0550         0120         0095];
 for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})
         case 'numbgframes',
@@ -31,6 +32,8 @@ for iarg = 1 : 2 : nargin - 2
             ROI_to_find_trigger_frame = varargin{iarg + 1};
         case 'grylimits',
             grayLimit = varargin{iarg + 1};
+        case 'firstdiffthreshold',
+            first_diff_threshold = varargin{iarg + 1};
     end
 end
 
@@ -81,13 +84,16 @@ end
 % find frame with maximum difference between background and current frame
 % in the region of interest
 histDiff_delta = diff(histDiff);
-maxDiffFrame = find(mean_BG_subt_values(mirror_idx,:) == max(mean_BG_subt_values(mirror_idx,:)));
-maxDeltaFrame = find(diffFrame_delta(maxDiffFrame-frames_before_max:maxDiffFrame) == ...
-                     max(diffFrame_delta(maxDiffFrame-frames_before_max:maxDiffFrame)));
-triggerFrame = maxDeltaFrame + (maxDiffFrame-frames_before_max);
+
+triggerFrame = find(histDiff_delta > first_diff_threshold, 1, 'first') + 1;
+peakFrame    = find(histDiff(triggerFrame : triggerFrame+frames_before_max) == ...
+                    max(histDiff(triggerFrame : triggerFrame+frames_before_max)));
+peakFrame = peakFrame + triggerFrame;
+
 % now find the frame with the first significant deviation from baseline
 figure
-plot(mean_BG_subt_values(1,:))
+plot(histDiff)
 hold on
-plot(mean_BG_subt_values(2,:),'r')
-plot(triggerFrame, mean_BG_subt_values(mirror_idx,triggerFrame),'linestyle','none','marker','*')
+plot(histDiff_delta,'r')
+plot(triggerFrame, histDiff(triggerFrame),'linestyle','none','marker','*')
+plot(peakFrame, histDiff(peakFrame),'linestyle','none','marker','*')
