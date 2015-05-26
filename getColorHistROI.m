@@ -1,5 +1,6 @@
 %dellens@umich.edu
 
+%beta
 %display color histograms of RGB images
 %imhist displays a histogram of a grayscale or binary images
 
