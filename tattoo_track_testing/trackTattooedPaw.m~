@@ -1,0 +1,62 @@
+function trackTattooedPaw( video,  rat_metadata, varargin )
+%
+% INPUTS:
+%   video - a videoReader object containing the video recorded from 
+
+
+% ALGORITHM:
+%   1) find the trigger frame
+%   2)
+
+numBGframes = 50;
+ROI_to_find_trigger_frame = [0210         0590         0050         0070
+                             1740         0560         0050         0070];
+ROI_to_mask_paw = [0090 0540 0180 0145
+                   0930 0520 0180 0200
+                   1730 0520 0180 0165];
+gray_paw_limits = [60 125];
+BGimg = [];
+
+for iarg = 1 : 2 : nargin - 2
+    switch lower(varargin{iarg})
+        case 'numbgframes',
+            numBGframes = varargin{iarg + 1};
+        case 'trigger_roi',
+            ROI_to_find_trigger_frame = varargin{iarg + 1};
+        case 'graypawlimits',
+            gray_paw_limits = varargin{iarg + 1};
+        case 'mask_roi',
+            ROI_to_mask_paw = varargin{iarg + 1};
+        case 'bgimg',
+            BGimg = varargin{iarg + 1};
+    end
+end
+
+if isempty(BGimg)
+    BGimg = extractBGimg( video, 'numbgframes', numBGframes);
+end
+
+% [triggerFrame, peakFrame]= identifyTriggerFrame( video, rat_metadata.pawPref, ...
+%                                                   'bgimg', BGimg, ...
+%                                                   'trigger_roi',ROI_to_find_trigger_frame,...
+%                                                   'grylimits',gray_paw_limits);
+triggerFrame = 511;peakFrame = 532;   % hard code to speed up analysis
+preReachFrame = triggerFrame - 25;
+% find a mask for the paw in the lateral, central, and right mirrors for
+% the peak frame
+
+im_trigger = read(video,triggerFrame);
+im_peak = read(video,peakFrame);
+im_preReach = read(video,preReachFrame);    % this image may or may not turn out to be useful
+
+imDiff = imabsdiff(im_preReach,im_peak);
+
+paw_img = maskPaw(im_peak, BGimg, ROI_to_mask_paw);
+figure
+imshow(rgb2gray(im_peak));
+figure
+imshow(im_peak);
+end    % end function trackTattooedPaw( video )
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
