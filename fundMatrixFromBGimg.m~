@@ -143,9 +143,6 @@ right_center_points(1:2,:) = center_green_beads;
 
 % I CHECKED THAT THE ORDER OF THE FEATURE MATCHING MATRICES IS CORRECT, AT
 % LEAST FOR THE BEADS UP TO THIS POINT
-
-% WORKING HERE - NEXT THING IS TO MATCH THE CHECKERBOARD POINTS
-
 lftFeatures = detectHarrisFeatures(BG_lft);
 ctrFeatures = detectHarrisFeatures(BG_ctr);
 rgtFeatures = detectHarrisFeatures(BG_rgt);

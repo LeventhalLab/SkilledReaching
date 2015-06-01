@@ -28,20 +28,48 @@ test_ratID = 44;
 rat_metadata = createMetadata(sr_summary, test_ratID);
 
 video = VideoReader(sampleVid);
+frame_h = video.Height;
+frame_w = video.Width;
 numFrames = video.numberOfFrames;
 numBGframes = 50;
 ROI_to_find_trigger_frame = [0210         0590         0050         0070
                              1740         0560         0050         0070];
-ROI_to_mask_paw = [0090 0540 0180 0145
-                   0930 0520 0180 0200
-                   1730 0520 0180 0165];
-gray_paw_limits = [60 125];
 
-trackTattooedPaw(video,rat_metadata,...
-                 'trigger_roi',ROI_to_find_trigger_frame, ...
-                 'graypawlimits',gray_paw_limits,...
-                 
-                 'numbgframes',numBGFrames);
+left_ROI_left  = 0001;ctr_ROI_left = 0930;rgt_ROI_left = 1730;
+left_ROI_top   = 0001;ctr_ROI_top  = 0001;rgt_ROI_top  = 0001;
+left_ROI_width = 0269;ctr_ROI_width = 0180;
+ROI_to_mask_paw = [left_ROI_left      left_ROI_top	  left_ROI_width            frame_h-left_ROI_top
+                   ctr_ROI_left       ctr_ROI_top 	  ctr_ROI_width             frame_h-ctr_ROI_top
+                   rgt_ROI_left       rgt_ROI_top     frame_w-rgt_ROI_left-1    frame_h-rgt_ROI_top];
+
+%WORKING HERE - NEED TO FIGURE OUT THE BOUNDARIES OF THE REGION OF INTEREST
+%FOR FINDING THE TRANSFORMATION BETWEEN THE LEFT/RIGHT MIRRORS AND THE
+%CENTER IMAGE
+left_ROI_left   = 0001;ctr_ROI_left = 280;rgt_ROI_left = 1730;
+left_ROI_top    = 0001;ctr_ROI_top  = 0001;rgt_ROI_top  = 0001;
+left_ROI_width  = 0269;ctr_ROI_width = 1400;
+left_ROI_height = 1024-left_ROI_top;
+register_ROI   = [left_ROI_left      left_ROI_top	  left_ROI_width            frame_h-left_ROI_top
+                  ctr_ROI_left       ctr_ROI_top 	  ctr_ROI_width             frame_h-ctr_ROI_top
+                  rgt_ROI_left       rgt_ROI_top     frame_w-rgt_ROI_left-1    frame_h-rgt_ROI_top];
+               
+
+
+gray_paw_limits = [60 125];
+hsvBounds_beads = [0.00, 0.15, 0.55, 1.00, 0.30, 1.00
+                   0.42, 0.15, 0.10, 0.50, 0.00, 0.80
+                   0.62, 0.15, 0.50, 1.00, 0.20, 1.00];
+               
+% BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
+
+[Fleft, Fright] = fundMatrixFromBGimg(BGimg, register_ROI, hsvBounds_beads);
+
+[paw_img,thresh_mask,mask] = trackTattooedPaw(video,rat_metadata,...
+                             'trigger_roi',ROI_to_find_trigger_frame, ...
+                             'graypawlimits',gray_paw_limits, ...
+                             'mask_roi',ROI_to_mask_paw, ...
+                             'bgimg',BGimg, ...
+                             'numbgframes',numBGFrames);
 
 
 % hsvBounds_grn = [0.3300    0.4300    0.2500    0.7500    0.2300    1];
@@ -53,9 +81,7 @@ trackTattooedPaw(video,rat_metadata,...
 % First column - center of hue values, second column - range of hue values,
 % 3rd column - lower saturation bound, 4th column - upper saturation bound,
 % 5th column - lower value bound, 6th column - upper value bound
-hsvBounds_beads = [0.00, 0.10, 0.55, 1.00, 0.30, 1.00
-                   0.42, 0.10, 0.10, 0.50, 0.20, 0.50
-                   0.62, 0.10, 0.50, 1.00, 0.20, 1.00];
+
 % the rgb boundaries for the checkerboards. first row - black squares,
 % second row - white squares. first col - min r value, second col - max r
 % values, third col - min g value, fourth col - max g value, fifth col -

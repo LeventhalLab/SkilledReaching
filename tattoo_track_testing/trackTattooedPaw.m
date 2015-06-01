@@ -1,4 +1,4 @@
-function trackTattooedPaw( video,  rat_metadata, varargin )
+function [paw_img,thresh_mask,mask] =trackTattooedPaw( video,  rat_metadata, varargin )
 %
 % INPUTS:
 %   video - a videoReader object containing the video recorded from 
@@ -8,6 +8,9 @@ function trackTattooedPaw( video,  rat_metadata, varargin )
 %   1) find the trigger frame
 %   2)
 
+
+% might be able to set the ROI automatically based on automatic detection
+% of the box edges
 numBGframes = 50;
 ROI_to_find_trigger_frame = [0210         0590         0050         0070
                              1740         0560         0050         0070];
@@ -51,7 +54,7 @@ im_preReach = read(video,preReachFrame);    % this image may or may not turn out
 
 imDiff = imabsdiff(im_preReach,im_peak);
 
-paw_img = maskPaw(im_peak, BGimg, ROI_to_mask_paw);
+[paw_img,thresh_mask,mask] = maskPaw(im_peak, BGimg, ROI_to_mask_paw);
 figure
 imshow(rgb2gray(im_peak));
 figure
