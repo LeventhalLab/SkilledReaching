@@ -145,6 +145,16 @@ right_center_points(1:2,:) = center_green_beads;
 % LEAST FOR THE BEADS UP TO THIS POINT
 
 % WORKING HERE - NEXT THING IS TO MATCH THE CHECKERBOARD POINTS
+% find the checkerboard in the left mirror
+
+% find the left checkerboard in the front view
+
+% find the right checkerboard in the front view
+
+% find the checkerboard in the right mirror
+
+
+
 
 lftFeatures = detectHarrisFeatures(BG_lft);
 ctrFeatures = detectHarrisFeatures(BG_ctr);
