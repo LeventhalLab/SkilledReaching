@@ -213,4 +213,4 @@ for i = 1:nquads
 end
 
 % plot the points and the quad
-plot(xy(:,1),xy(:,2),'r.',qx,qy,'b-')
+% plot(xy(:,1),xy(:,2),'r.',qx,qy,'b-')

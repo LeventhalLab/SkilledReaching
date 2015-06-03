@@ -1,11 +1,9 @@
-function [nn, meansep, nnidx] = nearestNeighbor(x)
+function [neighborIdx] = collectPointsWithinRadius(ctr, x, r)
 %
 % usage: 
 %
 
 diffMatrix = zeros(size(x,1)-1,size(x,2));
-nn = zeros(size(x,1),1);
-meansep = zeros(size(x,1),1);
 for ii = 1 : size(x,1)
     curPoint = x(ii,:);
     switch ii
@@ -22,7 +20,12 @@ for ii = 1 : size(x,1)
     end
     distances = sqrt(sum(diffMatrix.^2, 2));
     
-    nn(ii) = min(distances);
-    nnidx(ii) = find(
+    nndist(ii) = min(distances);
+    mindistidx = find(distances == min(distances));
+    if mindistidx < ii
+        nnidx(ii) = mindistidx;
+    else
+        nnidx(ii) = mindistidx + 1;
+    end
     meansep(ii) = mean(distances);
 end

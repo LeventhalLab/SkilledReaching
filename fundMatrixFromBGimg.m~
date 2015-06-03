@@ -186,13 +186,14 @@ numRows = size(left_center_cb,1) / pointsPerRow;
 for iRow = 1 : numRows
     startIdx = (iRow-1)*pointsPerRow + 1;
     endIdx   = iRow*pointsPerRow;
-    left_center_cb(startIdx:endIdx,:) = left_center_cb(endIdx:-1:endIdx,:);
-    right_center_cb(startIdx:endIdx,:) = right_center_cb(endIdx:-1:endIdx,:);
+    tempPts  = cb_pts(startIdx:endIdx,:);
+    [~, idx] = sort(tempPts(:,1),1);
+    tempPts = tempPts(idx,:);
+    cb_pts(startIdx:endIdx,:) = tempPts;
 end
 
-left_center_points(startMatchPoint:endMatchPoint) = left_center_cb;
-right_center_points(startMatchPoint:endMatchPoint) = right_center_cb;
-% WORKING HERE - TEST THAT THE POINT MATCHING MATRICES STILL MATCH UP
+left_center_points(startMatchPoint:endMatchPoint) = left_mirror_cb;
+right_center_points(startMatchPoint:endMatchPoint) = left_mirror_cb;
 
 
 left_center_points  = zeros(22,2); % markers to match with the left mirror in the center image
