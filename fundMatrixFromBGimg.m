@@ -176,33 +176,67 @@ right_center_cb(:,2) = right_center_cb(:,2) + register_ROI(2,2) - 1;
 % now map the points into the point-matching matrices
 num_cb_points = size(left_mirror_cb, 1);
 endMatchPoint = startMatchPoint + num_cb_points - 1;
-leftMirrorPoints(startMatchPoint:endMatchPoint) = left_mirror_cb;
-rightMirrorPoints(startMatchPoint:endMatchPoint) = right_mirror_cb;
+leftMirrorPoints(startMatchPoint:endMatchPoint,:) = left_mirror_cb;
+rightMirrorPoints(startMatchPoint:endMatchPoint,:) = right_mirror_cb;
 % note: need to flip the points left to right for the center mirror to make
 % them match up
 
-% WORKING HERE
 numRows = size(left_center_cb,1) / pointsPerRow;
 for iRow = 1 : numRows
+    iRow
     startIdx = (iRow-1)*pointsPerRow + 1;
     endIdx   = iRow*pointsPerRow;
-    left_center_cb(startIdx:endIdx,:) = left_center_cb(endIdx:-1:endIdx,:);
-    right_center_cb(startIdx:endIdx,:) = right_center_cb(endIdx:-1:endIdx,:);
+    left_center_cb(startIdx:endIdx,:) = left_center_cb(endIdx:-1:startIdx,:);
+    right_center_cb(startIdx:endIdx,:) = right_center_cb(endIdx:-1:startIdx,:);
 end
 
-left_center_points(startMatchPoint:endMatchPoint) = left_center_cb;
-right_center_points(startMatchPoint:endMatchPoint) = right_center_cb;
-% WORKING HERE - TEST THAT THE POINT MATCHING MATRICES STILL MATCH UP
+left_center_points(startMatchPoint:endMatchPoint,:) = left_center_cb;
+right_center_points(startMatchPoint:endMatchPoint,:) = right_center_cb;
+% WORKING HERE - move coordinates into sub-image components, and flip the
+% mirror images left-right
+leftMirrorPoints(:,1)    = leftMirrorPoints(:,1) - register_ROI(1,1) + 1;
+leftMirrorPoints(:,1)    = register_ROI(1,3) - leftMirrorPoints(:,1);
+rightMirrorPoints(:,1)   = rightMirrorPoints(:,1) - register_ROI(3,1) + 1;
+rightMirrorPoints(:,1)   = register_ROI(3,3) - rightMirrorPoints(:,1);
+left_center_points(:,1)  = left_center_points(:,1) - register_ROI(2,1) + 1;
+right_center_points(:,1) = right_center_points(:,1) - register_ROI(2,1) + 1;
+
+% calculate the fundamental matrices
+Fleft  = estimateFundamentalMatrix(leftMirrorPoints, left_center_points,'method','norm8point');
+Fright = estimateFundamentalMatrix(rightMirrorPoints, right_center_points,'method','norm8point');
+
+% WORKING HERE...
+% WORKING ON A CHECK TO SEE IF THE EPIPOLAR LINES CROSS THE RIGHT SPOTS
+% leftLines   = epipolarLine(Fleft, lftFrame_points);
+% righttLines = epipolarLine(Fright, rtFrame_points);
+% 
+% leftPoints  = lineToBorderPoints(leftLines, [size(ctr_calROI,1),size(ctr_calROI,2)]);
+% rightPoints = lineToBorderPoints(righttLines, [size(ctr_calROI,1),size(ctr_calROI,2)]);
+% 
+% figure(3);
+% line(leftPoints(:,[1,3])',leftPoints(:,[2,4])');
+% line(rightPoints(:,[1,3])',rightPoints(:,[2,4])');
 
 
-left_center_points  = zeros(22,2); % markers to match with the left mirror in the center image
-right_center_points = zeros(22,2); 
-% figure(5);imshow(BGimg)
-% hold on
-% plot(left_mirror_cb(:,1),left_mirror_cb(:,2),'marker','*','color','g','linestyle','none')
-% plot(right_mirror_cb(:,1),right_mirror_cb(:,2),'marker','*','color','g','linestyle','none')
-% plot(left_center_cb(:,1),left_center_cb(:,2),'marker','*','color','g','linestyle','none')
-% plot(right_center_cb(:,1),right_center_cb(:,2),'marker','*','color','g','linestyle','none')
+figure(1);imshow(fliplr(BG_lft));hold on
+plot(leftMirrorPoints(:,1),leftMirrorPoints(:,2),'color','g','linestyle','none','marker','*');
+
+figure(2);imshow(fliplr(BG_rgt));hold on
+plot(rightMirrorPoints(:,1),rightMirrorPoints(:,2),'color','r','linestyle','none','marker','*');
+
+figure(3);imshow(BG_ctr);hold on
+plot(left_center_points(:,1),left_center_points(:,2),'color','y','linestyle','none','marker','*');
+
+figure(4);imshow(BG_ctr);hold on
+plot(right_center_points(:,1),right_center_points(:,2),'color','c','linestyle','none','marker','*');
+
+
+
+hold on
+plot(leftMirrorPoints(:,1),leftMirrorPoints(:,2),'marker','*','color','g','linestyle','none')
+plot(rightMirrorPoints(:,1),rightMirrorPoints(:,2),'marker','*','color','r','linestyle','none')
+plot(left_center_points(:,1),left_center_points(:,2),'marker','*','color','y','linestyle','none')
+plot(right_center_points(:,1),right_center_points(:,2),'marker','*','color','c','linestyle','none')
 % 
 
 
@@ -215,16 +249,7 @@ rgtFeatures = detectHarrisFeatures(BG_rgt);
 % ctrFeatures = detectSURFFeatures(BG_ctr,'metricthreshold',500);
 % rgtFeatures = detectSURFFeatures(BG_rgt,'metricthreshold',500);
 
-plot(lftFeatures);
-figure(1);imshow(BG_lft);hold on
-plot(selectStrongest(lftFeatures, 30));
-% plot(lftFeatures);
-figure(2);imshow(BG_ctr);hold on
-plot(selectStrongest(ctrFeatures, 30));
-% plot(ctrFeatures);
-figure(3);imshow(BG_rgt);hold on
-plot(selectStrongest(rgtFeatures, 30));
-% plot(rgtFeatures);
+
 
 % next, find features in all 3 images
 ctrView_rubiks1_left = [778,406];
