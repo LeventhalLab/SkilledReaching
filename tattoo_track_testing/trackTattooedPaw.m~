@@ -14,6 +14,9 @@ function [digitImg_enh,palmImg,paw_img] =trackTattooedPaw( video,  rat_metadata,
 numBGframes = 50;
 ROI_to_find_trigger_frame = [0210         0590         0050         0070
                              1740         0560         0050         0070];
+ROI_to_mask_paw = [0090 0540 0180 0145
+                   0930 0520 0180 0200
+                   1730 0520 0180 0165];
 gray_paw_limits = [60 125];
 BGimg = [];
 
@@ -60,14 +63,13 @@ end
 
 % find the digits in the peakFrame, then use that as a "seed" to initiate
 % tracking of each digit and the paw itself
-digitImg_enh = decorrstretch(digitImg,'samplesubs',{pawRows,pawCols});
-digitMirrorMask = identifyMirrorDigits(digitImg_enh, rat_metadata);
+digitMirrorMask = identifyMirrorDigits(digitImg, rat_metadata);
 % find the digits in the center frame
-digitCenterMask = identifyCenterDigits(im_peak, digitMirrorMask, fundmat, register_ROI);
+digitCenterMask = identifyCenterDigits(im_peak, digitMirrorMask, fundmat, register_ROI, varargin)
 
 digit_gray = rgb2gray(digitImg);digitMask = digit_gray > 0;
 [pawRows,pawCols] = find(digit_gray);
-
+digitImg_enh = decorrstretch(digitImg,'samplesubs',{pawRows,pawCols});
 figure(1)
 imshow(digitImg_enh)
 figure(2)

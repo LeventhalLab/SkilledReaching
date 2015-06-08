@@ -1,4 +1,4 @@
-function digitMask = identifyDigits(digitImg, rat_metadata, varargin)
+function digitMask = identifyMirrorDigits(digitImg, rat_metadata, varargin)
 %
 % usage
 %
@@ -24,7 +24,7 @@ hsv_digitBounds = [0.55 0.25 0.00 0.40 0.20 0.50
                    0.25 0.10 0.40 1.00 0.40 1.00
                    0.00 0.10 0.60 1.00 0.40 1.00];
                
-for iarg = 1 : 2 : nargin - 3
+for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})
         case digitBounds,
             hsv_digitBounds = varargin{iarg + 1};
@@ -37,7 +37,7 @@ pawDorsumBlob.AreaOutputPort = true;
 pawDorsumBlob.CentroidOutputPort = true;
 pawDorsumBlob.BoundingBoxOutputPort = true;
 pawDorsumBlob.LabelMatrixOutputPort = true;
-pawBlob.MinimumBlobArea = 1000;
+pawDorsumBlob.MinimumBlobArea = 1000;
 
 digitBlob = vision.BlobAnalysis;
 digitBlob.AreaOutputPort = true;
