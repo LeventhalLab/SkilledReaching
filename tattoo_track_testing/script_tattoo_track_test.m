@@ -23,9 +23,13 @@
 sampleVid  = fullfile('/Volumes/RecordingsLeventhal3/SkilledReaching/R0044/R0044-rawdata/R0044_20150416a', 'R0044_20150416_12-11-45_034.avi');
 sr_summary = sr_ratList();
 
+minBeadArea = 0300;
+maxBeadArea = 1500;
+pointsPerRow = 4;    % for the checkerboard detection
+
 test_ratID = 44;
 % rat_idx = find(sr_summary.ratID == 44);
-rat_metadata = createMetadata(sr_summary, test_ratID);
+rat_metadata = create_sr_ratMetadata(sr_summary, test_ratID);
 
 video = VideoReader(sampleVid);
 frame_h = video.Height;
@@ -59,12 +63,28 @@ gray_paw_limits = [60 125];
 hsvBounds_beads = [0.00, 0.15, 0.55, 1.00, 0.30, 1.00
                    0.40, 0.15, 0.10, 0.50, 0.00, 0.50
                    0.62, 0.15, 0.50, 1.00, 0.20, 1.00];
+hsvBounds_paw   = [];
+% first row - red digits
+% second row - green digits
+% third row - purple digits
                
 % BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
 
-[Fleft, Fright] = fundMatrixFromBGimg(BGimg, register_ROI, hsvBounds_beads);
+% [Fleft, Fright, matchedPoints] = fundMatrixFromBGimg(BGimg, register_ROI, hsvBounds_beads, ...
+%                                                  'minbeadarea',minBeadArea, ...
+%                                                  'maxbeadarea',maxBeadArea, ...
+%                                                  'pointsperrow', pointsPerRow);
 
-[paw_img,thresh_mask,mask] = trackTattooedPaw(video,rat_metadata,...
+[Fleft, Fright] = fundMatrixFromBGimg(BGimg, register_ROI, hsvBounds_beads, ...
+                                      'minbeadarea',minBeadArea, ...
+                                      'maxbeadarea',maxBeadArea, ...
+                                      'pointsperrow', pointsPerRow);
+                                  
+% calculate epipolar lines and see if they line up correctly
+leftLines   = epipolarLine(Fleft, matchedPoints{1});
+righttLines = epipolarLine(Fright, matchedPoints{2});
+
+[paw_img,thresh_mask,mask] = trackTattooedPaw(video,rat_metadata,Fleft,Fright,register_ROI,...
                              'trigger_roi',ROI_to_find_trigger_frame, ...
                              'graypawlimits',gray_paw_limits, ...
                              'mask_roi',ROI_to_mask_paw, ...
