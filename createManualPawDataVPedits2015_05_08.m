@@ -11,13 +11,21 @@
 % first frame in which the rat's complete paw has passed the slot)
 %
 %% Output
-% * RatData: Structure array containing two fields
+% # RatData : Structure array containing the following fields
 %
-% # DateFolders: Listing of the paths of all date folders in rat's raw data
-% folder
-% # VideoFiles: Structural array containing info about all video files
+% * DateFolders: Listing of the paths of all date folders in rat's raw data folder
+% * VideoFiles: Structural array containing info about all video files
 % (.avi files) in a given date folder. Fields include name, data, bytes,
-% isdir, and datenum. Only the name data is used in this script.
+% isdir, datenum, ManualStartFrame (manually determined start frame), AutomaticTriggerFrame
+% (automatically determined trigger frame by identifyTriggerFrame function 
+% in createManualPawData script, may be removed later), AutomaticPeakFrame 
+% (automatically determined peak frame by identifyTriggerFrame function 
+% in createManualPawData script, may be removed later), Agree (0 if manual
+% start frame and automatic peak frame do not agree, 1 if 
+% they do), ROI_Used, Paw_Preference (encodes previous manually determined
+% information about paw used in video, dominant/marked or non-dominant/unmarked)
+% * Accuracy: Average accuracy of identifyTriggerFrame function for a given
+% session, may be removed later
 
 %% Open rat's raw data folder
 clc;
@@ -64,7 +72,8 @@ i = 27;
     cd('C:\Users\Administrator\Documents\GitHub\SkilledReaching');
     meta_ROI_to_find_trigger_frame = [0030         0570         0120         0095
         1880         0550         0120         0095];
-    for j = 1:length(RatData(i).VideoFiles);
+    AccuracyData = zeros(1,length(RatData(i).VideoFiles));
+    for j = [1,6,7,11,13:20,22:27,30:37,39:48];%1:length(RatData(i).VideoFiles);
         fprintf('Working on trial %d out of %d\n',j,length(RatData(i).VideoFiles));
         RatData(i).VideoFiles(j).ManualStartFrame = CSVfile{1,1}(j,2);
         if RatData(i).VideoFiles(j).ManualStartFrame == 0;
@@ -89,12 +98,12 @@ i = 27;
             pawpref = pawpref_master;
         end
         
-        [AutomaticTriggerFrame(j), AutomaticPeakFrame(j)] = identifyTriggerFrame(RatData(i).VideoFiles(j).Object,pawpref,'trigger_roi',meta_ROI_to_find_trigger_frame);
+        [AutomaticTriggerFrame(j), AutomaticPeakFrame(j)] = identifyTriggerFrame(RatData(i).VideoFiles(j).Object,pawpref,'trigger_roi',meta_ROI_to_find_trigger_frame,'firstdiffthreshold',240);
         RatData(i).VideoFiles(j).AutomaticTriggerFrame = AutomaticTriggerFrame(j);
         RatData(i).VideoFiles(j).AutomaticPeakFrame = AutomaticPeakFrame(j);
         k = 1;
         RatData(i).VideoFiles(j).Agree = 1;
-        while abs(RatData(i).VideoFiles(j).AutomaticPeakFrame - RatData(i).VideoFiles(j).ManualStartFrame) > 5;
+        while (abs(RatData(i).VideoFiles(j).AutomaticPeakFrame - RatData(i).VideoFiles(j).ManualStartFrame) > 5) || isnan(RatData(i).VideoFiles(j).AutomaticPeakFrame);
             im = read(RatData(i).VideoFiles(j).Object,RatData(i).VideoFiles(j).ManualStartFrame);
             if k == 3;
                 RatData(i).VideoFiles(j).Agree = 0;
@@ -120,14 +129,18 @@ i = 27;
                 k = k+1;
             end
             meta_ROI_to_find_trigger_frame = round(meta_ROI_to_find_trigger_frame);
-            [AutomaticTriggerFrame(j), AutomaticPeakFrame(j)] = identifyTriggerFrame(RatData(i).VideoFiles(j).Object,pawpref,'trigger_roi',meta_ROI_to_find_trigger_frame);
+            [AutomaticTriggerFrame(j), AutomaticPeakFrame(j)] = identifyTriggerFrame(RatData(i).VideoFiles(j).Object,pawpref,'trigger_roi',meta_ROI_to_find_trigger_frame,'firstdiffthreshold',240);
             RatData(i).VideoFiles(j).AutomaticTriggerFrame = AutomaticTriggerFrame(j);
             RatData(i).VideoFiles(j).AutomaticPeakFrame = AutomaticPeakFrame(j);
         end
         RatData(i).VideoFiles(j).ROI_Used = meta_ROI_to_find_trigger_frame;
         RatData(i).VideoFiles(j).Paw_Preference = pawpref;
-        RatData(i).Accuracy = 100.*((sum(RatData(i).VideoFiles(1).Agree:RatData(i).VideoFiles(j).Agree))./j);
-        %         StartFrame(i,j) = GUIcreateFrameStartVP2(RatData,i,j,RatDir,RatLookUp,RatID);
+        AccuracyData(j) = RatData(i).VideoFiles(j).Agree;
+        
+        
+        % StartFrame(i,j) = GUIcreateFrameStartVP2(RatData,i,j,RatDir,RatLookUp,RatID);
+        
+        
         % Load video, save video data(frames, frame rate, height, width, etc.), and play it
         %         vidObj = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
         %         vidHeight = vidObj.Height;
@@ -145,12 +158,13 @@ i = 27;
         %         set(gca,'position',[0 0 vidObj.Width vidObj.Height]);
         %         movie(hf,s,1,vidObj.FrameRate);
     end
-
+    RatData(i).Accuracy = 100.*(mean(AccuracyData,2));
 %% Start marking function. Display dialog box indicating which marker and option for indicating not visible and instructions.
 
-for i = 1:length(RatData)
-    for j = 1:length(RatData(i).VideoFiles);
-        [pellet_center_x{i,j}, pellet_center_y{i,j},manual_paw_centers{i,j},mcp_hulls{i,j},mph_hulls{i,j},dph_hulls{i,j}] = createManualPointsVPedits(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name),StartFrame(i,j));
+for i = 27; %1:length(RatData)
+    for j = 1; %1:length(RatData(i).VideoFiles);
+        StartFrame = RatData(i).VideoFiles(j).ManualStartFrame;
+        AllFramesMarkerLocData = GUIcreateManualPoints(RatData,i,j,StartFrame);
     end
 end
 

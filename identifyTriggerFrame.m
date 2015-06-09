@@ -33,7 +33,7 @@ numFrames = video.numberOfFrames;
 numBGFrames = 50;
 frames_before_max = 50;
 grayLimit = [50 150];       % intensity values to look between for differences between background and current frame
-first_diff_threshold = 50;  % minimum difference between adjacent frames
+%first_diff_threshold = 50;  % minimum difference between adjacent frames
 
 ROI_to_find_trigger_frame = [0030         0570         0120         0095
     1880         0550         0120         0095];
@@ -45,8 +45,8 @@ for iarg = 1 : 2 : nargin - 2
             ROI_to_find_trigger_frame = varargin{iarg + 1};
         case 'grylimits',
             grayLimit = varargin{iarg + 1};
-        case 'firstdiffthreshold',
-            first_diff_threshold = varargin{iarg + 1};
+        %case 'firstdiffthreshold',
+            %first_diff_threshold = varargin{iarg + 1};
     end
 end
 
@@ -97,7 +97,7 @@ end
 % find frame with maximum difference between background and current frame
 % in the region of interest
 histDiff_delta = diff(histDiff);
-
+first_diff_threshold = mean(histDiff_delta)+(2.*std(histDiff_delta));
 
 try
     %triggerFrame = find(histDiff_delta == max(histDiff_delta), 1, 'first');
@@ -112,7 +112,7 @@ catch
 end
 
 try peakFrame = find(histDiff(triggerFrame : triggerFrame+frames_before_max) == ...
-        max(histDiff(triggerFrame : triggerFrame+frames_before_max)));
+        max(histDiff(triggerFrame : triggerFrame+frames_before_max)),1,'first');
     peakFrame = peakFrame + triggerFrame - 1;
     if isempty(peakFrame)
         peakFrame = NaN;

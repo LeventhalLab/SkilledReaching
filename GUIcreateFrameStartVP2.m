@@ -3,13 +3,29 @@ function varargout = GUIcreateFrameStartVP2(varargin)
 
 %% GUICREATEFRAMESTARTVP2 MATLAB code for GUIcreateFrameStartVP2.fig
 %      GUICREATEFRAMESTARTVP2, by itself, creates a new GUICREATEFRAMESTARTVP2 or raises the existing
-%      singleton*.
+%      singleton*. It is used in 
 %
 %      H = GUICREATEFRAMESTARTVP2 returns the handle to a new GUICREATEFRAMESTARTVP2 or the handle to
 %      the existing singleton*.
 %
 %      GUICREATEFRAMESTARTVP2('CALLBACK',hObject,eventData,handles,...) calls the local
 %      function named CALLBACK in GUICREATEFRAMESTARTVP2.M with the given input arguments.
+
+%% INPUTS
+% 
+% # RatData : Structure array containing the following fields
+%
+    % * DateFolders: Listing of the paths of all date folders in rat's raw data folder
+    % * VideoFiles: Structural array containing info about all video files (.avi files) in a given date folder. Fields include name, data, bytes, isdir, datenum, ManualStartFrame (manually determined start frame), AutomaticTriggerFrame(automatically determined trigger frame by identifyTriggerFrame function in createManualPawData script, may be removed later), AutomaticPeakFrame (automatically determined peak frame by identifyTriggerFrame function in createManualPawData script, may be removed later), Agree (0 if manual start frame and automatic peak frame do not agree, 1 if they do), ROI_Used, Paw_Preference (encodes previous manually determined information about paw used in video, dominant/marked or non-dominant/unmarked)
+    % * Accuracy: Average accuracy of identifyTriggerFrame function for a given session, may be removed later
+% 
+% # i: Number representing session for a given rat, coded before use of function in createManualPawData script
+% # j: Number representing video for given session, coded before use of function in createManualPawData script 
+% # RatDir: Rat's raw data folder chosen by the user before function use in
+% createManualPawData
+% # RatLookUp: directory of files contained in RatDir
+% # RatID: Rat's ID (e.g. R0027), determined from filepath for RatDir in 
+% createManualPawData
 %
 %      GUICREATEFRAMESTARTVP2('Property','Value',...) creates a new GUICREATEFRAMESTARTVP2 or raises the
 %      existing singleton*.  Starting from the left, property value pairs are

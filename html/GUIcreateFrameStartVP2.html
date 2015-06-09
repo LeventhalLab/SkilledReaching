@@ -1,0 +1,457 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>GUIcreateFrameStartVP2</title><meta name="generator" content="MATLAB 8.4"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-06-04"><meta name="DC.source" content="GUIcreateFrameStartVP2.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">DELINEATE INPUT AND WAY FUNCTION MUST BE WRITTEN</a></li><li><a href="#3">GUICREATEFRAMESTARTVP2 MATLAB code for GUIcreateFrameStartVP2.fig</a></li><li><a href="#4">INPUTS</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> varargout = GUIcreateFrameStartVP2(varargin)
+</pre><h2>DELINEATE INPUT AND WAY FUNCTION MUST BE WRITTEN<a name="2"></a></h2><h2>GUICREATEFRAMESTARTVP2 MATLAB code for GUIcreateFrameStartVP2.fig<a name="3"></a></h2><pre>    GUICREATEFRAMESTARTVP2, by itself, creates a new GUICREATEFRAMESTARTVP2 or raises the existing
+    singleton*.</pre><pre>    H = GUICREATEFRAMESTARTVP2 returns the handle to a new GUICREATEFRAMESTARTVP2 or the handle to
+    the existing singleton*.</pre><pre>    GUICREATEFRAMESTARTVP2('CALLBACK',hObject,eventData,handles,...) calls the local
+    function named CALLBACK in GUICREATEFRAMESTARTVP2.M with the given input arguments.</pre><h2>INPUTS<a name="4"></a></h2><div><ol><li>RatData : Structure array containing the following fields</li></ol></div><div><ul><li>DateFolders: Listing of the paths of all date folders in rat's raw data folder</li><li>VideoFiles: Structural array containing info about all video files (.avi files) in a given date folder. Fields include name, data, bytes, isdir, datenum, ManualStartFrame (manually determined start frame), AutomaticTriggerFrame(automatically determined trigger frame by identifyTriggerFrame function in createManualPawData script, may be removed later), AutomaticPeakFrame (automatically determined peak frame by identifyTriggerFrame function in createManualPawData script, may be removed later), Agree (0 if manual start frame and automatic peak frame do not agree, 1 if they do), ROI_Used, Paw_Preference (encodes previous manually determined information about paw used in video, dominant/marked or non-dominant/unmarked)</li><li>Accuracy: Average accuracy of identifyTriggerFrame function for a given session, may be removed later</li></ul></div><div><ol><li>i: Number representing session for a given rat, coded before use of function in createManualPawData script</li><li>j: Number representing video for given session, coded before use of function in createManualPawData script</li><li>RatDir: Rat's raw data folder chosen by the user before function use in createManualPawData</li><li>RatLookUp: directory of files contained in RatDir</li><li>RatID: Rat's ID (e.g. R0027), determined from filepath for RatDir in createManualPawData</li></ol></div><pre>    GUICREATEFRAMESTARTVP2('Property','Value',...) creates a new GUICREATEFRAMESTARTVP2 or raises the
+    existing singleton*.  Starting from the left, property value pairs are
+    applied to the GUI before GUIcreateFrameStartVP2_OpeningFcn gets called.  An
+    unrecognized property name or invalid value makes property application
+    stop.  All inputs are passed to GUIcreateFrameStartVP2_OpeningFcn via varargin.</pre><pre>    *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+    instance to run (singleton)".</pre><p>See also: GUIDE, GUIDATA, GUIHANDLES</p><pre class="codeinput"><span class="comment">% Edit the above text to modify the response to help GUIcreateFrameStartVP2</span>
+
+<span class="comment">% Last Modified by GUIDE v2.5 11-May-2015 18:46:40</span>
+
+<span class="comment">% Begin initialization code - DO NOT EDIT</span>
+gui_Singleton = 1;
+gui_State = struct(<span class="string">'gui_Name'</span>,       mfilename, <span class="keyword">...</span>
+                   <span class="string">'gui_Singleton'</span>,  gui_Singleton, <span class="keyword">...</span>
+                   <span class="string">'gui_OpeningFcn'</span>, @GUIcreateFrameStartVP2_OpeningFcn, <span class="keyword">...</span>
+                   <span class="string">'gui_OutputFcn'</span>,  @GUIcreateFrameStartVP2_OutputFcn, <span class="keyword">...</span>
+                   <span class="string">'gui_LayoutFcn'</span>,  [] , <span class="keyword">...</span>
+                   <span class="string">'gui_Callback'</span>,   []);
+<span class="keyword">if</span> nargin &amp;&amp; ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+<span class="keyword">end</span>
+
+<span class="keyword">if</span> nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+<span class="keyword">else</span>
+    gui_mainfcn(gui_State, varargin{:});
+<span class="keyword">end</span>
+<span class="comment">% End initialization code - DO NOT EDIT</span>
+
+
+<span class="comment">% --- Executes just before GUIcreateFrameStartVP2 is made visible.</span>
+</pre><pre class="codeoutput error">Index exceeds matrix dimensions.
+
+Error in GUIcreateFrameStartVP2&gt;GUIcreateFrameStartVP2_OpeningFcn (line 75)
+    RatData = varargin{1};
+
+Error in gui_mainfcn (line 220)
+    feval(gui_State.gui_OpeningFcn, gui_hFigure, [], guidata(gui_hFigure), varargin{:});
+
+Error in GUIcreateFrameStartVP2 (line 61)
+    gui_mainfcn(gui_State, varargin{:});
+</pre><pre class="codeinput"><span class="keyword">function</span> GUIcreateFrameStartVP2_OpeningFcn(hObject, eventdata, handles, varargin)
+<span class="comment">% This function has no output args, see OutputFcn.</span>
+<span class="comment">% hObject    handle to figure</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+<span class="comment">% varargin   command line arguments to GUIcreateFrameStartVP2 (see VARARGIN)</span>
+
+<span class="keyword">if</span> nargin &gt; 0 ;
+    RatData = varargin{1};
+    i = varargin{2};
+    j = varargin{3};
+<span class="keyword">end</span>
+
+set(handles.video_path_txtbox,<span class="string">'string'</span>,fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
+
+<span class="comment">% Choose default command line output for GUIcreateFrameStartVP2</span>
+handles.output = hObject;
+
+<span class="comment">% Update handles structure</span>
+guidata(hObject, handles);
+
+<span class="comment">% UIWAIT makes GUIcreateFrameStartVP2 wait for user response (see UIRESUME)</span>
+ uiwait(handles.figure1);
+
+
+<span class="comment">% --- Outputs from this function are returned to the command line.</span>
+<span class="keyword">function</span> varargout = GUIcreateFrameStartVP2_OutputFcn(hObject, eventdata, handles)
+<span class="comment">% varargout  cell array for returning output args (see VARARGOUT);</span>
+<span class="comment">% hObject    handle to figure</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Get default command line output from handles structure</span>
+<span class="comment">% varargout{1} = handles.output;</span>
+StartFrameOrNaN = handles.UI_start_frame_txtbox.String;
+varargout{1} = StartFrameOrNaN;
+uiresume(handles.figure1);
+close;
+
+<span class="keyword">function</span> UI_start_frame_txtbox_Callback(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to UI_start_frame_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Hints: get(hObject,'String') returns contents of UI_start_frame_txtbox as text</span>
+<span class="comment">%        str2double(get(hObject,'String')) returns contents of UI_start_frame_txtbox as a double</span>
+
+
+<span class="comment">% --- Executes during object creation, after setting all properties.</span>
+<span class="keyword">function</span> UI_start_frame_txtbox_CreateFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to UI_start_frame_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+
+<span class="comment">% Hint: edit controls usually have a white background on Windows.</span>
+<span class="comment">%       See ISPC and COMPUTER.</span>
+<span class="keyword">if</span> ispc &amp;&amp; isequal(get(hObject,<span class="string">'BackgroundColor'</span>), get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>))
+    set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+<span class="keyword">end</span>
+
+
+<span class="comment">% --- Executes on button press in done_button.</span>
+<span class="keyword">function</span> done_button_Callback(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to done_button (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+uiresume(handles.figure1);
+
+
+<span class="comment">% --- Executes on button press in redo_button.</span>
+<span class="keyword">function</span> redo_button_Callback(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to redo_button (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+set(handles.UI_start_frame_txtbox,<span class="string">'String'</span>,<span class="string">'No Start Frame'</span>);
+uiresume(handles.figure1);
+
+<span class="comment">% --- Executes on selection change in video_file_list.</span>
+<span class="keyword">function</span> video_file_list_Callback(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to video_file_list (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Hints: contents = cellstr(get(hObject,'String')) returns video_file_list contents as cell array</span>
+<span class="comment">%        contents{get(hObject,'Value')} returns selected item from video_file_list</span>
+
+
+<span class="comment">% --- Executes during object creation, after setting all properties.</span>
+<span class="keyword">function</span> video_file_list_CreateFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to video_file_list (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+
+<span class="comment">% Hint: popupmenu controls usually have a white background on Windows.</span>
+<span class="comment">%       See ISPC and COMPUTER.</span>
+<span class="keyword">if</span> ispc &amp;&amp; isequal(get(hObject,<span class="string">'BackgroundColor'</span>), get(0,<span class="string">'defaultUicontrolBackgroundColor'</span>))
+    set(hObject,<span class="string">'BackgroundColor'</span>,<span class="string">'white'</span>);
+<span class="keyword">end</span>
+
+
+<span class="comment">% --- Executes during object creation, after setting all properties.</span>
+<span class="keyword">function</span> video_path_txtbox_CreateFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to video_path_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+
+
+<span class="comment">% --- Executes during object creation, after setting all properties.</span>
+<span class="keyword">function</span> rat_date_txtbox_CreateFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to rat_date_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    empty - handles not created until after all CreateFcns called</span>
+
+
+<span class="comment">% --- Executes during object deletion, before destroying properties.</span>
+<span class="keyword">function</span> UI_start_frame_txtbox_DeleteFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to UI_start_frame_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+
+
+<span class="keyword">function</span> video_path_txtbox_Callback(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to video_path_txtbox (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+
+<span class="comment">% Hints: get(hObject,'String') returns contents of video_path_txtbox as text</span>
+<span class="comment">%        str2double(get(hObject,'String')) returns contents of video_path_txtbox as a double</span>
+
+
+<span class="comment">% --- If Enable == 'on', executes on mouse press in 5 pixel border.</span>
+<span class="comment">% --- Otherwise, executes on mouse press in 5 pixel border or over done_button.</span>
+<span class="keyword">function</span> done_button_ButtonDownFcn(hObject, eventdata, handles)
+<span class="comment">% hObject    handle to done_button (see GCBO)</span>
+<span class="comment">% eventdata  reserved - to be defined in a future version of MATLAB</span>
+<span class="comment">% handles    structure with handles and user data (see GUIDATA)</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function varargout = GUIcreateFrameStartVP2(varargin)
+%% DELINEATE INPUT AND WAY FUNCTION MUST BE WRITTEN
+
+%% GUICREATEFRAMESTARTVP2 MATLAB code for GUIcreateFrameStartVP2.fig
+%      GUICREATEFRAMESTARTVP2, by itself, creates a new GUICREATEFRAMESTARTVP2 or raises the existing
+%      singleton*.
+%
+%      H = GUICREATEFRAMESTARTVP2 returns the handle to a new GUICREATEFRAMESTARTVP2 or the handle to
+%      the existing singleton*.
+%
+%      GUICREATEFRAMESTARTVP2('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in GUICREATEFRAMESTARTVP2.M with the given input arguments.
+
+%% INPUTS
+% 
+% # RatData : Structure array containing the following fields
+%
+    % * DateFolders: Listing of the paths of all date folders in rat's raw data folder
+    % * VideoFiles: Structural array containing info about all video files (.avi files) in a given date folder. Fields include name, data, bytes, isdir, datenum, ManualStartFrame (manually determined start frame), AutomaticTriggerFrame(automatically determined trigger frame by identifyTriggerFrame function in createManualPawData script, may be removed later), AutomaticPeakFrame (automatically determined peak frame by identifyTriggerFrame function in createManualPawData script, may be removed later), Agree (0 if manual start frame and automatic peak frame do not agree, 1 if they do), ROI_Used, Paw_Preference (encodes previous manually determined information about paw used in video, dominant/marked or non-dominant/unmarked)
+    % * Accuracy: Average accuracy of identifyTriggerFrame function for a given session, may be removed later
+% 
+% # i: Number representing session for a given rat, coded before use of function in createManualPawData script
+% # j: Number representing video for given session, coded before use of function in createManualPawData script 
+% # RatDir: Rat's raw data folder chosen by the user before function use in
+% createManualPawData
+% # RatLookUp: directory of files contained in RatDir
+% # RatID: Rat's ID (e.g. R0027), determined from filepath for RatDir in 
+% createManualPawData
+%
+%      GUICREATEFRAMESTARTVP2('Property','Value',...) creates a new GUICREATEFRAMESTARTVP2 or raises the
+%      existing singleton*.  Starting from the left, property value pairs are
+%      applied to the GUI before GUIcreateFrameStartVP2_OpeningFcn gets called.  An
+%      unrecognized property name or invalid value makes property application
+%      stop.  All inputs are passed to GUIcreateFrameStartVP2_OpeningFcn via varargin.
+%
+%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
+%      instance to run (singleton)".
+%
+% See also: GUIDE, GUIDATA, GUIHANDLES
+     
+
+% Edit the above text to modify the response to help GUIcreateFrameStartVP2
+
+% Last Modified by GUIDE v2.5 11-May-2015 18:46:40
+
+% Begin initialization code - DO NOT EDIT
+gui_Singleton = 1;
+gui_State = struct('gui_Name',       mfilename, ...
+                   'gui_Singleton',  gui_Singleton, ...
+                   'gui_OpeningFcn', @GUIcreateFrameStartVP2_OpeningFcn, ...
+                   'gui_OutputFcn',  @GUIcreateFrameStartVP2_OutputFcn, ...
+                   'gui_LayoutFcn',  [] , ...
+                   'gui_Callback',   []);
+if nargin && ischar(varargin{1})
+    gui_State.gui_Callback = str2func(varargin{1});
+end
+
+if nargout
+    [varargout{1:nargout}] = gui_mainfcn(gui_State, varargin{:});
+else
+    gui_mainfcn(gui_State, varargin{:});
+end
+% End initialization code - DO NOT EDIT
+
+
+% REPLACE_WITH_DASH_DASH- Executes just before GUIcreateFrameStartVP2 is made visible.
+function GUIcreateFrameStartVP2_OpeningFcn(hObject, eventdata, handles, varargin)
+% This function has no output args, see OutputFcn.
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% varargin   command line arguments to GUIcreateFrameStartVP2 (see VARARGIN)
+
+if nargin > 0 ;
+    RatData = varargin{1};
+    i = varargin{2};
+    j = varargin{3};
+end
+
+set(handles.video_path_txtbox,'string',fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
+
+% Choose default command line output for GUIcreateFrameStartVP2
+handles.output = hObject;
+
+% Update handles structure
+guidata(hObject, handles);
+
+% UIWAIT makes GUIcreateFrameStartVP2 wait for user response (see UIRESUME)
+ uiwait(handles.figure1);
+
+
+% REPLACE_WITH_DASH_DASH- Outputs from this function are returned to the command line.
+function varargout = GUIcreateFrameStartVP2_OutputFcn(hObject, eventdata, handles) 
+% varargout  cell array for returning output args (see VARARGOUT);
+% hObject    handle to figure
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Get default command line output from handles structure
+% varargout{1} = handles.output;
+StartFrameOrNaN = handles.UI_start_frame_txtbox.String;
+varargout{1} = StartFrameOrNaN;
+uiresume(handles.figure1);
+close;
+
+function UI_start_frame_txtbox_Callback(hObject, eventdata, handles)
+% hObject    handle to UI_start_frame_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of UI_start_frame_txtbox as text
+%        str2double(get(hObject,'String')) returns contents of UI_start_frame_txtbox as a double
+
+
+% REPLACE_WITH_DASH_DASH- Executes during object creation, after setting all properties.
+function UI_start_frame_txtbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to UI_start_frame_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% REPLACE_WITH_DASH_DASH- Executes on button press in done_button.
+function done_button_Callback(hObject, eventdata, handles)
+% hObject    handle to done_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+uiresume(handles.figure1);
+
+
+% REPLACE_WITH_DASH_DASH- Executes on button press in redo_button.
+function redo_button_Callback(hObject, eventdata, handles)
+% hObject    handle to redo_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+set(handles.UI_start_frame_txtbox,'String','No Start Frame');
+uiresume(handles.figure1);
+
+% REPLACE_WITH_DASH_DASH- Executes on selection change in video_file_list.
+function video_file_list_Callback(hObject, eventdata, handles)
+% hObject    handle to video_file_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns video_file_list contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from video_file_list
+
+
+% REPLACE_WITH_DASH_DASH- Executes during object creation, after setting all properties.
+function video_file_list_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to video_file_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% REPLACE_WITH_DASH_DASH- Executes during object creation, after setting all properties.
+function video_path_txtbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to video_path_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% REPLACE_WITH_DASH_DASH- Executes during object creation, after setting all properties.
+function rat_date_txtbox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to rat_date_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% REPLACE_WITH_DASH_DASH- Executes during object deletion, before destroying properties.
+function UI_start_frame_txtbox_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to UI_start_frame_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+function video_path_txtbox_Callback(hObject, eventdata, handles)
+% hObject    handle to video_path_txtbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of video_path_txtbox as text
+%        str2double(get(hObject,'String')) returns contents of video_path_txtbox as a double
+
+
+% REPLACE_WITH_DASH_DASH- If Enable == 'on', executes on mouse press in 5 pixel border.
+% REPLACE_WITH_DASH_DASH- Otherwise, executes on mouse press in 5 pixel border or over done_button.
+function done_button_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to done_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+##### SOURCE END #####
+--></body></html>

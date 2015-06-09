@@ -1,7 +1,25 @@
 function varargout = GUIcreateManualPointsVP(varargin)
-% GUICREATEMANUALPOINTSVP MATLAB code for GUIcreateManualPointsVP.fig
+%% USAGE:
+% Used within createManualPawData script in the following format:
+% [pellet_center_x{i,j}, pellet_center_y{i,j},manual_paw_centers{i,j},mcp_hulls{i,j},mph_hulls{i,j},dph_hulls{i,j}] = GUIcreateManualPointsVP(VideoFilePath,StartFrame)
+
+%% INPUTS
+% 
+% # VideoFilePath: filepath to video under analysis 
+% # StartFrame: manually determined start frame ****(NEEDS TO BE UPDATED IN
+% CREATEMANUALPAWDATAVPEDITS2015_05_08)****
+%
+%% OUTPUTS
+% # pellet_center_x:
+% # pellet_center_y:
+% # manual_paw_centers: 
+% # mcp_hulls:
+% # mph_hulls:
+% # dph_hulls:
+
+%% GUICREATEMANUALPOINTSVP MATLAB code for GUIcreateManualPointsVP.fig
 %      GUICREATEMANUALPOINTSVP, by itself, creates a new GUICREATEMANUALPOINTSVP or raises the existing
-%      singleton*.
+%      singleton*. It is used in the createManualPawData script to load a GUI which helps the user mark the paw points used in later analysis.
 %
 %      H = GUICREATEMANUALPOINTSVP returns the handle to a new GUICREATEMANUALPOINTSVP or the handle to
 %      the existing singleton*.
