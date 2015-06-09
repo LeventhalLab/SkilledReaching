@@ -285,7 +285,11 @@ function begin_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB 
 % handles    structure with handles and user data (see GUIDATA)
 
-try
+begin_button_func = @(hObject,eventdata)GUIcreateManualPoints('begin_button_Callback',hObject,eventdata,guidata(hObject));
+handles.begin_button_func = begin_button_func;
+guidata(hObject,handles);
+
+
     %Import relevant variables from handles structure which were created in
     %opening function
     video = handles.video;
@@ -469,12 +473,14 @@ try
     % Once all frames are completed, proceed to output function by allowing
     % the GUI to resume
     uiresume(handles.figure1);
-catch
+
+    %break
     
     % If an error occurs while assigning the marker, a dialog box will
     % pop-up to let the user know
-    uiwait(msgbox({'Error in placing marker points. Please restart program'}));
-end
+%     uiwait(msgbox({'Error in placing marker points. Please restart program'}));
+
+
 
 %% Function executed upon pressing Redo button
 % --- Executes on button press in redo_button.
@@ -646,7 +652,9 @@ end
 % When all the re-do markers are completed, the user must hit resume to
 % continue marking points or finish the marking.
 uiwait(msgbox({'Please press resume' 'on the Paw Point Creation Tool' 'to continue or finish marking'},'modal'));
-uiresume(handles.figure1);
+return
+% begin_button_func = handles.begin_button_func;
+% begin_button_func(handles.begin_button, eventdata);
 
 %% Output Function
 % Tells function to close the GUI and export output,
@@ -749,8 +757,6 @@ function frame_reg_in_focus_txtbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
 
 function marker_indicator2_txtbox_Callback(hObject, eventdata, handles)
 % hObject    handle to marker_indicator2_txtbox (see GCBO) eventdata
