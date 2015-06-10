@@ -354,8 +354,11 @@ guidata(hObject,handles);
         set(handles.marker_indicator_txtbox,'String',MarkerPoints{iMarker});
         set(handles.marker_indicator2_txtbox,'String',AnatMarkerPoints{iMarker});
         
+        display('Marker 1');
+        
         % Start marking
             [x,y] = getpts;
+            display('Marker 2');
        
         % For the pellet center marker...
         if iMarker == 1;
@@ -458,21 +461,33 @@ guidata(hObject,handles);
                 mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [x,y,8], 'Color', 'Magenta');
                 imshow(mPh_dPhCenterMarkerCircle);
             end
+        display('Marker 3');    
         end
         
         % Once the marker's position has been determined and added to
         % AllFramesMarkerLocData, it is exported to the base workspace
         % (just in case the GUI is terminated early) and updated in the
         % handles structure. The frame image is then closed
+        display('Marker 4');
         assignin('base','CumMarkedMarkersLocations', AllFramesMarkerLocData);
+        display('Marker 5');
         handles.AllFramesMarkerLocData = AllFramesMarkerLocData;
+        display('Marker 6');
         guidata(hObject, handles);
+        display('Marker 7');
         close;
     end
-    
+    display('Marker 8');
     % Once all frames are completed, proceed to output function by allowing
     % the GUI to resume
+   
+    handles.output = AllFramesMarkerLocData;
+    guidata(hObject, handles);
+
+    display('Marker 9');
     uiresume(handles.figure1);
+    GUIcreateManualPoints_OutputFcn(hObject, eventdata, handles);
+    
 
     %break
     
@@ -488,7 +503,7 @@ function redo_button_Callback(hObject, eventdata, handles)
 % hObject    handle to redo_button (see GCBO) eventdata  reserved - to be
 % defined in a future version of MATLAB handles    structure with handles
 % and user data (see GUIDATA)
-
+display('Marker A');
 % Import video from handles structure
 video = handles.video;
 
@@ -669,20 +684,26 @@ function varargout = GUIcreateManualPoints_OutputFcn(hObject, eventdata, handles
 % Get default command line output from handles structure varargout{1} =
 % handles.output; 
 
-try
-    close(handles.figure1);
-    varargout{1} = handles.AllFramesMarkerLocData;
-    delete(handles.figure1);
-    close all;
-catch
+%try
+   AllFramesMarkerLocData = handles.AllFramesMarkerLocData;
+   varargout{1} = AllFramesMarkerLocData;
+   uiresume(handles.figure1);
+   close;
+%    close all;
+%     varargout{1} = handles.ouput;
+%     %close(handles.figure1);
+%     close(hObject);
+%     delete(hObject);
+%     close all;
+%catch
     
     % If the program is closed unexpectedly, data recorded up to that point
     % is saved in CumMarkedMarkersLocations on base workspace.
     % AllFramesMarkerLocData is set to a string that conveys the error message.
-    varargout{1} = 'Program closed unexpectedly. Data saved under CumMarkedMarkersLocations';
-    uiwait(msgbox({'Program closed unexpectedly' 'Data saved under CumMarkedMarkersLocations'},'modal'));
-    close all
-end
+%     varargout{1} = 'Program closed unexpectedly. Data saved under CumMarkedMarkersLocations A';
+%     uiwait(msgbox({'Program closed unexpectedly' 'Data saved under CumMarkedMarkersLocations A'},'modal'));
+%     close all
+% end
 
 %% Closing figure (without or without completion of AllFramesMarkerLocData)
 % --- Executes when user attempts to close figure1.
@@ -693,15 +714,19 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 
 % Hint: delete(hObject) closes the figure delete(hObject);
 try
-    varargout{1} = handles.CumMarkedMarkersLocations;
-    delete(hObject);
+%      delete(hObject);
+%     close(handles.figure1);
+%     delete(hObject);
     close all;
+%     varargout{1} = handles.output;
+%     delete(hObject);
+%     close all;
 catch
     
     % If the user attempts to close the function early, an error message
     % pops up, letting the user know program closed and where the data was
     % saved.
-    varargout{1} = 'Program closed unexpectedly. Data saved under CumMarkedMarkersLocations'; %#ok<*NASGU>
+    varargout{1} = 'Program closed unexpectedly. Data saved under CumMarkedMarkersLocations B'; %#ok<*NASGU>
     delete(hObject);
     close all
 end
