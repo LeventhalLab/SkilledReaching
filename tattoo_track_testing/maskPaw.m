@@ -7,11 +7,30 @@ function [digitImg,palmImg,paw_img,paw_mask] = maskPaw( img, BGimg, ROI_to_mask_
 %   ROI_to_mask_paw - 
 
 diff_threshold = 45;
+extentLimit = 0.5;
+epiThresh = 0.2;
+
+ctr_paw_hsv_thresh = [0.5 0.5 0.20 0.6 0.20 0.7];
+
+centerPawBlob = vision.BlobAnalysis;
+centerPawBlob.AreaOutputPort = true;
+centerPawBlob.CentroidOutputPort = true;
+centerPawBlob.BoundingBoxOutputPort = true;
+centerPawBlob.ExtentOutputPort = true;
+centerPawBlob.LabelMatrixOutputPort = true;
+centerPawBlob.MinimumBlobArea = 2000;
+centerPawBlob.MaximumBlobArea = 6000;
 
 for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
         case 'diffthreshold',
             diff_threshold = varargin{iarg + 1};
+        case 'extentlimit',
+            extentLimit = varargin{iarg + 1};
+        case 'mincenterpawarea',
+            centerPawBlob.MinimumBlobArea = varargin{iarg + 1};
+        case 'maxcenterpawarea',
+            centerPawBlob.MaximumBlobArea = varargin{iarg + 1};
     end
 end
 
@@ -60,13 +79,68 @@ palmImg   = fliplr(paw_img{palmWindow}) .* uint8(palmMask);
 % palmImg   = fliplr(palmImg);
 % given the fundamental transformation matrix from the background, we
 % should be able to constrain where the paw is in the front view
-% 
 
-% WORKING HERE...
-% IDENTIFY INDIVIDUAL DIGITS IN EACH VIEW
-% USE THE MIRROR VIEWS TO CONSTRAIN WHERE THE PAW CAN BE IN THE CENTER
-% VIEW? MAYBE USE BOUNDING BOXES ON THE MASKED IMAGES AND THE FUNDAMENTAL
-% MATRICES TO ZOOM IN ON THE PAW'S LOCATION.
+% threshold the center image to find where the paw grossly should be
+% located
+ctrMask = HSVthreshold(rgb2hsv(paw_img{2}), ctr_paw_hsv_thresh);
+SE = strel('disk',2);
+ctrMask = bwdist(ctrMask) < 2;
+ctrMask = imopen(ctrMask, SE);
+ctrMask = imclose(ctrMask, SE);
+ctrMask = imfill(ctrMask, 'holes');
+
+[~, ~, ~, ~, paw_labMat] = step(centerPawBlob, ctrMask);
+ctrMask = paw_labMat > 0;    % eliminates blobs that are too big or too smal
+[~, ~, ~, paw_extent, paw_labMat] = step(centerPawBlob, ctrMask);
+% eliminate blobs that don't take up enough of their bounding box
+extIdx = find(paw_extent > extentLimit);
+ctrMask = false(size(ctrMask));
+for ii = 1 : length(extIdx)
+    ctrMask = ctrMask | (paw_labMat == extIdx(ii));
+end
+[~, ~, ~, ~, paw_labMat] = step(centerPawBlob, ctrMask);
+
+% calculate epipolar lines for the paw masked in each mirror
+epiLines = cell(1,2);
+epipolarMask = false(size(ctrMask,1),size(ctrMask,2),2);
+map_x = 1:size(ctrMask,2);
+for ii = 1 : 2 : 3
+    [y, x] = find(paw_mask{ii});
+    epiIdx = ceil(ii/2);
+    epiLines{epiIdx} = epipolarLine(Fleft, [x,y]);
+    % set any point that lies on these epipolar lines to true
+    for jj = 1 : size(epiLines{epiIdx}, 1)
+        epipolarMap = zeros(size(ctrMask,1),size(ctrMask,2));
+        for kk = 1 : size(ctrMask, 1)
+            epipolarMap(kk, :) = map_x * epiLines{epiIdx}(jj,1) + kk * epiLines{epiIdx}(jj,2);
+        end
+        epipolarMap = epipolarMap + epiLines{epiIdx}(1,3);
+        epipolarMask(:,:,epiIdx) = epipolarMask(:,:,epiIdx) | (abs(epipolarMap) < epiThresh);
+    end
+end
+epipolarOverlapMask = squeeze(epipolarMask(:,:,1)) & squeeze(epipolarMask(:,:,2));
+figure(1);imshow(squeeze(epipolarMask(:,:,1)));
+figure(2);imshow(squeeze(epipolarMask(:,:,2)));
+figure(3);imshow(squeeze(epipolarOverlapMask));
+% test this code tomorrow!!!!!!!!!!!!!!! should show where projections from
+% left and right mirrors overlap.
+            
+    
+
+% % find the top and bottom of the paw mask from the mirror
+% mirrorPawBottom = 0;
+% mirrorPawTop = size(digitMirrorMask, 1);
+% for ii = 1 : size(digitMirrorMask, 3)
+%     [mirrorMaskRows,mirrorMaskCols] = find(squeeze(digitMirrorMask(:,:,ii)));
+%     if max(mirrorMaskRows) > mirrorPawBottom
+%         mirrorBotIdx = find(mirrorMaskRows == max(mirrorMaskRows),1);
+%         mirrorPawBottom = [mirrorMaskCols(mirrorBotIdx), mirrorMaskRows(mirrorBotIdx)];
+%     end
+%     if min(mirrorMaskRows) < mirrorPawTop
+%         mirrorTopIdx = find(mirrorMaskRows == min(mirrorMaskRows),1);
+%         mirrorPawTop = [mirrorMaskCols(mirrorTopIdx), mirrorMaskRows(mirrorTopIdx)];
+%     end
+% end
 
 
 % START BY THRESHOLDING BASED ON IMAGE SUBTRACTION, THEN GO BACK TO

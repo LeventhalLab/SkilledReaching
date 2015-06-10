@@ -31,7 +31,6 @@ for iarg = 1 : 2 : nargin - 2
     end
 end
 
-% find the centroid of the paw mask
 pawDorsumBlob = vision.BlobAnalysis;
 pawDorsumBlob.AreaOutputPort = true;
 pawDorsumBlob.CentroidOutputPort = true;
@@ -48,10 +47,9 @@ digitBlob.MinimumBlobArea = 50;
 digitBlob.MaximumBlobArea = 500;
 
 hsv_digitImg = rgb2hsv(digitImg);
+
 % 1st row masks the dorsum of the paw
 % next 4 rows mask the digits
-
-
 digitMask = zeros(size(digitImg,1), size(digitImg,2), size(hsv_digitBounds,1));
 SE = strel('disk',2);
 digitCtr = zeros(size(hsv_digitBounds,1), 2);
@@ -76,7 +74,7 @@ for ii = 1 : size(hsv_digitBounds, 1)
         tempMask = logical(tempMask .* ~squeeze(digitMask(:,:,1)));
         [~, digit_c, ~, digitLabMat] = step(digitBlob, tempMask);
         % first, eliminate blobs that are on the wrong side of the paw
-        % centroid (to the left in looking in the left mirror, to the right
+        % centroid (to the left if looking in the left mirror, to the right
         % if looking in the right mirror).
         if strcmpi(rat_metadata.pawPref,'right')    % back of paw in the left mirror
             % looking in the left mirror for the digits
@@ -95,7 +93,7 @@ for ii = 1 : size(hsv_digitBounds, 1)
         % now, take the blob that is closest to the previous digit & below
         % it. Can't do this for the first digit
         if ii > 2
-            % first, get rid of any blobs whose centroid is above the previous
+            % get rid of any blobs whose centroid is above the previous
             % digit centroid
             digitIdx = find(digit_c(:,2) < digitCtr(ii-1,2));
             if ~isempty(digitIdx)
@@ -113,6 +111,17 @@ for ii = 1 : size(hsv_digitBounds, 1)
             minDistIdx = find(digitDistances == min(digitDistances));
             tempMask = (digitLabMat == minDistIdx);
             [~, digit_c, ~, ~] = step(digitBlob, tempMask);
+        elseif size(digit_c,1) > 1
+            % take the centroid closest to the dorsum of the paw if this is
+            % the first digit identified
+            x_dist = digit_c(:,1) - digitCtr(1,1);
+            y_dist = digit_c(:,2) - digitCtr(1,2);
+            dist_from_paw = x_dist.^2 + y_dist.^2;
+            minDistIdx = find(dist_from_paw == min(dist_from_paw));
+            tempMask = (digitLabMat == minDistIdx);
+            [~, digit_c, ~, ~] = step(digitBlob, tempMask);
+            % NOTE, NOT SURE IF THIS WILL BE ROBUST - COULD GET BLOBS
+            % CLOSER TO THE PAW CENTROID THAN THE DIGITS - DL 20150609
         end    % if ii > 2
         digitCtr(ii,:) = digit_c;
     end

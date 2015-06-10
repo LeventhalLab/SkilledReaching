@@ -1,4 +1,4 @@
-function [digitImg_enh,palmImg,paw_img] =trackTattooedPaw( video,  rat_metadata, Fleft, Fright, register_ROI, varargin )
+function [pawRegion] =trackTattooedPaw( video,  rat_metadata, Fleft, Fright, register_ROI, varargin )
 %
 % INPUTS:
 %   video - a videoReader object containing the video recorded from 
@@ -53,25 +53,29 @@ imDiff = imabsdiff(im_preReach,im_peak);
 if strcmpi(rat_metadata.pawPref,'right')    % back of paw in the left mirror
     % looking in the left mirror for the digits
     dorsalFundMat = Fleft;
+    dorsalPawMaskIdx = 1;
 else
     % looking in the right mirror for the digits
     dorsalFundMat = Fright;
+    dorsalPawMaskIdx = 3;
 end
 
 % find the digits in the peakFrame, then use that as a "seed" to initiate
 % tracking of each digit and the paw itself
+% digit_gray = rgb2gray(digitImg);digitMask = digit_gray > 0;
+[pawRows,pawCols] = find(paw_mask{dorsalPawMaskIdx});
 digitImg_enh = decorrstretch(digitImg,'samplesubs',{pawRows,pawCols});
 digitMirrorMask = identifyMirrorDigits(digitImg_enh, rat_metadata);
 % find the digits in the center frame
-digitCenterMask = identifyCenterDigits(im_peak, digitMirrorMask, fundmat, register_ROI);
+pawRegion = identifyCenterDigits(im_peak, digitMirrorMask, dorsalFundMat, register_ROI, rat_metadata);
 
-digit_gray = rgb2gray(digitImg);digitMask = digit_gray > 0;
-[pawRows,pawCols] = find(digit_gray);
 
-figure(1)
-imshow(digitImg_enh)
-figure(2)
-imshow(palmImg)
+
+
+% figure(1)
+% imshow(digitImg_enh)
+% figure(2)
+% imshow(palmImg)
 
 % find the individual digits, as well as the palm to initiate tracking in
 % the "color" image mirror (the one that sees the dorsum of the paw)
