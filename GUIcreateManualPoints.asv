@@ -151,22 +151,18 @@ for iarg = 5 : 2 : nargin-4
     end
 end
 
-NumOfFrames = (EndFrame - (StartFrame+20))/Interval;
+NumOfFrames = (EndFrame - StartFrame)/Interval;
 
 % Create cell array of frame numbers from video to be analyzed, based on
 % start frame and interval
 Frames = cell(NumOfFrames,1);
-initframeCount = 0;
-finframeCount = 1;
+frameCount = 0;
 for i = 1:NumOfFrames;
     if i < 21;
-        Frames{i} = num2str(StartFrame + initframeCount);
-        initframeCount = initframeCount + 1;
+        Frames{i} = num2str(StartFrame + frameCount)
     else
-    Frames{i} = num2str(StartFrame + 20 + (finframeCount.*Interval));
-    finframeCount = finframeCount+1;
-    end
-    
+    Frames{i} = num2str(StartFrame + (frameCount.*Interval));
+    frameCount = frameCount + 1;
 end
 
 % Create cell array of marker names to be displayed in GUI and appear in

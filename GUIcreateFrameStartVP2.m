@@ -98,7 +98,7 @@ function varargout = GUIcreateFrameStartVP2_OutputFcn(hObject, eventdata, handle
 
 % Get default command line output from handles structure
 % varargout{1} = handles.output;
-StartFrameOrNaN = handles.UI_start_frame_txtbox.String;
+StartFrameOrNaN = str2num(handles.UI_start_frame_txtbox.String);
 varargout{1} = StartFrameOrNaN;
 uiresume(handles.figure1);
 close;
@@ -138,7 +138,7 @@ function redo_button_Callback(hObject, eventdata, handles)
 % hObject    handle to redo_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-set(handles.UI_start_frame_txtbox,'String','No Start Frame');
+set(handles.UI_start_frame_txtbox,'String','NaN');
 uiresume(handles.figure1);
 
 % --- Executes on selection change in video_file_list.
