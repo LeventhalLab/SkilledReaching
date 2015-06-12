@@ -10,7 +10,8 @@ function mask = HSVthreshold(hsv_img, thresholds)
 %       value limits, respectively
 %
 % OUTPUTS:
-%   mask - 
+%   mask - logical BW image masking out regions that fall within the
+%       threshold ranges
 
 h = squeeze(hsv_img(:,:,1));
 s = squeeze(hsv_img(:,:,2));

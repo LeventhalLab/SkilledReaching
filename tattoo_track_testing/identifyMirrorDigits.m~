@@ -148,8 +148,7 @@ end
 % now identify the dorsum of the paw as everything on the opposite side of
 % a line connecting the base of the index finger and pinky compared to the
 % digit centroids
-% start by finding the convex hull around the digits masked out thus far -
-% this isn't as easy as it sounds... WORKING HERE...
+% start by finding the convex hull around the digits masked out thus far
 % draw lines between the centroids of each digit
 digitMask = mpMask | idxMask;
 s = regionprops(digitMask,'boundingbox','conveximage');
