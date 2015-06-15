@@ -560,7 +560,8 @@ function begin_button_Callback(hObject, eventdata, handles)
 %         display('Marker 6');
         guidata(hObject, handles);
 %         display('Marker 7');
-        close(BeginButton_Frame_axis_handle);
+if iMarker == 16        
+close(BeginButton_Frame;
     end
 %     display('Marker 8');
     % Once all frames are completed, proceed to output function by allowing
