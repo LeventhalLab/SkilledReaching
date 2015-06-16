@@ -16,7 +16,7 @@ ROI_to_find_trigger_frame = [0210         0590         0050         0070
                              1740         0560         0050         0070];
 gray_paw_limits = [60 125];
 BGimg = [];
-decorrStretchMean  = [127.5 100.5 127.5];
+decorrStretchMean  = [100.5 127.5 100.5];
 decorrStretchSigma = [025 050 025];
 
 diff_threshold = 45;
@@ -109,7 +109,10 @@ centerImg = rgbMask .* peak_paw_img{2};
 % find the digits in the mirror frame with the dorsum of the paw
 digitMirrorMask = identifyMirrorDigits(digitImg, rat_metadata);
 % find the digits in the center frame
-digitCenterMask = identifyCenterDigits(centerImg_enh, digitMirrorMask, dorsalFundMat, rat_metadata);
+digitCenterMask = identifyCenterDigits(centerImg, digitMirrorMask, dorsalFundMat, rat_metadata);
+
+% now have the digits and dorsum of the paw in 2 views, start to work on
+% the 3-D reconstruction
 
 % figure(1)
 % imshow(digitImg_enh)

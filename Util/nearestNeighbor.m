@@ -2,6 +2,11 @@ function [nndist, meansep, nnidx] = nearestNeighbor(x)
 %
 % usage: 
 %
+% INPUTS:
+%
+% VARARGs:
+%
+% OUTPUTS:
 
 diffMatrix = zeros(size(x,1)-1,size(x,2));
 nndist = zeros(size(x,1),1);nnidx = zeros(size(x,1),1);

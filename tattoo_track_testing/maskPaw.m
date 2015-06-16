@@ -14,7 +14,11 @@ diff_threshold = 45;
 extentLimit = 0.5;
 % epiThresh = 0.2;
 
-ctr_paw_hsv_thresh = [0.5 0.5 0.20 0.6 0.20 1.0];
+decorrStretchMean  = [100.5 127.5 100.5];
+decorrStretchSigma = [025 050 025];
+
+ctr_paw_hsv_thresh_enh = [0.5 0.5 0.40 1.0 0.40 1.0];
+% ctr_paw_hsv_thresh = [0.5 0.5 0.40 1.0 0.40 1.0];
 
 centerPawBlob = vision.BlobAnalysis;
 centerPawBlob.AreaOutputPort = true;
@@ -22,8 +26,8 @@ centerPawBlob.CentroidOutputPort = true;
 centerPawBlob.BoundingBoxOutputPort = true;
 centerPawBlob.ExtentOutputPort = true;
 centerPawBlob.LabelMatrixOutputPort = true;
-centerPawBlob.MinimumBlobArea = 2000;
-centerPawBlob.MaximumBlobArea = 8000;
+centerPawBlob.MinimumBlobArea = 3000;
+centerPawBlob.MaximumBlobArea = 10000;
 
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -88,12 +92,25 @@ palmImg   = fliplr(paw_img{palmWindow}) .* uint8(palmMask);
 
 % threshold the center image to find where the paw grossly should be
 % located
-paw_mask{2} = HSVthreshold(rgb2hsv(paw_diff_img{2}), ctr_paw_hsv_thresh);
+paw_img_enh = decorrstretch(paw_img{2},'targetmean',decorrStretchMean,'targetsigma',decorrStretchSigma);
+paw_mask{2} = HSVthreshold(rgb2hsv(paw_img_enh), ctr_paw_hsv_thresh_enh);
+lftProjectionMask = pawProjectionMask(paw_mask{1}, squeeze(fundmat(1,:,:)), size(paw_mask{2}));
+rgtProjectionMask = pawProjectionMask(paw_mask{3}, squeeze(fundmat(2,:,:)), size(paw_mask{2}));
+projectionMask = lftProjectionMask & rgtProjectionMask;
+
+paw_mask{2} = projectionMask & paw_mask{2};
+% paw must be in the middle third of the image
+ctrMask = false(size(paw_mask{2}));
+h = size(paw_mask{2},1); w = size(paw_mask{2},2);
+ctrMask(:,round(w/3):round(2*w/3)) = true;
+paw_mask{2} = paw_mask{2} & ctrMask;
+
+% paw_mask{2} = HSVthreshold(rgb2hsv(paw_diff_img{2}), ctr_paw_hsv_thresh);
 paw_mask{2} = bwdist(paw_mask{2}) < 2;
 paw_mask{2} = imopen(paw_mask{2}, SE);
 paw_mask{2} = imclose(paw_mask{2}, SE);
 paw_mask{2} = imfill(paw_mask{2}, 'holes');
-paw_mask{2} = imdilate(paw_mask{2},SE);
+% paw_mask{2} = imdilate(paw_mask{2},SE);
 
 [~, ~, ~, ~, paw_labMat] = step(centerPawBlob, paw_mask{2});
 paw_mask{2} = paw_labMat > 0;    % eliminates blobs that are too big or too small
@@ -135,39 +152,42 @@ end
 %     end
 % end
 % epipolarOverlapMask = squeeze(epipolarMask(:,:,1)) & squeeze(epipolarMask(:,:,2));
-borderLines = zeros(2,2,3);    % first dimension is left vs right mirror;
-                               % second dimension is top vs bottom;
-                               % third is A,B,C (see epipolarLine documentation)
-projectionMasks = false(size(paw_mask{2},1),size(paw_mask{2},2),2);
-for ii = 1 : 2
-    mirrorViewIdx = ii*2 - 1;    % 1 for left mirror, 3 for right mirror
-    [mirrorMaskRows,mirrorMaskCols] = find(paw_mask{mirrorViewIdx});
-    mirrorBotIdx = find(mirrorMaskRows == max(mirrorMaskRows),1);
-    mirrorTopIdx = find(mirrorMaskRows == min(mirrorMaskRows),1);
-    mirrorPawBottom = [mirrorMaskCols(mirrorBotIdx), mirrorMaskRows(mirrorBotIdx)];
-    mirrorPawTop    = [mirrorMaskCols(mirrorTopIdx), mirrorMaskRows(mirrorTopIdx)];
-    
-    borderLines(ii,:,:) = epipolarLine(squeeze(fundmat(ii,:,:)), [mirrorPawTop;mirrorPawBottom]);
+% borderLines = zeros(2,2,3);    % first dimension is left vs right mirror;
+%                                % second dimension is top vs bottom;
+%                                % third is A,B,C (see epipolarLine documentation)
+% projectionMasks = false(size(paw_mask{2},1),size(paw_mask{2},2),2);
 
-    % create a mask with true values between the epipolar lines
-    x = 1:size(paw_mask{2},2);
-    epipolarRegions = zeros(size(paw_mask{2},1),size(paw_mask{2},2),2);
-    for jj = 1 : 2
-        for kk = 1 : size(paw_mask{2}, 1)
-            epipolarRegions(kk, :, jj) = x * borderLines(ii,jj,1) + kk * borderLines(ii,jj,2);
-        end
-        epipolarRegions(:,:,jj) = epipolarRegions(:,:,jj) + borderLines(ii,jj,3);
-    end
-    if ii == 1   % haven't thought through why the signs change for the
-                 % region of interest depending on whether mapping the left
-                 % or right mirror to the direct view, but this seems to
-                 % work
-        projectionMasks(:,:,ii) = (epipolarRegions(:,:,1) < 0) & (epipolarRegions(:,:,2) > 0);
-    else
-        projectionMasks(:,:,ii) = (epipolarRegions(:,:,1) > 0) & (epipolarRegions(:,:,2) < 0);
-    end
-end
-projectionMask = squeeze(projectionMasks(:,:,1)) & squeeze(projectionMasks(:,:,2));
+% for ii = 1 : 2
+%     mirrorViewIdx = ii*2 - 1;    % 1 for left mirror, 3 for right mirror
+%     [mirrorMaskRows,mirrorMaskCols] = find(paw_mask{mirrorViewIdx});
+%     mirrorBotIdx = find(mirrorMaskRows == max(mirrorMaskRows),1);
+%     mirrorTopIdx = find(mirrorMaskRows == min(mirrorMaskRows),1);
+%     mirrorPawBottom = [mirrorMaskCols(mirrorBotIdx), mirrorMaskRows(mirrorBotIdx)];
+%     mirrorPawTop    = [mirrorMaskCols(mirrorTopIdx), mirrorMaskRows(mirrorTopIdx)];
+%     
+%     borderLines(ii,:,:) = epipolarLine(squeeze(fundmat(ii,:,:)), [mirrorPawTop;mirrorPawBottom]);
+% 
+%     % create a mask with true values between the epipolar lines
+%     x = 1:size(paw_mask{2},2);
+%     epipolarRegions = zeros(size(paw_mask{2},1),size(paw_mask{2},2),2);
+%     for jj = 1 : 2
+%         for kk = 1 : size(paw_mask{2}, 1)
+%             epipolarRegions(kk, :, jj) = x * borderLines(ii,jj,1) + kk * borderLines(ii,jj,2);
+%         end
+%         epipolarRegions(:,:,jj) = epipolarRegions(:,:,jj) + borderLines(ii,jj,3);
+%     end
+%     if ii == 1   % haven't thought through why the signs change for the
+%                  % region of interest depending on whether mapping the left
+%                  % or right mirror to the direct view, but this seems to
+%                  % work
+%         projectionMasks(:,:,ii) = (epipolarRegions(:,:,1) < 0) & (epipolarRegions(:,:,2) > 0);
+%     else
+%         projectionMasks(:,:,ii) = (epipolarRegions(:,:,1) > 0) & (epipolarRegions(:,:,2) < 0);
+%     end
+% end
+% projectionMask = squeeze(projectionMasks(:,:,1)) & squeeze(projectionMasks(:,:,2));
+projectionMask = lftProjectionMask & rgtProjectionMask;
+
 ctrPawMask = projectionMask & paw_mask{2};
 [paw_proj_a, ~, ~, ~, paw_proj_labMat] = step(centerPawBlob, ctrPawMask);
 max_a_idx = find(paw_proj_a == max(paw_proj_a));
@@ -185,8 +205,8 @@ paw_mask{2} = (paw_labMat == validRegion);
     
 % dilate the paw mask a little more to make sure we get everything we need
 % for finding the individual digits
-SE = strel('disk',5);
-paw_mask{2} = imdilate(paw_mask{2},SE);
+% SE = strel('disk',5);
+% paw_mask{2} = imdilate(paw_mask{2},SE);
 
 % figure(1);imshow(paw_mask{1});
 % figure(2);imshow(paw_mask{2});
