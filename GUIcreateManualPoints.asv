@@ -168,7 +168,7 @@ for i = 1:NumOfFrames;
     end
     
 end
-FrameInfo = cell(NumOfFrames,9);
+FrameInfo = cell(NumOfFrames,58);
 FrameInfo(:,1) = Frames(:,1);
 
 % Create cell array of marker names to be displayed in GUI and appear in
@@ -340,7 +340,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
-    for MarkerNum = Marker:17%length(AllFramesMarkerLocData(:,1));
+    for MarkerNum = Marker:49%length(AllFramesMarkerLocData(:,1));
         
         fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
         
@@ -388,6 +388,7 @@ function begin_button_Callback(hObject, eventdata, handles)
             if isempty (leftImg) || isempty(leftRectPos) || isempty (centerImg) || isempty(centerRectPos) || isempty (rightImg) || isempty(rightRectPos)
                 if iMarker == 1 && iFrameRegion == 1; %&& iFrame == 1;
                 im = read(video,str2double(Frames{iFrame}));
+                FrameInfo{iFrame,10} = im;
                 %imageName = sprintf('All_Markers_for_Frame_%s_of_%s',Frames{iFrame},video.Name(1:end-4));
                 figure;
                 BeginButton_Frame = imshow(im);
@@ -576,7 +577,16 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 PelletMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Blue');
                 im = PelletMarkerCircle;
-                im_handle = figure;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;                
+                if BeginButtonFrameProcessed ~= handles.LastBeginButtonFrameProcessed;
+                    im_handle = figure;
+                else
+                    if MarkerNum == 1;
+                        im_handle = figure;
+                    else
+                        set(groot, 'CurrentFigure', im_handle);
+                    end
+                end
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
                 FrameInfo{iFrame,2} = im;
@@ -794,7 +804,7 @@ function begin_button_Callback(hObject, eventdata, handles)
         guidata(hObject, handles);
 %         display('Marker 7');
 
-if iMarker == 16 && iFrameRegion == 3;        
+if iMarker == length(MarkerPoints) && iFrameRegion == length(FrameRegionInFocus);        
 close(BeginButtonFrameProcessed);
 end
     end
@@ -879,16 +889,17 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
     iFrameRegion = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),10));
     try
         FrameInfo = handles.FrameInfo;
-        leftImg = FrameInfo{iFrame,4};
-        leftRectPos = FrameInfo{iFrame,5};
-        centerImg = FrameInfo{iFrame,6};        
-        centerRectPos = FrameInfo{7};
-        rightImg = FrameInfo{iFrame,8};
-        rightRectPos = FrameInfo{iFrame,9};
-        RedoButton_Frame_handle = figure('units','normalized','outerposition',[0 .09 .85 .85]);
-        leftImgHandle = subplot(1,3,1); subimage(leftImg);
-        centerImgHandle = subplot(1,3,2); subimage(centerImg);
-        rightImgHandle = subplot(1,3,3); subimage(rightImg);
+%         leftImg = FrameInfo{iFrame,4};
+%         leftRectPos = FrameInfo{iFrame,5};
+%         centerImg = FrameInfo{iFrame,6};        
+%         centerRectPos = FrameInfo{iFrame,7};
+%         rightImg = FrameInfo{iFrame,8};
+%         rightRectPos = FrameInfo{iFrame,9};
+        RedoButton_Frame_handle = FrameInfo{iFrame,3};
+        figure(RedoButton_Frame_handle,'units','normalized','outerposition',[0 .09 .85 .85]);
+%         leftImgHandle = subplot(1,3,1); subimage(leftImg);
+%         centerImgHandle = subplot(1,3,2); subimage(centerImg);
+%         rightImgHandle = subplot(1,3,3); subimage(rightImg);
         im = FrameInfo{iFrame,2};        
     catch
         im = read(video,str2double(AllFramesMarkerLocData{SelectedRedoMarkerNum(iSelectedRedoMarkerNum),2}));
@@ -1235,7 +1246,8 @@ function varargout = GUIcreateManualPoints_OutputFcn(hObject, eventdata, handles
 % Get default command line output from handles structure varargout{1} =
 % handles.output; 
 
-try AllFramesMarkerLocData = handles.AllFramesMarkerLocData;
+try 
+   AllFramesMarkerLocData = handles.AllFramesMarkerLocData;
    varargout{1} = AllFramesMarkerLocData;
    uiresume(handles.figure1);
    close;
@@ -1248,7 +1260,7 @@ try AllFramesMarkerLocData = handles.AllFramesMarkerLocData;
 %     close all;
 catch ME
    varargout{1} = ME;
-   uiresume(handles.figure1);
+%    uiresume(handles.figure1);
    close;
     % If the program is closed unexpectedly, data recorded up to that point
     % is saved in CumMarkedMarkersLocations on base workspace.
@@ -1272,19 +1284,20 @@ try
 uiresume;
 handles.output = handles.AllFramesMarkerLocData;
 delete(hObject);
-    
+clf;   
 
 %     varargout{1} = handles.output;
 %     delete(hObject);
 %     close all;
-catch
+catch ME
     
     % If the user attempts to close the function early, an error message
     % pops up, letting the user know program closed and where the data was
     % saved.
     varargout{1} = 'Program closed unexpectedly. Data saved under CumMarkedMarkersLocations B'; %#ok<*NASGU>
     delete(hObject);
-    close all
+    clf;
+%     close all
 end
 
 function figure1_DeleteFcn(hObject,eventdata,handles)
