@@ -340,7 +340,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
-    for MarkerNum = Marker:17%length(AllFramesMarkerLocData(:,1));
+    for MarkerNum = Marker:49%length(AllFramesMarkerLocData(:,1));
         
         fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
         
@@ -378,6 +378,7 @@ function begin_button_Callback(hObject, eventdata, handles)
 
         try
             FrameInfo = handles.FrameInfo;
+            BeginButtonFrameProcessed = FrameInfo{iFrame,3};
             leftImg = FrameInfo{iFrame,4};
             leftRectPos = FrameInfo{iFrame,5};
             centerImg = FrameInfo{iFrame,6};
@@ -428,18 +429,29 @@ function begin_button_Callback(hObject, eventdata, handles)
                 %             handles.rightRectPos = rightRectPos;
                 guidata(hObject, handles);
                 close gcf;
-                uiwait(msgbox({'Generating figure with zoomed-in images' 'Please click the original GUI window after figure appears to know which marker to place'},'modal'));
+                uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
                 BeginButtonFrameProcessed = figure('units','normalized','outerposition',[0 .09 .85 .85]);
                 leftImgHandle = subplot(1,3,1); subimage(leftImg);
                 centerImgHandle = subplot(1,3,2); subimage(centerImg);
                 rightImgHandle = subplot(1,3,3); subimage(rightImg);
                 handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessed;
                 FrameInfo{iFrame,3} = BeginButtonFrameProcessed;
-                handles.FrameImagesWithAllMarkers = FrameInfo;
+                handles.FrameInfo = FrameInfo;
                 guidata(hObject,handles);
                 end
+            else
+                if BeginButtonFrameProcessed ~= handles.LastBeginButtonFrameProcessed;
+                    set(groot, 'CurrentFigure', BeginButtonFrameProcessed);
+                    leftImgHandle = subplot(1,3,1); subimage(leftImg);
+                    centerImgHandle = subplot(1,3,2); subimage(centerImg);
+                    rightImgHandle = subplot(1,3,3); subimage(rightImg);
+                    handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessed;
+                    FrameInfo{iFrame,3} = BeginButtonFrameProcessed;
+                    handles.FrameInfo = FrameInfo;
+                    guidata(hObject,handles);
+                else
+                end
             end
-
         catch
             disp('Error has occurred, please re-do');
                 im = read(video,str2double(Frames{iFrame}));
@@ -484,14 +496,14 @@ function begin_button_Callback(hObject, eventdata, handles)
                 %             handles.rightRectPos = rightRectPos;
                 guidata(hObject, handles);
                 close gcf;
-                uiwait(msgbox({'Generating figure with zoomed-in images' 'Please click the original GUI window after figure appears to know which marker to place'},'modal'));
+                uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
                 BeginButtonFrameProcessed = figure('units','normalized','outerposition',[0 .09 .85 .85]);
                 leftImgHandle = subplot(1,3,1); subimage(leftImg);
                 centerImgHandle = subplot(1,3,2); subimage(centerImg);
                 rightImgHandle = subplot(1,3,3); subimage(rightImg);
                 handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessed;
                 FrameInfo{iFrame,3} = BeginButtonFrameProcessed;
-                handles.FrameImagesWithAllMarkers = FrameInfo;
+                handles.FrameInfo = FrameInfo;
                 guidata(hObject,handles);            
         end
 %         if iFrame == AllFramesMarkerLocData{MarkerNum-1,9}
@@ -564,7 +576,15 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 PelletMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Blue');
                 im = PelletMarkerCircle;
-                im_handle = figure;
+                if BeginButtonFrameProcessed ~= handles.LastBeginButtonFrameProcessed;
+                    im_handle = figure;
+                else
+                    if MarkerNum == 1;
+                        im_handle = figure;
+                    else
+                        set(groot, 'CurrentFigure', im_handle);
+                    end
+                end
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
                 FrameInfo{iFrame,2} = im;
@@ -602,7 +622,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 PawCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Red');
                 im = PawCenterMarkerCircle;
-                set(0, 'CurrentFigure', im_handle);
+                set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
                 FrameInfo{iFrame,2} = im;
@@ -641,7 +661,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 McPh_pPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Green');
                 im = McPh_pPhCenterMarkerCircle;
-                set(0, 'CurrentFigure', im_handle);
+                set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
                 FrameInfo{iFrame,2} = im;
@@ -681,7 +701,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 pPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'White');
                 im = pPh_dPhCenterMarkerCircle;
-                set(0, 'CurrentFigure', im_handle);
+                set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
                 FrameInfo{iFrame,2} = im;
@@ -721,7 +741,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 pPh_mPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Cyan');
                 im = pPh_mPhCenterMarkerCircle;
-                set(0, 'CurrentFigure', im_handle);
+                set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
                 FrameInfo{iFrame,2} = im;
@@ -760,7 +780,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Magenta');
                 im = mPh_dPhCenterMarkerCircle;
-                set(0, 'CurrentFigure', im_handle);
+                set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
                 FrameInfo{iFrame,2} = im;
@@ -774,10 +794,10 @@ function begin_button_Callback(hObject, eventdata, handles)
         % handles structure. The frame image is then closed
 %         display('Marker 4');
         assignin('base','CumMarkedMarkersLocations', AllFramesMarkerLocData);
-        assignin('base','FrameImagesWithAllMarkers', FrameInfo);
+        assignin('base','FrameInfo', FrameInfo);
 %         display('Marker 5');
         handles.AllFramesMarkerLocData = AllFramesMarkerLocData;
-        handles.FrameImagesWithAllMarkers = FrameInfo;
+        handles.FrameInfo = FrameInfo;
 %         display('Marker 6');
         guidata(hObject, handles);
 %         display('Marker 7');
@@ -864,6 +884,7 @@ set(handles.begin_button,'String','Resume');
 for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
     iMarker = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),4));
     iFrame = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),9));
+    iFrameRegion = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),10));
     try
         FrameInfo = handles.FrameInfo;
         leftImg = FrameInfo{iFrame,4};
@@ -913,13 +934,13 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
         handles.rightRectPos = rightRectPos;
         guidata(hObject, handles);
         close gcf;
-        uiwait(msgbox({'Generating figure with zoomed-in images' 'Please click the original GUI window after figure appears to know which marker to place'},'modal'));
+        uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
         RedoButton_Frame_handle = figure('units','normalized','outerposition',[0 .09 .85 .85]);
         leftImgHandle = subplot(1,3,1); subimage(leftImg);
         centerImgHandle = subplot(1,3,2); subimage(centerImg);
         rightImgHandle = subplot(1,3,3); subimage(rightImg);
         FrameInfo{iFrame,2} = RedoButton_Frame_handle;
-        handles.FrameImagesWithAllMarkers = FrameInfo;
+        handles.FrameInfo = FrameInfo;
         guidata(hObject,handles);
     end
 
@@ -1016,7 +1037,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             PawCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Red');
             im = PawCenterMarkerCircle;
-            set(0, 'CurrentFigure', im_handle);
+            set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             FrameInfo{iFrame,2} = im;
@@ -1055,7 +1076,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             McPh_pPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Green');
             im = McPh_pPhCenterMarkerCircle;
-            set(0, 'CurrentFigure', im_handle);
+            set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             FrameInfo{iFrame,2} = im;
@@ -1095,7 +1116,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             pPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'White');
             im = pPh_dPhCenterMarkerCircle;
-            set(0, 'CurrentFigure', im_handle);
+            set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             FrameInfo{iFrame,2} = im;
@@ -1135,7 +1156,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             pPh_mPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Cyan');
             im = pPh_mPhCenterMarkerCircle;
-            set(0, 'CurrentFigure', im_handle);
+            set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             FrameInfo{iFrame,2} = im;
@@ -1174,7 +1195,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Magenta');
             im = mPh_dPhCenterMarkerCircle;
-            set(0, 'CurrentFigure', im_handle);
+            set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             FrameInfo{iFrame,2} = im;
@@ -1186,10 +1207,10 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
     % (just in case the GUI is terminated early) and updated in the
     % handles structure. The frame image is then closed
     assignin('base','CumMarkedMarkersLocations', AllFramesMarkerLocData);
-        assignin('base','FrameImagesWithAllMarkers', FrameInfo);
+        assignin('base','FrameInfo', FrameInfo);
 
     handles.AllFramesMarkerLocData = AllFramesMarkerLocData;
-        handles.FrameImagesWithAllMarkers = FrameInfo;
+        handles.FrameInfo = FrameInfo;
 
 %     handles.RedoButton_Frame_handle = RedoButton_Frame_handle;
     guidata(hObject, handles);
@@ -1222,7 +1243,8 @@ function varargout = GUIcreateManualPoints_OutputFcn(hObject, eventdata, handles
 % Get default command line output from handles structure varargout{1} =
 % handles.output; 
 
-try AllFramesMarkerLocData = handles.AllFramesMarkerLocData;
+try 
+   AllFramesMarkerLocData = handles.AllFramesMarkerLocData;
    varargout{1} = AllFramesMarkerLocData;
    uiresume(handles.figure1);
    close;
@@ -1235,7 +1257,7 @@ try AllFramesMarkerLocData = handles.AllFramesMarkerLocData;
 %     close all;
 catch ME
    varargout{1} = ME;
-   uiresume(handles.figure1);
+%    uiresume(handles.figure1);
    close;
     % If the program is closed unexpectedly, data recorded up to that point
     % is saved in CumMarkedMarkersLocations on base workspace.
@@ -1259,19 +1281,20 @@ try
 uiresume;
 handles.output = handles.AllFramesMarkerLocData;
 delete(hObject);
-    
+clf;   
 
 %     varargout{1} = handles.output;
 %     delete(hObject);
 %     close all;
-catch
+catch ME
     
     % If the user attempts to close the function early, an error message
     % pops up, letting the user know program closed and where the data was
     % saved.
     varargout{1} = 'Program closed unexpectedly. Data saved under CumMarkedMarkersLocations B'; %#ok<*NASGU>
     delete(hObject);
-    close all
+    clf;
+%     close all
 end
 
 function figure1_DeleteFcn(hObject,eventdata,handles)
@@ -1391,9 +1414,8 @@ function redo_marker_listbox_Callback(hObject, eventdata, handles)
 % not created until after all CreateFcns called
 
 %% Developer Notes
-% -Check Other Outputs to Base Workspace Section in Intro -WHAT IF THEY
-% SPECIFY # OF FRAMES WITHOUT SPECIFYING END FRAME AND/OR INTERVAL?
-% Incorporate check for at least 2/3. 
+% -Check Other Outputs to Base Workspace Section in Intro 
+% -WHAT IF THEY SPECIFY # OF FRAMES WITHOUT SPECIFYING END FRAME AND/OR INTERVAL? Incorporate check for at least 2/3. 
 % -Export output to Excel in processed data folder
 % -Remove limiters to marker placement put in for testing
 % -Frame image shouldn't keep loading, just load once for a given set of
@@ -1404,3 +1426,4 @@ function redo_marker_listbox_Callback(hObject, eventdata, handles)
 % that are already contained in AllFramesMarkerLocData
 % - Center text in dialog boxes
 % - remove white border on frame images with all markers
+% - replace 3 images in processed with magnification box (immagbox)
