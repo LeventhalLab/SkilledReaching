@@ -165,7 +165,7 @@ for i = 1:NumOfFrames;
         Frames{i} = num2str(StartFrame + initframeCount);
         initframeCount = initframeCount + 1;
     else
-    Frames{i} = num2str(StartFrame + 10 + (finframeCount.*Interval));
+    Frames{i} = num2str(StartFrame + 9 + (finframeCount.*Interval));
     finframeCount = finframeCount+1;
     end
     
@@ -343,7 +343,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
-    for MarkerNum = [1 2 3 48 49 50 51]%Marker:%50 %length(AllFramesMarkerLocData(:,1));
+    for MarkerNum = [1 2 48 49 50 51]; %Marker:length(AllFramesMarkerLocData(:,1));
         
         fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
         
@@ -596,7 +596,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-%                 FrameInfo{iFrame,2} = im;
+                 FrameInfo{iFrame,2} = im;
             end
             
             % for the paw center marker...
@@ -636,7 +636,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-%                 FrameInfo{iFrame,2} = im;
+                 FrameInfo{iFrame,2} = im;
             end
             
             % for the metacarpal phalanges-proximal phalanges (McPh-pPh)
@@ -677,7 +677,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-%                 FrameInfo{iFrame,2} = im;
+                 FrameInfo{iFrame,2} = im;
             end
             
             % for the thumb's proximal phalanges-distal phalanges (pPh-dPh)
@@ -719,7 +719,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-%                 FrameInfo{iFrame,2} = im;
+                 FrameInfo{iFrame,2} = im;
             end
             
             % for the proximal phalanges-middle phalanges (pPh-mPh)
@@ -761,7 +761,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-%                 FrameInfo{iFrame,2} = im;
+                 FrameInfo{iFrame,2} = im;
             end
             
             % for the middle phalanges-distal phalanges (mPh-dPh) joints...
@@ -802,7 +802,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-%                 FrameInfo{iFrame,2} = im;
+                 FrameInfo{iFrame,2} = im;
             end
 %         display('Marker 3');    
         end
@@ -872,6 +872,7 @@ function redo_button_Callback(hObject, eventdata, handles)
 % close;
 LastBeginButtonFrameProcessed = handles.LastBeginButtonFrameProcessed;
 close(LastBeginButtonFrameProcessed);
+close Figure 2;
 
 
 % Import video from handles structure
@@ -884,7 +885,6 @@ FrameInfo = handles.FrameInfo;
 ProcessedDataFolder = handles.ProcessedDataFolder;
 
 Frames = handles.Frames;
-
 
 
 % The numbers of user-selected markers to redo are placed in a vector
@@ -916,13 +916,17 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
     iMarker = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),4));
     iFrame = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),9));
     iFrameRegion = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),10));
+    
+%     beginButton_im = FrameInfo{iFrame,2};
+%     close(beginButton_im);
+    
     if strcmpi(AllFramesMarkerLocData{SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7},'Marker Not Yet Placed')
         uiwait(msgbox({'This marker has not yet been completed' 'Please resume marker placement' 'by pressing the "Resume" button' 'Or choose completed markers to re-do again' 'and press the "Re-do" button'},'modal'));
         break
     end
     
     try        
-        if iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+        if iSelectedRedoMarkerNum == 1 || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
             RedoButton_Frame_handle = figure;
             set(gcf,'units','normalized','outerposition',[0 .09 .85 .85]);
             leftImg = FrameInfo{iFrame,4};
@@ -1309,9 +1313,10 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
     %     handles.RedoButton_Frame_handle = RedoButton_Frame_handle;
     guidata(hObject, handles);
     %     uiresume;
-    if iSelectedRedoMarkerNum == length(SelectedRedoMarkerNum);
-        close(RedoButton_Frame_handle);
-        break
+    if iSelectedRedoMarkerNum == 1;
+        close(RedoButton_Frame_handle)
+    elseif iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+        close(RedoButton_Frame_handle)
     end
 end
 
