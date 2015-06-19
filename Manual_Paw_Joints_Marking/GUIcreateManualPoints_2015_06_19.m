@@ -820,7 +820,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-                 FrameInfo{iFrame,2} = im;
+                FrameInfo{iFrame,2} = im;
             end
 %         display('Marker 3');    
         end
