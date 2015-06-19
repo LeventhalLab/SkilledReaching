@@ -69,7 +69,7 @@
 % correctly.
 
 %% Start of Code
-function varargout = GUIcreateManualPoints(varargin)
+function varargout = GUIcreateManualPoints_2015_06_19(varargin)
 % GUICREATEMANUALPOINTS MATLAB code for GUIcreateManualPoints.fig
 %      GUICREATEMANUALPOINTS, by itself, creates a new
 %      GUICREATEMANUALPOINTS or raises the existing singleton*.

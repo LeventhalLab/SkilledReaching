@@ -1,4 +1,4 @@
-function varargout = GUIcreateFrameStartVP2(varargin)
+function varargout = GUIcreateFrameStart_2015_06_19(varargin)
 %% DELINEATE INPUT AND WAY FUNCTION MUST BE WRITTEN
 
 %% GUICREATEFRAMESTARTVP2 MATLAB code for GUIcreateFrameStartVP2.fig

@@ -178,16 +178,17 @@ for iVideo = 1:length(RatData(SessNum).VideoFiles); %1:length(RatData)
     try
         StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
         if isempty(StartFrame)
-            RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStartVP2(RatData,SessNum,iVideo);
+            RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
             StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
         end
     catch
-        RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStartVP2(RatData,SessNum,iVideo);
+        RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
         StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
     end
-    GUIcreateManualPoints(RatData,SessNum,iVideo,StartFrame,'interval',1);
+    temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',1);
     disp('Done with marking');
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
+    RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
     disp('Marking data written to RatData file');
     %end
 end
