@@ -343,7 +343,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
-    for MarkerNum = [1 2 48 49 50 51]; %Marker:length(AllFramesMarkerLocData(:,1));
+    for MarkerNum = Marker:length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
         
         fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
         
@@ -444,17 +444,35 @@ function begin_button_Callback(hObject, eventdata, handles)
                 guidata(hObject,handles);
                 end
             else
-                if BeginButtonFrameProcessedHandle ~= handles.LastBeginButtonFrameProcessed;
-                    set(groot, 'CurrentFigure', BeginButtonFrameProcessedHandle);
+                if exist('BeginButtonFrameProcessedHandle','var')
+                    if BeginButtonFrameProcessedHandle ~= handles.LastBeginButtonFrameProcessed;
+                        set(groot, 'CurrentFigure', BeginButtonFrameProcessedHandle);
+                        leftImgHandle = subplot(1,3,1); subimage(leftImg);
+                        centerImgHandle = subplot(1,3,2); subimage(centerImg);
+                        rightImgHandle = subplot(1,3,3); subimage(rightImg);
+                        savefig(BeginButtonFrameProcessedHandle,'BeginButtonFrameProcessed.fig');
+                        handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessedHandle;
+                        FrameInfo{iFrame,3} = BeginButtonFrameProcessedHandle.fig;
+                        handles.FrameInfo = FrameInfo;
+                        guidata(hObject,handles);
+                    end
+                else
+                    uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
+                    BeginButtonFrameProcessedHandle = figure('units','normalized','outerposition',[0 .09 .85 .85]);
                     leftImgHandle = subplot(1,3,1); subimage(leftImg);
                     centerImgHandle = subplot(1,3,2); subimage(centerImg);
                     rightImgHandle = subplot(1,3,3); subimage(rightImg);
-                    savefig(BeginButtonFrameProcessedHandle,'BeginButtonFrameProcessed.fig');
+                    ProcessedFrameFilename = sprintf('%s\\%s_Frame_%s_ProcessedImage.fig',ProcessedDataFolder,video.name(1:end-4),Frames{iFrame});
+                    savefig(BeginButtonFrameProcessedHandle,ProcessedFrameFilename);
                     handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessedHandle;
-                    FrameInfo{iFrame,3} = BeginButtonFrameProcessedHandle.fig;
+                    FrameInfo{iFrame,3} = ProcessedFrameFilename;
                     handles.FrameInfo = FrameInfo;
                     guidata(hObject,handles);
-                else
+                    close(2);
+                    im = FrameInfo{iFrame,2};
+                    im_handle = figure;
+                    imshow(im,'Border','tight');
+                    set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
                 end
             end
         catch
@@ -872,7 +890,7 @@ function redo_button_Callback(hObject, eventdata, handles)
 % close;
 LastBeginButtonFrameProcessed = handles.LastBeginButtonFrameProcessed;
 close(LastBeginButtonFrameProcessed);
-close Figure 2;
+close(2);
 
 
 % Import video from handles structure
