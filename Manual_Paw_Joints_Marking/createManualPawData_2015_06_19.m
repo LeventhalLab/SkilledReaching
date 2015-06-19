@@ -45,6 +45,8 @@ for iDate = 1:(length(RatRawDataLookUp)-3)
     RatData(iDate).VideoFiles = dir(fullfile(RatData(iDate).DateFolders,'*.avi'));    
 end
 
+PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
+save(PawPointFilename);
 % Make VideoReader Objects for all the videos of a given session
 uiwait(msgbox('Please select the session you would like to analyze','modal'));
 RatSessDir = uigetdir(RatRawDataDirPath);
@@ -56,6 +58,7 @@ for j = 1:(length(RatData(SessNum).VideoFiles));
     video = fullfile(RatData(SessNum).DateFolders,RatData(SessNum).VideoFiles(j).name);
     RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
 end
+save(PawPointFilename);
 %% for iDate = 1:(length(RatRawDataLookUp)-3)
 %         for iVideo = 1:(length(RatData(iDate).VideoFiles));
 %             fprintf('Working on video %d out of %d\n',iVideo,(length(RatData(iDate).VideoFiles)));
@@ -185,12 +188,14 @@ for iVideo = 1:length(RatData(SessNum).VideoFiles); %1:length(RatData)
         RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
         StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
     end
+    save(PawPointFilename);
     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',1);
     disp('Done with marking');
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
     disp('Marking data written to RatData file');
     %end
+    save(PawPointFilename);
 end
 
 % If left click is made after placing marker, record marker position

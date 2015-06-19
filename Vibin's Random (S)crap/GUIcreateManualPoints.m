@@ -69,7 +69,7 @@
 % correctly.
 
 %% Start of Code
-function varargout = GUIcreateManualPoints_2015_06_19(varargin)
+function varargout = GUIcreateManualPoints_2015_06_19_2015_06_19(varargin)
 % GUIcreateManualPoints_2015_06_19 MATLAB code for GUIcreateManualPoints_2015_06_19.fig
 %      GUIcreateManualPoints_2015_06_19, by itself, creates a new
 %      GUIcreateManualPoints_2015_06_19 or raises the existing singleton*.
@@ -95,7 +95,7 @@ function varargout = GUIcreateManualPoints_2015_06_19(varargin)
 
 % Edit the above text to modify the response to help GUIcreateManualPoints_2015_06_19
 
-% Last Modified by GUIDE v2.5 19-Jun-2015 16:31:45
+% Last Modified by GUIDE v2.5 09-Jun-2015 15:52:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;

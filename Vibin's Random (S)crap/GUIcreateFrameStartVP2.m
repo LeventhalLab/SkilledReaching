@@ -1,4 +1,4 @@
-function varargout = GUIcreateFrameStart_2015_06_19(varargin)
+function varargout = GUIcreateFrameStartVP2(varargin)
 %% DELINEATE INPUT AND WAY FUNCTION MUST BE WRITTEN
 
 %% GUIcreateFrameStart_2015_06_19 MATLAB code for GUIcreateFrameStart_2015_06_19.fig
@@ -41,7 +41,7 @@ function varargout = GUIcreateFrameStart_2015_06_19(varargin)
 
 % Edit the above text to modify the response to help GUIcreateFrameStart_2015_06_19
 
-% Last Modified by GUIDE v2.5 19-Jun-2015 16:25:32
+% Last Modified by GUIDE v2.5 19-Jun-2015 13:28:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -69,7 +69,7 @@ function GUIcreateFrameStart_2015_06_19_OpeningFcn(hObject, eventdata, handles, 
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to GUIcreateFrameStart_2015_06_19 (see VARARGIN)
+% varargin   command line arguments to GUIcreateFrameStartVP2 (see VARARGIN)
 
 if nargin > 0 ;
     RatData = varargin{1};
@@ -79,18 +79,18 @@ end
 
 set(handles.video_path_txtbox,'string',fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
 
-% Choose default command line output for GUIcreateFrameStart_2015_06_19
+% Choose default command line output for GUIcreateFrameStartVP2
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes GUIcreateFrameStart_2015_06_19 wait for user response (see UIRESUME)
+% UIWAIT makes GUIcreateFrameStartVP2 wait for user response (see UIRESUME)
  uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = GUIcreateFrameStart_2015_06_19_OutputFcn(hObject, eventdata, handles) 
+function varargout = GUIcreateFrameStartVP2_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -98,12 +98,12 @@ function varargout = GUIcreateFrameStart_2015_06_19_OutputFcn(hObject, eventdata
 
 % Get default command line output from handles structure
 % varargout{1} = handles.output;
-StartFrameOrNaN = str2double(handles.UI_start_frame_txtbox.String);
+StartFrameOrNaN = str2num(handles.UI_start_frame_txtbox.String);
 varargout{1} = StartFrameOrNaN;
 uiresume(handles.figure1);
 close;
 
-function UI_start_frame_txtbox_Callback(hObject, eventdata, handles) %#ok<*INUSD>
+function UI_start_frame_txtbox_Callback(hObject, eventdata, handles)
 % hObject    handle to UI_start_frame_txtbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
