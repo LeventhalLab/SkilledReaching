@@ -1,4 +1,4 @@
-function centerMask = identifyCenterDigits(centerImg, digitMirrorMask, fundmat, rat_metadata, varargin)
+function maskedPaw = identifyCenterDigits(centerImg, digitMirrorMask, fundmat, rat_metadata, varargin)
 %
 % usage
 %

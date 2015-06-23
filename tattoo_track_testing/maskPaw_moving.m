@@ -1,4 +1,4 @@
-function paw_mask = maskPaw( img, BGimg, register_ROI, F, rat_metadata, boxMarkers, varargin )
+function paw_mask = maskPaw_moving( img, BGimg, digitMirrorMask_dorsum, digitCenterMask, register_ROI, F, rat_metadata, boxMarkers, varargin )
 %
 % usage:
 %
@@ -38,8 +38,9 @@ mirrorPawBlob.LabelMatrixOutputPort = true;
 mirrorPawBlob.MinimumBlobArea = 3000;
 mirrorPawBlob.MaximumBlobArea = 10000;
 
+maxPixelsTraveled = 15;
 
-for iarg = 1 : 2 : nargin - 6
+for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
         case 'diffthreshold',
             diff_threshold = varargin{iarg + 1};
@@ -53,6 +54,8 @@ for iarg = 1 : 2 : nargin - 6
             mirrorPawBlob.MinimumBlobArea = varargin{iarg + 1};
         case 'maxmirrorpawarea',
             mirrorPawBlob.MaximumBlobArea = varargin{iarg + 1};
+        case 'maxpixelstraveled',
+            maxPixelsTraveled = varargin{iarg + 1};
     end
 end
 
@@ -60,7 +63,20 @@ paw_diff_img = cell(1,3);paw_img = cell(1,3);
 thresh_mask = cell(1,3);
 paw_mask = cell(1,3);
 bg_subtracted_image = imabsdiff(img, BGimg);
-
+% create a mask for the box front in the left and right mirrors
+boxFrontMask = cell(1,2);
+x_boxFront = boxMarkers.frontPanel_x(1,:) - register_ROI(1,1) + 1;
+y_boxFront = boxMarkers.frontPanel_y(1,:) - register_ROI(1,2) + 1;
+boxFrontMask{1} = poly2mask(x_boxFront, ...
+                            y_boxFront, ...
+                            register_ROI(1,4) + 1, ...
+                            register_ROI(1,3) + 1);
+x_boxFront = boxMarkers.frontPanel_x(2,:) - register_ROI(3,1) + 1;
+y_boxFront = boxMarkers.frontPanel_y(1,:) - register_ROI(3,2) + 1;
+boxFrontMask{2} = poly2mask(x_boxFront, ...
+                            y_boxFront, ...
+                            register_ROI(3,4) + 1, ...
+                            register_ROI(3,3) + 1);
 for ii = 1 : 3
     paw_diff_img{ii} = bg_subtracted_image(register_ROI(ii,2):register_ROI(ii,2) + register_ROI(ii,4),...
                                            register_ROI(ii,1):register_ROI(ii,1) + register_ROI(ii,3),:);
@@ -70,38 +86,57 @@ for ii = 1 : 3
 	thresh_mask{ii} = rgb2gray(paw_diff_img{ii}) > diff_threshold;
 end
 
+if strcmpi(rat_metadata.pawPref,'right')
+    prev_mask{1} = (digitMirrorMask_dorsum(:,:,1) | ...
+                    digitMirrorMask_dorsum(:,:,2) | ...
+                    digitMirrorMask_dorsum(:,:,3) | ...
+                    digitMirrorMask_dorsum(:,:,4) | ...
+                    digitMirrorMask_dorsum(:,:,5));
+else
+    prev_mask{3} = (digitMirrorMask_dorsum(:,:,1) | ...
+                    digitMirrorMask_dorsum(:,:,2) | ...
+                    digitMirrorMask_dorsum(:,:,3) | ...
+                    digitMirrorMask_dorsum(:,:,4) | ...
+                    digitMirrorMask_dorsum(:,:,5));
+end
+prev_mask{2} = (digitCenterMask(:,:,1) | ...
+                digitCenterMask(:,:,2) | ...
+                digitCenterMask(:,:,3) | ...
+                digitCenterMask(:,:,4) | ...
+                digitCenterMask(:,:,5));
 % work on the left and right images first...
 SE = strel('disk',4);
 for ii = 1 : 2 : 3
-    paw_mask{ii} = bwdist(thresh_mask{ii}) < 2;
+%     prev_mask = imdilate(prev_paw_mask{ii}, strel('disk',maxPixelsTraveled));
+%     prev_mask = fliplr(prev_mask);
+    
+    figure(1)
+    imshow(prev_mask)
+    figure(2)
+    imshow(thresh_mask{ii})
+    paw_mask{ii} = thresh_mask{ii} & prev_mask;
+    paw_mask{ii} = bwdist(paw_mask{ii}) < 2;
     paw_mask{ii} = imopen(paw_mask{ii}, SE);
     paw_mask{ii} = imclose(paw_mask{ii},SE);
     % try dilating the image slightly to make sure we don't miss the
     % boundaries of the paw/digits
     paw_mask{ii} = imfill(paw_mask{ii},'holes');
     paw_mask{ii} = imdilate(paw_mask{ii},SE);
-    
-    % only take regions that are on the correct side of the front box wall
-    wallMask = false(size(paw_mask{ii}));
-    if ii == 1
-        % only take points to the left of the red mirror beads
-        rightBorder = max(boxMarkers.beadLocations.left_mirror_red_beads(:,1)) + 25;
-        rightBorder = rightBorder + register_ROI(1,1);
-        wallMask(:, 1:rightBorder) = true;
-    else
-        % only take points to the right of the green mirror beads
-        leftBorder = min(boxMarkers.beadLocations.right_mirror_green_beads(:,1)) - 25;
-        leftBorder = leftBorder - register_ROI(3,1);
-        wallMask(:, leftBorder:end) = true;
-    end
-    paw_mask{ii} = paw_mask{ii} & wallMask;
-    
     paw_mask{ii} = fliplr(paw_mask{ii});
     
+    % WORKING HERE - NEED TO FIGURE OUT HOW TO ACCOUNT FOR PAW PASSING
+    % BEHIND THE FRONT PANEL OF THE BOX
+
+    
+    
+    
     % take only the largest region from each mask
-    [A,~,~,~,labelMask] = step(mirrorPawBlob, paw_mask{ii});
-    validIdx = find(A == max(A));
-    paw_mask{ii} = (labelMask == validIdx);
+%     [A,~,~,~,labelMask] = step(mirrorPawBlob, paw_mask{ii});
+%     validIdx = find(A == max(A));
+%     paw_mask{ii} = (labelMask == validIdx);
+%     figure(1)
+%     imshow(paw_mask{ii})
+
 end
 
 if strcmpi(rat_metadata.pawPref,'right')    % back of paw in the left mirror

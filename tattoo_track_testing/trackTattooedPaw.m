@@ -1,4 +1,4 @@
-function [digitImg_enh,centerImg_enh] =trackTattooedPaw( video, rat_metadata, Fleft, Fright, register_ROI, varargin )
+function [digitMirrorMask_dorsum,digitCenterMask] =trackTattooedPaw( video, rat_metadata, F, register_ROI, boxMarkers, varargin )
 %
 % INPUTS:
 %   video - a videoReader object containing the video recorded from 
@@ -8,6 +8,12 @@ function [digitImg_enh,centerImg_enh] =trackTattooedPaw( video, rat_metadata, Fl
 %   1) find the trigger frame
 %   2)
 
+% NOTES:
+% - CONSIDER AN ALGORITHM WHERE WE LOOK FOR ALL THE DIGITS AND THE DORSUM
+%   OF THE PAW; IF WE DON'T FIND IT, KEEP MOVING THROUGH FRAMES UNTIL WE DO
+% - NEED TO THINK ABOUT EXACTLY WHAT WE NEED TO PULL OUT FOR ROBUST
+%   ANALYSES. TO START, LET'S TRY JUST THE CENTROIDS OF THE PAW AND DIGITS
+%   IN EACH PROJECTION
 
 % might be able to set the ROI automatically based on automatic detection
 % of the box edges
@@ -21,8 +27,11 @@ decorrStretchSigma = [025 050 025];
 
 diff_threshold = 45;
 extentLimit = 0.5;
-minCenterPawArea = 2000;
-maxCenterPawArea = 8000;
+minCenterPawArea = 3000;
+maxCenterPawArea = 11000;
+
+minMirrorPawArea = 3000;
+maxMirrorPawArea = 11000;
 
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -46,7 +55,7 @@ end
 %                                                   'bgimg', BGimg, ...
 %                                                   'trigger_roi',ROI_to_find_trigger_frame,...
 %                                                   'grylimits',gray_paw_limits);
-triggerFrame = 511;peakFrame = 532;   % hard code to speed up analysis
+triggerFrame = 511;peakFrame = 532;   % hard code to speed up analysis % peak should be 532
 preReachFrame = triggerFrame - 25;
 % find a mask for the paw in the lateral, central, and right mirrors for
 % the peak frame
@@ -66,20 +75,22 @@ end
 imDiff = imabsdiff(im_preReach,im_peak);
 
 fundmat = zeros(2,3,3);
-fundmat(1,:,:) = Fleft;
-fundmat(2,:,:) = Fright;
-paw_mask = maskPaw(im_peak, BGimg, register_ROI,fundmat,rat_metadata, ...
+fundmat(1,:,:) = F.left;
+fundmat(2,:,:) = F.right;
+paw_mask = maskPaw(im_peak, BGimg, register_ROI,fundmat,rat_metadata, boxMarkers, ...
                    'diffthreshold',diff_threshold,...
                    'extentlimit',extentLimit,...
                    'mincenterpawarea',minCenterPawArea,...
-                   'maxcenterpawarea',maxCenterPawArea);
+                   'maxcenterpawarea',maxCenterPawArea, ...
+                   'minmirrorpawarea', minMirrorPawArea, ...
+                   'maxmirrorpawarea', maxMirrorPawArea);
 if strcmpi(rat_metadata.pawPref,'right')    % back of paw in the left mirror
     % looking in the left mirror for the digits
-    dorsalFundMat = Fleft;
+    dorsalFundMat = F.left;
     dorsalPawMaskIdx = 1;
 else
     % looking in the right mirror for the digits
-    dorsalFundMat = Fright;
+    dorsalFundMat = F.right;
     dorsalPawMaskIdx = 3;
 end
 rgbMask  = repmat(uint8(paw_mask{dorsalPawMaskIdx}),1,1,3);
@@ -107,13 +118,25 @@ centerImg = rgbMask .* peak_paw_img{2};
 % centerImg_enh = hsv2rgb(centerImg_enh);
 
 % find the digits in the mirror frame with the dorsum of the paw
-digitMirrorMask = identifyMirrorDigits(digitImg, rat_metadata);
+digitMirrorMask_dorsum = identifyMirrorDigits_dorsum(digitImg, rat_metadata);
 % find the digits in the center frame
-digitCenterMask = identifyCenterDigits(centerImg, digitMirrorMask, dorsalFundMat, rat_metadata);
+digitCenterMask = identifyCenterDigits(centerImg, digitMirrorMask_dorsum, dorsalFundMat, rat_metadata);
 
-% now have the digits and dorsum of the paw in 2 views, start to work on
-% the 3-D reconstruction
+% now have the digits and dorsum of the paw in 2 views from single frames,
+% start to work on the image tracking. Need to think about whether 3-D
+% reconstruction can contribute to the tracking cost function
 
+centroids = track3Dpaw(video, ...
+                       BGimg, ...
+                       peakFrame, ...
+                       fundmat, ...
+                       paw_mask, ...
+                       digitMirrorMask_dorsum, ...
+                       digitCenterMask, ...
+                       rat_metadata, ...
+                       register_ROI, ...
+                       boxMarkers);
+                            
 % figure(1)
 % imshow(digitImg_enh)
 % figure(2)

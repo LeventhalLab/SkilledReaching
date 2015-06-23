@@ -1,12 +1,15 @@
-function maskedPaw = identifyMirrorDigits(digitImg, rat_metadata, varargin)
+function maskedPaw = identifyMirrorTrack_dorsum(image, rat_metadata, varargin)
 %
 % usage
 %
+% function to find the location of the paw and digits in an image
+% given their locations in a previous image
+%
 % INPUTS:
-%   digitImg - rgb masked image of paw in the relevant mirror. Seems to
+%   image - rgb masked image of paw in the relevant mirror. Seems to
 %       work better if decorrstretched first to enhance color contrast
 %   pawMask - black/white paw mask. easier to include this as an input than
-%       extract from digitImg; if decorrstretch has been performed,
+%       extract from image; if decorrstretch has been performed,
 %       backgound isn't necessarily zero
 %   rat_metadata - needed to know whether to look to the left or right of
 %       the dorsal aspect of the paw to exclude points that can't be digits
@@ -70,7 +73,7 @@ digitBlob.LabelMatrixOutputPort = true;
 digitBlob.MinimumBlobArea = 50;
 digitBlob.MaximumBlobArea = 1500;
 
-pawMask = (rgb2gray(digitImg) > 0);
+pawMask = (rgb2gray(image) > 0);
 s = regionprops(pawMask,'area','centroid');
 wholePawCentroid = s.Centroid;
 % wholePawArea     = s.Area;      % this might be useful to set minimum and maximum digit/paw dorsum sizes as a function of the total paw size
@@ -80,11 +83,11 @@ wholePawCentroid = s.Centroid;
 
 SE = strel('disk',2);
 % digitCtr = zeros(size(rgb_digitBounds,1), 2);
-rgb_enh = zeros(size(rgb_digitBounds,1), size(digitImg,1),size(digitImg,2),size(digitImg,3));
+rgb_enh = zeros(size(rgb_digitBounds,1), size(image,1),size(image,2),size(image,3));
 for ii = 1 : size(rgb_digitBounds, 1)
     
     % CREATE THE ENHANCED IMAGE DEPENDING ON ii BEFORE DOING ANYTHING ELSE
-    rgb_enh(ii,:,:,:)  = enhanceColorImage(digitImg, ...
+    rgb_enh(ii,:,:,:)  = enhanceColorImage(image, ...
                                            decorrStretchMean(ii,:), ...
                                            decorrStretchSigma(ii,:), ...
                                            'mask',pawMask);
@@ -160,8 +163,10 @@ middle_c = mp_c(nnidx,:);
 % a line connecting the base of the index finger and pinky compared to the
 % digit centroids
 % start by creating the convex hull mask for all the digits together
-digitMask = mpMask | idxMask;
-[digitHullMask,digitHullPoints] = multiRegionConvexHullMask(digitMask);
+digitMasks = false(size(mpMask,1),size(mpMask,2));
+digitMasks(:,:,1) = mpMask;
+digitMasks(:,:,2) = idxMask;
+[digitHullMask,digitHullPoints] = multiRegionConvexHullMask(digitMasks);
 
 % make the paw dorsum mask overly inclusive, then subtract out the mask
 % that contains the digits
@@ -216,10 +221,10 @@ nnHull(2,:) = digitHullPoints(nnidx,:);
 % two regions, and has true values on the same side as the index finger
 % centroid
 digitRegionMask = segregateImage(nnHull, idx_c, size(pdMask));
-digitRegionMask = digitRegionMask & ...
-                  idxMask & ...
-                  middleMask & ...
-                  ringMask;
+digitRegionMask = digitRegionMask | ...
+                  idxMask | ...
+                  middleMask | ...
+                  pinkyMask;
 pdMask = pdMask & ~digitRegionMask;
 
 % now should have index finger, middle finger, pinky, and dorsum of paw
@@ -247,7 +252,7 @@ ringMask = (ringLabMask == nnidx);
 % [~,pinky_centroid,~,~,~] = step(digitBlob, pinkyMask);
 
 % create masks using only the center points
-% imshow(digitImg)
+% imshow(image)
 % hold on
 % plot(idx_centroid(1),idx_centroid(2),'marker','*')
 % plot(mid_centroid(1),mid_centroid(2),'marker','*')
@@ -255,55 +260,55 @@ ringMask = (ringLabMask == nnidx);
 % now have all the fingers
 SE = strel('disk',3);
 [pd_A,~,~,~,pdLabMask] = step(pawDorsumBlob, imerode(pdMask, SE));
-validIdx = find(pd_A == max(pd_A));
 if isempty(pd_A)    % in case we destroy the blob by eroding it
     pd_erode = pdMask;
 else
+    validIdx = find(pd_A == max(pd_A));
     pd_erode = (pdLabMask == validIdx);
 end
 
 [idx_A,~,~,~,idxLabMask] = step(digitBlob, imerode(idxMask, SE));
-validIdx = find(idx_A == max(idx_A));
 if isempty(idx_A)    % in case we destroy the blob by eroding it
     idx_erode = idxMask;
 else
+    validIdx = find(idx_A == max(idx_A));
     idx_erode = (idxLabMask == validIdx);
 end
 
 [middle_A,~,~,~,middleLabMask] = step(digitBlob, imerode(middleMask, SE));
-validIdx = find(middle_A == max(middle_A));
 if isempty(middle_A)    % in case we destroy the blob by eroding it
     middle_erode = middleMask;
 else
+    validIdx = find(middle_A == max(middle_A));
     middle_erode = (middleLabMask == validIdx);
 end
 
 [ring_A,~,~,~,ringLabMask] = step(digitBlob, imerode(ringMask, SE));
-validIdx = find(ring_A == max(ring_A));
 if isempty(ring_A)    % in case we destroy the blob by eroding it
     ring_erode = ringMask;
 else
+    validIdx = find(ring_A == max(ring_A));
     ring_erode = (ringLabMask == validIdx);
 end
 
 [pinky_A,~,~,~,pinkyLabMask] = step(digitBlob, imerode(pinkyMask, SE));
-validIdx = find(pinky_A == max(pinky_A));
 if isempty(pinky_A)    % in case we destroy the blob by eroding it
     pinky_erode = pinkyMask;
 else
+    validIdx = find(pinky_A == max(pinky_A));
     pinky_erode = (pinkyLabMask == validIdx);
 end
 
 
-[L,P] = imseggeodesic(digitImg, idx_erode, middle_erode, ring_erode);
-[L2, P2] = imseggeodesic(digitImg, pd_erode, pinky_erode);
+[L,P] = imseggeodesic(image, idx_erode, middle_erode, ring_erode);
+[L2, P2] = imseggeodesic(image, pd_erode, pinky_erode, middle_erode);
 
-% [L,P] = imseggeodesic(digitImg, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
-% [L2,P2] = imseggeodesic(digitImg, imerode(pdMask, SE), imerode(pinkyMask, SE));
-% [L,P] = imseggeodesic(digitImg, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
-% [L2,P2] = imseggeodesic(digitImg, imerode(pdMask, SE), imerode(pinkyMask, SE));
-maskedPaw = false(size(digitImg,1), size(digitImg,2), size(rgb_digitBounds,1));
-maskedPaw(:,:,1) = (P2(:,:,1) > 0.99) & pawMask & ~digitRegionMask;
+% [L,P] = imseggeodesic(image, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
+% [L2,P2] = imseggeodesic(image, imerode(pdMask, SE), imerode(pinkyMask, SE));
+% [L,P] = imseggeodesic(image, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
+% [L2,P2] = imseggeodesic(image, imerode(pdMask, SE), imerode(pinkyMask, SE));
+maskedPaw = false(size(image,1), size(image,2), size(rgb_digitBounds,1));
+maskedPaw(:,:,1) = (P2(:,:,1) > 0.9) & pawMask & ~digitRegionMask;
 maskedPaw(:,:,2) = (P(:,:,1) > 0.9) & pawMask;
 maskedPaw(:,:,3) = (P(:,:,2) > 0.9) & pawMask;
 maskedPaw(:,:,4) = (P(:,:,3) > 0.9) & pawMask;
@@ -335,8 +340,8 @@ end
 %            % DIGITS FIRST, SINCE THEY SHOW UP PRETTY ROBUSTLY?
 %            
 %            
-% %     tempMask = double(HSVthreshold(hsv_digitImg, hsv_digitBounds(ii,:)));
-%     tempMask = tempMask & (rgb2gray(digitImg) > 0);
+% %     tempMask = double(HSVthreshold(hsv_image, hsv_digitBounds(ii,:)));
+%     tempMask = tempMask & (rgb2gray(image) > 0);
 %     tempMask = bwdist(tempMask) < 2;
 %     tempMask = imopen(tempMask, SE);
 %     if ii ~= 3 && ii ~=5    % this can put the two red digits in contact and screw up the analysis

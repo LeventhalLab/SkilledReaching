@@ -1,4 +1,4 @@
-function [new_mask,hullPoints] = multiRegionConvexHullMask(old_mask)
+function [new_mask,hullPoints] = multiRegionConvexHullMask(old_masks)
 %
 % usage: new_mask = multiRegionConvexHullMask(old_mask)
 %
@@ -6,8 +6,9 @@ function [new_mask,hullPoints] = multiRegionConvexHullMask(old_mask)
 % create a new mask for the convex image of all regions combined
 %
 % INPUTS:
-%    old_mask - logical matrix containing a black/white mask with multiple
-%       regions
+%    old_masks - logical matrix containing black/white masks with multiple
+%       regions of the size m x n x p, where m is the image height, n is
+%       the image width, and p is the number of masks
 %
 % OUTPUTS: 
 %    new_mask - logical matrix the same size as old_mask that masks out the
@@ -16,14 +17,32 @@ function [new_mask,hullPoints] = multiRegionConvexHullMask(old_mask)
 %
 
 % first, find a polygon mask using the region centroids as the vertices
-s = regionprops(old_mask, 'Centroid');
 
-if isempty(s)
+% updated 06/18/2015 so that the algorithm can handle multiple "layers" -
+% that way if multiple objects overlap with each other, they are identified
+% as separate "blobs" with more than one centroid - DL
+
+numCentroids = 0;
+old_mask = false(size(old_masks,1),size(old_masks,2));
+for ii = 1 : size(old_masks, 3)
+    s = regionprops(squeeze(old_masks(:,:,ii)), 'Centroid');
+    for jj = 1 : length(s)
+        numCentroids = numCentroids + 1;
+        if numCentroids == 1
+            centroids = s(jj).Centroid;
+        else
+            centroids = [centroids;s(jj).Centroid];
+        end
+    end
+    old_mask = old_mask | squeeze(old_masks(:,:,ii));
+end 
+
+if numCentroids == 0
     new_mask = old_mask;
     return;
 end
 
-if length(s) == 1   % if only one connected 
+if numCentroids == 1   % if only one connected region
     s = regionprops(old_mask, 'BoundingBox', 'ConvexImage', 'ConvexHull');
     new_mask = false(size(old_mask));
     hullLeft  = round(s(1).BoundingBox(1));
@@ -36,10 +55,10 @@ if length(s) == 1   % if only one connected
     return;
 end
 
-centroids = zeros(length(s),2);
-for ii = 1 : length(s)
-    centroids(ii,:) = s(ii).Centroid;
-end
+% centroids = zeros(length(s),2);
+% for ii = 1 : length(s)
+%     centroids(ii,:) = s(ii).Centroid;
+% end
 
 % arrange centroids in a clockwise direction
 centroidCenter = mean(centroids,1);

@@ -1,4 +1,4 @@
-function [Fleft, Fright, varargout] = fundMatrixFromBGimg(BGimg, register_ROI, hsvBounds_beads, varargin)
+function F = fundMatrixFromBGimg(BGimg, boxMarkers, register_ROI, varargin)
 %
 % usage: 
 %
@@ -18,24 +18,41 @@ function [Fleft, Fright, varargout] = fundMatrixFromBGimg(BGimg, register_ROI, h
 % note, this is hard-coded from the session R0030_20140430a. Will need
 % other registration points for different sessions
 
-minBeadArea = 0300;
-maxBeadArea = 1500;
 pointsPerRow = 4;    % for the checkerboard detection
 
 for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
-        case 'minbeadarea',
-            minBeadArea = varargin{iarg + 1};
-        case 'maxbeadarea',
-            maxBeadArea = varargin{iarg + 1};
         case 'pointsperrow',
             pointsPerRow = varargin{iarg + 1};
     end
 end
 
 imWidth = size(BGimg, 2); imHeight = size(BGimg,1);
-% first, extract the relevant images
-BG_hsv = rgb2hsv(BGimg);
+
+leftMirrorPoints  = zeros(22,2);    % markers in the left mirror
+rightMirrorPoints = zeros(22,2);    % markers in the right mirror
+left_center_points  = zeros(22,2); % markers to match with the left mirror in the center image
+right_center_points = zeros(22,2); % markers to match with the right mirror in the center image
+
+% match beads in the mirrors with beads in the direct view
+leftMirrorPoints(1:2,:) = boxMarkers.beadLocations.left_mirror_red_beads;
+leftMirrorPoints(3:4,:) = boxMarkers.beadLocations.left_mirror_top_blue_beads;
+leftMirrorPoints(5:6,:) = boxMarkers.beadLocations.left_mirror_shelf_blue_beads;
+
+left_center_points(1:2,:) = boxMarkers.beadLocations.center_red_beads;
+left_center_points(3:4,:)  = boxMarkers.beadLocations.center_top_blue_beads;
+left_center_points(5:6,:) = boxMarkers.beadLocations.center_shelf_blue_beads;
+
+right_center_points(1:2,:) = boxMarkers.beadLocations.center_green_beads;
+right_center_points(3:4,:) = boxMarkers.beadLocations.center_top_blue_beads;
+right_center_points(5:6,:) = boxMarkers.beadLocations.center_shelf_blue_beads;
+
+rightMirrorPoints(1:2,:) = boxMarkers.beadLocations.right_mirror_green_beads;
+rightMirrorPoints(3:4,:) = boxMarkers.beadLocations.right_mirror_top_blue_beads;
+rightMirrorPoints(5:6,:) = boxMarkers.beadLocations.right_mirror_shelf_blue_beads;
+
+startMatchPoint= 7;
+
 BG_lft = uint8(BGimg(register_ROI(1,2):register_ROI(1,2) + register_ROI(1,4), ...
                      register_ROI(1,1):register_ROI(1,1) + register_ROI(1,3), :));
 BG_ctr = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
@@ -47,131 +64,22 @@ BG_leftctr  = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4
 BG_rightctr = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
                     round(imWidth/2):register_ROI(2,1) + register_ROI(2,3), :));
 
-% find the colored beads; looks like HSV space is the way to go, but need
-% to remember that the hue space is circular
-
-% find the beads
-h_beadBlob = vision.BlobAnalysis;
-h_beadBlob.AreaOutputPort = true;
-h_beadBlob.CentroidOutputPort = true;
-h_beadBlob.EccentricityOutputPort = true;
-h_beadBlob.MinimumBlobArea = minBeadArea;
-h_beadBlob.MaximumBlobArea = maxBeadArea;
-h_beadBlob.LabelMatrixOutputPort = true;
-beadMask = zeros(size(BGimg,1), size(BGimg, 2), 3);    % 3 different bead colors
-beadArea = cell(1,3); beadCent = cell(1,3); beadbbox = cell(1,3);
-beadEcc  = cell(1,3); beadLabelMatrix = cell(1,3);
-beadSortIdx = cell(1,3);
-for ii = 1 : 3
-    thresh_mask = HSVthreshold(BG_hsv, hsvBounds_beads(ii,:));
-    thresh_mask = imfill(thresh_mask,'holes');
-    
-%     figure(2)
-%     hold off
-    [beadArea{ii},beadCent{ii},beadbbox{ii},beadEcc{ii},beadLabelMatrix{ii}] = step(h_beadBlob,thresh_mask);
-%     imshow(double(beadLabelMatrix{ii})/12)
-    [~, beadSortIdx{ii}] = sort(beadCent{ii}(:,1));   % sort beads by centroids moving from left to right across the screen
-    beadCent{ii} = beadCent{ii}(beadSortIdx{ii},:);
-%     hold on
-%     for jj = 1 : size(beadCent{ii},1)
-%         plot(beadCent{ii}(jj,1),beadCent{ii}(jj,2),'marker','*','color','r','linestyle','none')
-%     end
-    beadMask(:,:,ii) = bwdist(thresh_mask) < 3;
-end
-
-leftMirrorPoints  = zeros(22,2);    % markers in the left mirror
-rightMirrorPoints = zeros(22,2);    % markers in the right mirror
-left_center_points  = zeros(22,2); % markers to match with the left mirror in the center image
-right_center_points = zeros(22,2); % markers to match with the right mirror in the center image
-
-% map left mirror bead centroids to center view bead centroids
-% top red bead is first row; bottom red bead is second row
-% next blue beads above reaching slot: top blue bead is third row, bottom
-%   blue bead is fourth row 
-
-% RED BEADS
-left_mirror_red_beads = beadCent{1}(1:2,:);
-[~, idx] = sort(left_mirror_red_beads(:,2));
-left_mirror_red_beads = left_mirror_red_beads(idx,:);
-leftMirrorPoints(1:2,:) = left_mirror_red_beads;
-
-center_red_beads = beadCent{1}(3:4,:);
-[~, idx] = sort(center_red_beads(:,2));
-center_red_beads = center_red_beads(idx,:);
-left_center_points(1:2,:) = center_red_beads;
-
-% BLUE BEADS ON THE LEFT
-left_mirror_blue_beads = beadCent{3}(1:4,:);
-[~, idx] = sort(left_mirror_blue_beads(:,2));
-left_mirror_top_blue_beads = left_mirror_blue_beads(idx(1:2),:);
-leftMirrorPoints(3:4,:) = left_mirror_top_blue_beads;
-
-left_mirror_shelf_blue_beads = left_mirror_blue_beads(idx(3:4),:);    % the two bottom beads in the left mirror
-% now sort from left to right to match with the front view beads
-[~, shelf_idx] = sort(left_mirror_shelf_blue_beads(:,1));
-left_mirror_shelf_blue_beads = left_mirror_shelf_blue_beads(shelf_idx, :);
-leftMirrorPoints(5:6,:) = left_mirror_shelf_blue_beads;
-
-% BLUE BEADS IN THE CENTER
-% first the blue beads next to the reaching slot on top
-center_blue_beads = beadCent{3}(5:8,:);
-[~, idx] = sort(center_blue_beads(:, 2));
-center_top_blue_beads = center_blue_beads(idx(1:2),:);
-left_center_points(3:4,:)  = center_top_blue_beads;
-right_center_points(3:4,:) = center_top_blue_beads;
-
-% now the blue beads on the shelf
-center_shelf_blue_beads = center_blue_beads(idx(3:4),:);   % these are the bottom two blue beads
-[~, idx] = sort(center_shelf_blue_beads(:,1));    % find left and right blue beads
-center_shelf_blue_beads = center_shelf_blue_beads(idx,:);
-left_center_points(5:6,:) = center_shelf_blue_beads;
-right_center_points(5:6,:) = center_shelf_blue_beads;    % order switches for the right mirror
-
-% BLUE BEADS IN THE RIGHT MIRROR
-right_mirror_blue_beads = beadCent{3}(9:12,:);
-[~, idx] = sort(right_mirror_blue_beads(:,2));
-right_mirror_top_blue_beads = right_mirror_blue_beads(idx(1:2),:);
-rightMirrorPoints(3:4,:) = right_mirror_top_blue_beads;
-
-right_mirror_shelf_blue_beads = right_mirror_blue_beads(idx(3:4),:);
-[~, idx] = sort(right_mirror_shelf_blue_beads(:,1));    % sort shelf beads from left to right; right bead is the reflection of the near bead in front
-right_mirror_shelf_blue_beads = right_mirror_shelf_blue_beads(idx,:);
-rightMirrorPoints(5:6,:) = right_mirror_shelf_blue_beads;
-
-% GREEN BEADS
-if size(beadCent{2},1) > 4        % if a green bead shows up in the left mirror, ignore it
-    beadCent{2} = beadCent{2}(end-3:end,:);
-end
-right_mirror_green_beads = beadCent{2}(3:4,:);
-[~, idx] = sort(right_mirror_green_beads(:,2));    % sort from top to bottom
-right_mirror_green_beads = right_mirror_green_beads(idx,:);
-rightMirrorPoints(1:2,:) = right_mirror_green_beads;
-
-center_green_beads = beadCent{2}(1:2,:);
-[~, idx] = sort(center_green_beads(:, 2));
-center_green_beads = center_green_beads(idx,:);
-right_center_points(1:2,:) = center_green_beads;
-
-startMatchPoint= 7;
-% I CHECKED THAT THE ORDER OF THE FEATURE MATCHING MATRICES IS CORRECT, AT
-% LEAST FOR THE BEADS UP TO THIS POINT
-
 % MATCH THE CHECKERBOARD POINTS
 % find the checkerboards, and map them onto coordinates in the original
 % image
-left_mirror_cb  = detect_SR_checkerboard(BG_lft);
-right_mirror_cb = detect_SR_checkerboard(BG_rgt);
-left_center_cb  = detect_SR_checkerboard(BG_leftctr);
-right_center_cb = detect_SR_checkerboard(BG_rightctr);
+% left_mirror_cb  = detect_SR_checkerboard(BG_lft);
+% right_mirror_cb = detect_SR_checkerboard(BG_rgt);
+% left_center_cb  = detect_SR_checkerboard(BG_leftctr);
+% right_center_cb = detect_SR_checkerboard(BG_rightctr);
 
-left_mirror_cb(:,1) = left_mirror_cb(:,1) + register_ROI(1,1) - 1;
-left_mirror_cb(:,2) = left_mirror_cb(:,2) + register_ROI(1,2) - 1;
-right_mirror_cb(:,1) = right_mirror_cb(:,1) + register_ROI(3,1) - 1;
-right_mirror_cb(:,2) = right_mirror_cb(:,2) + register_ROI(3,2) - 1;
-left_center_cb(:,1) = left_center_cb(:,1) + register_ROI(2,1) - 1;
-left_center_cb(:,2) = left_center_cb(:,2) + register_ROI(2,2) - 1;
-right_center_cb(:,1) = right_center_cb(:,1) + round(imWidth/2) - 1;
-right_center_cb(:,2) = right_center_cb(:,2) + register_ROI(2,2) - 1;
+left_mirror_cb(:,1) = boxMarkers.cbLocations.left_mirror_cb(:,1) + register_ROI(1,1) - 1;
+left_mirror_cb(:,2) = boxMarkers.cbLocations.left_mirror_cb(:,2) + register_ROI(1,2) - 1;
+right_mirror_cb(:,1) = boxMarkers.cbLocations.right_mirror_cb(:,1) + register_ROI(3,1) - 1;
+right_mirror_cb(:,2) = boxMarkers.cbLocations.right_mirror_cb(:,2) + register_ROI(3,2) - 1;
+left_center_cb(:,1) = boxMarkers.cbLocations.left_center_cb(:,1) + register_ROI(2,1) - 1;
+left_center_cb(:,2) = boxMarkers.cbLocations.left_center_cb(:,2) + register_ROI(2,2) - 1;
+right_center_cb(:,1) = boxMarkers.cbLocations.right_center_cb(:,1) + round(imWidth/2) - 1;
+right_center_cb(:,2) = boxMarkers.cbLocations.right_center_cb(:,2) + register_ROI(2,2) - 1;
 
 % now map the points into the point-matching matrices
 num_cb_points = size(left_mirror_cb, 1);
@@ -183,7 +91,6 @@ rightMirrorPoints(startMatchPoint:endMatchPoint,:) = right_mirror_cb;
 
 numRows = size(left_center_cb,1) / pointsPerRow;
 for iRow = 1 : numRows
-    iRow
     startIdx = (iRow-1)*pointsPerRow + 1;
     endIdx   = iRow*pointsPerRow;
     left_center_cb(startIdx:endIdx,:) = left_center_cb(endIdx:-1:startIdx,:);
@@ -202,31 +109,23 @@ left_center_points(:,1)  = left_center_points(:,1) - register_ROI(2,1) + 1;
 right_center_points(:,1) = right_center_points(:,1) - register_ROI(2,1) + 1;
 
 % calculate the fundamental matrices
-Fleft  = estimateFundamentalMatrix(leftMirrorPoints, left_center_points,'method','norm8point');
-Fright = estimateFundamentalMatrix(rightMirrorPoints, right_center_points,'method','norm8point');
+F.left  = estimateFundamentalMatrix(leftMirrorPoints, left_center_points,'method','norm8point');
+F.right = estimateFundamentalMatrix(rightMirrorPoints, right_center_points,'method','norm8point');
 
-matchedPoints{1} = leftMirrorPoints;
-matchedPoints{2} = rightMirrorPoints;
-matchedPoints{3} = left_center_points;
-matchedPoints{4} = right_center_points;
+% matchedPoints{1} = leftMirrorPoints;
+% matchedPoints{2} = rightMirrorPoints;
+% matchedPoints{3} = left_center_points;
+% matchedPoints{4} = right_center_points;
 
-varargout{1} = matchedPoints;
+% varargout{1} = matchedPoints;
 
-end
+
 % 
 % % WORKING HERE...
 % % WORKING ON A CHECK TO SEE IF THE EPIPOLAR LINES CROSS THE RIGHT SPOTS
-% % leftLines   = epipolarLine(Fleft, lftFrame_points);
-% % righttLines = epipolarLine(Fright, rtFrame_points);
-% % 
-% % leftPoints  = lineToBorderPoints(leftLines, [size(ctr_calROI,1),size(ctr_calROI,2)]);
-% % rightPoints = lineToBorderPoints(righttLines, [size(ctr_calROI,1),size(ctr_calROI,2)]);
-% % 
-% % figure(3);
-% % line(leftPoints(:,[1,3])',leftPoints(:,[2,4])');
-% % line(rightPoints(:,[1,3])',rightPoints(:,[2,4])');
+
 % 
-% 
+% % 
 % figure(1);imshow(fliplr(BG_lft));hold on
 % plot(leftMirrorPoints(:,1),leftMirrorPoints(:,2),'color','g','linestyle','none','marker','*');
 % 
@@ -239,7 +138,18 @@ end
 % figure(4);imshow(BG_ctr);hold on
 % plot(right_center_points(:,1),right_center_points(:,2),'color','c','linestyle','none','marker','*');
 % 
+% leftLines   = epipolarLine(Fleft, leftMirrorPoints);
+% righttLines = epipolarLine(Fright, rightMirrorPoints);
 % 
+% leftPoints  = lineToBorderPoints(leftLines, [size(BG_ctr,1),size(BG_ctr,2)]);
+% rightPoints = lineToBorderPoints(righttLines, [size(BG_ctr,1),size(BG_ctr,2)]);
+% 
+% figure(3);
+% line(leftPoints(:,[1,3])',leftPoints(:,[2,4])');
+% figure(4);
+% line(rightPoints(:,[1,3])',rightPoints(:,[2,4])');
+% 
+% % 
 % 
 % hold on
 % plot(leftMirrorPoints(:,1),leftMirrorPoints(:,2),'marker','*','color','g','linestyle','none')
@@ -441,3 +351,4 @@ end
 % % 
 % % 
 % 
+end
