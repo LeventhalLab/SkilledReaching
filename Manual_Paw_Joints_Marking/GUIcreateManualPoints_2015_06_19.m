@@ -345,7 +345,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % CurrentMarker, through to all markers
     for MarkerNum = Marker:length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
         
-        fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
+        fprintf('Working on marker %d out of %d in frame %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)),cell2mat(AllFramesMarkerLocData{MarkerNum,2}));
         
         %Set current marker to whichever marker is currently being worked
         %on, so user can resume from here after completing re-do's
