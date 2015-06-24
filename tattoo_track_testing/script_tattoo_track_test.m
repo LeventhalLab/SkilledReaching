@@ -68,10 +68,12 @@ hsvBounds_paw   = [];
 % second row - green digits
 % third row - purple digits
                
-% BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
-boxMarkers.beadLocations = identifyBeads(BGimg, hsvBounds_beads, ...
-                                         'minbeadarea',minBeadArea, ...
-                                         'maxbeadarea',maxBeadArea);
+BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
+beadLocations = identifyBeads(BGimg, hsvBounds_beads, ...
+                             'minbeadarea',minBeadArea, ...
+                             'maxbeadarea',maxBeadArea);
+boxMarkers.beadLocations = beadLocations;
+
 register_ROI(1,1) = 1; register_ROI(1,2) = 1;   % top left corner of left mirror region of interest
 register_ROI(1,3) = round(min(beadLocations.center_red_beads(:,1))) - 5;  % right edge, move just to the left to make sure red bead centroids can be included in the center image
 register_ROI(1,4) = size(BGimg,1) - register_ROI(1,2);  % bottom edge
@@ -98,10 +100,10 @@ BG_rightctr = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4
                     round(frame_w/2):register_ROI(2,1) + register_ROI(2,3), :));
                 
 % find the checkerboard points
-% cbLocations.left_mirror_cb  = detect_SR_checkerboard(BG_lft);
-% cbLocations.right_mirror_cb = detect_SR_checkerboard(BG_rgt);
-% cbLocations.left_center_cb  = detect_SR_checkerboard(BG_leftctr);
-% cbLocations.right_center_cb = detect_SR_checkerboard(BG_rightctr);
+cbLocations.left_mirror_cb  = detect_SR_checkerboard(BG_lft);
+cbLocations.right_mirror_cb = detect_SR_checkerboard(BG_rgt);
+cbLocations.left_center_cb  = detect_SR_checkerboard(BG_leftctr);
+cbLocations.right_center_cb = detect_SR_checkerboard(BG_rightctr);
 boxMarkers.cbLocations = cbLocations;
 boxMarkers = identifyBoxFront(BGimg, register_ROI, boxMarkers);
 
