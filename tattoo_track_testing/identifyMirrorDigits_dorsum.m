@@ -27,11 +27,7 @@ decorrStretchMean  = [100.0 127.5 100.0     % to isolate dorsum of paw
                       100.0 127.5 100.0     % to isolate red digits
                       127.5 100.0 127.5     % to isolate green digits
                       100.0 127.5 100.0];   % to isolate red digits
-decorrStretchSigma = [025 025 025       % to isolate dorsum of paw
-                      025 025 025       % to isolate blue digits
-                      025 025 025       % to isolate red digits
-                      025 025 025       % to isolate green digits
-                      025 025 025];     % to isolate red digits
+
 decorrStretchSigma = [050 050 050       % to isolate dorsum of paw
                       050 050 050       % to isolate blue digits
                       050 050 050       % to isolate red digits
@@ -51,8 +47,12 @@ rgb_digitBounds = [0.00 0.50 0.50 1.00 0.00 0.80
 
 for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})
-        case digitBounds,
+        case 'digitbounds',
             rgb_digitBounds = varargin{iarg + 1};
+        case 'decorrstretchmean',
+            decorrStretchMean = varargin{iarg + 1};
+        case 'decorrstretchsigma',
+            decorrStretchSigma = varargin{iarg + 1};
     end
 end
 

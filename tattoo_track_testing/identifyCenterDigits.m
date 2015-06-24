@@ -42,8 +42,12 @@ rgb_digitBounds = [0.01 0.50 0.01 0.80 0.01 0.50
                
 for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
-        case digitBounds,
-            hsv_digitBounds = varargin{iarg + 1};
+        case 'digitbounds',
+            rgb_digitBounds = varargin{iarg + 1};
+        case 'decorrstretchmean',
+            decorrStretchMean = varargin{iarg + 1};
+        case 'decorrstretchsigma',
+            decorrStretchSigma = varargin{iarg + 1};
     end
 end
 

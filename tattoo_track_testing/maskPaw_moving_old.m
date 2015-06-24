@@ -1,4 +1,4 @@
-function paw_mask = maskPaw_moving( img, BGimg, digitMirrorMask_dorsum, digitCenterMask, register_ROI, F, rat_metadata, boxMarkers, varargin )
+function paw_mask = maskPaw_moving_old( img, BGimg, prev_paw_mask, register_ROI, F, rat_metadata, boxMarkers, varargin )
 %
 % usage:
 %
@@ -124,7 +124,7 @@ for ii = 1 : 2 : 3
     paw_mask{ii} = imdilate(paw_mask{ii},SE);
     paw_mask{ii} = fliplr(paw_mask{ii});
     
-    % WORKING HERE - NEED TO FIGURE OUT HOW TO ACCOUNT FOR PAW PASSING
+    % NEED TO FIGURE OUT HOW TO ACCOUNT FOR PAW PASSING
     % BEHIND THE FRONT PANEL OF THE BOX
 
     

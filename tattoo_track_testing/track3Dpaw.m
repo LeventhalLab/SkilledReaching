@@ -38,7 +38,32 @@ function centroids = track3Dpaw(video, ...
 % OUTPUTS:
 %
 
+decorrStretchMean_center  = [127.5 100.0 100.0     % to isolate dorsum of paw
+                             127.5 100.0 127.5     % to isolate blue digits
+                             127.5 100.0 127.5     % to isolate red digits
+                             127.5 100.0 127.5     % to isolate green digits
+                             127.5 100.0 127.5];   % to isolate red digits
+decorrStretchSigma_center = [075 075 075       % to isolate dorsum of paw
+                             075 075 075       % to isolate blue digits
+                             075 075 075       % to isolate red digits
+                             075 075 075       % to isolate green digits
+                             075 075 075];     % to isolate red digits
+
+decorrStretchMean_mirror  = [100.0 127.5 100.0     % to isolate dorsum of paw
+                             100.0 127.5 100.0     % to isolate blue digits
+                             100.0 127.5 100.0     % to isolate red digits
+                             127.5 100.0 127.5     % to isolate green digits
+                             100.0 127.5 100.0];   % to isolate red digits
+
+decorrStretchSigma_mirror = [050 050 050       % to isolate dorsum of paw
+                      050 050 050       % to isolate blue digits
+                      050 050 050       % to isolate red digits
+                      050 050 050       % to isolate green digits
+                      050 050 050];     % to isolate red digits
+                  
 startTimeFromPeak = 0.2;    % in seconds
+diff_threshold = 45;
+maxDistPerFrame = 20;
 for iarg = 1 : 2 : nargin - 10
     switch lower(varargin{iarg})
         case 'numbgframes',
@@ -51,6 +76,16 @@ for iarg = 1 : 2 : nargin - 10
             BGimg = varargin{iarg + 1};
         case 'starttimebeforepeak',
             startTimeFromPeak = varargin{iarg + 1};
+        case 'diffthreshold',
+            diff_threshold = varargin{iarg + 1};
+        case 'decorrstretchmean_mirror',
+            decorrStretchMean_mirror = varargin{iarg + 1};
+        case 'decorrstretchsigma_mirror',
+            decorrStretchSigma_mirror = varargin{iarg + 1};
+        case 'decorrstretchmean_center',
+            decorrStretchMean_center = varargin{iarg + 1};
+        case 'decorrstretchsigma_center',
+            decorrStretchSigma_center = varargin{iarg + 1};
     end
 end
 
@@ -88,88 +123,201 @@ end
 % DECORRSTRETCH...
 tracks = initializeTracks();
 numTracks = 0;
-for ii = 1 : size(digitMirrorMask_dorsum, 3)
-    numTracks = numTracks + 1;
-    s = regionprops(squeeze(digitMirrorMask_dorsum(:,:,ii)),'Centroid','BoundingBox');
-    temp = fliplr(squeeze(digitCenterMask(:,:,ii)));
-    imgDigitMirrorMask = false(size(BGimg,1),size(BGimg,2));
+prev_paw_mask_mirror = false(size(BGimg, 1), size(BGimg, 2));
+prev_paw_mask_center = false(size(BGimg, 1), size(BGimg, 2));
+s = struct('Centroid', {}, ...
+           'BoundingBox', {});
+num_elements_to_track = size(digitMirrorMask_dorsum, 3);
+imgDigitMirrorMask = false(size(BGimg,1),size(BGimg,2),num_elements_to_track);
+imgDigitCenterMask = false(size(BGimg,1),size(BGimg,2),num_elements_to_track);
+for ii = 1 : num_elements_to_track
+    
+    temp = fliplr(squeeze(digitMirrorMask_dorsum(:,:,ii)));
+    
     if strcmpi(rat_metadata.pawPref,'right')
         imgDigitMirrorMask(register_ROI(1,2):register_ROI(1,2)+register_ROI(1,4), ...
-                           register_ROI(1,1):register_ROI(1,3)+register_ROI(1,3)) = temp;
+                           register_ROI(1,1):register_ROI(1,1)+register_ROI(1,3),ii) = temp;
     else
         imgDigitMirrorMask(register_ROI(3,2):register_ROI(3,2)+register_ROI(3,4), ...
-                           register_ROI(3,1):register_ROI(3,3)+register_ROI(3,3)) = temp;
+                           register_ROI(3,1):register_ROI(3,3)+register_ROI(3,3),ii) = temp;
     end
-    % need code here to calculate mean r, g, b values within each masked
-    % region
-%     rgb_mean = zeros(1,3);
-%     for jj = 1 : 3
-%         curChannelImage = squeeze(pawDorsumMirrorImg(:,:,jj));
-%         maskIdx = find(squeeze(digitMirrorMask_dorsum(:,:,ii)));
-%         rgb_mean(jj) = mean(curChannelImage(maskIdx));
-%     end
+
+    temp = squeeze(digitCenterMask(:,:,ii));
+    imgDigitCenterMask(register_ROI(2,2):register_ROI(2,2)+register_ROI(2,4), ...
+                       register_ROI(2,1):register_ROI(2,1)+register_ROI(2,3),ii) = temp;
+                   
+    s(ii) = regionprops(imgDigitMirrorMask,'Centroid','BoundingBox');
+    s(ii + num_elements_to_track) = regionprops(imgDigitCenterMask,'Centroid','BoundingBox');
+    
+    prev_paw_mask_mirror = prev_paw_mask_mirror | imgDigitMirrorMask;
+    prev_paw_mask_center = prev_paw_mask_center | imgDigitCenterMask;
+end
+prev_paw_mask_mirror = imdilate(prev_paw_mask_mirror, strel('disk', maxDistPerFrame));
+prev_paw_mask_mirror = imfill(prev_paw_mask_mirror,'holes');
+masked_mirror_img = uint8(repmat(prev_paw_mask_mirror,1,1,3));
+masked_mirror_img = masked_mirror_img  .* image;
+
+
+prev_paw_mask_center = imdilate(prev_paw_mask_center, strel('disk', maxDistPerFrame));
+prev_paw_mask_center = imfill(prev_paw_mask_center,'holes');
+masked_center_img = uint8(repmat(prev_paw_mask_center,1,1,3));
+masked_center_img = masked_center_img  .* image;
+
+meanRGBenh = zeros(1,3);
+for ii = 1 : num_elements_to_track
+    
+    masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+                                              decorrStretchMean_mirror(ii,:), ...
+                                              decorrStretchSigma_mirror(ii,:), ...
+                                              'mask',prev_paw_mask_mirror);
+	masked_mirror_hsv = rgb2hsv(masked_mirror_img_enh);
+                                          
+    masked_center_img_enh = enhanceColorImage(masked_center_img, ...
+                                              decorrStretchMean_center(ii,:), ...
+                                              decorrStretchSigma_center(ii,:), ...
+                                              'mask',prev_paw_mask_center);
+	masked_center_hsv = rgb2hsv(masked_center_img_enh);
+    
     
 	kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
-        s.Centroid, [200, 50], [100, 25], 100);
+        s(ii).Centroid, [200, 50], [100, 25], 100);
     CAMshiftTracker = vision.HistogramBasedTracker;
-    initializeObject(CAMshiftTracker, hsv_image(:,:,1), round(s.BoundingBox));
+    initializeObject(CAMshiftTracker, masked_mirror_hsv(:,:,1), round(s(ii).BoundingBox));
     
+    idx = find(squeeze(imgDigitMirrorMask(:,:,ii)));
+    for jj = 1 : 3
+        colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
+        meanRGBenh(jj) = mean(colPlane(idx));
+    end
     newTrack = struct(...
         'id', ii, ...
-        'bbox', s.BoundingBox, ...
+        'bbox', s(ii).BoundingBox, ...
         'kalmanFilter', kalmanFilter, ...
         'CAMshiftTracker', CAMshiftTracker, ...
+        'meanRGBenh', meanRGBenh, ...
+        'age', 1, ...
+        'totalVisibleCount', 1, ...
+        'consecutiveInvisibleCount', 1);
+    numTracks = numTracks + 1;
+    tracks(ii) = newTrack;
+    
+	kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
+        s(ii+num_elements_to_track).Centroid, [200, 50], [100, 25], 100);
+    CAMshiftTracker = vision.HistogramBasedTracker;
+    initializeObject(CAMshiftTracker, masked_center_hsv(:,:,1), round(s(ii+num_elements_to_track).BoundingBox));
+    
+    idx = find(squeeze(imgDigitCenterMask(:,:,ii)));
+    for jj = 1 : 3
+        colPlane = squeeze(masked_center_img_enh(:,:,jj));
+        meanRGBenh(jj) = mean(colPlane(idx));
+    end
+    newTrack = struct(...
+        'id', ii+num_elements_to_track, ...
+        'bbox', s(ii+num_elements_to_track).BoundingBox, ...
+        'kalmanFilter', kalmanFilter, ...
+        'CAMshiftTracker', CAMshiftTracker, ...
+        'meanRGBenh', meanRGBenh, ...
         'age', 1, ...
         'totalVisibleCount', 1, ...
         'consecutiveInvisibleCount', 1);
     
-    tracks(numTracks) = newTrack;
+    numTracks = numTracks + 1;
+    tracks(ii+num_elements_to_track) = newTrack;
 end
 
-for ii = 1 : size(digitCenterMask, 3)
-    numTracks = numTracks + 1;
-    temp = squeeze(digitCenterMask(:,:,ii));
-    imgDigitCenterMask = false(size(BGimg,1),size(BGimg,2));
-    imgDigitCenterMask(register_ROI(2,2):register_ROI(2,2)+register_ROI(2,4), ...
-                       register_ROI(2,1):register_ROI(2,3)+register_ROI(2,3)) = temp;
-    
-    s = regionprops(squeeze(digitCenterMask(:,:,ii)),'Centroid','BoundingBox');
-    
-%     rgb_mean = zeros(1,3);
-%     for jj = 1 : 3
-%         curChannelImage = squeeze(pawDorsumMirrorImg(:,:,jj));
-%         maskIdx = find(squeeze(digitMirrorMask_dorsum(:,:,ii)));
-%         rgb_mean(jj) = mean(curChannelImage(maskIdx));
-%     end
-    
-	kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
-        s.Centroid, [200, 50], [100, 25], 100);
-    CAMshiftTracker = vision.HistogramBasedTracker;
-    initializeObject(CAMshiftTracker, hsv_image(:,:,1), round(s.BoundingBox));
-    
-    newTrack = struct(...
-        'id', ii, ...
-        'bbox', s.BoundingBox, ...
-        'kalmanFilter', kalmanFilter, ...
-        'CAMshiftTracker', CAMshiftTracker, ...
-        'age', 1, ...
-        'totalVisibleCount', 1, ...
-        'consecutiveInvisibleCount', 1);
-    
-    tracks(numTracks) = newTrack;
-end
-% paw_mask = startPawMask;
+% for ii = 1 : size(digitCenterMask, 3)
+%     numTracks = numTracks + 1;
+%     temp = squeeze(digitCenterMask(:,:,ii));
+%     imgDigitCenterMask = false(size(BGimg,1),size(BGimg,2));
+%     imgDigitCenterMask(register_ROI(2,2):register_ROI(2,2)+register_ROI(2,4), ...
+%                        register_ROI(2,1):register_ROI(2,1)+register_ROI(2,3)) = temp;
+%     prev_paw_mask = prev_paw_mask | imgDigitCenterMask;
+%     s = regionprops(imgDigitCenterMask,'Centroid','BoundingBox');
+%     
+% %     rgb_mean = zeros(1,3);
+% %     for jj = 1 : 3
+% %         curChannelImage = squeeze(pawDorsumMirrorImg(:,:,jj));
+% %         maskIdx = find(squeeze(digitMirrorMask_dorsum(:,:,ii)));
+% %         rgb_mean(jj) = mean(curChannelImage(maskIdx));
+% %     end
+%     
+% 	kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
+%         s.Centroid, [200, 50], [100, 25], 100);
+%     CAMshiftTracker = vision.HistogramBasedTracker;
+%     initializeObject(CAMshiftTracker, hsv_image(:,:,1), round(s.BoundingBox));
+%     
+%     newTrack = struct(...
+%         'id', ii, ...
+%         'bbox', s.BoundingBox, ...
+%         'kalmanFilter', kalmanFilter, ...
+%         'CAMshiftTracker', CAMshiftTracker, ...
+%         'age', 1, ...
+%         'totalVisibleCount', 1, ...
+%         'consecutiveInvisibleCount', 1);
+%     
+%     tracks(numTracks) = newTrack;
+% end
+
+% prev_paw_mask = imdilate(prev_paw_mask, strel('disk',3));
 while video.CurrentTime < video.Duration
     image = readFrame(video);
-    hsv_image = rgb2hsv(image);
+    
+    masked_mirror_img = uint8(repmat(prev_paw_mask_mirror,1,1,3));
+    masked_mirror_img = masked_mirror_img  .* image;
+
+    masked_center_img = uint8(repmat(prev_paw_mask_center,1,1,3));
+    masked_center_img = masked_center_img  .* image;
+    
     figure(1)
     imshow(image)
-    hold on
+    for ii = 1 : num_elements_to_track
+        masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+                                                  decorrStretchMean_mirror(ii,:), ...
+                                                  decorrStretchSigma_mirror(ii,:), ...
+                                                  'mask',prev_paw_mask_mirror);
+        masked_mirror_hsv = rgb2hsv(masked_mirror_img_enh);
 
-    for ii = 1 : numTracks
-        bbox = step(tracks(ii).CAMshiftTracker, hsv_image(:,:,1));
-        rectangle('position',bbox);
+        masked_center_img_enh = enhanceColorImage(masked_center_img, ...
+                                                  decorrStretchMean_center(ii,:), ...
+                                                  decorrStretchSigma_center(ii,:), ...
+                                                  'mask',prev_paw_mask_center);
+        masked_center_hsv = rgb2hsv(masked_center_img_enh);
+        
+        mirror_bbox = step(tracks(ii).CAMshiftTracker, masked_mirror_hsv(:,:,1));
+        center_bbox = step(tracks(ii+num_elements_to_track).CAMshiftTracker, masked_center_hsv(:,:,1));
+        
+        figure(1)
+        rectangle('position',mirror_bbox,'edgecolor','r');
+        rectangle('position',center_bbox,'edgecolor','r');
+        
+        figure(2)
+        if ii == 1
+            imshow(masked_mirror_img_enh)
+        end
+        rectangle('position',mirror_bbox,'edgecolor','r');
+        
+        figure(3)
+        if ii == 1
+            imshow(masked_center_img_enh)
+        end
+        rectangle('position',center_bbox,'edgecolor','r');
     end
+        
+%     paw_mask = maskPaw_moving(image, BGimg, prev_paw_mask, register_ROI, F, rat_metadata, boxMarkers);
+%     diff_image  = imabsdiff(image, BGimg);
+%     thresh_mask = (rgb2gray(diff_image) > diff_threshold);
+%     
+%     curr_mask = thresh_mask & prev_paw_mask;
+%     
+%     hsv_image = rgb2hsv(image.*uint8(repmat(curr_mask,1,1,3)));
+%     figure(1)
+%     imshow(image)
+%     hold on
+
+%     for ii = 1 : numTracks
+%         bbox = step(tracks(ii).CAMshiftTracker, hsv_image(:,:,1));
+%         rectangle('position',bbox,'edgecolor','r');
+%     end
 %     paw_mask = maskPaw_moving(image, BGimg, digitMirrorMask_dorsum, digitCenterMask, register_ROI, F, rat_metadata, boxMarkers);
     
     
@@ -208,6 +356,7 @@ function tracks = initializeTracks()
         'bbox', {}, ...
         'kalmanFilter', {}, ...
         'CAMshiftTracker', {}, ...
+        'meanRGBenh', {}, ...
         'age', {}, ...
         'totalVisibleCount', {}, ...
         'consecutiveInvisibleCount', {});

@@ -1,10 +1,11 @@
-function paw_mask = maskPaw_moving( img, BGimg, digitMirrorMask_dorsum, digitCenterMask, register_ROI, F, rat_metadata, boxMarkers, varargin )
+function paw_mask = maskPaw_moving( img, BGimg, prev_paw_mask, register_ROI, F, rat_metadata, boxMarkers, varargin )
 %
 % usage:
 %
 % INPUTS:
 %   img - the image in which to find the paw mask
 %   BGimg - 
+%   prev_paw_mask - 
 %   register_ROI
 %   F - 2 x 3 x 3 matrix; first dimension is left vs right mirror;
 %   	next two dimensions are the fundamental matrices themselves
@@ -59,10 +60,26 @@ for iarg = 1 : 2 : nargin - 7
     end
 end
 
+SE = strel('disk',4);
+
 paw_diff_img = cell(1,3);paw_img = cell(1,3);
 thresh_mask = cell(1,3);
 paw_mask = cell(1,3);
 bg_subtracted_image = imabsdiff(img, BGimg);
+thresh_mask = rgb2gray(bg_subtracted_image) > diff_threshold;
+thresh_mask = thresh_mask & imdilate(prev_paw_mask, strel('disk',maxPixelsTraveled));
+paw_mask = bwdist(thresh_mask) < 2;
+paw_mask = imopen(paw_mask, SE);
+paw_mask = imclose(paw_mask,SE);
+% try dilating the image slightly to make sure we don't miss the
+% boundaries of the paw/digits
+paw_mask = imfill(paw_mask,'holes');
+paw_mask = imdilate(paw_mask,SE);
+% WORKING HERE - NEED TO DO SOMETHING FANCIER THAN JUST BACKGROUND
+% SUBTRACTION FOR THE DIRECT VIEW OF THE PAW; SHOULD WORK FOR THE MIRROR
+% VIEWS, THOUGH.
+    
+    
 % create a mask for the box front in the left and right mirrors
 boxFrontMask = cell(1,2);
 x_boxFront = boxMarkers.frontPanel_x(1,:) - register_ROI(1,1) + 1;
@@ -86,24 +103,6 @@ for ii = 1 : 3
 	thresh_mask{ii} = rgb2gray(paw_diff_img{ii}) > diff_threshold;
 end
 
-if strcmpi(rat_metadata.pawPref,'right')
-    prev_mask{1} = (digitMirrorMask_dorsum(:,:,1) | ...
-                    digitMirrorMask_dorsum(:,:,2) | ...
-                    digitMirrorMask_dorsum(:,:,3) | ...
-                    digitMirrorMask_dorsum(:,:,4) | ...
-                    digitMirrorMask_dorsum(:,:,5));
-else
-    prev_mask{3} = (digitMirrorMask_dorsum(:,:,1) | ...
-                    digitMirrorMask_dorsum(:,:,2) | ...
-                    digitMirrorMask_dorsum(:,:,3) | ...
-                    digitMirrorMask_dorsum(:,:,4) | ...
-                    digitMirrorMask_dorsum(:,:,5));
-end
-prev_mask{2} = (digitCenterMask(:,:,1) | ...
-                digitCenterMask(:,:,2) | ...
-                digitCenterMask(:,:,3) | ...
-                digitCenterMask(:,:,4) | ...
-                digitCenterMask(:,:,5));
 % work on the left and right images first...
 SE = strel('disk',4);
 for ii = 1 : 2 : 3
@@ -124,7 +123,7 @@ for ii = 1 : 2 : 3
     paw_mask{ii} = imdilate(paw_mask{ii},SE);
     paw_mask{ii} = fliplr(paw_mask{ii});
     
-    % WORKING HERE - NEED TO FIGURE OUT HOW TO ACCOUNT FOR PAW PASSING
+    % NEED TO FIGURE OUT HOW TO ACCOUNT FOR PAW PASSING
     % BEHIND THE FRONT PANEL OF THE BOX
 
     
