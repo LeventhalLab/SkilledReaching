@@ -150,6 +150,10 @@ for iarg = 5 : 2 : nargin-4
             Interval = varargin{iarg + 1};
         case 'end_frame',
             EndFrame = varargin{iarg + 1};
+        case 'marker_number'
+            MarkerNum = varargin{iarg+1};
+            handles.CurrentMarker = MarkerNum;
+            guidata(hObject,handles);
     end
 end
 
@@ -345,7 +349,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % CurrentMarker, through to all markers
     for MarkerNum = Marker:length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
         
-        fprintf('Working on marker %d out of %d in frame %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)),cell2mat(AllFramesMarkerLocData{MarkerNum,2}));
+        fprintf('Working on marker %d out of %d',MarkerNum,length(AllFramesMarkerLocData(:,1)))
         
         %Set current marker to whichever marker is currently being worked
         %on, so user can resume from here after completing re-do's
@@ -358,6 +362,8 @@ function begin_button_Callback(hObject, eventdata, handles)
         % Determine the position of the marker's frame number in the array
         % of frame numbers (e.x. the 4th frame for analysis)
         iFrame = AllFramesMarkerLocData{MarkerNum,9}; %length(Frames);
+        
+        fprintf('Marker contained in frame %d\n',str2double(Frames{iFrame}));
         
         % Determine the region of the frame where the marker should be
         % placed
@@ -933,6 +939,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
     fprintf('Working on marker %d out of %d\n',iSelectedRedoMarkerNum,length(SelectedRedoMarkerNum))
     iMarker = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),4));
     iFrame = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),9));
+    fprintf('Marker contained in frame %d\n',str2double(Frames{iFrame}));
     iFrameRegion = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),10));
     
 %     beginButton_im = FrameInfo{iFrame,2};
