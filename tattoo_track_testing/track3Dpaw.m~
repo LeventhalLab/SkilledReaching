@@ -65,6 +65,8 @@ startTimeFromPeak = 0.2;    % in seconds
 diff_threshold = 45;
 maxDistPerFrame = 20;
 RGBradius = 0.1;
+color_zlim = 2;
+pthresh = 0.9;
 
 h = video.Height;
 w = video.Width;
@@ -316,20 +318,67 @@ while video.CurrentTime < video.Duration
             center_RGBz(:,:,jj) = (colPlane - tracks(ii+num_elements_to_track).meanRGBenh(jj)) / ...
                 tracks(ii+num_elements_to_track).stdRGBenh(jj);
         end
-        % WORKING HERE - FIND POINTS WITHIN ONE STANDARD DEVIATION OF MEAN
-        % ENHANCED RGB VALUE
+        
         mirror_RGBzdist = sqrt(sum(mirror_RGBz.^2, 3));
         center_RGBzdist = sqrt(sum(center_RGBz.^2, 3));
         
-        mirror_zmask(:,:,ii) = (abs(mirror_RGBzdist) < 1);
-        center_zmask(:,:,ii) = (abs(center_RGBzdist) < 1);
+        mirror_zmask(:,:,ii) = (abs(mirror_RGBzdist) < color_zlim);
+        center_zmask(:,:,ii) = (abs(center_RGBzdist) < color_zlim);
         
         mirror_zmask(:,:,ii) = mirror_zmask(:,:,ii) & mirror_bboxMask;
         center_zmask(:,:,ii) = center_zmask(:,:,ii) & center_bboxMask;
         
     end
-    [L,P] = imseggeodesic(image, mirror_zmask(:,:,2), mirror_zmask(:,:,3), mirror_zmask(:,:,4));
+    masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+                                              decorrStretchMean_mirror(2,:), ...
+                                              decorrStretchSigma_mirror(2,:), ...
+                                              'mask',prev_paw_mask_center);
+    [~,mirror_P] = imseggeodesic(masked_mirror_img_enh, mirror_zmask(:,:,2), mirror_zmask(:,:,3), mirror_zmask(:,:,4));
+    [~,mirror_P2] = imseggeodesic(masked_mirror_img_enh, mirror_zmask(:,:,3), mirror_zmask(:,:,4), mirror_zmask(:,:,5));
+    
+    masked_center_img_enh = enhanceColorImage(masked_center_img, ...
+                                              decorrStretchMean_center(2,:), ...
+                                              decorrStretchSigma_center(2,:), ...
+                                              'mask',prev_paw_mask_center);
+    [~,center_P] = imseggeodesic(masked_center_img_enh, center_zmask(:,:,2), center_zmask(:,:,3), center_zmask(:,:,4));
+    [~,center_P2] = imseggeodesic(masked_center_img_enh, center_zmask(:,:,3), center_zmask(:,:,4), center_zmask(:,:,5));
         
+    mirrorMask = false(h,w,num_elements_to_track);
+    centerMask = false(h,w,num_elements_to_track);
+    SE = strel('disk',2);
+    for ii = 2 : num_elements_to_track
+        switch ii,
+            case 2,   % index finger
+                mirrorMask(:,:,ii) = (mirror_P(:,:,1) > pthresh);
+                centerMask(:,:,ii) = (center_P(:,:,1) > pthresh);
+            case 3,   % middle finger
+                mirrorMask(:,:,ii) = (mirror_P(:,:,2) > pthresh);
+                centerMask(:,:,ii) = (center_P(:,:,2) > pthresh);
+            case 4,   % ring finger
+                mirrorMask(:,:,ii) = (mirror_P2(:,:,2) > pthresh);
+                centerMask(:,:,ii) = (center_P2(:,:,2) > pthresh);
+            case 5,   % pinky finger
+                mirrorMask(:,:,ii) = (mirror_P2(:,:,3) > pthresh);
+                centerMask(:,:,ii) = (center_P2(:,:,3) > pthresh);
+        end
+    
+        mirrorMask(:,:,ii) = imopen(mirrorMask(:,:,ii), SE);
+        mirrorMask(:,:,ii) = imclose(mirrorMask(:,:,ii), SE);
+        mirrorMask(:,:,ii) = imfill(mirrorMask(:,:,ii), 'holes');
+        
+        centerMask(:,:,ii) = imopen(centerMask(:,:,ii), SE);
+        centerMask(:,:,ii) = imclose(centerMask(:,:,ii), SE);
+        centerMask(:,:,ii) = imfill(centerMask(:,:,ii), 'holes');
+        
+    end
+    
+    % we have the previous paw mask, let's assume
+
+    
+    masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...    % for paw dorsum
+                                              decorrStretchMean_center(1,:), ...
+                                              decorrStretchSigma_center(1,:), ...
+                                              'mask',prev_paw_mask_center);
         
         
 %         mirror_idx = find(mirror_bboxMask);

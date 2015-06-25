@@ -56,33 +56,17 @@ if numCentroids == 1   % if only one connected region
 end
 
 if numCentroids == 2   % if only one connected region
-    % create a polygon by moving one pixel in x and y away from each
-    % centroid to generate 4 vertices
-    centroids = [centroids(1,1) + 1, centroids(1,2) + 1;...
-                 centroids(1,1) - 1, centroids(1,2) - 1;...
-                 centroids(2,1) - 1, centroids(2,2) - 1;...
-                 centroids(2,1) + 1, centroids(1,2) + 1];
-           
-%     % arrange corners in a clockwise direction
-%     cornerCenter = mean(corners,1);
-%     % calculate angles between center point, first point, and the other points
-%     cornerRef = [corners(:,1) - cornerCenter(1), corners(:,2) - cornerCenter(2)];   % corner points in a coordinate system centered on the average of the corners
-%     cornerAngles = angle(cornerRef(:,1) + 1i*cornerRef(:,2));
-%     [~, sortIdx] = sort(cornerAngles);
-%     corners = corners(sortIdx,:);
-% 
-% 
-% 
-%     s = regionprops(old_mask, 'BoundingBox', 'ConvexImage', 'ConvexHull');
-%     new_mask = false(size(old_mask));
-%     hullLeft  = round(s(1).BoundingBox(1));
-%     hullRight = hullLeft + s(1).BoundingBox(3) - 1;
-%     hullTop   = round(s(1).BoundingBox(2));
-%     hullBot   = hullTop + s(1).BoundingBox(4) - 1;
-%     new_mask(hullTop:hullBot, hullLeft:hullRight) = s.ConvexImage;
-%     
-%     hullPoints = s(1).ConvexHull;
-%     return;
+    % create a poly
+    s = regionprops(old_mask, 'BoundingBox', 'ConvexImage', 'ConvexHull');
+    new_mask = false(size(old_mask));
+    hullLeft  = round(s(1).BoundingBox(1));
+    hullRight = hullLeft + s(1).BoundingBox(3) - 1;
+    hullTop   = round(s(1).BoundingBox(2));
+    hullBot   = hullTop + s(1).BoundingBox(4) - 1;
+    new_mask(hullTop:hullBot, hullLeft:hullRight) = s.ConvexImage;
+    
+    hullPoints = s(1).ConvexHull;
+    return;
 end
 
 % now if there are 3 or more centroids, create a polygon using each

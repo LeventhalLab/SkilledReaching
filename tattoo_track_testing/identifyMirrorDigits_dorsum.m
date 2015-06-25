@@ -300,8 +300,8 @@ else
 end
 
 
-[L,P] = imseggeodesic(digitImg, idx_erode, middle_erode, ring_erode);
-[L2, P2] = imseggeodesic(digitImg, pd_erode, pinky_erode, middle_erode);
+[~,P] = imseggeodesic(digitImg, idx_erode, middle_erode, ring_erode);
+[~, P2] = imseggeodesic(digitImg, pd_erode, pinky_erode, middle_erode);
 
 % [L,P] = imseggeodesic(digitImg, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
 % [L2,P2] = imseggeodesic(digitImg, imerode(pdMask, SE), imerode(pinkyMask, SE));
