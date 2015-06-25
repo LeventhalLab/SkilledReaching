@@ -64,6 +64,7 @@ decorrStretchSigma_mirror = [050 050 050       % to isolate dorsum of paw
 startTimeFromPeak = 0.2;    % in seconds
 diff_threshold = 45;
 maxDistPerFrame = 20;
+<<<<<<< HEAD
 RGBradius = 0.1;
 color_zlim = 2;
 pthresh = 0.9;
@@ -71,6 +72,8 @@ pthresh = 0.9;
 h = video.Height;
 w = video.Width;
 
+=======
+>>>>>>> origin/master
 for iarg = 1 : 2 : nargin - 10
     switch lower(varargin{iarg})
         case 'numbgframes',
@@ -153,11 +156,11 @@ for ii = 1 : num_elements_to_track
     imgDigitCenterMask(register_ROI(2,2):register_ROI(2,2)+register_ROI(2,4), ...
                        register_ROI(2,1):register_ROI(2,1)+register_ROI(2,3),ii) = temp;
                    
-    s(ii) = regionprops(imgDigitMirrorMask(:,:,ii),'Centroid','BoundingBox');
-    s(ii + num_elements_to_track) = regionprops(imgDigitCenterMask(:,:,ii),'Centroid','BoundingBox');
+    s(ii) = regionprops(imgDigitMirrorMask,'Centroid','BoundingBox');
+    s(ii + num_elements_to_track) = regionprops(imgDigitCenterMask,'Centroid','BoundingBox');
     
-    prev_paw_mask_mirror = prev_paw_mask_mirror | imgDigitMirrorMask(:,:,ii);
-    prev_paw_mask_center = prev_paw_mask_center | imgDigitCenterMask(:,:,ii);
+    prev_paw_mask_mirror = prev_paw_mask_mirror | imgDigitMirrorMask;
+    prev_paw_mask_center = prev_paw_mask_center | imgDigitCenterMask;
 end
 prev_paw_mask_mirror = imdilate(prev_paw_mask_mirror, strel('disk', maxDistPerFrame));
 prev_paw_mask_mirror = imfill(prev_paw_mask_mirror,'holes');
@@ -170,7 +173,7 @@ prev_paw_mask_center = imfill(prev_paw_mask_center,'holes');
 masked_center_img = uint8(repmat(prev_paw_mask_center,1,1,3));
 masked_center_img = masked_center_img  .* image;
 
-meanRGBenh = zeros(1,3);stdRGBenh = zeros(1,3);
+meanRGBenh = zeros(1,3);
 for ii = 1 : num_elements_to_track
     
     masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
@@ -195,7 +198,6 @@ for ii = 1 : num_elements_to_track
     for jj = 1 : 3
         colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
         meanRGBenh(jj) = mean(colPlane(idx));
-        stdRGBenh(jj) = std(colPlane(idx));
     end
     newTrack = struct(...
         'id', ii, ...
@@ -203,7 +205,6 @@ for ii = 1 : num_elements_to_track
         'kalmanFilter', kalmanFilter, ...
         'CAMshiftTracker', CAMshiftTracker, ...
         'meanRGBenh', meanRGBenh, ...
-        'stdRGBenh', stdRGBenh, ...
         'age', 1, ...
         'totalVisibleCount', 1, ...
         'consecutiveInvisibleCount', 1);
@@ -219,7 +220,6 @@ for ii = 1 : num_elements_to_track
     for jj = 1 : 3
         colPlane = squeeze(masked_center_img_enh(:,:,jj));
         meanRGBenh(jj) = mean(colPlane(idx));
-        stdRGBenh(jj) = std(colPlane(idx));
     end
     newTrack = struct(...
         'id', ii+num_elements_to_track, ...
@@ -227,7 +227,6 @@ for ii = 1 : num_elements_to_track
         'kalmanFilter', kalmanFilter, ...
         'CAMshiftTracker', CAMshiftTracker, ...
         'meanRGBenh', meanRGBenh, ...
-        'stdRGBenh', stdRGBenh, ...
         'age', 1, ...
         'totalVisibleCount', 1, ...
         'consecutiveInvisibleCount', 1);
@@ -279,10 +278,9 @@ while video.CurrentTime < video.Duration
     masked_center_img = uint8(repmat(prev_paw_mask_center,1,1,3));
     masked_center_img = masked_center_img  .* image;
     
-
-    mirror_zmask = false(h,w,num_elements_to_track);
-    center_zmask = false(h,w,num_elements_to_track);
-    for ii = 2 : num_elements_to_track    % do all the digits first
+    figure(1)
+    imshow(image)
+    for ii = 1 : num_elements_to_track
         masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
                                                   decorrStretchMean_mirror(ii,:), ...
                                                   decorrStretchSigma_mirror(ii,:), ...
@@ -298,37 +296,23 @@ while video.CurrentTime < video.Duration
         mirror_bbox = step(tracks(ii).CAMshiftTracker, masked_mirror_hsv(:,:,1));
         center_bbox = step(tracks(ii+num_elements_to_track).CAMshiftTracker, masked_center_hsv(:,:,1));
         
-        % create a "scribble" mask for each digit using the previous
-        % meanRGB values for that digit. Look only within the bounding box
-        % defined by the histogram tracker
-        mirror_bboxMask = false(h,w);
-        center_bboxMask = false(h,w);
-        mirror_bboxMask(mirror_bbox(2):mirror_bbox(2)+mirror_bbox(4)-1,...
-                        mirror_bbox(1):mirror_bbox(1)+mirror_bbox(3)-1) = true;
-        center_bboxMask(center_bbox(2):center_bbox(2)+center_bbox(4)-1,...
-                        center_bbox(1):center_bbox(1)+center_bbox(3)-1) = true;
-        mirror_RGBz = zeros(h,w,3);
-        center_RGBz = zeros(h,w,3);
-        for jj = 1 : 3
-            colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
-            mirror_RGBz(:,:,jj) = (colPlane - tracks(ii).meanRGBenh(jj)) / ...
-                tracks(ii).stdRGBenh(jj);
-            
-            colPlane = squeeze(masked_center_img_enh(:,:,jj));
-            center_RGBz(:,:,jj) = (colPlane - tracks(ii+num_elements_to_track).meanRGBenh(jj)) / ...
-                tracks(ii+num_elements_to_track).stdRGBenh(jj);
+        figure(1)
+        rectangle('position',mirror_bbox,'edgecolor','r');
+        rectangle('position',center_bbox,'edgecolor','r');
+        
+        figure(2)
+        if ii == 1
+            imshow(masked_mirror_img_enh)
         end
+        rectangle('position',mirror_bbox,'edgecolor','r');
         
-        mirror_RGBzdist = sqrt(sum(mirror_RGBz.^2, 3));
-        center_RGBzdist = sqrt(sum(center_RGBz.^2, 3));
-        
-        mirror_zmask(:,:,ii) = (abs(mirror_RGBzdist) < color_zlim);
-        center_zmask(:,:,ii) = (abs(center_RGBzdist) < color_zlim);
-        
-        mirror_zmask(:,:,ii) = mirror_zmask(:,:,ii) & mirror_bboxMask;
-        center_zmask(:,:,ii) = center_zmask(:,:,ii) & center_bboxMask;
-        
+        figure(3)
+        if ii == 1
+            imshow(masked_center_img_enh)
+        end
+        rectangle('position',center_bbox,'edgecolor','r');
     end
+<<<<<<< HEAD
     masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
                                               decorrStretchMean_mirror(2,:), ...
                                               decorrStretchSigma_mirror(2,:), ...
@@ -410,6 +394,8 @@ while video.CurrentTime < video.Duration
 %         end
 %         rectangle('position',center_bbox,'edgecolor','r');
     
+=======
+>>>>>>> origin/master
         
 %     paw_mask = maskPaw_moving(image, BGimg, prev_paw_mask, register_ROI, F, rat_metadata, boxMarkers);
 %     diff_image  = imabsdiff(image, BGimg);
@@ -435,10 +421,10 @@ end
 % detector = vision.ForegroundDetector(...
 %    'NumTrainingFrames', 50, ... % 5 because of short video
 %    'InitialVariance', 30*30); % initial standard deviation of 30
-% blob = vision.BlobAnalysis(...
-%    'CentroidOutputPort', false, 'AreaOutputPort', false, ...
-%    'BoundingBoxOutputPort', true, ...
-%    'MinimumBlobAreaSource', 'Property', 'MinimumBlobArea', 200);
+blob = vision.BlobAnalysis(...
+   'CentroidOutputPort', false, 'AreaOutputPort', false, ...
+   'BoundingBoxOutputPort', true, ...
+   'MinimumBlobAreaSource', 'Property', 'MinimumBlobArea', 200);
 
 sTime = (peakFrameNum / video.FrameRate);
 figure(1)
@@ -465,7 +451,6 @@ function tracks = initializeTracks()
         'kalmanFilter', {}, ...
         'CAMshiftTracker', {}, ...
         'meanRGBenh', {}, ...
-        'stdRGBenh', {}, ...
         'age', {}, ...
         'totalVisibleCount', {}, ...
         'consecutiveInvisibleCount', {});
