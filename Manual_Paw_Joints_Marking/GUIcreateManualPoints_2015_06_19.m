@@ -347,7 +347,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
-    for MarkerNum = Marker:length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
+    for MarkerNum = Marker:Marker+3; %[1 2 48 49 50 51]; %length(AllFramesMarkerLocData(:,1)); 
         
         fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
         

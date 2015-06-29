@@ -28,38 +28,172 @@
 % session, may be removed later
 
 %% Open rat's raw data folder
-clc;
-clear;
-uiwait(msgbox('Please select the rat''s raw data folder','modal'));
+try
+    PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
+    load(PawPointFilename);    
+catch
+%     clc;
+% clear;
+uiwait(msgbox('Please select the rat''s RAW DATA FOLDER','modal'));
 RatRawDataDirPath = uigetdir('\\172.20.138.143\RecordingsLeventhal04\SkilledReaching');
 RatRawDataLookUp = dir(RatRawDataDirPath);
 [pathstr,name,ext] = fileparts(RatRawDataDirPath);
 RatID = pathstr(end-4:end);
 
 %% Pull video files for later use
-RatData().DateFolders = zeros(length(RatRawDataLookUp)-3);
-RatData().VideoFiles = zeros(length(RatRawDataLookUp)-3);
-for iDate = 1:(length(RatRawDataLookUp)-3)
-    fprintf('Working on folder %d out of %d\n',iDate,(length(RatRawDataLookUp)-3));
-    RatData(iDate).DateFolders = fullfile(RatRawDataDirPath,RatRawDataLookUp(iDate+3).name);
-    RatData(iDate).VideoFiles = dir(fullfile(RatData(iDate).DateFolders,'*.avi'));    
+
+    RatData().DateFolders = zeros((length(RatRawDataLookUp)-3),1);
+    RatData().VideoFiles = zeros((length(RatRawDataLookUp)-3),1);
+    for iDate = 1:(length(RatRawDataLookUp)-3)
+        fprintf('Working on folder %d out of %d\n',iDate,(length(RatRawDataLookUp)-3));
+        RatData(iDate).DateFolders = fullfile(RatRawDataDirPath,RatRawDataLookUp(iDate+3).name);
+        RatData(iDate).VideoFiles = dir(fullfile(RatData(iDate).DateFolders,'*.avi'));
+    end
+    
+    PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
+    save(PawPointFilename);
+    % Make VideoReader Objects for all the videos of a given session
+    uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
+    RatSessDir = uigetdir(RatRawDataDirPath);
+    AllRatDateFolders = {RatData.DateFolders}';
+    SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
+    
+    for j = 1:(length(RatData(SessNum).VideoFiles));
+        fprintf('Working on video %d out of %d\n',j,(length(RatData(SessNum).VideoFiles)));
+        video = fullfile(RatData(SessNum).DateFolders,RatData(SessNum).VideoFiles(j).name);
+        RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
+    end
+end
+save(PawPointFilename);
+
+%% Start marking function. Display dialog box indicating which marker and option for indicating not visible and instructions.
+% AnalysisRound = 1;
+% if AnalysisRound ~= 1;
+uiwait(msgbox('Please select the VIDEO or TRIAL you would like to start analysis from','modal'));
+VideoFilepath = fullfile(RatSessDir,'*.avi');
+[VideoName,VideoFilePathName,~] = uigetfile(VideoFilepath,'Finally, please select the trial, or video file, you would like to analyze');
+VideoFileList = {RatData(SessNum).VideoFiles.name}';
+iVideo = find(strcmpi(VideoFileList,VideoName)==1);
+% elseif AnalysisRound == 1;
+%     iVideo = 1; %:length(RatData(SessNum).VideoFiles); %1:length(RatData)
+%     %for iVideo = 1; %1:length(RatData(i).VideoFiles);
+%     end
+
+for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
+    fprintf('Working on trial %d out of %d for this session\n',iVideo,length(RatData(SessNum).VideoFiles));
+
+    try
+        StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
+        if isempty(StartFrame)
+            RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
+            StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
+        end
+    catch
+        RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
+        StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
+    end
+    save(PawPointFilename);
+%     MarkerNum = input('Please enter the number of the marker you would like to start from. If you would like to start from the beginning, please enter 1: ');
+%     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5,'marker_number',MarkerNum);
+    temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5);    
+disp('Done with marking');
+    RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
+    RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
+    disp('Marking data written to RatData file');
+%     AnalysisRound = AnalysisRound+1;
+    %end
+    save(PawPointFilename);
 end
 
-PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
-save(PawPointFilename);
-% Make VideoReader Objects for all the videos of a given session
-uiwait(msgbox('Please select the session you would like to analyze','modal'));
-RatSessDir = uigetdir(RatRawDataDirPath);
-AllRatDateFolders = {RatData.DateFolders}';
-SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
+%%
+% If left click is made after placing marker, record marker position
+% externally.
 
-for j = 1:(length(RatData(SessNum).VideoFiles));
-    fprintf('Working on video %d out of %d\n',j,(length(RatData(SessNum).VideoFiles)));
-    video = fullfile(RatData(SessNum).DateFolders,RatData(SessNum).VideoFiles(j).name);
-    RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
-end
-save(PawPointFilename);
-%% for iDate = 1:(length(RatRawDataLookUp)-3)
+% If right click is made after placing marker, prompt user to redo last
+% marker
+
+% If user selects Yes, display last marker placement dialog box, go
+% back 1 in marking function and overwrite marker position data.
+
+% If user selects No, continue with marker placement.
+
+%% Save marker position data externally
+
+
+%% Old code
+% %% Reset
+% close all
+% clear all
+% clc
+%
+% %% Pick of the dates from the processed folder
+% disp('Select the directory for which you want to selec the manual points');
+% RatDir = uigetdir('\\172.20.138.142\RecordingsLeventhal3\SkilledReaching');
+%
+% %% Begin Circling Through Data
+% RatLookUp = dir(fullfile(RatDir));
+% dates = {RatLookUp(3:end).name}.';%This pulls all the dates in the directory
+%
+%
+%
+%
+%     for i = 1:length(dates)
+%
+%
+%       videoFile = char(fullfile(RatDir,dates(i)));
+%       [pathstr,name,ext] = fileparts(videoFile);
+%
+%       frameStart = 560;
+% %       if i == 2
+% %           frameStart =287;
+% %            elseif i == 3
+% %           frameStart = 292;
+% %           elseif i == 4
+% %           frameStart = 295;
+% %           elseif i == 5
+% %           frameStart = 290;
+% %           elseif i == 6
+% %           frameStart = 288;
+% %           elseif i == 6
+% %           frameStart = 288;
+% %           elseif i == 8
+% %           frameStart = 287;
+% %           elseif i == 18
+% %           frameStart = 280;
+% %           elseif i == 20
+% %           frameStart = 280;
+% %           elseif i == 23
+% %           frameStart = 272;
+% %           elseif i == 25
+% %           frameStart = 262;
+% %           elseif i == 26
+% %           frameStart = 280;
+% %           elseif i == 28
+% %           frameStart = 275
+% %           elseif i == 32
+% %           frameStart = 270;
+% %           elseif i == 33
+% %           frameStart = 280;
+% %           elseif i == 34
+% %           frameStart = 280
+% %           elseif i == 35
+% %           frameStart = 280;
+% %           elseif i == 36
+% %           frameStart = 280;
+% %           else
+% %           frameStart = 300;
+% %
+% %       end
+%
+%       [pellet_center_x, pellet_center_y,manual_paw_centers,mcp_hulls,mph_hulls,dph_hulls] = createManualPoints (videoFile,frameStart)
+%        mkdir(fullfile(pathstr,'manual_trials'));
+%       save(fullfile(pathstr,'manual_trials',name),'pellet_center_x','pellet_center_y','manual_paw_centers','mcp_hulls','mph_hulls','dph_hulls');
+%
+%
+%     end
+
+%% More old code
+%for iDate = 1:(length(RatRawDataLookUp)-3)
 %         for iVideo = 1:(length(RatData(iDate).VideoFiles));
 %             fprintf('Working on video %d out of %d\n',iVideo,(length(RatData(iDate).VideoFiles)));
 %             video = fullfile(RatData(iDate).DateFolders,RatData(iDate).VideoFiles(iVideo).name);
@@ -173,115 +307,3 @@ save(PawPointFilename);
 %         %         movie(hf,s,1,vidObj.FrameRate);
 %     end
 %     RatData(i).Accuracy = 100.*(mean(AccuracyData,2));
-%% Start marking function. Display dialog box indicating which marker and option for indicating not visible and instructions.
-
-for iVideo = 1:length(RatData(SessNum).VideoFiles); %1:length(RatData)
-    %for iVideo = 1; %1:length(RatData(i).VideoFiles);
-    fprintf('Working on trial %d out of %d for this session\n',iVideo,length(RatData(SessNum).VideoFiles));
-    try
-        StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
-        if isempty(StartFrame)
-            RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
-            StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
-        end
-    catch
-        RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
-        StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
-    end
-    save(PawPointFilename);
-%     MarkerNum = input('Please enter the number of the marker you would like to start from. If you would like to start from the beginning, please enter 1: ');
-%     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5,'marker_number',MarkerNum);
-    temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5);    
-disp('Done with marking');
-    RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
-    RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
-    disp('Marking data written to RatData file');
-    %end
-    save(PawPointFilename);
-end
-
-% If left click is made after placing marker, record marker position
-% externally.
-
-% If right click is made after placing marker, prompt user to redo last
-% marker
-
-% If user selects Yes, display last marker placement dialog box, go
-% back 1 in marking function and overwrite marker position data.
-
-% If user selects No, continue with marker placement.
-
-%% Save marker position data externally
-
-
-%% Old code
-% %% Reset
-% close all
-% clear all
-% clc
-%
-% %% Pick of the dates from the processed folder
-% disp('Select the directory for which you want to selec the manual points');
-% RatDir = uigetdir('\\172.20.138.142\RecordingsLeventhal3\SkilledReaching');
-%
-% %% Begin Circling Through Data
-% RatLookUp = dir(fullfile(RatDir));
-% dates = {RatLookUp(3:end).name}.';%This pulls all the dates in the directory
-%
-%
-%
-%
-%     for i = 1:length(dates)
-%
-%
-%       videoFile = char(fullfile(RatDir,dates(i)));
-%       [pathstr,name,ext] = fileparts(videoFile);
-%
-%       frameStart = 560;
-% %       if i == 2
-% %           frameStart =287;
-% %            elseif i == 3
-% %           frameStart = 292;
-% %           elseif i == 4
-% %           frameStart = 295;
-% %           elseif i == 5
-% %           frameStart = 290;
-% %           elseif i == 6
-% %           frameStart = 288;
-% %           elseif i == 6
-% %           frameStart = 288;
-% %           elseif i == 8
-% %           frameStart = 287;
-% %           elseif i == 18
-% %           frameStart = 280;
-% %           elseif i == 20
-% %           frameStart = 280;
-% %           elseif i == 23
-% %           frameStart = 272;
-% %           elseif i == 25
-% %           frameStart = 262;
-% %           elseif i == 26
-% %           frameStart = 280;
-% %           elseif i == 28
-% %           frameStart = 275
-% %           elseif i == 32
-% %           frameStart = 270;
-% %           elseif i == 33
-% %           frameStart = 280;
-% %           elseif i == 34
-% %           frameStart = 280
-% %           elseif i == 35
-% %           frameStart = 280;
-% %           elseif i == 36
-% %           frameStart = 280;
-% %           else
-% %           frameStart = 300;
-% %
-% %       end
-%
-%       [pellet_center_x, pellet_center_y,manual_paw_centers,mcp_hulls,mph_hulls,dph_hulls] = createManualPoints (videoFile,frameStart)
-%        mkdir(fullfile(pathstr,'manual_trials'));
-%       save(fullfile(pathstr,'manual_trials',name),'pellet_center_x','pellet_center_y','manual_paw_centers','mcp_hulls','mph_hulls','dph_hulls');
-%
-%
-%     end
