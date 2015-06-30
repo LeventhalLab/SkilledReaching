@@ -64,7 +64,7 @@ decorrStretchSigma_mirror = [050 050 050       % to isolate dorsum of paw
 startTimeFromPeak = 0.2;    % in seconds
 diff_threshold = 45;
 maxDistPerFrame = 20;
-<<<<<<< HEAD
+% <<<<<<< HEAD
 RGBradius = 0.1;
 color_zlim = 2;
 pthresh = 0.9;
@@ -72,8 +72,8 @@ pthresh = 0.9;
 h = video.Height;
 w = video.Width;
 
-=======
->>>>>>> origin/master
+% =======
+% >>>>>>> origin/master
 for iarg = 1 : 2 : nargin - 10
     switch lower(varargin{iarg})
         case 'numbgframes',
@@ -312,7 +312,7 @@ while video.CurrentTime < video.Duration
         end
         rectangle('position',center_bbox,'edgecolor','r');
     end
-<<<<<<< HEAD
+% <<<<<<< HEAD
     masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
                                               decorrStretchMean_mirror(2,:), ...
                                               decorrStretchSigma_mirror(2,:), ...
@@ -394,8 +394,8 @@ while video.CurrentTime < video.Duration
 %         end
 %         rectangle('position',center_bbox,'edgecolor','r');
     
-=======
->>>>>>> origin/master
+% =======
+% >>>>>>> origin/master
         
 %     paw_mask = maskPaw_moving(image, BGimg, prev_paw_mask, register_ROI, F, rat_metadata, boxMarkers);
 %     diff_image  = imabsdiff(image, BGimg);

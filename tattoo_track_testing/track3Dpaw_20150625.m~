@@ -65,7 +65,7 @@ startTimeFromPeak = 0.2;    % in seconds
 diff_threshold = 45;
 maxDistPerFrame = 25;
 RGBradius = 0.1;
-color_zlim = 2;
+color_zlim = 3;
 pthresh = 0.9;
 
 h = video.Height;
@@ -96,11 +96,15 @@ for iarg = 1 : 2 : nargin - 10
     end
 end
 
+% WORKING HERE - CHECK THAT THE FRAME READ IN TO INITIALIZE THE TRACKING IS
+% THE SAME FRAME THE INITIAL DETECTION WAS DONE ON, AND NOT A FRAME OR SO
+% OFF
 vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
-peakTime = (peakFrameNum / video.FrameRate);
+peakTime = ((peakFrameNum-1) / video.FrameRate);    % need to subtract one because readFrame reads the NEXT frame, not the current frame
 video.CurrentTime = peakTime;
 image = readFrame(video);
+
 hsv_image = rgb2hsv(image);
 
 paw_img = cell(1,3);
@@ -196,7 +200,9 @@ for ii = 1 : num_elements_to_track
     CAMshiftTracker = vision.HistogramBasedTracker;
     initializeObject(CAMshiftTracker, masked_mirror_hsv(:,:,1), round(s(ii).BoundingBox));
     
-    idx = find(squeeze(imgDigitMirrorMask(:,:,ii)));
+    tempMask = squeeze(imgDigitMirrorMask(:,:,ii));
+    tempMask = imerode(tempMask,strel('disk',2));    % try eroding out the previous blob to focus on colors most characteristic of that digit
+    idx = find(tempMask);
     for jj = 1 : 3
         colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
         meanRGBenh(jj) = mean(colPlane(idx));
@@ -209,7 +215,7 @@ for ii = 1 : num_elements_to_track
         'CAMshiftTracker', CAMshiftTracker, ...
         'meanRGBenh', meanRGBenh, ...
         'stdRGBenh', stdRGBenh, ...
-        'currentMask', imgDigitMirrorMask(:,:,ii), ...
+        'currentMask', squeeze(imgDigitMirrorMask(:,:,ii)), ...
         'age', 1, ...
         'totalVisibleCount', 1, ...
         'consecutiveInvisibleCount', 1);
@@ -221,7 +227,9 @@ for ii = 1 : num_elements_to_track
     CAMshiftTracker = vision.HistogramBasedTracker;
     initializeObject(CAMshiftTracker, masked_center_hsv(:,:,1), round(s(ii+num_elements_to_track).BoundingBox));
     
-    idx = find(squeeze(imgDigitCenterMask(:,:,ii)));
+    tempMask = squeeze(imgDigitCenterMask(:,:,ii));
+    tempMask = imerode(tempMask,strel('disk',2));    % try eroding out the previous blob to focus on colors most characteristic of that digit
+    idx = find(tempMask);
     for jj = 1 : 3
         colPlane = squeeze(masked_center_img_enh(:,:,jj));
         meanRGBenh(jj) = mean(colPlane(idx));
@@ -234,7 +242,7 @@ for ii = 1 : num_elements_to_track
         'CAMshiftTracker', CAMshiftTracker, ...
         'meanRGBenh', meanRGBenh, ...
         'stdRGBenh', stdRGBenh, ...
-        'currentMask', imgDigitCenterMask(:,:,ii), ...
+        'currentMask', squeeze(imgDigitCenterMask(:,:,ii)), ...
         'age', 1, ...
         'totalVisibleCount', 1, ...
         'consecutiveInvisibleCount', 1);
@@ -345,14 +353,21 @@ while video.CurrentTime < video.Duration
         prev_digit_mask = imfill(prev_digit_mask, 'holes');
         
         curr_mirror_digImg_enh = curr_mirror_img_enh .* double(repmat(prev_digit_mask,1,1,3));
-        RGBdistMap = RGBzdist(curr_mirror_img_enh, ...
+        RGBdistMap = RGBzdist(curr_mirror_digImg_enh, ...
                               tracks(ii).meanRGBenh, ...
                               tracks(ii).stdRGBenh);
-        currentDigitMirrorMask(:,:,ii) = (RGBdistMap < color_zlim);
         currentDigitMirrorMask(:,:,ii) = (RGBdistMap < color_zlim);
         currentDigitMirrorMask(:,:,ii) = imerode(currentDigitMirrorMask(:,:,ii), strel('disk',2));
                           
     end
+    masked_mirror_img = uint8(repmat(curr_paw_mask_mirror,1,1,3));
+    masked_mirror_img = masked_mirror_img  .* image;
+    masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+                                              decorrStretchMean_mirror(2,:), ...
+                                              decorrStretchSigma_mirror(2,:), ...
+                                              'mask',prev_paw_mask_mirror);
+    [~,mirror_P] = imseggeodesic(masked_mirror_img_enh, currentDigitMirrorMask(:,:,2), currentDigitMirrorMask(:,:,3), currentDigitMirrorMask(:,:,4));
+    [~,mirror_P2] = imseggeodesic(masked_mirror_img_enh, currentDigitMirrorMask(:,:,3), currentDigitMirrorMask(:,:,4), currentDigitMirrorMask(:,:,5));
         
     % CURRENT PROBLEM - HOW TO THRESHOLD BASED ON COLOR? BEST WAY MAY BE TO
     % GO THROUGH EACH DIGIT AND PAW DORSUM SEPARATELY TO GENERATE A MASK,
