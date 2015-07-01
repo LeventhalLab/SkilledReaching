@@ -37,7 +37,7 @@ RatRawDataLookUp = dir(RatRawDataDirPath);
 RatID = pathstr(end-4:end);
 
 try
-    PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
+    PawPointFilename = fullfile(pathstr,[RatID '-proessed'],[RatID 'PawPointFiles.mat']);
     load(PawPointFilename);
     uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
     RatSessDir = uigetdir(RatRawDataDirPath);
