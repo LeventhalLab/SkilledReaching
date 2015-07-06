@@ -98,14 +98,9 @@ function varargout = GUIcreateFrameStart_2015_06_19_OutputFcn(hObject, eventdata
 
 % Get default command line output from handles structure
 % varargout{1} = handles.output;
-try
-    StartFrameOrNaN = str2double(get(handles.UI_start_frame_txtbox,'String'));
-    varargout{1} = StartFrameOrNaN;
-    uiresume(handles.figure1);
-catch ME
-    StartFrameOrNaN = ME;
-    varargout{1} = StartFrameOrNaN;
-end        
+StartFrameOrNaN = str2double(get(handles.UI_start_frame_txtbox,'String'));
+varargout{1} = StartFrameOrNaN;
+uiresume(handles.figure1);
 close;
 
 function UI_start_frame_txtbox_Callback(hObject, eventdata, handles) %#ok<*INUSD>

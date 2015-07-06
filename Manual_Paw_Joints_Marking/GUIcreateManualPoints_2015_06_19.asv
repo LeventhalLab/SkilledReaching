@@ -182,20 +182,20 @@ FrameInfo(:,1) = Frames(:,1);
 % frame region. 
 Finger = {'Pellet Center',...
     'Center of Back Surface of Paw',...    
-    'Thumb',...
-    'Thumb',...
-    'Index Finger',...
-    'Index Finger',...
-    'Index Finger',...
-    'Middle Finger',...
-    'Middle Finger',...
-    'Middle Finger',...
-    'Ring Finger',...
-    'Ring Finger',...
-    'Ring Finger',...
-    'Pinky Finger',...
-    'Pinky Finger',...
-    'Pinky Finger'}';
+    'Far Thumb Joint',...
+    'Near Thumb Joint',...
+    'Far Index Finger Joint',...
+    'Middle Index Finger Joint',...
+    'Near Index Finger Joint',...
+    'Far Middle Finger Joint',...
+    'Middle Middle Finger Joint',...
+    'Near Middle Finger Joint',...
+    'Far Ring Finger Joint',...
+    'Middle Ring Finger Joint',...
+    'Near Ring Finger Joint',...
+    'Far Pinky Finger Joint',...
+    'Middle Pinky Finger Joint',...
+    'Near Pinky Finger Joint'}';
 
 % Create cell array of anatomical marker names to be displayed with
 % corresponding common marker name in GUI and appear in Column 6 of
@@ -231,7 +231,7 @@ m = 1; %Represents marker number out of total
 for i = 1:length(Frames); %Represents Frames element index
     for j = 1:length(FrameRegionInFocus); %Represents region of focus in frame
         for k = 1:length(Finger); %Represents marker number out of total marked (16) in every frame region
-            ReDoMarkerList{m} = strjoin(cellstr(['Frame' Frames(i) FrameRegionInFocus(j) Finger(k) AnatMarkerPoints(k)]));
+            ReDoMarkerList{m} = strjoin(cellstr(['Frame' Frames(i) FrameRegionInFocus(j) AnatMarkerPoints(k)]));
             m = m+1;
         end
     end
@@ -272,7 +272,7 @@ set(handles.redo_marker_listbox,'Max',TotMarkNum,'Min',0);
 % callback functions for the various buttons and text boxes in the GUI can
 % access it
 handles.video = video;
-handles.Finger = Finger;
+handles.MarkerPoints = Finger;
 handles.AnatMarkerPoints = AnatMarkerPoints;
 handles.FrameRegionInFocus = FrameRegionInFocus;
 handles.Frames = Frames;
@@ -318,7 +318,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     %Import relevant variables from handles structure which were created in
     %opening function
     video = handles.video;
-    Finger = handles.Finger;
+    MarkerPoints = handles.MarkerPoints;
     AnatMarkerPoints = handles.AnatMarkerPoints;
     FrameRegionInFocus = handles.FrameRegionInFocus;
     Frames = handles.Frames;
@@ -560,7 +560,7 @@ function begin_button_Callback(hObject, eventdata, handles)
         
         % Determine the name of the marker to be placed and display it,
         % along with its anatomical name, in GUI
-        set(handles.marker_indicator_txtbox,'String',Finger{iMarker});
+        set(handles.marker_indicator_txtbox,'String',MarkerPoints{iMarker});
         set(handles.marker_indicator2_txtbox,'String',AnatMarkerPoints{iMarker});
         
 %         display('Marker 1');
@@ -584,7 +584,7 @@ function begin_button_Callback(hObject, eventdata, handles)
             if isempty(x)||isempty(y);
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
                 
                 % otherwise, function records position data and displays a
                 % BLUE circle temporarily where the user indicated the
@@ -608,7 +608,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 PelletMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Blue');
                 im = PelletMarkerCircle;
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;                
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;                
                 if BeginButtonFrameProcessedHandle ~= handles.LastBeginButtonFrameProcessed;
                     im_handle = figure;
                 else
@@ -632,7 +632,7 @@ function begin_button_Callback(hObject, eventdata, handles)
             if isempty(x)||isempty(y);
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
                 % otherwise, function records position data and displays a
                 % RED circle temporarily where the user indicated the paw
@@ -656,7 +656,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 PawCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Red');
                 im = PawCenterMarkerCircle;
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -673,7 +673,7 @@ function begin_button_Callback(hObject, eventdata, handles)
             if isempty(x)||isempty(y);
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
                 % otherwise, function records position data and displays a
                 % GREEN circle temporarily where the user indicated the
@@ -697,7 +697,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 McPh_pPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Green');
                 im = McPh_pPhCenterMarkerCircle;
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -714,7 +714,7 @@ function begin_button_Callback(hObject, eventdata, handles)
             if isempty(x)||isempty(y);
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
                 
                 % otherwise, function records position data and displays a
                 % WHITE circle temporarily where the user indicated the
@@ -739,7 +739,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 pPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'White');
                 im = pPh_dPhCenterMarkerCircle;
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -756,7 +756,7 @@ function begin_button_Callback(hObject, eventdata, handles)
             if isempty(x)||isempty(y);
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
                 
                 % otherwise, function records position data and displays a
                 % CYAN circle temporarily where the user indicated the
@@ -781,7 +781,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 pPh_mPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Cyan');
                 im = pPh_mPhCenterMarkerCircle;
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -797,7 +797,7 @@ function begin_button_Callback(hObject, eventdata, handles)
             if isempty(x)||isempty(y);
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
                 % otherwise, function records position data and displays a
                 % MAGENTA circle temporarily where the user indicated the
@@ -822,7 +822,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Magenta');
                 im = mPh_dPhCenterMarkerCircle;
-                FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -845,7 +845,7 @@ function begin_button_Callback(hObject, eventdata, handles)
         guidata(hObject, handles);
 %         display('Marker 7');
 
-if iMarker == length(Finger) && iFrameRegion == length(FrameRegionInFocus);        
+if iMarker == length(MarkerPoints) && iFrameRegion == length(FrameRegionInFocus);        
 close(BeginButtonFrameProcessedHandle);
 end
     end
@@ -902,7 +902,7 @@ close(2);
 % Import video from handles structure
 video = handles.video;
 
-Finger = handles.Finger;
+MarkerPoints = handles.MarkerPoints;
 
 FrameInfo = handles.FrameInfo;
 
@@ -1078,7 +1078,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
         if isempty(x)||isempty(y);
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
             % otherwise, function records position data and displays a
             % BLUE circle temporarily where the user indicated the
@@ -1102,7 +1102,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             PelletMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Blue');
             im = PelletMarkerCircle;
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
                 im_handle = figure;
             else
@@ -1126,7 +1126,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
         if isempty(x)||isempty(y);
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
             % otherwise, function records position data and displays a
             % RED circle temporarily where the user indicated the paw
@@ -1150,7 +1150,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             PawCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Red');
             im = PawCenterMarkerCircle;
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -1167,7 +1167,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
         if isempty(x)||isempty(y);
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
             % otherwise, function records position data and displays a
             % GREEN circle temporarily where the user indicated the
@@ -1191,7 +1191,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             McPh_pPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Green');
             im = McPh_pPhCenterMarkerCircle;
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -1208,7 +1208,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
         if isempty(x)||isempty(y);
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
             % otherwise, function records position data and displays a
             % WHITE circle temporarily where the user indicated the
@@ -1233,7 +1233,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             pPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'White');
             im = pPh_dPhCenterMarkerCircle;
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -1250,7 +1250,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
         if isempty(x)||isempty(y);
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
             % otherwise, function records position data and displays a
             % CYAN circle temporarily where the user indicated the
@@ -1275,7 +1275,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             pPh_mPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Cyan');
             im = pPh_mPhCenterMarkerCircle;
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -1291,7 +1291,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
         if isempty(x)||isempty(y);
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             
             % otherwise, function records position data and displays a
             % MAGENTA circle temporarily where the user indicated the
@@ -1316,7 +1316,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             end
             mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Magenta');
             im = mPh_dPhCenterMarkerCircle;
-            FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+            FrameInfo{iFrame,10+((iFrameRegion-1)*length(MarkerPoints))+iMarker} = im;
             set(groot, 'CurrentFigure', im_handle);
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
@@ -1550,7 +1550,7 @@ function redo_marker_listbox_Callback(hObject, eventdata, handles)
 % markers
 % -DONE-Keep circles on screen for duration of marking a given region of the
 % frame
-% - Remove references to Finger and AnatMarkerPoints and other arrays
+% - Remove references to MarkerPoints and AnatMarkerPoints and other arrays
 % that are already contained in AllFramesMarkerLocData
 % - Center text in dialog boxes and dialog boxes on screen
 % - remove white border on frame images with all markers
