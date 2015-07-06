@@ -118,6 +118,8 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
     save(PawPointFilename);
 end
 
+disp('Done with marking all trials for session');
+
 %%
 % If left click is made after placing marker, record marker position
 % externally.

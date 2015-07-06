@@ -201,7 +201,7 @@ Finger = {'Pellet Center',...
 % corresponding common marker name in GUI and appear in Column 6 of
 % AllFramesMarkerLocData 
 AnatMarkerPoints = {'',...
-    'Lunate-Capitate-Hamate Joint',...
+    'Capitate-Middle Finger Metacarpal Joint',...
     'Metacarpal-Proximal Phalanges Joint',...
     'Proximal-Distal Phalanges Joint',...
     'Metacarpal-Proximal Phalanges Joint',...
@@ -347,7 +347,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
-    for MarkerNum = Marker:length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
+    for MarkerNum = Marker:(Marker + 9) %length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
         
         fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
         
@@ -1419,7 +1419,7 @@ catch ME
     % If the user attempts to close the function early, an error message
     % pops up, letting the user know program closed and where the data was
     % saved.
-    varargout{1} = 'Program closed unexpectedly. Data saved under CumMarkedMarkersLocations B'; %#ok<*NASGU>
+    varargout{1} = 'Program closed unexpectedly. Data saved under CumMarkedMarkersLocations'; %#ok<*NASGU>
     delete(hObject);
     clf;
      close all
