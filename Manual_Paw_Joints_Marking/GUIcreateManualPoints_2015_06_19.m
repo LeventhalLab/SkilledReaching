@@ -347,7 +347,7 @@ function begin_button_Callback(hObject, eventdata, handles)
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
-    for MarkerNum = Marker:(Marker + 9) %length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
+    for MarkerNum = Marker: length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
         
         fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
         
@@ -1151,7 +1151,15 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             PawCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Red');
             im = PawCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            set(groot, 'CurrentFigure', im_handle);
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
 %             FrameInfo{iFrame,2} = im;
@@ -1192,7 +1200,15 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             McPh_pPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Green');
             im = McPh_pPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            set(groot, 'CurrentFigure', im_handle);
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
 %             FrameInfo{iFrame,2} = im;
@@ -1234,7 +1250,15 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             pPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'White');
             im = pPh_dPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            set(groot, 'CurrentFigure', im_handle);
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
 %             FrameInfo{iFrame,2} = im;
@@ -1276,7 +1300,15 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             pPh_mPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Cyan');
             im = pPh_mPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            set(groot, 'CurrentFigure', im_handle);
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
 %             FrameInfo{iFrame,2} = im;
@@ -1317,7 +1349,15 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Magenta');
             im = mPh_dPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            set(groot, 'CurrentFigure', im_handle);
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
             imshow(im,'Border','tight');
             set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
 %             FrameInfo{iFrame,2} = im;

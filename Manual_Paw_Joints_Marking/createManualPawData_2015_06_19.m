@@ -64,7 +64,7 @@ catch
     end
     
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
-    save(PawPointFilename);
+%     save(PawPointFilename);
     % Make VideoReader Objects for all the videos of a given session
     uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
     RatSessDir = uigetdir(RatRawDataDirPath);
@@ -104,7 +104,7 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
         RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
         StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
     end
-    save(PawPointFilename);
+%     save(PawPointFilename);
 %     MarkerNum = input('Please enter the number of the marker you would like to start from. If you would like to start from the beginning, please enter 1: ');
 %     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5,'marker_number',MarkerNum);
     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5);
