@@ -150,10 +150,10 @@ for iarg = 5 : 2 : nargin-4
             Interval = varargin{iarg + 1};
         case 'end_frame',
             EndFrame = varargin{iarg + 1};
-%         case 'marker_number'
-%             MarkerNum = varargin{iarg+1};
-%             handles.CurrentMarker = MarkerNum;
-%             guidata(hObject,handles);
+        case 'marker_number'
+            MarkerNum = varargin{iarg+1};
+            handles.CurrentMarker = MarkerNum;
+            guidata(hObject,handles);
     end
 end
 
