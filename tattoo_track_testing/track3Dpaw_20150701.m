@@ -78,7 +78,9 @@ mirrorPawBlob.ExtentOutputPort = true;
 mirrorPawBlob.LabelMatrixOutputPort = true;
 mirrorPawBlob.MinimumBlobArea = 0000;
 mirrorPawBlob.MaximumBlobArea = 10000;
-                  
+
+minErodedBlobSize = 225;
+
 startTimeFromPeak = 0.2;    % in seconds
 diff_threshold = 45;
 maxDistPerFrame = 25;
@@ -348,12 +350,12 @@ while video.CurrentTime < video.Duration
     imdiff = imabsdiff(image, BGimg);
     thresh_mask = rgb2gray(imdiff) > diff_threshold;
     
-    SE = strel('disk',4);
+    SE = strel('disk',2);
     thresh_mask = bwdist(thresh_mask) < 2;
     thresh_mask = imopen(thresh_mask, SE);
     thresh_mask = imclose(thresh_mask,SE);
     thresh_mask = imfill(thresh_mask,'holes');
-    thresh_mask = imdilate(thresh_mask,SE);
+    thresh_mask = imdilate(thresh_mask,strel('disk',4));
     
     % could use the Kalman filter here to predict where the digit centroid
     % shoud be next to narrow down where to move the mask from the previous
@@ -485,7 +487,7 @@ while video.CurrentTime < video.Duration
 
 	% check to make sure masks don't overlap, which will kill the
 	% segmentation based on geodesic distance
-    testMask = false(size(image,1),size(image,2));
+%     testMask = false(size(image,1),size(image,2));
     for ii = 1 : num_elements_to_track - 1
         for jj = ii + 1 : num_elements_to_track
             testMask = currentDigitMirrorMask(:,:,ii) & currentDigitMirrorMask(:,:,jj);
@@ -531,6 +533,12 @@ while video.CurrentTime < video.Duration
             % update mean and standard deviation of hsv values
             tempMask = squeeze(tracks(ii).currentMask);
             tempMask = tempMask & (squeeze(curr_mirror_img_enh_hsv(:,:,2,ii)) > minSatForTracking);
+            
+            % erode the mask so that only the really representative color
+            % at the middle of the blob remains (I hope) - DL 20150707
+            tempMask = erodeToMininumSize(tempMask, minErodedBlobSize);
+            tempMask = connectBlobs(tempMask);
+            
             hue = squeeze(curr_mirror_img_enh_hsv(:,:,1,ii));
             masked_hue = hue(tempMask(:));
             sat = squeeze(curr_mirror_img_enh_hsv(:,:,2,ii));
