@@ -55,7 +55,7 @@ if numCentroids == 1   % if only one connected region
     return;
 end
 
-if numCentroids == 2   % if only one connected region
+if numCentroids == 2   % if only two connected regions
     % create a polygon by moving one pixel in x and y away from each
     % centroid to generate 4 vertices
     centroids = [centroids(1,1) + 1, centroids(1,2) + 1;...

@@ -68,6 +68,12 @@ RGBradius = 0.1;
 color_zlim = 3;
 pthresh = 0.9;
 
+hBinEdges = linspace(0,1,17);
+sBinEdges = linspace(0,1,17);
+binEdges{1} = hBinEdges;
+binEdges{2} = sBinEdges;
+minSatForTracking = 0.7;
+
 h = video.Height;
 w = video.Width;
 
@@ -193,28 +199,39 @@ for ii = 1 : num_elements_to_track
                                               decorrStretchSigma_center(ii,:), ...
                                               'mask',prev_paw_mask_center);
 	masked_center_hsv = rgb2hsv(masked_center_img_enh);
-    
-    
+
 	kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
         s(ii).Centroid, [200, 50], [100, 25], 100);
     CAMshiftTracker = vision.HistogramBasedTracker;
     initializeObject(CAMshiftTracker, masked_mirror_hsv(:,:,1), round(s(ii).BoundingBox));
     
     tempMask = squeeze(imgDigitMirrorMask(:,:,ii));
-    tempMask = imerode(tempMask,strel('disk',2));    % try eroding out the previous blob to focus on colors most characteristic of that digit
-    idx = find(tempMask);
-    for jj = 1 : 3
-        colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
-        meanRGBenh(jj) = mean(colPlane(idx));
-        stdRGBenh(jj) = std(colPlane(idx));
-    end
+    tempMask = tempMask & (masked_mirror_hsv(:,:,2) > minSatForTracking);
+%     tempMask = imerode(tempMask,strel('disk',2));
+    hue = squeeze(masked_mirror_hsv(:,:,1));
+    masked_hue = hue(tempMask(:));
+    sat = squeeze(masked_mirror_hsv(:,:,2));
+    masked_sat = sat(tempMask(:));
+    X = [masked_hue,masked_sat];
+%     sh_hist = hist3(X, 'Edges', binEdges);
+%     sh_hist = sh_hist ./ max(max(sh_hist));
+    sh_hist = histcounts(masked_hue, hBinEdges,'normalization','probability');
+    sh_hist = sh_hist/max(sh_hist);
+%     s_hist = hist(masked_sat, sBinEdges);
+%     tempMask = imerode(tempMask,strel('disk',2));    % try eroding out the previous blob to focus on colors most characteristic of that digit
+    
+%     idx = find(tempMask(:));
+%     for jj = 1 : 3
+%         colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
+%         meanRGBenh(jj) = mean(colPlane(idx));
+%         stdRGBenh(jj) = std(colPlane(idx));
+%     end
     newTrack = struct(...
         'id', ii, ...
         'bbox', s(ii).BoundingBox, ...
         'kalmanFilter', kalmanFilter, ...
         'CAMshiftTracker', CAMshiftTracker, ...
-        'meanRGBenh', meanRGBenh, ...
-        'stdRGBenh', stdRGBenh, ...
+        'sh_hist', sh_hist, ...
         'currentMask', squeeze(imgDigitMirrorMask(:,:,ii)), ...
         'age', 1, ...
         'totalVisibleCount', 1, ...
@@ -228,20 +245,28 @@ for ii = 1 : num_elements_to_track
     initializeObject(CAMshiftTracker, masked_center_hsv(:,:,1), round(s(ii+num_elements_to_track).BoundingBox));
     
     tempMask = squeeze(imgDigitCenterMask(:,:,ii));
-    tempMask = imerode(tempMask,strel('disk',2));    % try eroding out the previous blob to focus on colors most characteristic of that digit
-    idx = find(tempMask);
-    for jj = 1 : 3
-        colPlane = squeeze(masked_center_img_enh(:,:,jj));
-        meanRGBenh(jj) = mean(colPlane(idx));
-        stdRGBenh(jj) = std(colPlane(idx));
-    end
+    tempMask = tempMask & (masked_mirror_hsv(:,:,2) > minSatForTracking);
+%     tempMask = imerode(tempMask,strel('disk',2));
+    hue = squeeze(masked_center_hsv(:,:,1));
+    masked_hue = hue(tempMask(:));
+    sat = squeeze(masked_center_hsv(:,:,2));
+    masked_sat = sat(tempMask(:));
+    X = [masked_hue,masked_sat];
+    sh_hist = hist3(X, 'Edges', binEdges);
+    sh_hist = sh_hist ./ max(max(sh_hist));
+%     tempMask = imerode(tempMask,strel('disk',2));    % try eroding out the previous blob to focus on colors most characteristic of that digit
+%     idx = find(tempMask);
+%     for jj = 1 : 3
+%         colPlane = squeeze(masked_center_img_enh(:,:,jj));
+%         meanRGBenh(jj) = mean(colPlane(idx));
+%         stdRGBenh(jj) = std(colPlane(idx));
+%     end
     newTrack = struct(...
         'id', ii+num_elements_to_track, ...
         'bbox', s(ii+num_elements_to_track).BoundingBox, ...
         'kalmanFilter', kalmanFilter, ...
         'CAMshiftTracker', CAMshiftTracker, ...
-        'meanRGBenh', meanRGBenh, ...
-        'stdRGBenh', stdRGBenh, ...
+        'sh_hist', sh_hist, ...
         'currentMask', squeeze(imgDigitCenterMask(:,:,ii)), ...
         'age', 1, ...
         'totalVisibleCount', 1, ...
@@ -270,19 +295,18 @@ kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
 CAMshiftTracker = vision.HistogramBasedTracker;
 initializeObject(CAMshiftTracker, masked_mirror_hsv(:,:,1), round(s_mirror.BoundingBox));
 
-idx = find(prev_paw_mask_mirror);
-for jj = 1 : 3
-    colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
-    meanRGBenh(jj) = mean(colPlane(idx));
-    stdRGBenh(jj) = std(colPlane(idx));
-end
+% idx = find(prev_paw_mask_mirror);
+% for jj = 1 : 3
+%     colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
+%     meanRGBenh(jj) = mean(colPlane(idx));
+%     stdRGBenh(jj) = std(colPlane(idx));
+% end
 newTrack = struct(...
     'id', ii, ...
     'bbox', s(ii).BoundingBox, ...
     'kalmanFilter', kalmanFilter, ...
     'CAMshiftTracker', CAMshiftTracker, ...
-    'meanRGBenh', meanRGBenh, ...
-    'stdRGBenh', stdRGBenh, ...
+    'sh_hist', sh_hist, ...
     'currentMask', prev_paw_mask_mirror, ...
     'age', 1, ...
     'totalVisibleCount', 1, ...
@@ -295,19 +319,25 @@ kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
 CAMshiftTracker = vision.HistogramBasedTracker;
 initializeObject(CAMshiftTracker, masked_center_hsv(:,:,1), round(s_center.BoundingBox));
 
-idx = find(prev_paw_mask_center);
-for jj = 1 : 3
-    colPlane = squeeze(masked_center_img_enh(:,:,jj));
-    meanRGBenh(jj) = mean(colPlane(idx));
-    stdRGBenh(jj) = std(colPlane(idx));
-end
+% tempMask = squeeze(imgDigitCenterMask(:,:,ii));
+% hue = squeeze(masked_center_hsv(:,:,1));
+% masked_hue = hue(tempMask(:));
+% sat = squeeze(masked_center_hsv(:,:,2));
+% masked_sat = sat(tempMask(:));
+% h_hist = hist(masked_hue, hBinEdges);
+% s_hist = hist(masked_sat, sBinEdges);
+% idx = find(prev_paw_mask_center);
+% for jj = 1 : 3
+%     colPlane = squeeze(masked_center_img_enh(:,:,jj));
+%     meanRGBenh(jj) = mean(colPlane(idx));
+%     stdRGBenh(jj) = std(colPlane(idx));
+% end
 newTrack = struct(...
     'id', ii, ...
     'bbox', s(ii).BoundingBox, ...
     'kalmanFilter', kalmanFilter, ...
     'CAMshiftTracker', CAMshiftTracker, ...
-    'meanRGBenh', meanRGBenh, ...
-    'stdRGBenh', stdRGBenh, ...
+    'sh_hist', sh_hist, ...
     'currentMask', prev_paw_mask_center, ...
     'age', 1, ...
     'totalVisibleCount', 1, ...
@@ -346,18 +376,46 @@ while video.CurrentTime < video.Duration
                                                 decorrStretchMean_mirror(ii,:), ...
                                                 decorrStretchSigma_mirror(ii,:), ...
                                                 'mask', curr_paw_mask_mirror);
+                                            
+        curr_mirror_img_enh_hsv = rgb2hsv(curr_mirror_img_enh);
+        
         prev_digit_mask = imdilate(tracks(ii).currentMask, strel('disk',maxDistPerFrame)) & thresh_mask;
         prev_digit_mask = bwdist(prev_digit_mask) < 2;
         prev_digit_mask = imopen(prev_digit_mask, SE);
         prev_digit_mask = imclose(prev_digit_mask, SE);
         prev_digit_mask = imfill(prev_digit_mask, 'holes');
         
-        curr_mirror_digImg_enh = curr_mirror_img_enh .* double(repmat(prev_digit_mask,1,1,3));
-        RGBdistMap = RGBzdist(curr_mirror_digImg_enh, ...
-                              tracks(ii).meanRGBenh, ...
-                              tracks(ii).stdRGBenh);
-        currentDigitMirrorMask(:,:,ii) = (RGBdistMap < color_zlim);
-        currentDigitMirrorMask(:,:,ii) = imerode(currentDigitMirrorMask(:,:,ii), strel('disk',2));
+        masked_mirror_hsv = curr_mirror_img_enh_hsv .* double(repmat(prev_digit_mask,1,1,3));
+        [mirror_bbox,~,sc] = step(tracks(ii).CAMshiftTracker, masked_mirror_hsv(:,:,1));
+        
+        % now that we have the bounding box, look inside it for the points
+        % with maximum probability of belonging to the digit
+        
+        % create backprojected histogram map
+%         s = regionprops(prev_digit_mask,'BoundingBox');
+        satMask = curr_mirror_img_enh_hsv(:,:,2) > minSatForTracking;
+        I = curr_mirror_img_enh_hsv .* double(repmat(prev_digit_mask,1,1,3));
+        I = I .* double(repmat(satMask,1,1,3));
+        
+%         bbox = floor(s.BoundingBox); bbox(3:4) = bbox(3:4) + 1;
+%         I = I(bbox(2):bbox(2) + bbox(4) - 1, ...
+%               bbox(1):bbox(1) + bbox(3) - 1, :);
+        I = I(mirror_bbox(2):mirror_bbox(2) + mirror_bbox(4) - 1, ...
+              mirror_bbox(1):mirror_bbox(1) + mirror_bbox(3) - 1, :);
+        modelHist = tracks(ii).sh_hist;
+        I_bp = histBackProjection(I, modelHist, {hBinEdges});
+        full_I_bp = zeros(size(image,1),size(image,2));
+        full_I_bp(mirror_bbox(2):mirror_bbox(2) + mirror_bbox(4) - 1, ...
+                  mirror_bbox(1):mirror_bbox(1) + mirror_bbox(3) - 1) = I_bp;
+        
+        currentDigitMirrorMask(:,:,ii) = (full_I_bp > 0.5);      
+              
+%         curr_mirror_digImg_enh = curr_mirror_img_enh .* double(repmat(prev_digit_mask,1,1,3));
+%         RGBdistMap = RGBzdist(curr_mirror_digImg_enh, ...
+%                               tracks(ii).meanRGBenh, ...
+%                               tracks(ii).stdRGBenh);
+%         currentDigitMirrorMask(:,:,ii) = (RGBdistMap < color_zlim);
+%         currentDigitMirrorMask(:,:,ii) = imerode(currentDigitMirrorMask(:,:,ii), strel('disk',2));
                           
     end
     masked_mirror_img = uint8(repmat(curr_paw_mask_mirror,1,1,3));
@@ -608,8 +666,7 @@ function tracks = initializeTracks()
         'bbox', {}, ...
         'kalmanFilter', {}, ...
         'CAMshiftTracker', {}, ...
-        'meanRGBenh', {}, ...
-        'stdRGBenh', {}, ...
+        'sh_hist', {}, ...
         'currentMask', {}, ...
         'age', {}, ...
         'totalVisibleCount', {}, ...

@@ -159,8 +159,8 @@ for ii = 1 : num_elements_to_track
     s(ii) = regionprops(imgDigitMirrorMask,'Centroid','BoundingBox');
     s(ii + num_elements_to_track) = regionprops(imgDigitCenterMask,'Centroid','BoundingBox');
     
-    prev_paw_mask_mirror = prev_paw_mask_mirror | imgDigitMirrorMask;
-    prev_paw_mask_center = prev_paw_mask_center | imgDigitCenterMask;
+    prev_paw_mask_mirror = prev_paw_mask_mirror | imgDigitMirrorMask(:,:,ii);
+    prev_paw_mask_center = prev_paw_mask_center | imgDigitCenterMask(:,:,ii);
 end
 prev_paw_mask_mirror = imdilate(prev_paw_mask_mirror, strel('disk', maxDistPerFrame));
 prev_paw_mask_mirror = imfill(prev_paw_mask_mirror,'holes');

@@ -17,7 +17,7 @@
 %   1 - the paw is moving
 %   2 - dorsum of the paw is (mostly) green
 %   3 - palmar aspect is (mostly) pink
-%   4 - it's different from the background image   
+%   4 - it's different from the background image     
 %%
 % sampleVid  = fullfile('/Volumes/RecordingsLeventhal04/SkilledReaching/R0030/R0030-rawdata/R0030_20140430a','R0030_20140430_13-09-15_023.avi');
 sampleVid  = fullfile('/Volumes/RecordingsLeventhal3/SkilledReaching/R0044/R0044-rawdata/R0044_20150416a', 'R0044_20150416_12-11-45_034.avi');
@@ -73,13 +73,13 @@ boxMarkers.beadLocations = identifyBeads(BGimg, hsvBounds_beads, ...
                                          'minbeadarea',minBeadArea, ...
                                          'maxbeadarea',maxBeadArea);
 register_ROI(1,1) = 1; register_ROI(1,2) = 1;   % top left corner of left mirror region of interest
-register_ROI(1,3) = round(min(beadLocations.center_red_beads(:,1))) - 5;  % right edge, move just to the left to make sure red bead centroids can be included in the center image
+register_ROI(1,3) = round(min(boxMarkers.beadLocations.center_red_beads(:,1))) - 5;  % right edge, move just to the left to make sure red bead centroids can be included in the center image
 register_ROI(1,4) = size(BGimg,1) - register_ROI(1,2);  % bottom edge
 
 register_ROI(2,1) = register_ROI(1,3) + 2; register_ROI(2,2) = 1;   % top left corner of left mirror region of interest
 register_ROI(2,4) = size(BGimg,1) - register_ROI(2,2);  % bottom edge
 
-register_ROI(3,1) = round(max(beadLocations.center_green_beads(:,1))) + 5;   % left edge
+register_ROI(3,1) = round(max(boxMarkers.beadLocations.center_green_beads(:,1))) + 5;   % left edge
 register_ROI(3,2) = 1;   % top edge of right mirror region of interest
 register_ROI(3,3) = size(BGimg,2) - register_ROI(3,1);  % right edge, extend to edge of the image
 register_ROI(3,4) = size(BGimg,1) - register_ROI(1,2);  % bottom edge
@@ -97,7 +97,9 @@ BG_leftctr  = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4
 BG_rightctr = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
                     round(frame_w/2):register_ROI(2,1) + register_ROI(2,3), :));
                 
-% find the checkerboard points
+% find the checkerboard points - comment these lines out to make it run
+% faster, put them back in if checkerboard points need to be recalculated****************
+
 % cbLocations.left_mirror_cb  = detect_SR_checkerboard(BG_lft);
 % cbLocations.right_mirror_cb = detect_SR_checkerboard(BG_rgt);
 % cbLocations.left_center_cb  = detect_SR_checkerboard(BG_leftctr);
