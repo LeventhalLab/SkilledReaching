@@ -1,4 +1,4 @@
-function maskedPaw = identifyMirrorDigits_dorsum(digitImg, rat_metadata, varargin)
+function maskedPaw = identifyMirrorDigits_dorsum_20150708(image, pawMask, rat_metadata, varargin)
 %
 % usage
 %
@@ -6,11 +6,8 @@ function maskedPaw = identifyMirrorDigits_dorsum(digitImg, rat_metadata, varargi
 % with a clear view of the paw in the mirrors
 %
 % INPUTS:
-%   digitImg - rgb masked image of paw in the relevant mirror. Seems to
-%       work better if decorrstretched first to enhance color contrast
-%   pawMask - black/white paw mask. easier to include this as an input than
-%       extract from digitImg; if decorrstretch has been performed,
-%       backgound isn't necessarily zero
+%   image - rgb image
+%   pawMask - mask of the paw in the appropriate mirror (logical matrix)
 %   rat_metadata - needed to know whether to look to the left or right of
 %       the dorsal aspect of the paw to exclude points that can't be digits
 %
@@ -34,14 +31,14 @@ function maskedPaw = identifyMirrorDigits_dorsum(digitImg, rat_metadata, varargi
 %                       050 050 050       % to isolate green digits
 %                       050 050 050];     % to isolate red digits
 
-decorrStretchMean  = [150.0 100.0 150.0     % to isolate dorsum of paw
-                             100.0 127.5 100.0     % to isolate blue digits
-                             150.0 100.0 150.0     % to isolate red digits
-                             127.5 100.0 127.5     % to isolate green digits
-                             150.0 100.0 150.0];   % to isolate red digits
+decorrStretchMean  = [127.5 100.0 127.5     % to isolate dorsum of paw
+                      100.0 100.0 150.0     % to isolate blue digits
+                      150.0 100.0 150.0     % to isolate red digits
+                      127.5 100.0 127.5     % to isolate green digits
+                      150.0 100.0 150.0];   % to isolate red digits
 
-decorrStretchSigma = [050 025 025       % to isolate dorsum of paw
-                      050 050 050       % to isolate blue digits
+decorrStretchSigma = [050 050 050       % to isolate dorsum of paw
+                      025 025 050       % to isolate blue digits
                       050 025 025       % to isolate red digits
                       050 050 050       % to isolate green digits
                       050 025 025];     % to isolate red digits
@@ -50,13 +47,25 @@ decorrStretchSigma = [050 025 025       % to isolate dorsum of paw
 %                    0.00 0.16 0.90 1.00 0.80 1.00
 %                    0.33 0.16 0.90 1.00 0.90 1.00
 %                    0.00 0.16 0.90 1.00 0.80 1.00];
-rgb_digitBounds = [0.00 0.50 0.50 1.00 0.00 0.80
-                   0.00 0.10 0.00 0.60 0.80 1.00
-                   0.90 1.00 0.00 0.40 0.00 0.40
-                   0.00 0.70 0.90 1.00 0.00 0.50
-                   0.00 0.16 0.90 1.00 0.80 1.00];
+% rgb_digitBounds = [0.00 0.50 0.50 1.00 0.00 0.80
+%                    0.00 0.10 0.00 0.60 0.80 1.00
+%                    0.90 1.00 0.00 0.40 0.00 0.40
+%                    0.00 0.70 0.90 1.00 0.00 0.50
+%                    0.00 0.16 0.90 1.00 0.80 1.00];
 
-for iarg = 1 : 2 : nargin - 2
+% rgb_digitBounds = [0.00 0.50 0.00 0.10 0.00 0.10
+%                    0.00 0.10 0.00 0.60 0.80 1.00
+%                    0.90 1.00 0.00 0.40 0.00 0.40
+%                    0.00 0.70 0.90 1.00 0.00 0.50
+%                    0.00 0.16 0.90 1.00 0.80 1.00];
+
+colorList = {'darkgreen','blue','red','green','red'};
+minSaturation = 0.5;
+hueLimits = [0.00, 0.16;
+             0.33, 0.16;
+             0.66, 0.16];
+
+for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
         case 'digitbounds',
             rgb_digitBounds = varargin{iarg + 1};
@@ -66,6 +75,8 @@ for iarg = 1 : 2 : nargin - 2
             decorrStretchSigma = varargin{iarg + 1};
     end
 end
+
+numObjects = size(decorrStretchMean, 1);
 
 pawDorsumBlob = vision.BlobAnalysis;
 pawDorsumBlob.AreaOutputPort = true;
@@ -84,7 +95,7 @@ digitBlob.LabelMatrixOutputPort = true;
 digitBlob.MinimumBlobArea = 50;
 digitBlob.MaximumBlobArea = 1500;
 
-pawMask = (rgb2gray(digitImg) > 0);
+% pawMask = (rgb2gray(image) > 0);
 s = regionprops(pawMask,'area','centroid');
 wholePawCentroid = s.Centroid;
 % wholePawArea     = s.Area;      % this might be useful to set minimum and maximum digit/paw dorsum sizes as a function of the total paw size
@@ -94,16 +105,88 @@ wholePawCentroid = s.Centroid;
 
 SE = strel('disk',2);
 % digitCtr = zeros(size(rgb_digitBounds,1), 2);
-rgb_enh = zeros(size(rgb_digitBounds,1), size(digitImg,1),size(digitImg,2),size(digitImg,3));
-for ii = 1 : size(rgb_digitBounds, 1)
+% rgb_enh = zeros(size(rgb_digitBounds,1), size(image,1),size(image,2),size(image,3));
+masked_hsv_enh = zeros(numObjects, size(image,1),size(image,2),size(image,3));
+rgbMask = double(repmat(pawMask,1,1,3));
+for ii = 1 : numObjects
     
     % CREATE THE ENHANCED IMAGE DEPENDING ON ii BEFORE DOING ANYTHING ELSE
-    rgb_enh(ii,:,:,:)  = enhanceColorImage(digitImg, ...
-                                           decorrStretchMean(ii,:), ...
-                                           decorrStretchSigma(ii,:), ...
-                                           'mask',pawMask);
+    rgb_enh = enhanceColorImage(image, ...
+                                decorrStretchMean(ii,:), ...
+                                decorrStretchSigma(ii,:), ...
+                                'mask',pawMask);
+	masked_hsv_enh(ii,:,:,:) = rgb2hsv(rgbMask .* squeeze(rgb_enh(:,:,:)));
 end
 % mask out the purple and red digits first
+dMask = zeros(size(image,1),size(image,2),numObjects);
+SE = strel('disk',2);
+s = regionprops(pawMask,'centroid');                      
+wholePawCentroid = s.Centroid;
+fullDigitMask = false(size(image,1),size(image,2));
+digitCentroids = zeros(numObject-1,2);
+for ii = 2 : numObjects    % CONSIDER PUTTING A CHECK HERE THAT IF ALL DIGITS AREN'T FOUND, TRY ANOTHER IMAGE
+    switch lower(colorList{ii}),
+        case 'red',
+            colorIdx = 1;
+        case 'green',
+            colorIdx = 2;
+        case 'blue',
+            colorIdx = 3;
+    end
+    tempMask = HSVthreshold(squeeze(masked_hsv_enh(ii,:,:,:)), ...
+                            [hueLimits(colorIdx,:), minSaturation, 1.0, 0.0, 1.0]);
+    tempMask = bwdist(tempMask) < 2;
+    tempMask = imopen(tempMask, SE);
+    tempMask = imclose(tempMask, SE);
+    tempMask = imfill(tempMask, 'holes');
+    
+    s = regionprops(tempMask, 'centroid');
+    tempLabel = bwlabel(tempMask);
+    centroids = [s.Centroid];
+    centroids = reshape(centroids,2,[])';   % now an m x 2 array where each row is another centroid
+    if strcmpi(rat_metadata.pawPref,'right')   % looking in left mirror
+        % take only blobs with centroids to the left of the paw centroid
+        validIdx = find(centroids(:,1) < wholePawCentroid(1));
+    else
+        % take only blobs with centroids to the right of the paw centroid
+        validIdx = find(centroids(:,1) > wholePawCentroid(1));
+    end
+    newMask = false(size(tempMask));
+    for jj = 1 : length(validIdx)
+        newMask = newMask | (tempLabel == validIdx(jj));
+    end
+        
+    % now take the n largest of the remaining blobs, where n is the number
+    % of digits with that color
+    n = length(find(strcmpi(colorList{ii},colorList)));
+    s = regionprops(newMask, 'area');
+    A = [s.Area];
+    [~,idx] = sort(A, 'descend');
+    tempLabel = bwlabel(newMask);
+    tempMask = false(size(newMask));
+    for jj = 1 : n
+        tempMask = tempMask | (tempLabel == idx(jj));
+    end
+    
+    for jj = 2 : ii-1
+        overlapMask = dMask(:,:,jj) & tempMask;
+        dMask(:,:,jj) = dMask(:,:,jj) & ~overlapMask;
+        tempMask = tempMask & ~overlapMask;
+    
+    dMask(:,:,ii) = tempMask;
+    s = regionprops(tempMask,'centroid');
+    
+    fullDigitMask = fullDigitMask | tempMask;
+end
+
+for ii = 2 : numObjects - 1
+    for jj = ii + 1 : numObjects
+        fullDigitMask = fullDigitMask & ~(dMask(:,:,ii) & dMask(:,:,jj));
+    end
+end
+% now need to assign blobs that are the same color to the appropriate digit
+
+
 idxMask = squeeze(rgb_enh(2,:,:,1)) >= rgb_digitBounds(2,1) & ...
           squeeze(rgb_enh(2,:,:,1)) <= rgb_digitBounds(2,2) & ...
           squeeze(rgb_enh(2,:,:,2)) >= rgb_digitBounds(2,3) & ...
@@ -263,7 +346,7 @@ ringMask = (ringLabMask == nnidx);
 % [~,pinky_centroid,~,~,~] = step(digitBlob, pinkyMask);
 
 % create masks using only the center points
-% imshow(digitImg)
+% imshow(image)
 % hold on
 % plot(idx_centroid(1),idx_centroid(2),'marker','*')
 % plot(mid_centroid(1),mid_centroid(2),'marker','*')
@@ -311,14 +394,14 @@ else
 end
 
 
-[~,P] = imseggeodesic(digitImg, idx_erode, middle_erode, ring_erode);
-[~, P2] = imseggeodesic(digitImg, pd_erode, pinky_erode, middle_erode);
+[~,P] = imseggeodesic(image, idx_erode, middle_erode, ring_erode);
+[~, P2] = imseggeodesic(image, pd_erode, pinky_erode, middle_erode);
 
-% [L,P] = imseggeodesic(digitImg, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
-% [L2,P2] = imseggeodesic(digitImg, imerode(pdMask, SE), imerode(pinkyMask, SE));
-% [L,P] = imseggeodesic(digitImg, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
-% [L2,P2] = imseggeodesic(digitImg, imerode(pdMask, SE), imerode(pinkyMask, SE));
-maskedPaw = false(size(digitImg,1), size(digitImg,2), size(rgb_digitBounds,1));
+% [L,P] = imseggeodesic(image, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
+% [L2,P2] = imseggeodesic(image, imerode(pdMask, SE), imerode(pinkyMask, SE));
+% [L,P] = imseggeodesic(image, imerode(idxMask, SE), imerode(middleMask, SE), imerode(ringMask, SE));
+% [L2,P2] = imseggeodesic(image, imerode(pdMask, SE), imerode(pinkyMask, SE));
+maskedPaw = false(size(image,1), size(image,2), size(rgb_digitBounds,1));
 maskedPaw(:,:,1) = (P2(:,:,1) > 0.9) & pawMask & ~digitRegionMask;
 maskedPaw(:,:,2) = (P(:,:,1) > 0.9) & pawMask;
 maskedPaw(:,:,3) = (P(:,:,2) > 0.9) & pawMask;
@@ -351,8 +434,8 @@ end
 %            % DIGITS FIRST, SINCE THEY SHOW UP PRETTY ROBUSTLY?
 %            
 %            
-% %     tempMask = double(HSVthreshold(hsv_digitImg, hsv_digitBounds(ii,:)));
-%     tempMask = tempMask & (rgb2gray(digitImg) > 0);
+% %     tempMask = double(HSVthreshold(hsv_image, hsv_digitBounds(ii,:)));
+%     tempMask = tempMask & (rgb2gray(image) > 0);
 %     tempMask = bwdist(tempMask) < 2;
 %     tempMask = imopen(tempMask, SE);
 %     if ii ~= 3 && ii ~=5    % this can put the two red digits in contact and screw up the analysis

@@ -23,7 +23,7 @@ I_enh = decorrstretch(I,'samplesubs',{y,x}, ...
                       'targetmean',decorrmean,...
                       'targetsigma',decorrsigma);
 
-I_enh = rgbMask .* I_enh;
+% I_enh = rgbMask .* I_enh;
 I_enh = rgb2hsv(I_enh);
 % I_enh(:,:,1) = imadjust(I_enh(:,:,1));
 I_enh(:,:,2) = imadjust(I_enh(:,:,2));

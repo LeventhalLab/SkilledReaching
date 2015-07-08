@@ -61,6 +61,7 @@ decorrStretchSigma_mirror = [050 050 050       % to isolate dorsum of paw
                       050 050 050       % to isolate green digits
                       050 050 050];     % to isolate red digits
                   
+
 startTimeFromPeak = 0.2;    % in seconds
 diff_threshold = 45;
 maxDistPerFrame = 20;

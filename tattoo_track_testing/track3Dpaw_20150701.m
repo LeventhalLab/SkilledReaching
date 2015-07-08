@@ -49,17 +49,17 @@ decorrStretchSigma_center = [075 075 075       % to isolate dorsum of paw
                              075 075 075       % to isolate green digits
                              075 075 075];     % to isolate red digits
 
-decorrStretchMean_mirror  = [100.0 127.5 100.0     % to isolate dorsum of paw
+decorrStretchMean_mirror  = [150.0 100.0 150.0     % to isolate dorsum of paw
                              100.0 127.5 100.0     % to isolate blue digits
-                             100.0 127.5 100.0     % to isolate red digits
+                             150.0 100.0 150.0     % to isolate red digits
                              127.5 100.0 127.5     % to isolate green digits
-                             100.0 127.5 100.0];   % to isolate red digits
+                             150.0 100.0 150.0];   % to isolate red digits
 
-decorrStretchSigma_mirror = [050 050 050       % to isolate dorsum of paw
+decorrStretchSigma_mirror = [050 025 025       % to isolate dorsum of paw
                       050 050 050       % to isolate blue digits
-                      050 050 050       % to isolate red digits
+                      050 025 025       % to isolate red digits
                       050 050 050       % to isolate green digits
-                      050 050 050];     % to isolate red digits
+                      050 025 025];     % to isolate red digits
                   
 centerPawBlob = vision.BlobAnalysis;
 centerPawBlob.AreaOutputPort = true;
@@ -96,7 +96,7 @@ hBinEdges = linspace(0,1,17);
 sBinEdges = linspace(0,1,17);
 binEdges{1} = hBinEdges;
 binEdges{2} = sBinEdges;
-minSatForTracking = 0.7;
+minSatForTracking = 0.0;
 
 h = video.Height;
 w = video.Width;
@@ -126,9 +126,6 @@ for iarg = 1 : 2 : nargin - 10
     end
 end
 
-% WORKING HERE - CHECK THAT THE FRAME READ IN TO INITIALIZE THE TRACKING IS
-% THE SAME FRAME THE INITIAL DETECTION WAS DONE ON, AND NOT A FRAME OR SO
-% OFF
 vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
 peakTime = ((peakFrameNum-1) / video.FrameRate);    % need to subtract one because readFrame reads the NEXT frame, not the current frame
@@ -206,13 +203,21 @@ masked_center_img = masked_center_img  .* image;
 meanRGBenh = zeros(1,3);stdRGBenh = zeros(1,3);
 for ii = 1 : num_elements_to_track
     
-    masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+%     masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+%                                               decorrStretchMean_mirror(ii,:), ...
+%                                               decorrStretchSigma_mirror(ii,:), ...
+%                                               'mask',prev_paw_mask_mirror);
+    masked_mirror_img_enh = enhanceColorImage(image, ...
                                               decorrStretchMean_mirror(ii,:), ...
                                               decorrStretchSigma_mirror(ii,:), ...
                                               'mask',prev_paw_mask_mirror);
 	masked_mirror_hsv = rgb2hsv(masked_mirror_img_enh);
                                           
-    masked_center_img_enh = enhanceColorImage(masked_center_img, ...
+%     masked_center_img_enh = enhanceColorImage(masked_center_img, ...
+%                                               decorrStretchMean_center(ii,:), ...
+%                                               decorrStretchSigma_center(ii,:), ...
+%                                               'mask',prev_paw_mask_center);
+    masked_center_img_enh = enhanceColorImage(image, ...
                                               decorrStretchMean_center(ii,:), ...
                                               decorrStretchSigma_center(ii,:), ...
                                               'mask',prev_paw_mask_center);
@@ -288,14 +293,22 @@ for ii = 1 : num_elements_to_track
     tracks(ii+num_elements_to_track) = newTrack;
 end
 % create tracks for the full paw
-masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+% masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+%                                           decorrStretchMean_mirror(1,:), ...
+%                                           decorrStretchSigma_mirror(1,:), ...
+%                                           'mask',prev_paw_mask_mirror);
+masked_mirror_img_enh = enhanceColorImage(image, ...
                                           decorrStretchMean_mirror(1,:), ...
                                           decorrStretchSigma_mirror(1,:), ...
                                           'mask',prev_paw_mask_mirror);
 masked_mirror_hsv = rgb2hsv(masked_mirror_img_enh);
 s_mirror = regionprops(prev_paw_mask_mirror,'Centroid','BoundingBox');
 
-masked_center_img_enh = enhanceColorImage(masked_center_img, ...
+% masked_center_img_enh = enhanceColorImage(masked_center_img, ...
+%                                           decorrStretchMean_center(1,:), ...
+%                                           decorrStretchSigma_center(1,:), ...
+%                                           'mask',prev_paw_mask_center);
+masked_center_img_enh = enhanceColorImage(image, ...
                                           decorrStretchMean_center(1,:), ...
                                           decorrStretchSigma_center(1,:), ...
                                           'mask',prev_paw_mask_center);
@@ -480,7 +493,11 @@ while video.CurrentTime < video.Duration
 
     masked_mirror_img = uint8(repmat(curr_paw_mask_mirror,1,1,3));
     masked_mirror_img = masked_mirror_img  .* image;
-    masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+%     masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
+%                                               decorrStretchMean_mirror(2,:), ...
+%                                               decorrStretchSigma_mirror(2,:), ...
+%                                               'mask',curr_paw_mask_mirror);
+    masked_mirror_img_enh = enhanceColorImage(image, ...
                                               decorrStretchMean_mirror(2,:), ...
                                               decorrStretchSigma_mirror(2,:), ...
                                               'mask',curr_paw_mask_mirror);
@@ -501,6 +518,8 @@ while video.CurrentTime < video.Duration
     [~,mirror_P] = imseggeodesic(masked_mirror_img_enh, currentDigitMirrorMask(:,:,2), currentDigitMirrorMask(:,:,3), currentDigitMirrorMask(:,:,4));
     [~,mirror_P2] = imseggeodesic(masked_mirror_img_enh, currentDigitMirrorMask(:,:,1), currentDigitMirrorMask(:,:,4), currentDigitMirrorMask(:,:,5));
     
+    % WORKING HERE - NEED TO SEE IF NOT MASKING OUT ALL "NON-PAW" AREAS IN
+    % THE BOUNDING REGION INFLUENCES CAMSHIFTTRACKER PERFORMANCE
     currentDigitMirrorMask(:,:,1) = (mirror_P2(:,:,1) > 0.9);
     currentDigitMirrorMask(:,:,2) = (mirror_P(:,:,1) > 0.9);
     currentDigitMirrorMask(:,:,3) = (mirror_P(:,:,2) > 0.9);
@@ -536,7 +555,7 @@ while video.CurrentTime < video.Duration
             
             % erode the mask so that only the really representative color
             % at the middle of the blob remains (I hope) - DL 20150707
-            tempMask = erodeToMininumSize(tempMask, minErodedBlobSize);
+            tempMask = erodeToMinimumSize(tempMask, minErodedBlobSize);
             tempMask = connectBlobs(tempMask);
             
             hue = squeeze(curr_mirror_img_enh_hsv(:,:,1,ii));

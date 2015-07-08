@@ -120,15 +120,8 @@ centerImg = rgbMask .* peak_paw_img{2};
 % find the digits in the mirror frame with the dorsum of the paw
 % NEED TO FEED IN FULL DIGITIMG, NOT JUST THE MASKED VERSION
 
-if strcmpi(rat_metadata.pawPref,'right')
-    maskIdx = 1;
-else
-    maskIdx = 3;
-end
-temp = fliplr(paw_mask{maskIdx});
-pawMask = false(size(image,1),size(image,2));
-pawMask(register_ROI(maskIdx,2):register_ROI(maskIdx,2) + register_ROI(maskIdx,4), ...
-        register_ROI(maskIdx,1):register_ROI(maskIdx,1) + register_ROI(maskIdx,3)) = temp;
+temp = fliplr(squeeze(digitMirrorMask_dorsum(:,:,ii)));
+
 
 digitMirrorMask_dorsum = identifyMirrorDigits_dorsum_20150708(digitImg, pawMask, rat_metadata);
 % find the digits in the center frame
