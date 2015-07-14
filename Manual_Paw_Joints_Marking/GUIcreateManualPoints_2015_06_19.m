@@ -347,10 +347,8 @@ function begin_button_Callback(hObject, eventdata, handles)
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
-    for MarkerNum = Marker: length(AllFramesMarkerLocData(:,1)); %[1 2 48 49 50 51]; 
-        
-        fprintf('Working on marker %d out of %d\n',MarkerNum,length(AllFramesMarkerLocData(:,1)))
-        
+    for MarkerNum = Marker:length(AllFramesMarkerLocData(:,1)); %[Marker Marker+47 Marker+48 Marker+49];
+                
         %Set current marker to whichever marker is currently being worked
         %on, so user can resume from here after completing re-do's
         CurrentMarker = MarkerNum;
@@ -361,9 +359,10 @@ function begin_button_Callback(hObject, eventdata, handles)
         
         % Determine the position of the marker's frame number in the array
         % of frame numbers (e.x. the 4th frame for analysis)
-        iFrame = AllFramesMarkerLocData{MarkerNum,9}; %length(Frames);
-        
-        fprintf('Marker contained in frame %d\n',str2double(Frames{iFrame}));
+        iFrame = AllFramesMarkerLocData{MarkerNum,9}; %length(Frames);     
+
+
+%         fprintf('Marker contained in frame %d\n',str2double(Frames{iFrame}));
         
         % Determine the region of the frame where the marker should be
         % placed
@@ -371,7 +370,15 @@ function begin_button_Callback(hObject, eventdata, handles)
         
         iMarker = AllFramesMarkerLocData{MarkerNum,4};
         
+            fprintf('Working on marker %s %s\nin frame region %s of frame %d.\nThis is marker number %d out of %d total\n\n',...
+            Finger{iMarker},...
+            AnatMarkerPoints{iMarker},...
+            FrameRegionInFocus{iFrameRegion},...
+            str2double(Frames{iFrame}),...
+            MarkerNum,...
+            length(AllFramesMarkerLocData(:,1)));
         
+        warning('off','images:initSize:adjustingMag');
         % Display the frame image on the left side of the screen
         
         %         BeginButton_Frame_handle = figure;
@@ -384,7 +391,7 @@ function begin_button_Callback(hObject, eventdata, handles)
         %         handles.BeginButton_Frame_handle = BeginButton_Frame_handle;
         %         guidata(hObject,handles);
         %[~,imMap] = frame2im(im);        
-
+        
         try
             leftImg = FrameInfo{iFrame,4};
             leftRectPos = FrameInfo{iFrame,5};
@@ -394,64 +401,71 @@ function begin_button_Callback(hObject, eventdata, handles)
             rightRectPos = FrameInfo{iFrame,9};
             if isempty (leftImg) || isempty(leftRectPos) || isempty (centerImg) || isempty(centerRectPos) || isempty (rightImg) || isempty(rightRectPos)
                 if iMarker == 1 && iFrameRegion == 1; %&& iFrame == 1;
-                im = read(video,str2double(Frames{iFrame}));
-                FrameInfo{iFrame,10} = im;
-                %imageName = sprintf('All_Markers_for_Frame_%s_of_%s',Frames{iFrame},video.Name(1:end-4));
-                figure;
-                BeginButton_Frame = imshow(im);
-                set(gcf,'units','normalized','outerposition',[0 .09 .85 .85]);
-                BeginButton_Frame_axis_handle = gca;
-                BeginButton_Frame_figure_handle = gcf;
-                uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the LEFT mirror of the frame'},'modal'));
-                leftRect = imrect(BeginButton_Frame_axis_handle);
-                leftRectPos = getPosition(leftRect);
-                uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the CENTER of the frame'},'modal'));
-                centerRect = imrect(BeginButton_Frame_axis_handle);
-                centerRectPos = getPosition(centerRect);
-                uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the RIGHT mirror of the frame'},'modal'));
-                rightRect = imrect(BeginButton_Frame_axis_handle);
-                rightRectPos = getPosition(rightRect);
-                leftImg = im(leftRectPos(2):(leftRectPos(2)+leftRectPos(4)),...
-                    leftRectPos(1):(leftRectPos(1)+leftRectPos(3)),...
-                    :);
-                FrameInfo{iFrame,4} = leftImg;
-                FrameInfo{iFrame,5} = leftRectPos;
-                centerImg = im(centerRectPos(2):(centerRectPos(2)+centerRectPos(4)),...
-                    centerRectPos(1):(centerRectPos(1)+centerRectPos(3)),...
-                    :);
-                FrameInfo{iFrame,6} = centerImg;
-                FrameInfo{iFrame,7} = centerRectPos;
-                rightImg = im(rightRectPos(2):(rightRectPos(2)+rightRectPos(4)),...
-                    rightRectPos(1):(rightRectPos(1)+rightRectPos(3)),...
-                    :);
-                FrameInfo{iFrame,8} = rightImg;
-                FrameInfo{iFrame,9} = rightRectPos;
-                %             handles.BeginButton_Frame = BeginButton_Frame;
-                %             handles.BeginButton_Frame_axis_handle = BeginButton_Frame_axis_handle;
-                %             handles.BeginButton_Frame_figure_handle = BeginButton_Frame_figure_handle;
-                %             handles.leftRect = leftRect;
-                %             handles.leftRectPos = leftRectPos;
-                %             handles.centerRect = centerRect;
-                %             handles.centerRectPos = centerRectPos;
-                %             handles.rightRect = rightRect;
-                %             handles.rightRectPos = rightRectPos;
-                guidata(hObject, handles);
-                close gcf;
-                uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
-                BeginButtonFrameProcessedHandle = figure('units','normalized','outerposition',[0 .09 .85 .85]);
-                leftImgHandle = subplot(1,3,1); subimage(leftImg);
-                centerImgHandle = subplot(1,3,2); subimage(centerImg);
-                rightImgHandle = subplot(1,3,3); subimage(rightImg);
-                ProcessedFrameFilename = sprintf('%s\\%s_Frame_%s_ProcessedImage.fig',ProcessedDataFolder,video.name(1:end-4),Frames{iFrame});
-                savefig(BeginButtonFrameProcessedHandle,ProcessedFrameFilename);
-                handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessedHandle;
-                FrameInfo{iFrame,3} = ProcessedFrameFilename;
-                handles.FrameInfo = FrameInfo;
-                guidata(hObject,handles);
+                    % when starting a frame
+                    im = read(video,str2double(Frames{iFrame}));
+                    FrameInfo{iFrame,10} = im;
+                    %imageName = sprintf('All_Markers_for_Frame_%s_of_%s',Frames{iFrame},video.Name(1:end-4));
+                    figure;
+                    BeginButton_Frame = imshow(im);
+                    set(gcf,'units','normalized','outerposition',[0 .09 .85 .85]);
+                    BeginButton_Frame_axis_handle = gca;
+                    BeginButton_Frame_figure_handle = gcf;
+                    uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the LEFT mirror of the frame'},'modal'));
+                    leftRect = imrect(BeginButton_Frame_axis_handle);
+                    leftRectPos = getPosition(leftRect);
+                    uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the CENTER of the frame'},'modal'));
+                    centerRect = imrect(BeginButton_Frame_axis_handle);
+                    centerRectPos = getPosition(centerRect);
+                    uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the RIGHT mirror of the frame'},'modal'));
+                    rightRect = imrect(BeginButton_Frame_axis_handle);
+                    rightRectPos = getPosition(rightRect);
+                    leftImg = im(floor(leftRectPos(2)):ceil(leftRectPos(2)+leftRectPos(4)),...
+                        floor(leftRectPos(1)):ceil(leftRectPos(1)+leftRectPos(3)),...
+                        :);
+                    FrameInfo{iFrame,4} = leftImg;
+                    FrameInfo{iFrame,5} = leftRectPos;
+                    centerImg = im(floor(centerRectPos(2)):ceil(centerRectPos(2)+centerRectPos(4)),...
+                        floor(centerRectPos(1)):ceil((centerRectPos(1)+centerRectPos(3))),...
+                        :);
+                    FrameInfo{iFrame,6} = centerImg;
+                    FrameInfo{iFrame,7} = centerRectPos;
+                    rightImg = im(floor(rightRectPos(2)):ceil((rightRectPos(2)+rightRectPos(4))),...
+                        floor(rightRectPos(1)):ceil((rightRectPos(1)+rightRectPos(3))),...
+                        :);
+                    FrameInfo{iFrame,8} = rightImg;
+                    FrameInfo{iFrame,9} = rightRectPos;
+                    %             handles.BeginButton_Frame = BeginButton_Frame;
+                    %             handles.BeginButton_Frame_axis_handle = BeginButton_Frame_axis_handle;
+                    %             handles.BeginButton_Frame_figure_handle = BeginButton_Frame_figure_handle;
+                    %             handles.leftRect = leftRect;
+                    %             handles.leftRectPos = leftRectPos;
+                    %             handles.centerRect = centerRect;
+                    %             handles.centerRectPos = centerRectPos;
+                    %             handles.rightRect = rightRect;
+                    %             handles.rightRectPos = rightRectPos;
+                    guidata(hObject, handles);
+                    close gcf;
+                    uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
+                    BeginButtonFrameProcessedHandle = figure('units','normalized','outerposition',[0 .09 .85 .85]);
+                    leftImgHandle = subplot(1,3,1); subimage(leftImg);
+                    centerImgHandle = subplot(1,3,2); subimage(centerImg);
+                    rightImgHandle = subplot(1,3,3); subimage(rightImg);
+                    ProcessedFrameFilename = sprintf('%s\\%s_Frame_%s_ProcessedImage.fig',ProcessedDataFolder,video.name(1:end-4),Frames{iFrame});
+                    savefig(BeginButtonFrameProcessedHandle,ProcessedFrameFilename);
+                    handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessedHandle;
+                    FrameInfo{iFrame,3} = ProcessedFrameFilename;
+                    FrameInfo{iFrame,2} = im;
+                    im_handle = figure;
+                    imshow(im,'Border','tight');
+                    set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                    handles.im_handle = im_handle;
+                    handles.FrameInfo = FrameInfo;
+                    guidata(hObject,handles);
                 end
             else
                 if exist('BeginButtonFrameProcessedHandle','var')
                     if BeginButtonFrameProcessedHandle ~= handles.LastBeginButtonFrameProcessed;
+                        % when changing to a new frame
                         set(groot, 'CurrentFigure', BeginButtonFrameProcessedHandle);
                         leftImgHandle = subplot(1,3,1); subimage(leftImg);
                         centerImgHandle = subplot(1,3,2); subimage(centerImg);
@@ -461,9 +475,17 @@ function begin_button_Callback(hObject, eventdata, handles)
                         FrameInfo{iFrame,3} = BeginButtonFrameProcessedHandle.fig;
                         handles.FrameInfo = FrameInfo;
                         guidata(hObject,handles);
+                        im_handle = handles.im_handle;
+                        close(im_handle);
+                        im = FrameInfo{iFrame,2};
+                        im_handle = figure;
+                        imshow(im,'Border','tight');
+                        set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                        handles.im_handle = im_handle;
+                        guidata(hObject,handles);
                     end
-%                     disp('Marker contained in same frame as last marked');
                 else
+                    % when returning from Redo Button
                     uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
                     BeginButtonFrameProcessedHandle = figure('units','normalized','outerposition',[0 .09 .85 .85]);
                     leftImgHandle = subplot(1,3,1); subimage(leftImg);
@@ -475,72 +497,78 @@ function begin_button_Callback(hObject, eventdata, handles)
                     FrameInfo{iFrame,3} = ProcessedFrameFilename;
                     handles.FrameInfo = FrameInfo;
                     guidata(hObject,handles);
-                    if exist('im_handle','var');
-                        close(im_handle);                    %it's closing BeginButtonFrameProcessedHandle here sometimes, instead of im_handle, which is already closed for some reason
-                    else
-                    end
+%                     try
+%                         close(2);
+%                     catch ME
+%                         disp(ME);
+%                     end                                           
+%                     im_handle = imgcf;
+%                     close(im_handle);
                     im = FrameInfo{iFrame,2};
                     im_handle = figure;
                     imshow(im,'Border','tight');
                     set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                    handles.im_handle = im_handle;
+                    guidata(hObject,handles);
                 end
             end
-        catch
-            uiwait(msgbox({'Error has occurred, please re-do'},'modal'));
-                im = read(video,str2double(Frames{iFrame}));
-                FrameInfo{iFrame,10} = im;
-                %imageName = sprintf('All_Markers_for_Frame_%s_of_%s',Frames{iFrame},video.Name(1:end-4));
-                figure;
-                BeginButton_Frame = imshow(im);
-                set(gcf,'units','normalized','outerposition',[0 .09 .85 .85]);
-                BeginButton_Frame_axis_handle = gca;
-                BeginButton_Frame_figure_handle = gcf;
-                uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the LEFT mirror of the frame'},'modal'));
-                leftRect = imrect(BeginButton_Frame_axis_handle);
-                leftRectPos = getPosition(leftRect);
-                uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the CENTER of the frame'},'modal'));
-                centerRect = imrect(BeginButton_Frame_axis_handle);
-                centerRectPos = getPosition(centerRect);
-                uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the RIGHT mirror of the frame'},'modal'));
-                rightRect = imrect(BeginButton_Frame_axis_handle);
-                rightRectPos = getPosition(rightRect);
-                leftImg = im(leftRectPos(2):(leftRectPos(2)+leftRectPos(4)),...
-                    leftRectPos(1):(leftRectPos(1)+leftRectPos(3)),...
-                    :);
-                FrameInfo{iFrame,4} = leftImg;
-                FrameInfo{iFrame,5} = leftRectPos;
-                centerImg = im(centerRectPos(2):(centerRectPos(2)+centerRectPos(4)),...
-                    centerRectPos(1):(centerRectPos(1)+centerRectPos(3)),...
-                    :);
-                FrameInfo{iFrame,6} = centerImg;
-                FrameInfo{iFrame,7} = centerRectPos;
-                rightImg = im(rightRectPos(2):(rightRectPos(2)+rightRectPos(4)),...
-                    rightRectPos(1):(rightRectPos(1)+rightRectPos(3)),...
-                    :);
-                FrameInfo{iFrame,8} = rightImg;
-                FrameInfo{iFrame,9} = rightRectPos;
-                %             handles.BeginButton_Frame = BeginButton_Frame;
-                %             handles.BeginButton_Frame_axis_handle = BeginButton_Frame_axis_handle;
-                %             handles.BeginButton_Frame_figure_handle = BeginButton_Frame_figure_handle;
-                %             handles.leftRect = leftRect;
-                %             handles.leftRectPos = leftRectPos;
-                %             handles.centerRect = centerRect;
-                %             handles.centerRectPos = centerRectPos;
-                %             handles.rightRect = rightRect;
-                %             handles.rightRectPos = rightRectPos;
-                guidata(hObject, handles);
-                close gcf;
-                uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
-                BeginButtonFrameProcessedHandle = figure('units','normalized','outerposition',[0 .09 .85 .85]);
-                leftImgHandle = subplot(1,3,1); subimage(leftImg);
-                centerImgHandle = subplot(1,3,2); subimage(centerImg);
-                rightImgHandle = subplot(1,3,3); subimage(rightImg);
-                ProcessedFrameFilename = sprintf('%s\\%s_Frame_%s_ProcessedImage.fig',ProcessedDataFolder,video.name(1:end-4),Frames{iFrame});
-                savefig(BeginButtonFrameProcessedHandle,ProcessedFrameFilename);
-                handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessedHandle;
-                FrameInfo{iFrame,3} = ProcessedFrameFilename;
-                handles.FrameInfo = FrameInfo;
-                guidata(hObject,handles);            
+        catch ME
+            uiwait(msgbox({'Error has occurred, please select zoom in windows for frame again'},'modal'));
+            disp(ME);
+            dbstop in GUIcreateManualPoints_2015_06_19
+            im = read(video,str2double(Frames{iFrame}));
+            %imageName = sprintf('All_Markers_for_Frame_%s_of_%s',Frames{iFrame},video.Name(1:end-4));
+            figure;
+            BeginButton_Frame = imshow(im);
+            set(gcf,'units','normalized','outerposition',[0 .09 .85 .85]);
+            BeginButton_Frame_axis_handle = gca;
+            BeginButton_Frame_figure_handle = gcf;
+            uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the LEFT mirror of the frame'},'modal'));
+            leftRect = imrect(BeginButton_Frame_axis_handle);
+            leftRectPos = getPosition(leftRect);
+            uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the CENTER of the frame'},'modal'));
+            centerRect = imrect(BeginButton_Frame_axis_handle);
+            centerRectPos = getPosition(centerRect);
+            uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the RIGHT mirror of the frame'},'modal'));
+            rightRect = imrect(BeginButton_Frame_axis_handle);
+            rightRectPos = getPosition(rightRect);
+            leftImg = im(floor(leftRectPos(2)):ceil(leftRectPos(2)+leftRectPos(4)),...
+                floor(leftRectPos(1)):ceil(leftRectPos(1)+leftRectPos(3)),...
+                :);
+            FrameInfo{iFrame,4} = leftImg;
+            FrameInfo{iFrame,5} = leftRectPos;
+            centerImg = im(floor(centerRectPos(2)):ceil(centerRectPos(2)+centerRectPos(4)),...
+                floor(centerRectPos(1)):ceil(centerRectPos(1)+centerRectPos(3)),...
+                :);
+            FrameInfo{iFrame,6} = centerImg;
+            FrameInfo{iFrame,7} = centerRectPos;
+            rightImg = im(floor(rightRectPos(2)):ceil(rightRectPos(2)+rightRectPos(4)),...
+                floor(rightRectPos(1)):ceil(rightRectPos(1)+rightRectPos(3)),...
+                :);
+            FrameInfo{iFrame,8} = rightImg;
+            FrameInfo{iFrame,9} = rightRectPos;
+            %             handles.BeginButton_Frame = BeginButton_Frame;
+            %             handles.BeginButton_Frame_axis_handle = BeginButton_Frame_axis_handle;
+            %             handles.BeginButton_Frame_figure_handle = BeginButton_Frame_figure_handle;
+            %             handles.leftRect = leftRect;
+            %             handles.leftRectPos = leftRectPos;
+            %             handles.centerRect = centerRect;
+            %             handles.centerRectPos = centerRectPos;
+            %             handles.rightRect = rightRect;
+            %             handles.rightRectPos = rightRectPos;
+            guidata(hObject, handles);
+            close gcf;
+            uiwait(msgbox({'Generating figure with zoomed-in images' 'Use the original GUI window to know which marker to place' 'The window with the cropped images must be active to place markers'},'modal'));
+            BeginButtonFrameProcessedHandle = figure('units','normalized','outerposition',[0 .09 .85 .85]);
+            leftImgHandle = subplot(1,3,1); subimage(leftImg);
+            centerImgHandle = subplot(1,3,2); subimage(centerImg);
+            rightImgHandle = subplot(1,3,3); subimage(rightImg);
+            ProcessedFrameFilename = sprintf('%s\\%s_Frame_%s_ProcessedImage.fig',ProcessedDataFolder,video.name(1:end-4),Frames{iFrame});
+            savefig(BeginButtonFrameProcessedHandle,ProcessedFrameFilename);
+            handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessedHandle;
+            FrameInfo{iFrame,3} = ProcessedFrameFilename;
+            handles.FrameInfo = FrameInfo;
+            guidata(hObject,handles);
         end
 %         if iFrame == AllFramesMarkerLocData{MarkerNum-1,9}
 %         elseif iFrame == 1;
@@ -571,13 +599,24 @@ function begin_button_Callback(hObject, eventdata, handles)
 %         display('Marker 1');
         
         % Start marking
-        if iFrameRegion == 1;
-            [x,y] = getpts(leftImgHandle);
-        elseif iFrameRegion == 2;
-            [x,y] = getpts(centerImgHandle);
-        elseif iFrameRegion == 3;
-            [x,y] = getpts(rightImgHandle);
+        try
+            if iFrameRegion == 1;
+                [x,y] = getpts(leftImgHandle);
+            elseif iFrameRegion == 2;
+                [x,y] = getpts(centerImgHandle);
+            elseif iFrameRegion == 3;
+                [x,y] = getpts(rightImgHandle);
+            end
+        catch
+            if iFrameRegion == 1;
+                [x,y] = getpts(leftImgHandle);
+            elseif iFrameRegion == 2;
+                [x,y] = getpts(centerImgHandle);
+            elseif iFrameRegion == 3;
+                [x,y] = getpts(rightImgHandle);
+            end
         end
+            
 %             display('Marker 2');
        
         % For the pellet center marker...
@@ -618,6 +657,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                     im_handle = figure;
                 else
                     if MarkerNum == 1;
+                        close(im_handle);
                         im_handle = figure;
                     else
                         set(groot, 'CurrentFigure', im_handle);
@@ -625,7 +665,9 @@ function begin_button_Callback(hObject, eventdata, handles)
                 end
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-                 FrameInfo{iFrame,2} = im;
+                FrameInfo{iFrame,2} = im;
+                handles.im_handle = im_handle;
+                guidata(hObject,handles);
             end
             
             % for the paw center marker...
@@ -665,7 +707,7 @@ function begin_button_Callback(hObject, eventdata, handles)
                 set(groot, 'CurrentFigure', im_handle);
                 imshow(im,'Border','tight');
                 set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
-                 FrameInfo{iFrame,2} = im;
+                FrameInfo{iFrame,2} = im;
             end
             
             % for the metacarpal phalanges-proximal phalanges (McPh-pPh)
@@ -852,6 +894,7 @@ function begin_button_Callback(hObject, eventdata, handles)
 
 if iMarker == length(Finger) && iFrameRegion == length(FrameRegionInFocus);        
 close(BeginButtonFrameProcessedHandle);
+close(im_handle);
 end
     end
     
@@ -901,7 +944,8 @@ function redo_button_Callback(hObject, eventdata, handles)
 % close;
 LastBeginButtonFrameProcessed = handles.LastBeginButtonFrameProcessed;
 close(LastBeginButtonFrameProcessed);
-close(2);
+OverallMarkedImgHandle = handles.im_handle;
+close(OverallMarkedImgHandle);
 
 
 % Import video from handles structure
@@ -915,7 +959,8 @@ ProcessedDataFolder = handles.ProcessedDataFolder;
 
 Frames = handles.Frames;
 
-FrameRegionInFocus = handles.FrameRegionInFocus;
+    AnatMarkerPoints = handles.AnatMarkerPoints;
+    FrameRegionInFocus = handles.FrameRegionInFocus;
 
 
 % The numbers of user-selected markers to redo are placed in a vector
@@ -941,13 +986,21 @@ end
 % Change string on Begin button to Resume
 set(handles.begin_button,'String','Resume');
 
+warning('off','images:initSize:adjustingMag');
+
 % Start marking and re-writing selected redo markers
 for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
-    fprintf('Working on marker %d out of %d\n',iSelectedRedoMarkerNum,length(SelectedRedoMarkerNum))
     iMarker = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),4));
     iFrame = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),9));
-    fprintf('Marker contained in frame %d\n',str2double(Frames{iFrame}));
     iFrameRegion = cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),10));
+    
+    fprintf('Working on marker %s %s\nin frame region %s of frame %d.\nThis is marker number %d out of %d selected for re-do\n\n',...
+            Finger{iMarker},...
+            AnatMarkerPoints{iMarker},...
+            FrameRegionInFocus{iFrameRegion},...
+            str2double(Frames{iFrame}),...
+            iSelectedRedoMarkerNum,...
+            length(SelectedRedoMarkerNum));
     
 %     beginButton_im = FrameInfo{iFrame,2};
 %     close(beginButton_im);
@@ -975,7 +1028,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
 %             FrameInfo{iFrame,3} = RedoButton_Frame_handle;
             handles.FrameInfo = FrameInfo;
             guidata(hObject,handles)
-            im = FrameInfo{iFrame,10+(iMarker-1)};
+            im = FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker};
         else
             if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle
                 set(groot, 'CurrentFigure', RedoButton_Frame_handle);
@@ -993,12 +1046,14 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
 %                                 FrameInfo{iFrame,3} = RedoButton_Frame_handle;
                 handles.FrameInfo = FrameInfo;
                 guidata(hObject,handles);
-                im = FrameInfo{iFrame,10+(iMarker-1)};
+                im = FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker};
             else
             end
         end
-    catch
-        uiwait(msgbox({'Error has occurred, please re-do'},'modal'));
+    catch ME
+        uiwait(msgbox({'Error has occurred, please please select zoom in windows for frame again'},'modal'));
+        disp(ME);
+%         dbstop if caught error;
         im = read(video,str2double(AllFramesMarkerLocData{SelectedRedoMarkerNum(iSelectedRedoMarkerNum),2}));
         figure;
         RedoButton_Frame = imshow(im);
@@ -1014,18 +1069,18 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
         uiwait(msgbox({'Place a rectangle over where you would like to zoom to for marker placement in the RIGHT mirror of the frame'},'modal'));
         rightRect = imrect(RedoButton_Frame_axis_handle);
         rightRectPos = getPosition(rightRect);
-        leftImg = im(leftRectPos(2):(leftRectPos(2)+leftRectPos(4)),...
-            leftRectPos(1):(leftRectPos(1)+leftRectPos(3)),...
+        leftImg = im(floor(leftRectPos(2)):ceil(leftRectPos(2)+leftRectPos(4)),...
+            floor(leftRectPos(1)):ceil(leftRectPos(1)+leftRectPos(3)),...
             :);
         FrameInfo{iFrame,4} = leftImg;
         FrameInfo{iFrame,5} = leftRectPos;
-        centerImg = im(centerRectPos(2):(centerRectPos(2)+centerRectPos(4)),...
-            centerRectPos(1):(centerRectPos(1)+centerRectPos(3)),...
+        centerImg = im(floor(centerRectPos(2)):ceil(centerRectPos(2)+centerRectPos(4)),...
+            floor(centerRectPos(1)):ceil(centerRectPos(1)+centerRectPos(3)),...
             :);
         FrameInfo{iFrame,6} = centerImg;
         FrameInfo{iFrame,7} = centerRectPos;
-        rightImg = im(rightRectPos(2):(rightRectPos(2)+rightRectPos(4)),...
-            rightRectPos(1):(rightRectPos(1)+rightRectPos(3)),...
+        rightImg = im(floor(rightRectPos(2)):ceil(rightRectPos(2)+rightRectPos(4)),...
+            floor(rightRectPos(1)):ceil(rightRectPos(1)+rightRectPos(3)),...
             :);
         FrameInfo{iFrame,8} = rightImg;
         FrameInfo{iFrame,9} = rightRectPos;
@@ -1062,19 +1117,30 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
     else
         set(handles.redo_marker_position_edit_txtbox,'String',[num2str(AllFramesMarkerLocData{SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7}),', ',num2str(AllFramesMarkerLocData{SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8})]);
     end
-    set(handles.frame_reg_in_focus_txtbox,'String',FrameRegionInFocus{iFrameRegion})
     set(handles.marker_indicator_txtbox,'String',AllFramesMarkerLocData{SelectedRedoMarkerNum(iSelectedRedoMarkerNum),5});
     set(handles.marker_indicator2_txtbox,'String',AllFramesMarkerLocData{SelectedRedoMarkerNum(iSelectedRedoMarkerNum),6});
+            set(handles.frame_reg_in_focus_txtbox,'String',FrameRegionInFocus{iFrameRegion})
+
     
     % Load and show frame in left side of screen
     
     % Start marking selected marker(s)
-    if iFrameRegion == 1;
-        [x,y] = getpts(leftImgHandle);
-    elseif iFrameRegion == 2;
-        [x,y] = getpts(centerImgHandle);
-    elseif iFrameRegion == 3;
-        [x,y] = getpts(rightImgHandle);
+    try
+        if iFrameRegion == 1;
+            [x,y] = getpts(leftImgHandle);
+        elseif iFrameRegion == 2;
+            [x,y] = getpts(centerImgHandle);
+        elseif iFrameRegion == 3;
+            [x,y] = getpts(rightImgHandle);
+        end
+    catch
+        if iFrameRegion == 1;
+            [x,y] = getpts(leftImgHandle);
+        elseif iFrameRegion == 2;
+            [x,y] = getpts(centerImgHandle);
+        elseif iFrameRegion == 3;
+            [x,y] = getpts(rightImgHandle);
+        end
     end
     
     % For the pellet center marker...
@@ -1114,7 +1180,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
                 im_handle = figure;
             else
-                if iSelectedRedoMarkerNum == 1;
+                if iSelectedRedoMarkerNum == 1 || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                     im_handle = figure;
                 else
                     set(groot, 'CurrentFigure', im_handle);
@@ -1159,7 +1225,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             PawCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Red');
             im = PawCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
@@ -1208,7 +1274,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             McPh_pPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Green');
             im = McPh_pPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
@@ -1258,7 +1324,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             pPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'White');
             im = pPh_dPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
@@ -1308,7 +1374,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             pPh_mPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Cyan');
             im = pPh_mPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
@@ -1357,7 +1423,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Magenta');
             im = mPh_dPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
@@ -1387,9 +1453,11 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
     guidata(hObject, handles);
     %     uiresume;
     if iSelectedRedoMarkerNum == length(SelectedRedoMarkerNum);
-        close(RedoButton_Frame_handle)
+        close(RedoButton_Frame_handle);
+        close(im_handle);
     elseif iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum+1),9))
-        close(RedoButton_Frame_handle)        
+        close(RedoButton_Frame_handle);
+        close(im_handle);
     end
 end
 
