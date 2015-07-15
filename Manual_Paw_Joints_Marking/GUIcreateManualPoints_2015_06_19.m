@@ -157,7 +157,8 @@ for iarg = 5 : 2 : nargin-4
     end
 end
 
-NumOfFrames = 10+((EndFrame - (StartFrame+10))/Interval);
+% NumOfFrames = 10+((EndFrame - (StartFrame+10))/Interval);
+NumOfFrames = ((EndFrame - StartFrame)/Interval);
 
 % Create cell array of frame numbers from video to be analyzed, based on
 % start frame and interval
@@ -165,13 +166,15 @@ Frames = cell(NumOfFrames,1);
 initframeCount = 0;
 finframeCount = 1;
 for i = 1:NumOfFrames;
-    if i < 11;
-        Frames{i} = num2str(StartFrame + initframeCount);
-        initframeCount = initframeCount + 1;
-    else
-    Frames{i} = num2str(StartFrame + 9 + (finframeCount.*Interval));
-    finframeCount = finframeCount+1;
-    end
+%     if i < 11;
+%         Frames{i} = num2str(StartFrame + initframeCount);
+%         initframeCount = initframeCount + 1;
+%     else
+%     Frames{i} = num2str(StartFrame + 9 + (finframeCount.*Interval));
+%     finframeCount = finframeCount+1;
+%     end
+Frames{i} = num2str(StartFrame + (initframeCount.*Interval));
+initframeCount = initframeCount +1;
     
 end
 FrameInfo = cell(NumOfFrames,58);
