@@ -81,7 +81,7 @@ catch
         RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
     end
 end
-save(PawPointFilename);
+save(PawPointFilename,'-v7.3');
 
 %% Start marking function. Display dialog box indicating which marker and option for indicating not visible and instructions.
 % AnalysisRound = 1;
@@ -119,7 +119,7 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
     disp('Marking data written to RatData file');
 %     AnalysisRound = AnalysisRound+1;
     %end
-    save(PawPointFilename);
+    save(PawPointFilename,'-v7.3');
 end
 
 disp('Done with marking all trials for session');
