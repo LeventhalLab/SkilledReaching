@@ -39,13 +39,9 @@ uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze',
     RatSessDir = uigetdir(RatRawDataDirPath);
     SessionName = RatSessDir((end-8):(end-1));
 try
-<<<<<<< HEAD
-    
-=======
     uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
     RatSessDir = uigetdir(RatRawDataDirPath);
     SessionName = RatSessDir((end-8):(end-1));
->>>>>>> origin/master
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     load(PawPointFilename);
     AllRatDateFolders = {RatData.DateFolders}';
@@ -73,15 +69,14 @@ catch
 %     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
 %     save(PawPointFilename);
     % Make VideoReader Objects for all the videos of a given session
-<<<<<<< HEAD
+
 %     uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
 %     RatSessDir = uigetdir(RatRawDataDirPath);
 %     SessionName = RatSessDir((end-8):(end-1));
-=======
+
     uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
     RatSessDir = uigetdir(RatRawDataDirPath);
     SessionName = RatSessDir((end-8):(end-1));
->>>>>>> origin/master
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     AllRatDateFolders = {RatData.DateFolders}';
     SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
