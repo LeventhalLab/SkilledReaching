@@ -30,6 +30,8 @@
 %% Open rat's raw data folder
 %     clc;
 clear;
+uiwait(msgbox('Please navigate to your My Documents folder for saving data locally','modal'));
+LocalSaveFolder = uigetdir('C:\Users');
 uiwait(msgbox('Please select the rat''s RAW DATA FOLDER','modal'));
 RatRawDataDirPath = uigetdir('\\172.20.138.143\RecordingsLeventhal04\SkilledReaching');
 RatRawDataLookUp = dir(RatRawDataDirPath);
@@ -41,6 +43,8 @@ uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze',
 try
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     load(PawPointFilename);
+    LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
+    LocalPawPointFilename = fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName,[RatID 'Session' SessionName 'PawPointFiles.mat']);
     AllRatDateFolders = {RatData.DateFolders}';
     SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
 %     try 
@@ -88,6 +92,12 @@ end
 %     SessionName = RatSessDir((end-8):(end-1));
 
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
+    LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
+    while LocalDataFolderStatus == 0;
+        mkdir(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName));
+        LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
+    end
+    LocalPawPointFilename = fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName,[RatID 'Session' SessionName 'PawPointFiles.mat']);
     AllRatDateFolders = {RatData.DateFolders}';
     SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
     
@@ -97,6 +107,12 @@ end
 % %         RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
 %         VidReaderFileList(j) = VideoReader(video);
 %     end
+end
+if LocalDataFolderStatus > 0;
+    save(LocalPawPointFilename,'-v7.3');
+else
+    mkdir(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName));
+    save(LocalPawPointFilename,'-v7.3');
 end
 save(PawPointFilename,'-v7.3');
 
