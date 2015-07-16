@@ -102,8 +102,8 @@ try
     StartFrameOrNaN = str2double(get(handles.UI_start_frame_txtbox,'String'));
     varargout{1} = StartFrameOrNaN;
     uiresume(handles.figure1);
-catch ME
-    StartFrameOrNaN = ME;
+catch
+    StartFrameOrNaN = NaN;
     varargout{1} = StartFrameOrNaN;
 end        
 close;

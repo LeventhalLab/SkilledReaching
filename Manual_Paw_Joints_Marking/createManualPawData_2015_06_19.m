@@ -43,26 +43,42 @@ try
     load(PawPointFilename);
     AllRatDateFolders = {RatData.DateFolders}';
     SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
-    try 
-        VidReaderFileList = {RatData(SessNum).VideoFiles.Object}';
-    catch
-        for j = 1:(length(RatData(SessNum).VideoFiles));
-        fprintf('Working on video %d out of %d\n',j,(length(RatData(SessNum).VideoFiles)));
-        video = fullfile(RatData(SessNum).DateFolders,RatData(SessNum).VideoFiles(j).name);
-        RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
-        end
-    end
+%     try 
+% %         VidReaderFileList = {RatData(SessNum).VideoFiles.Object}';
+%     catch
+%         for j = 1:(length(RatData(SessNum).VideoFiles));
+%         fprintf('Working on video %d out of %d\n',j,(length(RatData(SessNum).VideoFiles)));
+%         video = fullfile(RatData(SessNum).DateFolders,RatData(SessNum).VideoFiles(j).name);
+% %         RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
+%         VidReaderFileList(j) = VideoReader(video);
+%         end
+%     end
 catch
 %% Pull video files for later use
 
-    RatData().DateFolders = zeros((length(RatRawDataLookUp)-3),1);
-    RatData().VideoFiles = zeros((length(RatRawDataLookUp)-3),1);
-    for iDate = 1:(length(RatRawDataLookUp)-3)
-        fprintf('Working on folder %d out of %d\n',iDate,(length(RatRawDataLookUp)-3));
-        RatData(iDate).DateFolders = fullfile(RatRawDataDirPath,RatRawDataLookUp(iDate+3).name);
-        RatData(iDate).VideoFiles = dir(fullfile(RatData(iDate).DateFolders,'*.avi'));
+j = 1;
+for i = 1:length(RatRawDataLookUp)
+    startIndex = regexpi(RatRawDataLookUp(i).name,'[.]');
+    if ~isempty(startIndex);
+        DeleteIndex(j) = 1;
+        j = j+1;
+    else
+        DeleteIndex(j) = 0;
+        j = j+1;
     end
-    
+end
+m = 1;
+% RatData().DateFolders = zeros((length(RatRawDataLookUp)-3),1);
+% RatData().VideoFiles = zeros((length(RatRawDataLookUp)-3),1);
+for iDate = 1:(length(RatRawDataLookUp))
+    fprintf('Working on folder %d out of %d\n',iDate,(length(RatRawDataLookUp)));
+    if DeleteIndex(iDate) == 0;
+    RatData(m).DateFolders = fullfile(RatRawDataDirPath,RatRawDataLookUp(iDate).name);
+    RatData(m).VideoFiles = dir(fullfile(RatData(m).DateFolders,'*.avi'));
+    m = m+1;
+    end
+end
+
 %     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
 %     save(PawPointFilename);
     % Make VideoReader Objects for all the videos of a given session
@@ -75,11 +91,12 @@ catch
     AllRatDateFolders = {RatData.DateFolders}';
     SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
     
-    for j = 1:(length(RatData(SessNum).VideoFiles));
-        fprintf('Working on video %d out of %d\n',j,(length(RatData(SessNum).VideoFiles)));
-        video = fullfile(RatData(SessNum).DateFolders,RatData(SessNum).VideoFiles(j).name);
-        RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
-    end
+%     for j = 1:(length(RatData(SessNum).VideoFiles));
+%         fprintf('Working on video %d out of %d\n',j,(length(RatData(SessNum).VideoFiles)));
+%         video = fullfile(RatData(SessNum).DateFolders,RatData(SessNum).VideoFiles(j).name);
+% %         RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
+%         VidReaderFileList(j) = VideoReader(video);
+%     end
 end
 save(PawPointFilename,'-v7.3');
 
@@ -100,8 +117,9 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
     fprintf('Working on trial %d out of %d for this session\n',iVideo,length(RatData(SessNum).VideoFiles));
     try
         StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
-        if isempty(StartFrame)
+        if isempty(StartFrame) || isnan(StartFrame)
             RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
+%             ManualStartFrame(iVideo) = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
             StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
         end
     catch
