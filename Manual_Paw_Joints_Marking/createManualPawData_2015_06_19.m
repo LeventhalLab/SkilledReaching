@@ -39,9 +39,6 @@ uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze',
     RatSessDir = uigetdir(RatRawDataDirPath);
     SessionName = RatSessDir((end-8):(end-1));
 try
-    uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
-    RatSessDir = uigetdir(RatRawDataDirPath);
-    SessionName = RatSessDir((end-8):(end-1));
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     load(PawPointFilename);
     AllRatDateFolders = {RatData.DateFolders}';
@@ -74,9 +71,6 @@ catch
 %     RatSessDir = uigetdir(RatRawDataDirPath);
 %     SessionName = RatSessDir((end-8):(end-1));
 
-    uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
-    RatSessDir = uigetdir(RatRawDataDirPath);
-    SessionName = RatSessDir((end-8):(end-1));
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     AllRatDateFolders = {RatData.DateFolders}';
     SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
