@@ -632,7 +632,21 @@ function begin_button_Callback(hObject, eventdata, handles)
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
                 FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-                
+                if BeginButtonFrameProcessedHandle ~= handles.LastBeginButtonFrameProcessed;
+                    im_handle = figure;
+                else
+                    if MarkerNum == 1;
+                        close(im_handle);
+                        im_handle = figure;
+                    else
+                        set(groot, 'CurrentFigure', im_handle);
+                    end
+                end
+                imshow(im,'Border','tight');
+                set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                FrameInfo{iFrame,2} = im;
+                handles.im_handle = im_handle;
+                guidata(hObject,handles);
                 % otherwise, function records position data and displays a
                 % BLUE circle temporarily where the user indicated the
                 % pellet center is
@@ -683,7 +697,10 @@ function begin_button_Callback(hObject, eventdata, handles)
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
                 FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            
+                set(groot, 'CurrentFigure', im_handle);
+                imshow(im,'Border','tight');
+                set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                FrameInfo{iFrame,2} = im;            
                 % otherwise, function records position data and displays a
                 % RED circle temporarily where the user indicated the paw
                 % center is
@@ -724,6 +741,10 @@ function begin_button_Callback(hObject, eventdata, handles)
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
                 FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                set(groot, 'CurrentFigure', im_handle);
+                imshow(im,'Border','tight');
+                set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                FrameInfo{iFrame,2} = im;
             
                 % otherwise, function records position data and displays a
                 % GREEN circle temporarily where the user indicated the
@@ -765,6 +786,10 @@ function begin_button_Callback(hObject, eventdata, handles)
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
                 FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                set(groot, 'CurrentFigure', im_handle);
+                imshow(im,'Border','tight');
+                set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                FrameInfo{iFrame,2} = im;
                 
                 % otherwise, function records position data and displays a
                 % WHITE circle temporarily where the user indicated the
@@ -807,6 +832,10 @@ function begin_button_Callback(hObject, eventdata, handles)
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
                 FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                set(groot, 'CurrentFigure', im_handle);
+                imshow(im,'Border','tight');
+                set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                 FrameInfo{iFrame,2} = im;
                 
                 % otherwise, function records position data and displays a
                 % CYAN circle temporarily where the user indicated the
@@ -848,6 +877,10 @@ function begin_button_Callback(hObject, eventdata, handles)
                 AllFramesMarkerLocData(MarkerNum,7) = {NaN};
                 AllFramesMarkerLocData(MarkerNum,8) = {NaN};
                 FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
+                set(groot, 'CurrentFigure', im_handle);
+                imshow(im,'Border','tight');
+                set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+                FrameInfo{iFrame,2} = im;
             
                 % otherwise, function records position data and displays a
                 % MAGENTA circle temporarily where the user indicated the
@@ -1031,7 +1064,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
 %             FrameInfo{iFrame,3} = RedoButton_Frame_handle;
             handles.FrameInfo = FrameInfo;
             guidata(hObject,handles)
-            im = FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker};
+            im = FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker-1};
         else
             if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle
                 set(groot, 'CurrentFigure', RedoButton_Frame_handle);
@@ -1049,7 +1082,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
 %                                 FrameInfo{iFrame,3} = RedoButton_Frame_handle;
                 handles.FrameInfo = FrameInfo;
                 guidata(hObject,handles);
-                im = FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker};
+                im = FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker-1};
             else
             end
         end
@@ -1156,7 +1189,17 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle;
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1 || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
+            imshow(im,'Border','tight');
+            set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             % otherwise, function records position data and displays a
             % BLUE circle temporarily where the user indicated the
             % pellet center is
@@ -1204,7 +1247,17 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
+            imshow(im,'Border','tight');
+            set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             % otherwise, function records position data and displays a
             % RED circle temporarily where the user indicated the paw
             % center is
@@ -1253,7 +1306,17 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
+            imshow(im,'Border','tight');
+            set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             % otherwise, function records position data and displays a
             % GREEN circle temporarily where the user indicated the
             % McPh-pPh joint center is.
@@ -1277,7 +1340,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             McPh_pPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Green');
             im = McPh_pPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
@@ -1302,7 +1365,17 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
+            imshow(im,'Border','tight');
+            set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             % otherwise, function records position data and displays a
             % WHITE circle temporarily where the user indicated the
             % pPh-dPh joint center is.
@@ -1327,7 +1400,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             pPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'White');
             im = pPh_dPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
@@ -1352,7 +1425,17 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
+            imshow(im,'Border','tight');
+            set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
             % otherwise, function records position data and displays a
             % CYAN circle temporarily where the user indicated the
             % pPh-mPh joint center is.
@@ -1377,7 +1460,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             pPh_mPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Cyan');
             im = pPh_mPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
@@ -1401,7 +1484,18 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),7) = {NaN};
             AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum),8) = {NaN};
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+                im_handle = figure;
+            else
+                if iSelectedRedoMarkerNum == 1;
+                    im_handle = figure;
+                else
+                    set(groot, 'CurrentFigure', im_handle);
+                end
+            end
+            imshow(im,'Border','tight');
+            set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+%             FrameInfo{iFrame,2} = im;
             % otherwise, function records position data and displays a
             % MAGENTA circle temporarily where the user indicated the
             % mPh-dPh joint center is.
@@ -1426,7 +1520,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             mPh_dPhCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Magenta');
             im = mPh_dPhCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
