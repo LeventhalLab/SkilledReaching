@@ -60,18 +60,21 @@ ROI_to_mask_paw = [left_ROI_left      left_ROI_top	  left_ROI_width            f
 
 
 gray_paw_limits = [60 125];
-hsvBounds_beads = [0.00, 0.15, 0.55, 1.00, 0.30, 1.00
-                   0.40, 0.15, 0.10, 0.50, 0.00, 0.50
-                   0.62, 0.15, 0.50, 1.00, 0.20, 1.00];
+hsvBounds_beads = [0.00    0.16    0.50    1.00    0.00    1.00
+                   0.33    0.16    0.00    0.50    0.00    0.50
+                   0.66    0.16    0.50    1.00    0.00    1.00];
 hsvBounds_paw   = [];
+maxBeadEcc = 0.8;
 % first row - red digits
 % second row - green digits
 % third row - purple digits
                
 % BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
-boxMarkers.beadLocations = identifyBeads(BGimg, hsvBounds_beads, ...
+[boxMarkers.beadLocations, boxMarkers.beadMasks] = identifyBeads(BGimg, ...
                                          'minbeadarea',minBeadArea, ...
-                                         'maxbeadarea',maxBeadArea);
+                                         'maxbeadarea',maxBeadArea, ...
+                                         'hsvbounds',hsvBounds_beads, ...
+                                         'maxeccentricity',maxBeadEcc);
 register_ROI(1,1) = 1; register_ROI(1,2) = 1;   % top left corner of left mirror region of interest
 register_ROI(1,3) = round(min(boxMarkers.beadLocations.center_red_beads(:,1))) - 5;  % right edge, move just to the left to make sure red bead centroids can be included in the center image
 register_ROI(1,4) = size(BGimg,1) - register_ROI(1,2);  % bottom edge
@@ -101,9 +104,18 @@ BG_rightctr = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4
 % faster, put them back in if checkerboard points need to be recalculated****************
 
 % cbLocations.left_mirror_cb  = detect_SR_checkerboard(BG_lft);
+% cbLocations.left_mirror_cb(:,1) = cbLocations.left_mirror_cb(:,1) + register_ROI(1,1) - 1;
+% cbLocations.left_mirror_cb(:,2) = cbLocations.left_mirror_cb(:,2) + register_ROI(1,2) - 1;
 % cbLocations.right_mirror_cb = detect_SR_checkerboard(BG_rgt);
+% cbLocations.right_mirror_cb(:,1) = cbLocations.right_mirror_cb(:,1) + register_ROI(3,1) - 1;
+% cbLocations.right_mirror_cb(:,2) = cbLocations.right_mirror_cb(:,2) + register_ROI(3,2) - 1;
 % cbLocations.left_center_cb  = detect_SR_checkerboard(BG_leftctr);
+% cbLocations.left_center_cb(:,1) = cbLocations.left_center_cb(:,1) + register_ROI(2,1) - 1;
+% cbLocations.left_center_cb(:,2) = cbLocations.left_center_cb(:,2) + register_ROI(2,2) - 1;
 % cbLocations.right_center_cb = detect_SR_checkerboard(BG_rightctr);
+% cbLocations.right_center_cb(:,1) = cbLocations.right_center_cb(:,1) + round(frame_w/2) - 1;
+% cbLocations.right_center_cb(:,2) = cbLocations.right_center_cb(:,2) + register_ROI(2,2) - 1;
+
 boxMarkers.cbLocations = cbLocations;
 boxMarkers = identifyBoxFront(BGimg, register_ROI, boxMarkers);
 

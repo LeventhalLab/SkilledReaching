@@ -76,12 +76,19 @@ paw_mask = cell(1,3);
 % bg_subtracted_image = imabsdiff(img, BGimg);
 bg_subtracted_image = double(img) - double(BGimg);
 bg_abs_diff = imabsdiff(img,BGimg);
-bg_subtracted_image = bg_subtracted_image - min(bg_subtracted_image(:));
+bg_subtracted_image = (bg_subtracted_image - min(bg_subtracted_image(:)));
+bg_subtracted_image = bg_subtracted_image / max(bg_subtracted_image(:));
+bg_mask = (mean(double(bg_abs_diff),3) < 2);
 
 % WORKING HERE - HOW TO USE THE "REAL" IMAGE DIFFERENCE FOR BETTER
 % CONTRAST?
+mean_bg = zeros(1,3);
+
 for iCh = 1 : 3    % color channels
+    % find the average background pixel value in each color channel
     colorCh = squeeze(bg_subtracted_image(:,:,iCh));
+    mean_bg(iCh) = mean(colorCh(bg_mask));
+    
     colMode = mode(colorCh(:));
     bg_subtracted_image(:,:,iCh) = bg_subtracted_image(:,:,iCh) - colMode;
 end

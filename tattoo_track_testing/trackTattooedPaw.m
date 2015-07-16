@@ -94,7 +94,7 @@ else
     dorsalPawMaskIdx = 3;
 end
 % rgbMask  = repmat(uint8(paw_mask{dorsalPawMaskIdx}),1,1,3);
-digitImg = rgbMask .* peak_paw_img{dorsalPawMaskIdx};
+% digitImg = rgbMask .* peak_paw_img{dorsalPawMaskIdx};
 % [pawRows,pawCols] = find(paw_mask{dorsalPawMaskIdx});
 % digitImg_enh = decorrstretch(digitImg,'samplesubs',{pawRows,pawCols}, ...
 %                              'targetmean',decorrStretchMean,...
@@ -120,17 +120,12 @@ centerImg = rgbMask .* peak_paw_img{2};
 % find the digits in the mirror frame with the dorsum of the paw
 % NEED TO FEED IN FULL DIGITIMG, NOT JUST THE MASKED VERSION
 
-if strcmpi(rat_metadata.pawPref,'right')
-    maskIdx = 1;
-else
-    maskIdx = 3;
-end
-temp = fliplr(paw_mask{maskIdx});
-pawMask = false(size(image,1),size(image,2));
-pawMask(register_ROI(maskIdx,2):register_ROI(maskIdx,2) + register_ROI(maskIdx,4), ...
-        register_ROI(maskIdx,1):register_ROI(maskIdx,1) + register_ROI(maskIdx,3)) = temp;
+temp = fliplr(paw_mask{dorsalPawMaskIdx});
+pawMask = false(size(im_peak,1),size(im_peak,2));
+pawMask(register_ROI(dorsalPawMaskIdx,2):register_ROI(dorsalPawMaskIdx,2) + register_ROI(dorsalPawMaskIdx,4), ...
+        register_ROI(dorsalPawMaskIdx,1):register_ROI(dorsalPawMaskIdx,1) + register_ROI(dorsalPawMaskIdx,3)) = temp;
 
-digitMirrorMask_dorsum = identifyMirrorDigits_dorsum_20150708(digitImg, pawMask, rat_metadata);
+digitMirrorMask_dorsum = identifyMirrorDigits_dorsum_20150708(im_peak, pawMask, rat_metadata, boxMarkers);
 % find the digits in the center frame
 digitCenterMask = identifyCenterDigits(centerImg, digitMirrorMask_dorsum, dorsalFundMat, rat_metadata);
 

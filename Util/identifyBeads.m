@@ -1,14 +1,28 @@
-function beadLocations = identifyBeads(I, hsvBounds_beads, varargin)
+function [beadLocations, beadMasks] = identifyBeads(I, varargin)
 
 minBeadArea = 0300;
-maxBeadArea = 1500;
+maxBeadArea = 2000;
+maxEccentricity = 0.8;
 
-for iarg = 1 : 2 : nargin - 2
+% decorrStretchMean  = [100.0 127.5 127.5
+%                       200.0 127.5 200.0
+%                       127.5 127.5 100.0];
+% decorrStretchSigma = [050 025 025
+%                       025 025 025
+%                       025 025 050];
+hsvBounds_beads = [0.00    0.16    0.50    1.00    0.00    1.00
+                   0.33    0.16    0.00    0.50    0.00    0.50
+                   0.66    0.16    0.50    1.00    0.00    1.00];
+for iarg = 1 : 2 : nargin - 1
     switch lower(varargin{iarg})
         case 'minbeadarea',
             minBeadArea = varargin{iarg + 1};
         case 'maxbeadarea',
             maxBeadArea = varargin{iarg + 1};
+        case 'hsvbounds',
+            hsvBounds_beads = varargin{iarg + 1};
+        case 'maxeccentricity',
+            maxEccentricity = varargin{iarg + 1};
     end
 end
 
@@ -23,17 +37,26 @@ h_beadBlob.EccentricityOutputPort = true;
 h_beadBlob.MinimumBlobArea = minBeadArea;
 h_beadBlob.MaximumBlobArea = maxBeadArea;
 h_beadBlob.LabelMatrixOutputPort = true;
-% beadMask = zeros(size(I,1), size(I, 2), 3);    % 3 different bead colors
-% beadArea = cell(1,3); 
-beadCent = cell(1,3); beadbbox = cell(1,3);
-beadEcc  = cell(1,3); beadLabelMatrix = cell(1,3);
+
+beadCent = cell(1,3);
 beadSortIdx = cell(1,3);
+beadMasks = false(size(I,1),size(I,2), 3);
 for ii = 1 : 3
+    
     thresh_mask = HSVthreshold(I_hsv, hsvBounds_beads(ii,:));
     thresh_mask = imfill(thresh_mask,'holes');
+    beadMasks(:,:,ii) = thresh_mask;
     
-    [~,beadCent{ii},beadbbox{ii},~,beadLabelMatrix{ii}] = ...
+    [~,~,~,beadEcc,beadLabelMatrix] = ...
         step(h_beadBlob,thresh_mask);
+    for jj = 1 : length(beadEcc)
+        if beadEcc(jj) > maxEccentricity
+            beadLabelMatrix(beadLabelMatrix == jj) = 0;
+        end
+    end
+    beadMasks(:,:,ii) = (beadLabelMatrix > 0);
+    [~,beadCent{ii},~,~,~] = ...
+        step(h_beadBlob,squeeze(beadMasks(:,:,ii)));
 
     [~, beadSortIdx{ii}] = sort(beadCent{ii}(:,1));   % sort beads by centroids moving from left to right across the screen
     beadCent{ii} = round(beadCent{ii}(beadSortIdx{ii},:));

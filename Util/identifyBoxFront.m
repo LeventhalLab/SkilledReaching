@@ -8,6 +8,7 @@ function boxMarkers = identifyBoxFront(img, register_ROI, boxMarkers, varargin)
 % VARARGS:
 %
 % OUTPUTS:
+%   boxMarkers - 
 
 halfPatternWidth = 1;
 uniformityThreshold = 100;

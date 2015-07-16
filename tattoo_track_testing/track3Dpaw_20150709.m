@@ -1,4 +1,4 @@
-function centroids = track3Dpaw_20150625(video, ...
+function centroids = track3Dpaw_20150709(video, ...
                                          BGimg, ...
                                          peakFrameNum, ...
                                          F, ...
@@ -96,7 +96,13 @@ hBinEdges = linspace(0,1,17);
 sBinEdges = linspace(0,1,17);
 binEdges{1} = hBinEdges;
 binEdges{2} = sBinEdges;
-minSatForTracking = 0.0;
+
+colorList = {'darkgreen','blue','red','green','red'};
+minSaturation = [0.00001,0.8,0.8,0.8,0.8];
+max_Value = 0.15;
+hueLimits = [0.00, 0.16;
+             0.33, 0.16;
+             0.66, 0.16];
 
 h = video.Height;
 w = video.Width;
@@ -131,8 +137,7 @@ video = VideoReader(vidName);
 peakTime = ((peakFrameNum-1) / video.FrameRate);    % need to subtract one because readFrame reads the NEXT frame, not the current frame
 video.CurrentTime = peakTime;
 image = readFrame(video);
-
-hsv_image = rgb2hsv(image);
+im_hsv = rgb2hsv(image);
 
 paw_img = cell(1,3);
 for ii = 1 : 3
@@ -161,12 +166,12 @@ end
 
 tracks = initializeTracks();
 numTracks = 0;
-prev_paw_mask_mirror = false(size(BGimg, 1), size(BGimg, 2));
-prev_paw_mask_center = false(size(BGimg, 1), size(BGimg, 2));
+prev_paw_mask_mirror = false(h,w);
+prev_paw_mask_center = false(h,w);
 s = struct('Centroid', {}, ...
            'BoundingBox', {});
 num_elements_to_track = size(digitMirrorMask_dorsum, 3);
-imgDigitCenterMask = false(size(BGimg,1),size(BGimg,2),num_elements_to_track);
+imgDigitCenterMask = false(h,w,num_elements_to_track);
 for ii = 1 : num_elements_to_track
     
 %     temp = fliplr(squeeze(digitMirrorMask_dorsum(:,:,ii)));
@@ -191,6 +196,16 @@ for ii = 1 : num_elements_to_track
 end
 prev_paw_mask_mirror = imdilate(prev_paw_mask_mirror, strel('disk', maxDistPerFrame));
 prev_paw_mask_mirror = imfill(prev_paw_mask_mirror,'holes');
+prev_paw_mask_mirror = prev_paw_mask_mirror & ~boxFrontMask;
+% take the largest portion of the paw mask, in case there are parts
+% on both sides of the mirror. This should be OK, at least for the
+% initial frame.
+labMask = bwlabel(prev_paw_mask_mirror);
+s_paw = regionprops(prev_paw_mask_mirror,'area');
+A = [s_paw.Area];
+validIdx = find(A == max(A));
+prev_paw_mask_mirror = (labMask == validIdx);
+    
 masked_mirror_img = uint8(repmat(prev_paw_mask_mirror,1,1,3));
 masked_mirror_img = masked_mirror_img  .* image;
 
@@ -206,35 +221,41 @@ for ii = 1 : num_elements_to_track
 %                                               decorrStretchMean_mirror(ii,:), ...
 %                                               decorrStretchSigma_mirror(ii,:), ...
 %                                               'mask',prev_paw_mask_mirror);
-    masked_mirror_img_enh = enhanceColorImage(image, ...
-                                              decorrStretchMean_mirror(ii,:), ...
-                                              decorrStretchSigma_mirror(ii,:), ...
-                                              'mask',prev_paw_mask_mirror);
-	masked_mirror_hsv = rgb2hsv(masked_mirror_img_enh);
+    mirror_img_enh = enhanceColorImage(image, ...
+                                       decorrStretchMean_mirror(ii,:), ...
+                                       decorrStretchSigma_mirror(ii,:), ...
+                                       'mask',prev_paw_mask_mirror);
+	mirror_enh_hsv = rgb2hsv(mirror_img_enh);
                                           
 %     masked_center_img_enh = enhanceColorImage(masked_center_img, ...
 %                                               decorrStretchMean_center(ii,:), ...
 %                                               decorrStretchSigma_center(ii,:), ...
 %                                               'mask',prev_paw_mask_center);
-    masked_center_img_enh = enhanceColorImage(image, ...
-                                              decorrStretchMean_center(ii,:), ...
-                                              decorrStretchSigma_center(ii,:), ...
-                                              'mask',prev_paw_mask_center);
-	masked_center_hsv = rgb2hsv(masked_center_img_enh);
+    center_img_enh = enhanceColorImage(image, ...
+                                       decorrStretchMean_center(ii,:), ...
+                                       decorrStretchSigma_center(ii,:), ...
+                                       'mask',prev_paw_mask_center);
+	center_enh_hsv = rgb2hsv(center_img_enh);
 
 	kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
         s(ii).Centroid, [200, 50], [100, 25], 100);
     CAMshiftTracker = vision.HistogramBasedTracker;
-    initializeObject(CAMshiftTracker, masked_mirror_hsv(:,:,1), round(s(ii).BoundingBox));
+    if ii == 1   % for the paw dorsum, use the intensity histogram instead of the color histogram, at
+                 % at least for the paws where dark green was used on the
+                 % dorsum
+        initializeObject(CAMshiftTracker, im_hsv(:,:,1), round(s(ii).BoundingBox));   % legacy from trying some different things, the if...then may be eliminated later - 20150713
+    else
+        initializeObject(CAMshiftTracker, im_hsv(:,:,1), round(s(ii).BoundingBox));
+    end
     
     tempMask = squeeze(digitMirrorMask_dorsum(:,:,ii));
-    tempMask = tempMask & (masked_mirror_hsv(:,:,2) > minSatForTracking);
+    tempMask = tempMask & (mirror_enh_hsv(:,:,2) > minSaturation(ii));
 %     tempMask = imerode(tempMask,strel('disk',2));
-    hue = squeeze(masked_mirror_hsv(:,:,1));
+    hue = squeeze(mirror_enh_hsv(:,:,1));
     masked_hue = hue(tempMask(:));
-    sat = squeeze(masked_mirror_hsv(:,:,2));
+    sat = squeeze(mirror_enh_hsv(:,:,2));
     masked_sat = sat(tempMask(:));
-    v = squeeze(masked_mirror_hsv(:,:,3));
+    v = squeeze(mirror_enh_hsv(:,:,3));
     masked_v = v(tempMask(:));
     
     % calculate mean hue - this must be a circular mean
@@ -263,14 +284,14 @@ for ii = 1 : num_elements_to_track
 	kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
         s(ii+num_elements_to_track).Centroid, [200, 50], [100, 25], 100);
     CAMshiftTracker = vision.HistogramBasedTracker;
-    initializeObject(CAMshiftTracker, masked_center_hsv(:,:,1), round(s(ii+num_elements_to_track).BoundingBox));
+    initializeObject(CAMshiftTracker, im_hsv(:,:,1), round(s(ii+num_elements_to_track).BoundingBox));
     
     tempMask = squeeze(imgDigitCenterMask(:,:,ii));
-    tempMask = tempMask & (masked_mirror_hsv(:,:,2) > minSatForTracking);
+    tempMask = tempMask & (center_enh_hsv(:,:,2) > minSaturation(ii));
 %     tempMask = imerode(tempMask,strel('disk',2));
-    hue = squeeze(masked_center_hsv(:,:,1));
+    hue = squeeze(center_enh_hsv(:,:,1));
     masked_hue = hue(tempMask(:));
-    sat = squeeze(masked_center_hsv(:,:,2));
+    sat = squeeze(center_enh_hsv(:,:,2));
     masked_sat = sat(tempMask(:));
     X = [masked_hue,masked_sat];
     sh_hist = hist3(X, 'Edges', binEdges);
@@ -317,11 +338,12 @@ s_center = regionprops(prev_paw_mask_center,'Centroid','BoundingBox');
 kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
     s_mirror.Centroid, [200, 50], [100, 25], 100);
 CAMshiftTracker = vision.HistogramBasedTracker;
-initializeObject(CAMshiftTracker, masked_mirror_hsv(:,:,1), round(s_mirror.BoundingBox));
+initializeObject(CAMshiftTracker, im_hsv(:,:,1), round(s_mirror.BoundingBox));
 
+numTracks = numTracks + 1;
 newTrack = struct(...
-    'id', ii, ...
-    'bbox', s(ii).BoundingBox, ...
+    'id', numTracks, ...
+    'bbox', s_mirror.BoundingBox, ...
     'kalmanFilter', kalmanFilter, ...
     'CAMshiftTracker', CAMshiftTracker, ...
     'mean_hsv', mean_hsv, ...
@@ -330,17 +352,17 @@ newTrack = struct(...
     'age', 1, ...
     'totalVisibleCount', 1, ...
     'consecutiveInvisibleCount', 0);
-numTracks = numTracks + 1;
 tracks(numTracks) = newTrack;
 
 kalmanFilter = configureKalmanFilter('ConstantVelocity', ...
     s_center.Centroid, [200, 50], [100, 25], 100);
 CAMshiftTracker = vision.HistogramBasedTracker;
-initializeObject(CAMshiftTracker, masked_center_hsv(:,:,1), round(s_center.BoundingBox));
+initializeObject(CAMshiftTracker, im_hsv(:,:,1), round(s_center.BoundingBox));
 
+numTracks = numTracks + 1;
 newTrack = struct(...
-    'id', ii, ...
-    'bbox', s(ii).BoundingBox, ...
+    'id', numTracks, ...
+    'bbox', s_center.BoundingBox, ...
     'kalmanFilter', kalmanFilter, ...
     'CAMshiftTracker', CAMshiftTracker, ...
     'mean_hsv', mean_hsv, ...
@@ -349,7 +371,6 @@ newTrack = struct(...
     'age', 1, ...
     'totalVisibleCount', 1, ...
     'consecutiveInvisibleCount', 0);
-numTracks = numTracks + 1;
 tracks(numTracks) = newTrack;
     
 numImages = 0;
@@ -359,6 +380,8 @@ while video.CurrentTime < video.Duration
     center_visible = false(1,num_elements_to_track);
     
     image  = readFrame(video);
+    im_hsv = rgb2hsv(image);
+    
     imdiff = imabsdiff(image, BGimg);
     thresh_mask = rgb2gray(imdiff) > diff_threshold;
     
@@ -377,13 +400,25 @@ while video.CurrentTime < video.Duration
     curr_paw_mask_mirror = imopen(curr_paw_mask_mirror, SE);
     curr_paw_mask_mirror = imclose(curr_paw_mask_mirror, SE);
     curr_paw_mask_mirror = imfill(curr_paw_mask_mirror, 'holes');
-    curr_paw_mask_mirror = imdilate(curr_paw_mask_mirror, strel('disk',6));
+    curr_paw_mask_mirror = curr_paw_mask_mirror & ~boxFrontMask;
+
+%     curr_paw_mask_mirror = imdilate(curr_paw_mask_mirror, strel('disk',6));
     
     % within that mask, look for regions that match with the previous digit
     % colors
     currentDigitMirrorMask = false(h,w,num_elements_to_track);
-    curr_mirror_img_enh_hsv = zeros(size(image,1),size(image,2),3,num_elements_to_track);
+    curr_mirror_img_enh_hsv = zeros(h,w,3,num_elements_to_track);
     for ii = 2 : num_elements_to_track    % do the digits first
+        
+        switch lower(colorList{ii}),
+            case 'red',
+                colorIdx = 1;
+            case 'green',
+                colorIdx = 2;
+            case 'blue',
+                colorIdx = 3;
+        end
+        
         curr_mirror_img_enh = enhanceColorImage(image, ...
                                                 decorrStretchMean_mirror(ii,:), ...
                                                 decorrStretchSigma_mirror(ii,:), ...
@@ -396,6 +431,7 @@ while video.CurrentTime < video.Duration
         prev_digit_mask = imopen(prev_digit_mask, SE);
         prev_digit_mask = imclose(prev_digit_mask, SE);
         prev_digit_mask = imfill(prev_digit_mask, 'holes');
+        prev_digit_mask = prev_digit_mask & curr_paw_mask_mirror;
         
         % find points near the previous hsv means
         h_thresh = [tracks(ii).mean_hsv(1), tracks(ii).std_hsv(1) * hue_stdev_thresh];
@@ -404,37 +440,47 @@ while video.CurrentTime < video.Duration
         hsvThresholds = [h_thresh, s_thresh, v_thresh];
         hsvThresholds(hsvThresholds <= 0) = 0.0000001;   % make sure 0's aren't included in the mask
         
-        masked_mirror_hsv = squeeze(curr_mirror_img_enh_hsv(:,:,:,ii));% .* double(repmat(prev_digit_mask,1,1,3));
-        [mirror_bbox,~,sc] = step(tracks(ii).CAMshiftTracker, masked_mirror_hsv(:,:,1));
-        hsv_mask = HSVthreshold(masked_mirror_hsv, hsvThresholds);
+        mirror_enh_hsv = squeeze(curr_mirror_img_enh_hsv(:,:,:,ii));% .* double(repmat(prev_digit_mask,1,1,3));
+        [mirror_bbox,~,sc] = step(tracks(ii).CAMshiftTracker, im_hsv(:,:,1));
+        hsv_mask = HSVthreshold(mirror_enh_hsv, [hueLimits(colorIdx,:), minSaturation(ii), 1.0, 0.000001, 1.0]);
         hsv_mask = hsv_mask & prev_digit_mask;
+        
         mirror_visible(ii) = true;    % need to add a check here in case the digit isn't visible in the mirror
         
         % only take blobs that overlap with the bounding box predicted by
         % the CAMshiftTracker object
-        bbox_mask = false(size(image,1),size(image,2));
+        bbox_mask = false(h,w);
         bbox_mask(mirror_bbox(2):mirror_bbox(2) + mirror_bbox(4), ...
                   mirror_bbox(1):mirror_bbox(1) + mirror_bbox(3)) = true;
               
         [~,~,~,~,labelMask] = step(mirrorPawBlob, hsv_mask);
         bbox_overlap = labelMask .* uint8(bbox_mask);
-        validIdx = unique(bbox_overlap(:));
-        validIdx = validIdx(validIdx > 0);
-        tempDigitMask = false(size(image,1),size(image,2));
-        for jj = 1 : length(validIdx)
-            tempDigitMask = tempDigitMask | (labelMask == validIdx(jj));
-        end
-        tempDigitMask = (bbox_overlap > 0);
+        s = regionprops(bbox_overlap,'Centroid','Area');
+        A = [s.Area];
+        validIdx = find(A == max(A));
+        overlap_centroid = round(s(validIdx).Centroid);
+        markerMask = false(h,w);
+        markerMask(overlap_centroid(2),overlap_centroid(1)) = true;
+        tempDigitMask = imreconstruct(markerMask, hsv_mask);
+%         validIdx = unique(bbox_overlap(:));
+%         validIdx = validIdx(validIdx > 0);
+%         tempDigitMask = false(h,w);
+%         for jj = 1 : length(validIdx)
+%             tempDigitMask = tempDigitMask | (labelMask == validIdx(jj));
+%         end
+%         tempDigitMask = (bbox_overlap > 0);
         
-        if length(validIdx) > 1
-            tempDigitMask = connectBlobs(tempDigitMask);
-        end
+%         if length(validIdx) > 1
+%             tempDigitMask = connectBlobs(tempDigitMask);
+%         end
         SE = strel('disk',2);
         tempDigitMask = bwdist(tempDigitMask) < 2;
         tempDigitMask = imopen(tempDigitMask, SE);
         tempDigitMask = imclose(tempDigitMask, SE);
         tempDigitMask = imfill(tempDigitMask, 'holes');
         
+        % WORKING HERE - SEE IF THERE'S A WAY TO USE THE CAMSHIFT TRACKER
+        % TO PICK OUT WHICH OF THE RED DIGITS IS THE RIGHT ONE
         currentDigitMirrorMask(:,:,ii) = tempDigitMask;%imerode(tempDigitMask, SE);                
     end
     
@@ -450,6 +496,7 @@ while video.CurrentTime < video.Duration
     prev_digit_mask = imopen(prev_digit_mask, SE);
     prev_digit_mask = imclose(prev_digit_mask, SE);
     prev_digit_mask = imfill(prev_digit_mask, 'holes');
+    prev_digit_mask = prev_digit_mask & curr_paw_mask_mirror;
     
     % find points near the previous hsv means
     h_thresh = [tracks(1).mean_hsv(1), tracks(1).std_hsv(1) * hue_stdev_thresh];
@@ -458,15 +505,19 @@ while video.CurrentTime < video.Duration
     hsvThresholds = [h_thresh, s_thresh, v_thresh];
     hsvThresholds(hsvThresholds <= 0) = 0.0000001;
     
-    masked_mirror_hsv = squeeze(curr_mirror_img_enh_hsv(:,:,:,1)) .* double(repmat(prev_digit_mask,1,1,3));
-    [mirror_bbox,~,sc] = step(tracks(1).CAMshiftTracker, masked_mirror_hsv(:,:,1));
-    hsv_mask = HSVthreshold(masked_mirror_hsv, hsvThresholds);
+    % WORKING HERE - WHY ISN'T THE CAMSHIFTTRACKER WORKING ON THE PAW
+    % DORSUM ON IMAGE 2?
+    mirror_enh_hsv = squeeze(curr_mirror_img_enh_hsv(:,:,:,1));% .* double(repmat(prev_digit_mask,1,1,3));
+%     [mirror_bbox,~,sc] = step(tracks(1).CAMshiftTracker, masked_mirror_hsv(:,:,1));
+    [mirror_bbox,~,sc] = step(tracks(1).CAMshiftTracker, im_hsv(:,:,1));%squeeze(curr_mirror_img_enh_hsv(:,:,3,1)));
+%     hsv_mask = HSVthreshold(masked_mirror_hsv, hsvThresholds);
+    hsv_mask = HSVthreshold(mirror_enh_hsv, [0.5,0.5,0,1,0.000001,max_Value]);
    
     mirror_visible(1) = true;    % need to add a check here in case the digit isn't visible in the mirror
     
     % only take blobs that overlap with the bounding box predicted by
     % the CAMshiftTracker object
-    bbox_mask = false(size(image,1),size(image,2));
+    bbox_mask = false(h,w);
     bbox_mask(mirror_bbox(2):mirror_bbox(2) + mirror_bbox(4), ...
               mirror_bbox(1):mirror_bbox(1) + mirror_bbox(3)) = true;
           
@@ -474,7 +525,7 @@ while video.CurrentTime < video.Duration
     bbox_overlap = labelMask .* uint8(bbox_mask);
     validIdx = unique(bbox_overlap(:));
     validIdx = validIdx(validIdx > 0);
-    tempDigitMask = false(size(image,1),size(image,2));
+    tempDigitMask = false(h,w);
     for jj = 1 : length(validIdx)
         tempDigitMask = tempDigitMask | (labelMask == validIdx(jj));
     end
@@ -492,12 +543,6 @@ while video.CurrentTime < video.Duration
 
     currentDigitMirrorMask(:,:,1) = tempDigitMask;%imerode(tempDigitMask, SE); 
 
-    masked_mirror_img = uint8(repmat(curr_paw_mask_mirror,1,1,3));
-    masked_mirror_img = masked_mirror_img  .* image;
-%     masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
-%                                               decorrStretchMean_mirror(2,:), ...
-%                                               decorrStretchSigma_mirror(2,:), ...
-%                                               'mask',curr_paw_mask_mirror);
     masked_mirror_img_enh = enhanceColorImage(image, ...
                                               decorrStretchMean_mirror(2,:), ...
                                               decorrStretchSigma_mirror(2,:), ...
@@ -505,7 +550,7 @@ while video.CurrentTime < video.Duration
 
 	% check to make sure masks don't overlap, which will kill the
 	% segmentation based on geodesic distance
-%     testMask = false(size(image,1),size(image,2));
+%     testMask = false(h,w);
     for ii = 1 : num_elements_to_track - 1
         for jj = ii + 1 : num_elements_to_track
             overlapMask = currentDigitMirrorMask(:,:,ii) & currentDigitMirrorMask(:,:,jj);
@@ -528,8 +573,8 @@ while video.CurrentTime < video.Duration
     currentDigitMirrorMask(:,:,5) = (mirror_P2(:,:,3) > 0.9);
     
     % update the tracks
-    mirror_fullPawMask = false(size(image,1),size(image,2));
-    center_fullPawMask = false(size(image,1),size(image,2));
+    mirror_fullPawMask = false(h,w);
+    center_fullPawMask = false(h,w);
     for ii = 1 : num_elements_to_track
         tracks(ii).age = tracks(ii).age + 1;
         if mirror_visible(ii)
@@ -543,8 +588,7 @@ while video.CurrentTime < video.Duration
             tracks(ii).bbox = s.BoundingBox;
             
             % update the CAMshiftTracker
-            masked_mirror_hsv = squeeze(curr_mirror_img_enh_hsv(:,:,:,ii));
-            initializeObject(tracks(ii).CAMshiftTracker, masked_mirror_hsv(:,:,1), round(s.BoundingBox));
+            initializeObject(tracks(ii).CAMshiftTracker, im_hsv(:,:,1), round(s.BoundingBox));
             
             % update the Kalman filter
             predict(tracks(ii).kalmanFilter);
@@ -552,7 +596,7 @@ while video.CurrentTime < video.Duration
             
             % update mean and standard deviation of hsv values
             tempMask = squeeze(tracks(ii).currentMask);
-            tempMask = tempMask & (squeeze(curr_mirror_img_enh_hsv(:,:,2,ii)) > minSatForTracking);
+            tempMask = tempMask & (squeeze(curr_mirror_img_enh_hsv(:,:,2,ii)) > minSaturation(ii));
             
             % erode the mask so that only the really representative color
             % at the middle of the blob remains (I hope) - DL 20150707
@@ -815,22 +859,7 @@ end
 % % rewind 
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tracks = initializeTracks()
-    % create an empty array of tracks
-    tracks = struct(...
-        'id', {}, ...
-        'bbox', {}, ...
-        'kalmanFilter', {}, ...
-        'CAMshiftTracker', {}, ...
-        'mean_hsv', {}, ...
-        'std_hsv', {}, ...
-        'currentMask', {}, ...
-        'age', {}, ...
-        'totalVisibleCount', {}, ...
-        'consecutiveInvisibleCount', {});
-end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
