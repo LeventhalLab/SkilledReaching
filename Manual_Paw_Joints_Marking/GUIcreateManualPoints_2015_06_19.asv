@@ -1281,7 +1281,7 @@ for iSelectedRedoMarkerNum = 1:length(SelectedRedoMarkerNum)
             PawCenterMarkerCircle = insertShape(im, 'FilledCircle', [BigFigX,BigFigY,8], 'Color', 'Red');
             im = PawCenterMarkerCircle;
             FrameInfo{iFrame,10+((iFrameRegion-1)*length(Finger))+iMarker} = im;
-            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle %|| iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
+            if RedoButton_Frame_handle ~= handles.LastRedoButton_Frame_handle || iFrame ~= cell2mat(AllFramesMarkerLocData(SelectedRedoMarkerNum(iSelectedRedoMarkerNum-1),9));
                 im_handle = figure;
             else
                 if iSelectedRedoMarkerNum == 1;
