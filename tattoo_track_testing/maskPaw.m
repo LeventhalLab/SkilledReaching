@@ -1,4 +1,4 @@
-function paw_mask = maskPaw( img, BGimg, register_ROI, F, rat_metadata, boxMarkers, varargin )
+function paw_mask = maskPaw( video, frameNum, BGimg, register_ROI, F, rat_metadata, boxMarkers, varargin )
 %
 % usage:
 %
@@ -10,15 +10,16 @@ function paw_mask = maskPaw( img, BGimg, register_ROI, F, rat_metadata, boxMarke
 %   	next two dimensions are the fundamental matrices themselves
 %   register_ROI - 
 
-diff_threshold = 25;
+diff_threshold = 25 / 255;
 extentLimit = 0.5;
 % epiThresh = 0.2;
 
-decorrStretchMean  = [100.5 127.5 100.5];
-decorrStretchSigma = [025 050 025];
+decorrStretchMean  = [100.5 127.5 100.5] / 255;
+decorrStretchSigma = [025 050 025] / 255;
 
-ctr_paw_hsv_thresh_enh = [0.5 0.5 0.40 1.0 0.40 1.0];
+ctr_paw_hsv_thresh_enh = [0.5 0.5 0.40 1.0 0.30 1.0];
 % ctr_paw_hsv_thresh = [0.5 0.5 0.40 1.0 0.40 1.0];
+numFramesToAverage = 5;
 
 centerPawBlob = vision.BlobAnalysis;
 centerPawBlob.AreaOutputPort = true;
@@ -38,12 +39,12 @@ mirrorPawBlob.LabelMatrixOutputPort = true;
 mirrorPawBlob.MinimumBlobArea = 3000;
 mirrorPawBlob.MaximumBlobArea = 30000;
 
-h = size(img,1);
-w = size(img,2);
+h = video.Height;
+w = video.Width;
 
-allBeadsMask = boxMarkers.beadMasks(:,:,1) | ...
-               boxMarkers.beadMasks(:,:,2) | ...
-               boxMarkers.beadMasks(:,:,3);
+% allBeadsMask = boxMarkers.beadMasks(:,:,1) | ...
+%                boxMarkers.beadMasks(:,:,2) | ...
+%                boxMarkers.beadMasks(:,:,3);
            
 % create a mask for the box front in the left and right mirrors
 boxFrontMask = poly2mask(boxMarkers.frontPanel_x(1,:), ...
@@ -53,7 +54,7 @@ boxFrontMask = boxFrontMask | poly2mask(boxMarkers.frontPanel_x(2,:), ...
                                         boxMarkers.frontPanel_y(2,:), ...
                                         h, w);
                                     
-for iarg = 1 : 2 : nargin - 6
+for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
         case 'diffthreshold',
             diff_threshold = varargin{iarg + 1};
@@ -70,33 +71,67 @@ for iarg = 1 : 2 : nargin - 6
     end
 end
 
+vidName = fullfile(video.Path, video.Name);
+video = VideoReader(vidName);
+frameTime = ((frameNum-1) / video.FrameRate);    % need to subtract one because readFrame reads the NEXT frame, not the current frame
+video.CurrentTime = frameTime;
+% mean_img = zeros(h,w,3);
+% for ii = 1 : numFramesToAverage
+%     mean_img = mean_img + double(readFrame(video));
+% end
+% mean_img = mean_img / numFramesToAverage;
+% mean_img = mean_img / 255;
+
+img = readFrame(video);
+img = double(img) / 255;
+
+% move_diff = imabsdiff(mean_img,img);
+BG_diff   = imabsdiff(BGimg,img);
+
+% move_mask = false(h,w);
+BG_mask = false(h,w);
+for iCh = 1 : 3
+%     move_mask = move_mask | (squeeze(move_diff(:,:,iCh)) > diff_threshold);
+    BG_mask   = BG_mask | (squeeze(BG_diff(:,:,iCh)) > diff_threshold);
+end
+% 
+% for iCh = 1 : 3    % color channels
+%     % find the average background pixel value in each color channel
+%     colorCh = squeeze(bg_subtracted_image(:,:,iCh));
+%     mean_bg(iCh) = mean(colorCh(bg_mask));
+%     
+%     colMode = mode(colorCh(:));
+%     bg_subtracted_image(:,:,iCh) = bg_subtracted_image(:,:,iCh) - colMode;
+% end
+
 paw_diff_img = cell(1,3);paw_img = cell(1,3);
 thresh_mask = cell(1,3);
 paw_mask = cell(1,3);
-% bg_subtracted_image = imabsdiff(img, BGimg);
-bg_subtracted_image = double(img) - double(BGimg);
-bg_abs_diff = imabsdiff(img,BGimg);
-bg_subtracted_image = bg_subtracted_image - min(bg_subtracted_image(:));
+% % bg_subtracted_image = imabsdiff(img, BGimg);
+% bg_subtracted_image = double(img) - double(BGimg);
+% bg_abs_diff = imabsdiff(img,BGimg);
+% bg_subtracted_image = (bg_subtracted_image - min(bg_subtracted_image(:)));
+% bg_subtracted_image = bg_subtracted_image / max(bg_subtracted_image(:));
+% bg_mask = (mean(double(bg_abs_diff),3) < 2);
+% 
+% % WORKING HERE - HOW TO USE THE "REAL" IMAGE DIFFERENCE FOR BETTER
+% % CONTRAST?
+% mean_bg = zeros(1,3);
 
-% WORKING HERE - HOW TO USE THE "REAL" IMAGE DIFFERENCE FOR BETTER
-% CONTRAST?
-for iCh = 1 : 3    % color channels
-    colorCh = squeeze(bg_subtracted_image(:,:,iCh));
-    colMode = mode(colorCh(:));
-    bg_subtracted_image(:,:,iCh) = bg_subtracted_image(:,:,iCh) - colMode;
-end
+
 
 cb_mask = cb_fp_mask(boxMarkers, [h,w]);   % mask out anything above the bottom of the 
                                            % checkerboards and in front of
                                            % the front panel in the mirrors
 for ii = 1 : 3
-    paw_diff_img{ii} = bg_subtracted_image(register_ROI(ii,2):register_ROI(ii,2) + register_ROI(ii,4),...
-                                           register_ROI(ii,1):register_ROI(ii,1) + register_ROI(ii,3),:);
+    paw_diff_img{ii} = BG_diff(register_ROI(ii,2):register_ROI(ii,2) + register_ROI(ii,4),...
+                               register_ROI(ii,1):register_ROI(ii,1) + register_ROI(ii,3),:);
     paw_img{ii} = img(register_ROI(ii,2):register_ROI(ii,2) + register_ROI(ii,4),...
                       register_ROI(ii,1):register_ROI(ii,1) + register_ROI(ii,3),:);
                                                                
-	thresh_mask{ii} = rgb2gray(paw_diff_img{ii}) > diff_threshold;
-    alt_thresh_mask = mean(double(paw_diff_img{ii}),3) > diff_threshold;
+% 	thresh_mask{ii} = rgb2gray(paw_diff_img{ii}) > diff_threshold;
+    thresh_mask{ii} = BG_mask(register_ROI(ii,2):register_ROI(ii,2) + register_ROI(ii,4),...
+                      register_ROI(ii,1):register_ROI(ii,1) + register_ROI(ii,3),:);
 end
 
 % work on the left and right images first...
@@ -159,20 +194,21 @@ end
 
 digitMask = repmat(paw_mask{digitWindow},1,1,3);
 % [pawRows,pawCols] = find(paw_mask{digitWindow});
-digitImg  = fliplr(paw_img{digitWindow}) .* uint8(digitMask);
+digitImg  = fliplr(paw_img{digitWindow}) .* double(digitMask);
 % digitImg_enh = decorrstretch(digitImg,'samplesubs',{pawRows,pawCols});
 % digitImg = fliplr(digitImg);
 % digitImg_enh  = fliplr(digitImg_enh);
 
 palmMask  = repmat(paw_mask{palmWindow},1,1,3);
-palmImg   = fliplr(paw_img{palmWindow}) .* uint8(palmMask);
+palmImg   = fliplr(paw_img{palmWindow}) .* double(palmMask);
 % palmImg   = fliplr(palmImg);
 % given the fundamental transformation matrix from the background, we
 % should be able to constrain where the paw is in the front view
 
 % threshold the center image to find where the paw grossly should be
 % located
-paw_img_enh = decorrstretch(paw_img{2},'targetmean',decorrStretchMean,'targetsigma',decorrStretchSigma);
+% paw_img_enh = decorrstretch(paw_img{2},'targetmean',decorrStretchMean,'targetsigma',decorrStretchSigma);
+paw_img_enh = enhanceColorImage(paw_img{2},decorrStretchMean,decorrStretchSigma);
 paw_mask{2} = HSVthreshold(rgb2hsv(paw_img_enh), ctr_paw_hsv_thresh_enh);
 SE = strel('disk',3);
 lftProjectionMask = pawProjectionMask(imdilate(paw_mask{1},SE), squeeze(F(1,:,:)), size(paw_mask{2}));
@@ -203,70 +239,7 @@ for ii = 1 : length(extIdx)
     paw_mask{2} = paw_mask{2} | (paw_labMat == extIdx(ii));
 end
 [~, ~, ~, ~, paw_labMat] = step(centerPawBlob, paw_mask{2});
-% COULD ALSO GET RID OF THE BEADS SINCE WE ALREADY LOCATED THEM FOR
-% GENERATING THE FUNDAMENTAL MATRICES, OR FILTER THEM OUT BASED ON BEING
-% TOO BLUE
 
-% calculate epipolar lines for the paw masked in each mirror. THIS TAKES
-% TOO LONG, LEFT IT IN IN CASE I COME BACK TO IT BUT WILL TRY JUST TAKING
-% THE TOP AND BOTTOM POINTS FROM EACH MIRROR VIEW
-% epiLines = cell(1,2);
-% epipolarMask = false(size(ctrMask,1),size(ctrMask,2),2);
-% map_x = 1:size(ctrMask,2);
-% for ii = 1 : 2 : 3
-%     [y, x] = find(paw_mask{ii});
-%     epiIdx = ceil(ii/2);
-%     if epiIdx == 1
-%         F = Fleft;
-%     else
-%         F = Fright;
-%     end
-%     epiLines{epiIdx} = epipolarLine(F, [x,y]);
-%     % set any point that lies on these epipolar lines to true
-%     for jj = 1 : size(epiLines{epiIdx}, 1)
-%         epipolarMap = zeros(size(ctrMask,1),size(ctrMask,2));
-%         for kk = 1 : size(ctrMask, 1)
-%             epipolarMap(kk, :) = map_x * epiLines{epiIdx}(jj,1) + kk * epiLines{epiIdx}(jj,2);
-%         end
-%         epipolarMap = epipolarMap + epiLines{epiIdx}(1,3);
-%         epipolarMask(:,:,epiIdx) = epipolarMask(:,:,epiIdx) | (abs(epipolarMap) < epiThresh);
-%     end
-% end
-% epipolarOverlapMask = squeeze(epipolarMask(:,:,1)) & squeeze(epipolarMask(:,:,2));
-% borderLines = zeros(2,2,3);    % first dimension is left vs right mirror;
-%                                % second dimension is top vs bottom;
-%                                % third is A,B,C (see epipolarLine documentation)
-% projectionMasks = false(size(paw_mask{2},1),size(paw_mask{2},2),2);
-
-% for ii = 1 : 2
-%     mirrorViewIdx = ii*2 - 1;    % 1 for left mirror, 3 for right mirror
-%     [mirrorMaskRows,mirrorMaskCols] = find(paw_mask{mirrorViewIdx});
-%     mirrorBotIdx = find(mirrorMaskRows == max(mirrorMaskRows),1);
-%     mirrorTopIdx = find(mirrorMaskRows == min(mirrorMaskRows),1);
-%     mirrorPawBottom = [mirrorMaskCols(mirrorBotIdx), mirrorMaskRows(mirrorBotIdx)];
-%     mirrorPawTop    = [mirrorMaskCols(mirrorTopIdx), mirrorMaskRows(mirrorTopIdx)];
-%     
-%     borderLines(ii,:,:) = epipolarLine(squeeze(F(ii,:,:)), [mirrorPawTop;mirrorPawBottom]);
-% 
-%     % create a mask with true values between the epipolar lines
-%     x = 1:size(paw_mask{2},2);
-%     epipolarRegions = zeros(size(paw_mask{2},1),size(paw_mask{2},2),2);
-%     for jj = 1 : 2
-%         for kk = 1 : size(paw_mask{2}, 1)
-%             epipolarRegions(kk, :, jj) = x * borderLines(ii,jj,1) + kk * borderLines(ii,jj,2);
-%         end
-%         epipolarRegions(:,:,jj) = epipolarRegions(:,:,jj) + borderLines(ii,jj,3);
-%     end
-%     if ii == 1   % haven't thought through why the signs change for the
-%                  % region of interest depending on whether mapping the left
-%                  % or right mirror to the direct view, but this seems to
-%                  % work
-%         projectionMasks(:,:,ii) = (epipolarRegions(:,:,1) < 0) & (epipolarRegions(:,:,2) > 0);
-%     else
-%         projectionMasks(:,:,ii) = (epipolarRegions(:,:,1) > 0) & (epipolarRegions(:,:,2) < 0);
-%     end
-% end
-% projectionMask = squeeze(projectionMasks(:,:,1)) & squeeze(projectionMasks(:,:,2));
 projectionMask = lftProjectionMask & rgtProjectionMask;
 
 ctrPawMask = projectionMask & paw_mask{2};
@@ -283,60 +256,6 @@ ctrPawMask = uint8(ctrPawMask) .* paw_labMat;   % paw_labMat contains the
 validRegionList = unique(ctrPawMask);
 validRegion = validRegionList(validRegionList > 0);
 paw_mask{2} = (paw_labMat == validRegion);
-% paw_mask{2} = paw_mask{2} & ...
-%               ~allBeadsMask(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4),...
-%                             register_ROI(2,1):register_ROI(2,1) + register_ROI(2,3)) & ...
-%               ~boxFrontMask(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4),...
-%                             register_ROI(2,1):register_ROI(2,1) + register_ROI(2,3));
-
-
-
-
-
-
-
-
-
-
-
-
-
-% dilate the paw mask a little more to make sure we get everything we need
-% for finding the individual digits
-% SE = strel('disk',5);
-% paw_mask{2} = imdilate(paw_mask{2},SE);
-
-% figure(1);imshow(paw_mask{1});
-% figure(2);imshow(paw_mask{2});
-% figure(3);imshow(paw_mask{3});
-
-% test this code tomorrow!!!!!!!!!!!!!!! should show where projections from
-% left and right mirrors overlap.
-            
-    
-
-% % find the top and bottom of the paw mask from the mirror
-% mirrorPawBottom = 0;
-% mirrorPawTop = size(digitMirrorMask, 1);
-% for ii = 1 : size(digitMirrorMask, 3)
-%     [mirrorMaskRows,mirrorMaskCols] = find(squeeze(digitMirrorMask(:,:,ii)));
-%     if max(mirrorMaskRows) > mirrorPawBottom
-%         mirrorBotIdx = find(mirrorMaskRows == max(mirrorMaskRows),1);
-%         mirrorPawBottom = [mirrorMaskCols(mirrorBotIdx), mirrorMaskRows(mirrorBotIdx)];
-%     end
-%     if min(mirrorMaskRows) < mirrorPawTop
-%         mirrorTopIdx = find(mirrorMaskRows == min(mirrorMaskRows),1);
-%         mirrorPawTop = [mirrorMaskCols(mirrorTopIdx), mirrorMaskRows(mirrorTopIdx)];
-%     end
-% end
-
-
-% START BY THRESHOLDING BASED ON IMAGE SUBTRACTION, THEN GO BACK TO
-% IDENTIFY COLORS IN THE PREVIOUSLY MASKED IMAGE
-% LOOK INTO WHETHER ANY OF THE MATLAB IMAGE TRACKING ALGORITHMS WILL FOLLOW
-% THE PAW AND/OR DIGITS ONCE IDENTIFIED IN THE FIRST FRAME
-% ALSO NEED TO FIGURE OUT WHAT TO DO ABOUT THE CENTER WHERE THE BG
-% SUBTRACTION ISN'T AS CLEAN
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

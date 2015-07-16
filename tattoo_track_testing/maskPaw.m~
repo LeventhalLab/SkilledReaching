@@ -1,4 +1,4 @@
-function paw_mask = maskPaw( img, BGimg, register_ROI, F, rat_metadata, boxMarkers, varargin )
+function paw_mask = maskPaw( video, frameNum, BGimg, register_ROI, F, rat_metadata, boxMarkers, varargin )
 %
 % usage:
 %
@@ -10,7 +10,7 @@ function paw_mask = maskPaw( img, BGimg, register_ROI, F, rat_metadata, boxMarke
 %   	next two dimensions are the fundamental matrices themselves
 %   register_ROI - 
 
-diff_threshold = 25;
+diff_threshold = 25 / 255;
 extentLimit = 0.5;
 % epiThresh = 0.2;
 
@@ -19,6 +19,7 @@ decorrStretchSigma = [025 050 025];
 
 ctr_paw_hsv_thresh_enh = [0.5 0.5 0.40 1.0 0.40 1.0];
 % ctr_paw_hsv_thresh = [0.5 0.5 0.40 1.0 0.40 1.0];
+numFramesToAverage = 5;
 
 centerPawBlob = vision.BlobAnalysis;
 centerPawBlob.AreaOutputPort = true;
@@ -38,8 +39,8 @@ mirrorPawBlob.LabelMatrixOutputPort = true;
 mirrorPawBlob.MinimumBlobArea = 3000;
 mirrorPawBlob.MaximumBlobArea = 30000;
 
-h = size(img,1);
-w = size(img,2);
+h = video.Height;
+w = video.Width;
 
 allBeadsMask = boxMarkers.beadMasks(:,:,1) | ...
                boxMarkers.beadMasks(:,:,2) | ...
@@ -53,7 +54,7 @@ boxFrontMask = boxFrontMask | poly2mask(boxMarkers.frontPanel_x(2,:), ...
                                         boxMarkers.frontPanel_y(2,:), ...
                                         h, w);
                                     
-for iarg = 1 : 2 : nargin - 6
+for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
         case 'diffthreshold',
             diff_threshold = varargin{iarg + 1};
@@ -70,28 +71,58 @@ for iarg = 1 : 2 : nargin - 6
     end
 end
 
+vidName = fullfile(video.Path, video.Name);
+video = VideoReader(vidName);
+frameTime = ((frameNum-1) / video.FrameRate);    % need to subtract one because readFrame reads the NEXT frame, not the current frame
+                                                    % subtracting again so
+                                                    % we can take the
+                                                    % difference between
+                                                    % consecutive frames
+video.CurrentTime = frameTime;
+% mean_img = zeros(h,w,3);
+% for ii = 1 : numFramesToAverage
+%     mean_img = mean_img + double(readFrame(video));
+% end
+% mean_img = mean_img / numFramesToAverage;
+% mean_img = mean_img / 255;
+
+img = readFrame(video);
+img = double(img) / 255;
+
+% move_diff = imabsdiff(mean_img,img);
+BG_diff   = imabsdiff(BGimg,img);
+
+% move_mask = false(h,w);
+BG_mask = false(h,w);
+for iCh = 1 : 3
+%     move_mask = move_mask | (squeeze(move_diff(:,:,iCh)) > diff_threshold);
+    BG_mask   = BG_mask | (squeeze(BG_diff(:,:,iCh)) > diff_threshold);
+end
+% 
+% for iCh = 1 : 3    % color channels
+%     % find the average background pixel value in each color channel
+%     colorCh = squeeze(bg_subtracted_image(:,:,iCh));
+%     mean_bg(iCh) = mean(colorCh(bg_mask));
+%     
+%     colMode = mode(colorCh(:));
+%     bg_subtracted_image(:,:,iCh) = bg_subtracted_image(:,:,iCh) - colMode;
+% end
+
 paw_diff_img = cell(1,3);paw_img = cell(1,3);
 thresh_mask = cell(1,3);
 paw_mask = cell(1,3);
-% bg_subtracted_image = imabsdiff(img, BGimg);
-bg_subtracted_image = double(img) - double(BGimg);
-bg_abs_diff = imabsdiff(img,BGimg);
-bg_subtracted_image = (bg_subtracted_image - min(bg_subtracted_image(:)));
-bg_subtracted_image = bg_subtracted_image / max(bg_subtracted_image(:));
-bg_mask = (mean(double(bg_abs_diff),3) < 2);
+% % bg_subtracted_image = imabsdiff(img, BGimg);
+% bg_subtracted_image = double(img) - double(BGimg);
+% bg_abs_diff = imabsdiff(img,BGimg);
+% bg_subtracted_image = (bg_subtracted_image - min(bg_subtracted_image(:)));
+% bg_subtracted_image = bg_subtracted_image / max(bg_subtracted_image(:));
+% bg_mask = (mean(double(bg_abs_diff),3) < 2);
+% 
+% % WORKING HERE - HOW TO USE THE "REAL" IMAGE DIFFERENCE FOR BETTER
+% % CONTRAST?
+% mean_bg = zeros(1,3);
 
-% WORKING HERE - HOW TO USE THE "REAL" IMAGE DIFFERENCE FOR BETTER
-% CONTRAST?
-mean_bg = zeros(1,3);
 
-for iCh = 1 : 3    % color channels
-    % find the average background pixel value in each color channel
-    colorCh = squeeze(bg_subtracted_image(:,:,iCh));
-    mean_bg(iCh) = mean(colorCh(bg_mask));
-    
-    colMode = mode(colorCh(:));
-    bg_subtracted_image(:,:,iCh) = bg_subtracted_image(:,:,iCh) - colMode;
-end
 
 cb_mask = cb_fp_mask(boxMarkers, [h,w]);   % mask out anything above the bottom of the 
                                            % checkerboards and in front of

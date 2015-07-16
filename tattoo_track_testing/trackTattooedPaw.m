@@ -49,7 +49,7 @@ end
 if isempty(BGimg)
     BGimg = extractBGimg( video, 'numbgframes', numBGframes);
 end
-
+BGimg = double(BGimg) / 255;
 % put the line below back in when done debugging
 % [triggerFrame, peakFrame]= identifyTriggerFrame( video, rat_metadata.pawPref, ...
 %                                                   'bgimg', BGimg, ...
@@ -77,7 +77,7 @@ imDiff = imabsdiff(im_preReach,im_peak);
 fundmat = zeros(2,3,3);
 fundmat(1,:,:) = F.left;
 fundmat(2,:,:) = F.right;
-paw_mask = maskPaw(im_peak, BGimg, register_ROI,fundmat,rat_metadata, boxMarkers, ...
+paw_mask = maskPaw(video, peakFrame, BGimg, register_ROI,fundmat,rat_metadata, boxMarkers, ...
                    'diffthreshold',diff_threshold,...
                    'extentlimit',extentLimit,...
                    'mincenterpawarea',minCenterPawArea,...
@@ -125,7 +125,7 @@ pawMask = false(size(im_peak,1),size(im_peak,2));
 pawMask(register_ROI(dorsalPawMaskIdx,2):register_ROI(dorsalPawMaskIdx,2) + register_ROI(dorsalPawMaskIdx,4), ...
         register_ROI(dorsalPawMaskIdx,1):register_ROI(dorsalPawMaskIdx,1) + register_ROI(dorsalPawMaskIdx,3)) = temp;
 
-digitMirrorMask_dorsum = identifyMirrorDigits_dorsum_20150708(im_peak, pawMask, rat_metadata, boxMarkers);
+digitMirrorMask_dorsum = identifyMirrorDigits_dorsum_20150716(video, peakFrame, pawMask, rat_metadata, boxMarkers);
 % find the digits in the center frame
 digitCenterMask = identifyCenterDigits(centerImg, digitMirrorMask_dorsum, dorsalFundMat, rat_metadata);
 
