@@ -42,9 +42,12 @@ uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze',
     SessionName = RatSessDir((end-8):(end-1));
 try
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
-    load(PawPointFilename);
-    LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
     LocalPawPointFilename = fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName,[RatID 'Session' SessionName 'PawPointFiles.mat']);
+    try
+        load(LocalPawPointFilename);
+    catch
+        load(PawPointFilename);
+    end 
     AllRatDateFolders = {RatData.DateFolders}';
     SessNum = find(strcmpi(AllRatDateFolders,RatSessDir)==1);
 %     try 
@@ -108,6 +111,7 @@ end
 %         VidReaderFileList(j) = VideoReader(video);
 %     end
 end
+LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
 if LocalDataFolderStatus > 0;
     save(LocalPawPointFilename,'-v7.3');
 else
@@ -149,11 +153,23 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
     close all;
     disp('Done with marking');
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
+    FrameInfo = FrameInfo(:,[1:10 58]);
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
     disp('Marking data written to RatData file');
 %     AnalysisRound = AnalysisRound+1;
     %end
-    save(PawPointFilename,'-v7.3');
+    save(LocalPawPointFilename,'RatData','-v7.3');
+    save(PawPointFilename,'RatData','-v7.3');
+%     if rem(iVideo,10) == 0;
+%         msgbox('Saving all data to NAS and local folder. Please wait, this may take some time','modal')
+%         if LocalDataFolderStatus > 0;
+%             save(LocalPawPointFilename,'-v7.3');
+%         else
+%             mkdir(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName));
+%             save(LocalPawPointFilename,'-v7.3');
+%         end
+%         save(PawPointFilename,'-v7.3');
+%     end
 end
 
 disp('Done with marking all trials for session');
