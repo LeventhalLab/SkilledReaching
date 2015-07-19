@@ -2,34 +2,8 @@
 %Leventhal Lab
 %7/19/2015
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%This program will take in the manual paw data (ie. the xy coordinates)
-%for the three given prespectives and spit out analysis 
-%Paramaters read in from Paw_Points Tracking Data file
+%This program will take in the manual paw data for the 
 
-%Each of these is take in for the prespectives Left, Right, Center
-
-%Pellet Center
-
-%Center of Back Surface of Paw
-
-%Thumb Proximal
-%Thumb Distal
-
-% Index proximal
-% Index middle
-% Index distal
-% 
-% Middle proximal
-% Middle middle
-% Middle distal
-% 
-% Ring proximal
-% Ring middle
-% Ring distal
-% 
-% Pinky proximal
-% Pinky middle
-% Pinky distal
 
 
 
