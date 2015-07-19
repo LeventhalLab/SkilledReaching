@@ -44,8 +44,10 @@ try
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     LocalPawPointFilename = fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName,[RatID 'Session' SessionName 'PawPointFiles.mat']);
     try
+        disp('Loading local data');
         load(LocalPawPointFilename);
-    catch
+    catch      
+        disp('Loading NAS data');
         load(PawPointFilename);
     end 
     AllRatDateFolders = {RatData.DateFolders}';
