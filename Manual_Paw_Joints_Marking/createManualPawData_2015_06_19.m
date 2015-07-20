@@ -44,10 +44,10 @@ try
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     LocalPawPointFilename = fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName,[RatID 'Session' SessionName 'PawPointFiles.mat']);
     try
-        disp('Loading local data');
+        fprintf('Loading local data\n');
         load(LocalPawPointFilename);
     catch      
-        disp('Loading NAS data');
+        fprintf('Loading NAS data\n');
         load(PawPointFilename);
     end 
     AllRatDateFolders = {RatData.DateFolders}';
@@ -153,18 +153,18 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
 %     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5,'marker_number',MarkerNum);
     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',8);
     close all;
-    disp('Done with marking\n');
+    fprintf('Done with marking\n');
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
     FrameInfo = FrameInfo(:,[1:10 58]);
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
-    disp('Marking data written to RatData file\n');
+    fprintf('Marking data written to RatData file\n');
 %     AnalysisRound = AnalysisRound+1;
     %end
-    disp('Saving data locally\n');
+    fprintf('Saving data locally\n');
     save(LocalPawPointFilename,'RatData');
 
 if rem(iVideo,10) == 0;
-    disp('Saving data to NAS\n');
+    fprintf('Saving data to NAS\n');
     save(PawPointFilename,'RatData');
 end
 %         msgbox('Saving all data to NAS and local folder. Please wait, this may take some time','modal')
@@ -178,10 +178,10 @@ end
 %     end
 end
 
-disp('Done with marking all trials for session');
-disp('Saving data locally\n');
+fprintf('Done with marking all trials for session\n');
+fprintf('Saving data locally\n');
 save(LocalPawPointFilename,'RatData');
-disp('Saving data to NAS\n');
+fprintf('Saving data to NAS\n');
 save(PawPointFilename,'RatData');
 
 %%
