@@ -31,86 +31,136 @@
 % Pinky middle
 % Pinky distal
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function [pelletCenter, centerBackPaw, thumbProx, thumbDist, indexProx, indexMid, indexDist,middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyPox ,pinkyMid, pinkyDist] = readDataFromPawPoints(pawPointsData)
+function analyzeManualTrialData
+    readDataFromPawPoints
+    
+end
 
-function [pawCoords] = analyzeManualTrialData(pawPointsData)
+function [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData)
+
+pelletCenter = [];
+pawBackCenter = [];
+
+thumbProx = [];
+thumbDist = [];
+
+indexProx = [];
+indexMid = [];
+indexDist= [];
+
+middleProx= [];
+middleMid = [];
+middleDist= [];
+
+ringProx = [];
+ringMid= [];
+ringDist = [];
+
+pinkyProx = [];
+pinkyMid = [];
+pinkyDist = [];
+
+
+
+
+
 overallCounter = 1;
 
     for i=1:5
         for j=1:3
             for k=overallCounter:(overallCounter+15) 
+                if overallCounter<241
+                    
+                     %Pellet Center 
+                     if mod(overallCounter,16) == 1
+                        pelletCenter{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+                     %Back of paw
+                     if mod(overallCounter,16) == 2
+                        pawBackCenter{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+                     %Thumb
+                     if mod(overallCounter,16) == 3
+                        thumbProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+                     if mod(overallCounter,16) == 4
+                        thumbDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+                     
+                     
+                     %Index
+                     if mod(overallCounter,16) == 5
+                        indexProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+                     
+                     if mod(overallCounter,16) == 6
+                        indexMid{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+                     if mod(overallCounter,16) == 7
+                        indexDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+                     %Middle
+                     if mod(overallCounter,16) == 8
+                        middleProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+
+                     if mod(overallCounter,16) == 9
+                        middleMid{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+                      if mod(overallCounter,16) == 10
+                        middleDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                      end
+
                 
-                if mod(overallCounter,16) == 1
-                    pelletCenter{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     %Ring
+                     if mod(overallCounter,16) == 11
+                        ringProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+
+                     if mod(overallCounter,16) == 12
+                        ringMid{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+
+                      if mod(overallCounter,16) == 13
+                        ringDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                      end
+
+
+                     %Pinky
+                     if mod(overallCounter,16) == 14
+                        pinkyProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+
+                     if mod(overallCounter,16) == 15
+                        pinkyMid{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                     end
+
+
+                      if mod(overallCounter,16) == 0
+                        pinkyDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
+                      end
+
+                    
+                    overallCounter = overallCounter + 1;
                 end
-                
-                 if mod(overallCounter,16) == 2
-                    pawBackCenter{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                
-                 if mod(overallCounter,16) == 3
-                    thumbProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                
-                  
-                 if mod(overallCounter,16) == 4
-                    thumbDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                 
-                 if mod(overallCounter,16) == 5
-                    indexProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                 
-                 if mod(overallCounter,16) == 6
-                    indexMid{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                 
-                 if mod(overallCounter,16) == 7
-                    indexDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                 
-                 if mod(overallCounter,16) == 8
-                    middleProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                 
-                 
-                 if mod(overallCounter,16) == 9
-                    middleMid{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                 
-                 
-                  if mod(overallCounter,16) == 10
-                    middleDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                  end
-                  
-                  
-                 
-                 if mod(overallCounter,16) == 11
-                    middleProx{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                 
-                 
-                 if mod(overallCounter,16) == 12
-                    middleMid{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                 end
-                 
-                 
-                  if mod(overallCounter,16) == 13
-                    middleDist{i,j} = [pawPointsData(k,7),pawPointsData(k,8)];
-                  end
-                 
-                 
-                 
-                 
-                 
-                overallCounter = overallCounter + 1;
-            
             end
         end
     end
     
 end
 
+function 
+
+end
 
 % function     [digit13dcoords,digit23dcoords,digit33dcoords,digit43dcoords] = analyzeManualTrialData
 % 
