@@ -153,16 +153,20 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
 %     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5,'marker_number',MarkerNum);
     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',8);
     close all;
-    disp('Done with marking');
+    disp('Done with marking\n');
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
     FrameInfo = FrameInfo(:,[1:10 58]);
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
-    disp('Marking data written to RatData file');
+    disp('Marking data written to RatData file\n');
 %     AnalysisRound = AnalysisRound+1;
     %end
+    disp('Saving data locally\n');
     save(LocalPawPointFilename,'RatData','-v7.3');
+
+if rem(iVideo,10) == 0;
+    disp('Saving data to NAS\n');
     save(PawPointFilename,'RatData','-v7.3');
-%     if rem(iVideo,10) == 0;
+end
 %         msgbox('Saving all data to NAS and local folder. Please wait, this may take some time','modal')
 %         if LocalDataFolderStatus > 0;
 %             save(LocalPawPointFilename,'-v7.3');
