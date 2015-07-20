@@ -345,13 +345,13 @@ function begin_button_Callback(hObject, eventdata, handles)
     % IS NOT VISIBLE IN A PARTICULAR REGION OF THE FRAME, IT WILL APPEAR AS
     % 'NaN' IN OUTPUT. IF IT IS CORRECTLY RECORDED, IT'S COORDINATES WILL
     % BE RECORDED BOTH IN THE FINAL OUTPUT AND THE "TEMPORARY" VARIABLE
-    % CumMarkedMarkersLocations IN THE BASE WORKSPACE   
-   
+    % CumMarkedMarkersLocations IN THE BASE WORKSPACE
+    
     % The code below is what controls marker placement, starting from
     % either 1 or the last marked marker, depending on the value of
     % CurrentMarker, through to all markers
     for MarkerNum = Marker:length(AllFramesMarkerLocData(:,1)); %[Marker Marker+47 Marker+48 Marker+49];
-                
+        
         %Set current marker to whichever marker is currently being worked
         %on, so user can resume from here after completing re-do's
         CurrentMarker = MarkerNum;
@@ -362,10 +362,10 @@ function begin_button_Callback(hObject, eventdata, handles)
         
         % Determine the position of the marker's frame number in the array
         % of frame numbers (e.x. the 4th frame for analysis)
-        iFrame = AllFramesMarkerLocData{MarkerNum,9}; %length(Frames);     
-
-
-%         fprintf('Marker contained in frame %d\n',str2double(Frames{iFrame}));
+        iFrame = AllFramesMarkerLocData{MarkerNum,9}; %length(Frames);
+        
+        
+        %         fprintf('Marker contained in frame %d\n',str2double(Frames{iFrame}));
         
         % Determine the region of the frame where the marker should be
         % placed
@@ -373,7 +373,7 @@ function begin_button_Callback(hObject, eventdata, handles)
         
         iMarker = AllFramesMarkerLocData{MarkerNum,4};
         
-            fprintf('Working on marker %s %s\nin frame region %s of frame %d.\nThis is marker number %d out of %d total\n\n',...
+        fprintf('Working on marker %s %s\nin frame region %s of frame %d.\nThis is marker number %d out of %d total\n\n',...
             Finger{iMarker},...
             AnatMarkerPoints{iMarker},...
             FrameRegionInFocus{iFrameRegion},...
@@ -393,7 +393,7 @@ function begin_button_Callback(hObject, eventdata, handles)
         %         BeginButton_Frame_handle = imshow(im);
         %         handles.BeginButton_Frame_handle = BeginButton_Frame_handle;
         %         guidata(hObject,handles);
-        %[~,imMap] = frame2im(im);        
+        %[~,imMap] = frame2im(im);
         
         try
             leftImg = FrameInfo{iFrame,4};
@@ -500,13 +500,13 @@ function begin_button_Callback(hObject, eventdata, handles)
                     FrameInfo{iFrame,3} = ProcessedFrameFilename;
                     handles.FrameInfo = FrameInfo;
                     guidata(hObject,handles);
-%                     try
-%                         close(2);
-%                     catch ME
-%                         disp(ME);
-%                     end                                           
-%                     im_handle = imgcf;
-%                     close(im_handle);
+                    %                     try
+                    %                         close(2);
+                    %                     catch ME
+                    %                         disp(ME);
+                    %                     end
+                    %                     im_handle = imgcf;
+                    %                     close(im_handle);
                     im = FrameInfo{iFrame,2};
                     im_handle = figure;
                     imshow(im,'Border','tight');
@@ -518,8 +518,8 @@ function begin_button_Callback(hObject, eventdata, handles)
         catch ME
             uiwait(msgbox({'Error has occurred, please select zoom in windows for frame again'},'modal'));
             disp(ME);
-            dbstop in GUIcreateManualPoints_2015_06_19
             im = read(video,str2double(Frames{iFrame}));
+            FrameInfo{iFrame,10} = im;
             %imageName = sprintf('All_Markers_for_Frame_%s_of_%s',Frames{iFrame},video.Name(1:end-4));
             figure;
             BeginButton_Frame = imshow(im);
@@ -541,12 +541,12 @@ function begin_button_Callback(hObject, eventdata, handles)
             FrameInfo{iFrame,4} = leftImg;
             FrameInfo{iFrame,5} = leftRectPos;
             centerImg = im(floor(centerRectPos(2)):ceil(centerRectPos(2)+centerRectPos(4)),...
-                floor(centerRectPos(1)):ceil(centerRectPos(1)+centerRectPos(3)),...
+                floor(centerRectPos(1)):ceil((centerRectPos(1)+centerRectPos(3))),...
                 :);
             FrameInfo{iFrame,6} = centerImg;
             FrameInfo{iFrame,7} = centerRectPos;
-            rightImg = im(floor(rightRectPos(2)):ceil(rightRectPos(2)+rightRectPos(4)),...
-                floor(rightRectPos(1)):ceil(rightRectPos(1)+rightRectPos(3)),...
+            rightImg = im(floor(rightRectPos(2)):ceil((rightRectPos(2)+rightRectPos(4))),...
+                floor(rightRectPos(1)):ceil((rightRectPos(1)+rightRectPos(3))),...
                 :);
             FrameInfo{iFrame,8} = rightImg;
             FrameInfo{iFrame,9} = rightRectPos;
@@ -570,6 +570,11 @@ function begin_button_Callback(hObject, eventdata, handles)
             savefig(BeginButtonFrameProcessedHandle,ProcessedFrameFilename);
             handles.LastBeginButtonFrameProcessed = BeginButtonFrameProcessedHandle;
             FrameInfo{iFrame,3} = ProcessedFrameFilename;
+            FrameInfo{iFrame,2} = im;
+            im_handle = figure;
+            imshow(im,'Border','tight');
+            set(im_handle,'units','normalized','outerposition',[-0.0005    0.0361    0.2161    0.2806]);
+            handles.im_handle = im_handle;
             handles.FrameInfo = FrameInfo;
             guidata(hObject,handles);
         end
