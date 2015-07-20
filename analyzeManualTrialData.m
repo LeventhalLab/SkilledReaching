@@ -1,7 +1,7 @@
 %Titus John
 %Leventhal Lab
 %7/19/2015
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% About analyze manual trial data
 %This program will take in the manual paw data (ie. the xy coordinates)
 %for the three given prespectives and spit out analysis 
 %Paramaters read in from Paw_Points Tracking Data file
@@ -30,12 +30,15 @@
 % Pinky proximal
 % Pinky middle
 % Pinky distal
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% Master function for calling all the seperate functions written into script
 function analyzeManualTrialData
-    readDataFromPawPoints
+    [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData)
     
 end
 
+%% Function to read the data from the rat data array structure into indciudal arrays
 function [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData)
 
 pelletCenter = [];
@@ -158,7 +161,62 @@ overallCounter = 1;
     
 end
 
-function 
+%% Plot ball stick models of the data
+function plotBallStick
+    for i= 1
+        for j =1
+        pawBackCenter_xy = cell2mat(pawBackCenter{1,1});
+        
+        indexProx_xy = cell2mat(indexProx{i,j});
+        middleProx_xy = cell2mat(middleProx{i,j});
+        ringProx_xy = cell2mat(ringProx{i,j});
+        pinkyProx_xy = cell2mat(pinkyProx{i,j});
+        
+        indexMid_xy = cell2mat(indexMid{i,j});
+        middleMid_xy = cell2mat(middleMid{i,j});
+        ringMid_xy = cell2mat(ringMid{i,j});
+        pinkyMid_xy = cell2mat(pinkyMid{i,j});
+        
+        indexDist_xy = cell2mat(indexDist{i,j});
+        middleDist_xy = cell2mat(middleDist{i,j});
+        ringDist_xy = cell2mat(ringDist{i,j});
+        pinkyDist_xy = cell2mat(pinkyDist{i,j});
 
+ 
+       
+        
+        figure(1)
+        hold on
+        scatter(pawBackCenter_xy(1),pawBackCenter_xy(2))
+        
+        
+        scatter(indexProx_xy(1), indexProx_xy(2),'r')
+        scatter(middleProx_xy(1), middleProx_xy(2),'r')
+        scatter(ringProx_xy(1), ringProx_xy(2),'r')
+        scatter(pinkyProx_xy(1), pinkyProx_xy(2),'r')
+        
+        
+        scatter(indexMid_xy(1), indexMid_xy(2),'b')
+        scatter(middleMid_xy(1), middleMid_xy(2),'b')
+        scatter(ringMid_xy(1), ringMid_xy(2),'b')
+        scatter(pinkyMid_xy(1), pinkyMid_xy(2),'b')
+        
+        
+        scatter(indexDist_xy(1), indexDist_xy(2),'g')
+        scatter(middleDist_xy(1), middleDist_xy(2),'g')
+        scatter(ringDist_xy(1), ringDist_xy(2),'g')
+        scatter(pinkyDist_xy(1), pinkyDist_xy(2),'g')
+
+
+        
+        end
+    end
 end
+
+% %% This Function is for measuring the spread between the distal knucles of the index finger and pink
+% function  = plotPawSpread(pinkyDist, indexDist)
+% 
+% 
+% end
+
 
