@@ -40,6 +40,8 @@ RatID = pathstr(end-4:end);
 uiwait(msgbox('Please select the SESSION (I.E. DATE) you would like to analyze','modal'));
     RatSessDir = uigetdir(RatRawDataDirPath);
     SessionName = RatSessDir((end-8):(end-1));
+
+
 try
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     LocalPawPointFilename = fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName,[RatID 'Session' SessionName 'PawPointFiles.mat']);
@@ -112,7 +114,30 @@ end
 % %         RatData(SessNum).VideoFiles(j).Object = VideoReader(video);
 %         VidReaderFileList(j) = VideoReader(video);
 %     end
+   ProcessedDataFolder = strrep(RatSessDir,'-rawdata','-processed');
+   uiwait(msgbox('Please select the .csv file with the video scores for this session','modal'));
+   [CSVfilename,CSVpath] = uigetfile(fullfile(ProcessedDataFolder,'*.csv'),'Select .csv file with video scores');
+   [nums,txt,raw] = xlsread(fullfile(CSVpath,CSVfilename));
+   [r,c] = size(raw);
+   
+   o = 1;
+   p = 1;
+   for n = 1:length(nums)
+       if isnumeric(nums(n,2)) && isnan(nums(n,2))== 0;
+           if (isnumeric(nums(n,3)) && isnan(nums(n,3)) == 0)
+               RatData(SessNum).VideoFiles(o).ManualStartFrame = nums(n,3);
+               o = o+1;
+           else 
+              RatData(SessNum).VideoFiles(o).ManualStartFrame = NaN;
+              o = o+1; 
+           end
+           RatData(SessNum).VideoFiles(p).Score = nums(n,2);
+           p = p + 1;      
+       end
+   end
+
 end
+
 LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
 if LocalDataFolderStatus > 0;
     save(LocalPawPointFilename);
