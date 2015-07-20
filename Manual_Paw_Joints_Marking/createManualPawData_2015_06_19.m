@@ -115,12 +115,12 @@ end
 end
 LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
 if LocalDataFolderStatus > 0;
-    save(LocalPawPointFilename,'-v7.3');
+    save(LocalPawPointFilename);
 else
     mkdir(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName));
-    save(LocalPawPointFilename,'-v7.3');
+    save(LocalPawPointFilename);
 end
-save(PawPointFilename,'-v7.3');
+save(PawPointFilename);
 
 %% Start marking function. Display dialog box indicating which marker and option for indicating not visible and instructions.
 % AnalysisRound = 1;
@@ -161,11 +161,11 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
 %     AnalysisRound = AnalysisRound+1;
     %end
     disp('Saving data locally\n');
-    save(LocalPawPointFilename,'RatData','-v7.3');
+    save(LocalPawPointFilename,'RatData');
 
 if rem(iVideo,10) == 0;
     disp('Saving data to NAS\n');
-    save(PawPointFilename,'RatData','-v7.3');
+    save(PawPointFilename,'RatData');
 end
 %         msgbox('Saving all data to NAS and local folder. Please wait, this may take some time','modal')
 %         if LocalDataFolderStatus > 0;
