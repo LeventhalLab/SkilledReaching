@@ -33,9 +33,9 @@
 
 
 %% Master function for calling all the seperate functions written into script
-function analyzeManualTrialData
+function analyzeManualTrialData(pawPointsData)
     [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData)
-    
+    plotPawSpread(pinkyDist, indexDist)
 end
 
 %% Function to read the data from the rat data array structure into indciudal arrays
@@ -163,15 +163,16 @@ end
 
 %% Plot ball stick models of the data
 function plotBallStick
-    for i= 1
-        for j =1
+    for i= 1:5
+        for j =1:3
         pawBackCenter_xy = cell2mat(pawBackCenter{1,1});
-        
+      
         indexProx_xy = cell2mat(indexProx{i,j});
         middleProx_xy = cell2mat(middleProx{i,j});
         ringProx_xy = cell2mat(ringProx{i,j});
         pinkyProx_xy = cell2mat(pinkyProx{i,j});
         
+    
         indexMid_xy = cell2mat(indexMid{i,j});
         middleMid_xy = cell2mat(middleMid{i,j});
         ringMid_xy = cell2mat(ringMid{i,j});
@@ -195,6 +196,10 @@ function plotBallStick
         scatter(ringProx_xy(1), ringProx_xy(2),'r')
         scatter(pinkyProx_xy(1), pinkyProx_xy(2),'r')
         
+        line([pawBackCenter_xy(1),indexProx_xy(1)],[pawBackCenter_xy(2),indexProx_xy(2)],'color','r')
+        line([pawBackCenter_xy(1),middleProx_xy(1)],[pawBackCenter_xy(2),middleProx_xy(2)],'color','r')
+        line([pawBackCenter_xy(1),ringProx_xy(1)],[pawBackCenter_xy(2),ringProx_xy(2)],'color','r')
+        line([pawBackCenter_xy(1),pinkyProx_xy(1)],[pawBackCenter_xy(2),pinkyProx_xy(2)],'color','r')
         
         scatter(indexMid_xy(1), indexMid_xy(2),'b')
         scatter(middleMid_xy(1), middleMid_xy(2),'b')
@@ -202,10 +207,20 @@ function plotBallStick
         scatter(pinkyMid_xy(1), pinkyMid_xy(2),'b')
         
         
+        line([indexMid_xy(1),indexProx_xy(1)],[indexMid_xy(2),indexProx_xy(2)],'color','b')
+        line([middleMid_xy(1),middleProx_xy(1)],[middleMid_xy(2),middleProx_xy(2)],'color','b')
+        line([ringMid_xy(1),ringProx_xy(1)],[ringMid_xy(2),ringProx_xy(2)],'color','b')
+        line([pinkyMid_xy(1),pinkyProx_xy(1)],[pinkyMid_xy(2),pinkyProx_xy(2)],'color','b')
+        
         scatter(indexDist_xy(1), indexDist_xy(2),'g')
         scatter(middleDist_xy(1), middleDist_xy(2),'g')
         scatter(ringDist_xy(1), ringDist_xy(2),'g')
         scatter(pinkyDist_xy(1), pinkyDist_xy(2),'g')
+        
+        line([indexMid_xy(1),indexDist_xy(1)],[indexMid_xy(2),indexDist_xy(2)],'color','g')
+        line([middleMid_xy(1),middleDist_xy(1)],[middleMid_xy(2),middleDist_xy(2)],'color','g')
+        line([ringMid_xy(1),ringDist_xy(1)],[ringMid_xy(2),ringDist_xy(2)],'color','g')
+        line([pinkyMid_xy(1),pinkyDist_xy(1)],[pinkyMid_xy(2),pinkyDist_xy(2)],'color','g')
 
 
         
@@ -213,10 +228,41 @@ function plotBallStick
     end
 end
 
-% %% This Function is for measuring the spread between the distal knucles of the index finger and pink
-% function  = plotPawSpread(pinkyDist, indexDist)
-% 
-% 
-% end
+
+%% Create the fundemental matrix 
+function fundmentalMatrixCalc
+ for i= 1:5
+        for j =1:3
+        
+        pawBackCenter_xy = cell2mat(pawBackCenter{i,j});
+      
+        indexProx_xy = cell2mat(indexProx{i,j});
+        middleProx_xy = cell2mat(middleProx{i,j});
+        ringProx_xy = cell2mat(ringProx{i,j});
+        pinkyProx_xy = cell2mat(pinkyProx{i,j});
+        
+    
+        indexMid_xy = cell2mat(indexMid{i,j});
+        middleMid_xy = cell2mat(middleMid{i,j});
+        ringMid_xy = cell2mat(ringMid{i,j});
+        pinkyMid_xy = cell2mat(pinkyMid{i,j});
+        
+        indexDist_xy = cell2mat(indexDist{i,j});
+        middleDist_xy = cell2mat(middleDist{i,j});
+        ringDist_xy = cell2mat(ringDist{i,j});
+        pinkyDist_xy = cell2mat(pinkyDist{i,j});
+
+ 
+    
+    end
+end
+
+end
+
+%% This Function is for measuring the spread between the distal knucles of the index finger and pink
+function plotPawSpread(pinkyDist, indexDist)
+
+
+end
 
 
