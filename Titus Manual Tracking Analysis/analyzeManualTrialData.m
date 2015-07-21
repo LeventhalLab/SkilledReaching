@@ -234,29 +234,38 @@ function fundmentalMatrixCalc
  for i= 1:5
         for j =1:3
         
-        pawBackCenter_xy = cell2mat(pawBackCenter{i,j});
+        pawBackCenter_xy{i,j} = cell2mat(pawBackCenter{i,j});
       
-        indexProx_xy = cell2mat(indexProx{i,j});
-        middleProx_xy = cell2mat(middleProx{i,j});
-        ringProx_xy = cell2mat(ringProx{i,j});
-        pinkyProx_xy = cell2mat(pinkyProx{i,j});
+        indexProx_xy{i,j} = cell2mat(indexProx{i,j});
+        middleProx_xy{i,j} = cell2mat(middleProx{i,j});
+        ringProx_xy{i,j} = cell2mat(ringProx{i,j});
+        pinkyProx_xy{i,j} = cell2mat(pinkyProx{i,j});
         
     
-        indexMid_xy = cell2mat(indexMid{i,j});
-        middleMid_xy = cell2mat(middleMid{i,j});
-        ringMid_xy = cell2mat(ringMid{i,j});
-        pinkyMid_xy = cell2mat(pinkyMid{i,j});
+        indexMid_xy{i,j} = cell2mat(indexMid{i,j});
+        middleMid_xy{i,j} = cell2mat(middleMid{i,j});
+        ringMid_xy{i,j} = cell2mat(ringMid{i,j});
+        pinkyMid_xy{i,j} = cell2mat(pinkyMid{i,j});
         
-        indexDist_xy = cell2mat(indexDist{i,j});
-        middleDist_xy = cell2mat(middleDist{i,j});
-        ringDist_xy = cell2mat(ringDist{i,j});
-        pinkyDist_xy = cell2mat(pinkyDist{i,j});
+        indexDist_xy{i,j} = cell2mat(indexDist{i,j});
+        middleDist_xy{i,j} = cell2mat(middleDist{i,j});
+        ringDist_xy{i,j} = cell2mat(ringDist{i,j});
+        pinkyDist_xy{i,j} = cell2mat(pinkyDist{i,j});
 
- 
-    
     end
-end
-
+ end
+ 
+ temp = cell2mat(pinkyDist_xy)
+ 
+ pinkyDistLeft(:,1)  = temp(:,1);
+ pinkyDistLeft(:,2) = temp(:,2);
+ pinkyDistCenter(:,1) = temp(:,3);
+ pinkyDistCenter(:,2) = temp(:,4);
+ pinkyDistRight(:,1) = temp(:,5);
+ pinkyDistRight(:,2) = temp(:,6);
+ 
+ 
+ 
 end
 
 %% This Function is for measuring the spread between the distal knucles of the index finger and pink
