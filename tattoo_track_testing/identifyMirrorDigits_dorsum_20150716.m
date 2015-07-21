@@ -70,7 +70,7 @@ hueLimits = [0.00, 0.16;
 h = video.Height;
 w = video.Width;
 
-for iarg = 1 : 2 : nargin - 4
+for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
         case 'digitbounds',
             rgb_digitBounds = varargin{iarg + 1};
