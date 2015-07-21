@@ -229,7 +229,7 @@ function plotBallStick
 end
 
 
-%% Create the fundemental matrix 
+%% Normalize Data to fixed point
 function fundmentalMatrixCalc
  for i= 1:5
         for j =1:3
