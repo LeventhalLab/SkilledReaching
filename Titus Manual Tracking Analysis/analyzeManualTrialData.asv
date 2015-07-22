@@ -35,10 +35,11 @@
 %% Master function for calling all the seperate functions written into script
 function analyzeManualTrialData(pawPointsData)
     
-    [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData);
-    [indexDistLeft, indexDistCenter, indexDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist);
-    [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight]= calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight);
-    plot2DisancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight);
+    [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData)
+    [indexDistLeft, indexDistCenter, indexDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist)
+    [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight] = calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistRight, indexDistRight, pinkyDistRight)
+    
+    plot2DisancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight)
 
 end
 
@@ -289,7 +290,7 @@ function   [indexDistLeft, indexDistCenter, indexDistRight, pinkyDistLeft, pinky
 end
  
 %% This Function is for measuring the spread between the distal knucles of the index finger and pink
-function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight]= calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight)
+function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight]= calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistRight, indexDistRight, pinkyDistRight)
 
      pawSpreadDistPILeft = [];
      pawSpreadDistPICenter = [];
