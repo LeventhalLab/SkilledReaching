@@ -186,7 +186,7 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
 %     AnalysisRound = AnalysisRound+1;
     %end
     fprintf('Saving data locally\n');
-    save(LocalPawPointFilename,'RatData');
+    save(LocalPawPointFilename,'RatData','-v7.3');
 
 if rem(iVideo,10) == 0;
     fprintf('Saving data to NAS\n');
