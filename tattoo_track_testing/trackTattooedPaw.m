@@ -125,9 +125,9 @@ pawMask = false(size(im_peak,1),size(im_peak,2));
 pawMask(register_ROI(dorsalPawMaskIdx,2):register_ROI(dorsalPawMaskIdx,2) + register_ROI(dorsalPawMaskIdx,4), ...
         register_ROI(dorsalPawMaskIdx,1):register_ROI(dorsalPawMaskIdx,1) + register_ROI(dorsalPawMaskIdx,3)) = temp;
 
-digitMirrorMask_dorsum = identifyMirrorDigits_dorsum_20150716(video, peakFrame, pawMask, rat_metadata, boxMarkers);
+digitMasks = initialDigitID(video, peakFrame, BGimg, rat_metadata, boxMarkers);
 % find the digits in the center frame
-digitCenterMask = identifyCenterDigits(centerImg, digitMirrorMask_dorsum, dorsalFundMat, rat_metadata);
+% digitCenterMask = identifyCenterDigits(centerImg, digitMirrorMask_dorsum, dorsalFundMat, rat_metadata);
 
 % now have the digits and dorsum of the paw in 2 views from single frames,
 % start to work on the image tracking. Need to think about whether 3-D
