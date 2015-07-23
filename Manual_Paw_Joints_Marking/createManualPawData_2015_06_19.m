@@ -67,28 +67,28 @@ try
 catch
 %% Pull video files for later use
 
-j = 1;
-for i = 1:length(RatRawDataLookUp)
-    startIndex = regexpi(RatRawDataLookUp(i).name,'[.]');
-    if ~isempty(startIndex);
-        DeleteIndex(j) = 1;
-        j = j+1;
-    else
-        DeleteIndex(j) = 0;
-        j = j+1;
-    end
-end
+% j = 1;
+% for i = 1:length(RatRawDataLookUp)
+%     startIndex = regexpi(RatRawDataLookUp(i).name,'[.]');
+%     if ~isempty(startIndex);
+%         DeleteIndex(j) = 1;
+%         j = j+1;
+%     else
+%         DeleteIndex(j) = 0;
+%         j = j+1;
+%     end
+% end
 m = 1;
 % RatData().DateFolders = zeros((length(RatRawDataLookUp)-3),1);
 % RatData().VideoFiles = zeros((length(RatRawDataLookUp)-3),1);
-for iDate = 1:(length(RatRawDataLookUp))
-    fprintf('Working on folder %d out of %d\n',iDate,(length(RatRawDataLookUp)));
-    if DeleteIndex(iDate) == 0;
-    RatData(m).DateFolders = fullfile(RatRawDataDirPath,RatRawDataLookUp(iDate).name);
+% for iDate = 1:(length(RatRawDataLookUp))
+%     fprintf('Working on folder %d out of %d\n',iDate,(length(RatRawDataLookUp)));
+%     if DeleteIndex(iDate) == 0;
+    RatData(m).DateFolders = RatSessDir;
     RatData(m).VideoFiles = dir(fullfile(RatData(m).DateFolders,'*.avi'));
-    m = m+1;
-    end
-end
+%     m = m+1;
+%     end
+% end
 
 %     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'PawPointFiles.mat']);
 %     save(PawPointFilename);
@@ -122,7 +122,8 @@ end
    
    o = 1;
    p = 1;
-   for n = 1:length(nums)
+   try
+       for n = 1:length(nums)
        if isnumeric(nums(n,2)) && isnan(nums(n,2))== 0;
            if (isnumeric(nums(n,3)) && isnan(nums(n,3)) == 0)
                RatData(SessNum).VideoFiles(o).ManualStartFrame = nums(n,3);
@@ -134,18 +135,21 @@ end
            RatData(SessNum).VideoFiles(p).Score = nums(n,2);
            p = p + 1;      
        end
+       end
+   catch
    end
+   
 
 end
 
 LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
 if LocalDataFolderStatus > 0;
-    save(LocalPawPointFilename);
+    save(LocalPawPointFilename,'-v7.3');
 else
     mkdir(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName));
-    save(LocalPawPointFilename);
+    save(LocalPawPointFilename,'-v7.3');
 end
-save(PawPointFilename);
+save(PawPointFilename,'-v7.3');
 
 %% Start marking function. Display dialog box indicating which marker and option for indicating not visible and instructions.
 % AnalysisRound = 1;
@@ -180,8 +184,8 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
     close all;
     fprintf('Done with marking\n');
     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
-    FrameInfo = FrameInfo(:,[1:10 58]);
-    RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
+%     FrameInfo = FrameInfo(:,[1:10 58]);
+%     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
     fprintf('Marking data written to RatData file\n');
 %     AnalysisRound = AnalysisRound+1;
     %end
@@ -190,7 +194,7 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
 
 if rem(iVideo,10) == 0;
     fprintf('Saving data to NAS\n');
-    save(PawPointFilename,'RatData');
+    save(PawPointFilename,'RatData','-v7.3');
 end
 %         msgbox('Saving all data to NAS and local folder. Please wait, this may take some time','modal')
 %         if LocalDataFolderStatus > 0;
@@ -205,9 +209,9 @@ end
 
 fprintf('Done with marking all trials for session\n');
 fprintf('Saving data locally\n');
-save(LocalPawPointFilename,'RatData');
+save(LocalPawPointFilename,'RatData','-v7.3');
 fprintf('Saving data to NAS\n');
-save(PawPointFilename,'RatData');
+save(PawPointFilename,'RatData','-v7.3');
 
 %%
 % If left click is made after placing marker, record marker position
