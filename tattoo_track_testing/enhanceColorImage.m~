@@ -24,15 +24,8 @@ I_enh = decorrstretch(I,'samplesubs',{y,x}, ...
                       'targetsigma',decorrsigma);
 
 I_enh_masked = rgbMask .* double(I_enh);
-I_enh_masked = imadjust(I_enh_masked, [0.3 0.7], []);
+I_enh_masked = imadjust(I_enh, [0.3 0.7], []);
 
-I_enh = I_enh_masked;
-for iPlane = 1 : 3
-    curPlane = squeeze(I_enh(:,:,iPlane));
-    curPlane_masked = squeeze(I_enh_masked(:,:,iPlane));
-    curPlane(mask(:)) = curPlane_masked(mask(:));
-    I_enh(:,:,iPlane) = curPlane;
-end
 % I_enh = rgb2hsv(I_enh);
 % % I_enh(:,:,1) = imadjust(I_enh(:,:,1));
 % I_enh(:,:,2) = imadjust(I_enh(:,:,2));
