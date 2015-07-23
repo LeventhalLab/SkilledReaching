@@ -33,6 +33,9 @@
 
 
 %% Master function for calling all the seperate functions written into script
+
+
+%Feed in the master 
 function analyzeManualTrialData(pawPointsData)
     
     [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData);
