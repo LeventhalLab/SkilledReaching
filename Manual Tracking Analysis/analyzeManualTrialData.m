@@ -42,6 +42,7 @@ function analyzeManualTrialData(pawPointsData)
     [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist);
     [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight]= calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight);
     plotPawangle(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
+    pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
     %plot2DisancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight);
 
 end
@@ -308,11 +309,25 @@ function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight] = calc
   
     for i =1:5
         pawSpreadDistPILeft(i) = sqrt((pinkyDistLeft(i,1)-indexDistLeft(i,1))^2+(pinkyDistLeft(i,2)-indexDistLeft(i,2))^2);
-        pawSpreadDistPICenter(i) = sqrt((pinkyDistCenter(i,1)-indexDistCenter(i,1))^2+(pinkyDistCenter(i,2)-indexDistCenter(i,2))^2);        pawSpreadDistPIRight(i) = sqrt((pinkyDistRight(i,1)-indexDistRight(i,1))^2+(pinkyDistRight(i,2)-indexDistRight(i,2))^2);
+        pawSpreadDistPICenter(i) = sqrt((pinkyDistCenter(i,1)-indexDistCenter(i,1))^2+(pinkyDistCenter(i,2)-indexDistCenter(i,2))^2);    
+        pawSpreadDistPIRight(i) = sqrt((pinkyDistRight(i,1)-indexDistRight(i,1))^2+(pinkyDistRight(i,2)-indexDistRight(i,2))^2);
     end
 
 end
 
+%% Calc 3D distance in space
+function pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
+   for i =1:5
+        if (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistLeft(i,1) ~= 0)
+                pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistLeft(i,1)];
+        elseif (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistRight(i,1) ~= 0)
+                pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistRight(i,1)];       
+
+        end
+   end
+end
+
+%% PlotPawAngle
 function plotPawangle(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
     
     
@@ -330,12 +345,9 @@ function plotPawangle(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistC
 
 end
 
-function calc3DistancePawSpread
-    
 
-end
 
-function plot2DisancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight)
+function plot2DistancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight)
     for i =1:5
         hold on
         scatter(i,pawSpreadDistPICenter(i),'b')
@@ -343,5 +355,6 @@ function plot2DisancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpr
         
 end
 
-function plot3DistancePawSpread (pa
+function plot3Distance
+end
 
