@@ -308,7 +308,14 @@ function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight] = calc
   
     for i =1:5
         pawSpreadDistPILeft(i) = sqrt((pinkyDistLeft(i,1)-indexDistLeft(i,1))^2+(pinkyDistLeft(i,2)-indexDistLeft(i,2))^2);
-        pawSpreadDistPICenter(i) = sqrt((pinkyDistCenter(i,1)-indexDistCenter(i,1))^2+(pinkyDistCenter(i,2)-indexDistCenter(i,2))^2);        pawSpreadDistPIRight(i) = sqrt((pinkyDistRight(i,1)-indexDistRight(i,1))^2+(pinkyDistRight(i,2)-indexDistRight(i,2))^2);
+    end
+  
+    for i =1:5
+        pawSpreadDistPICenter(i) = sqrt((pinkyDistCenter(i,1)-indexDistCenter(i,1))^2+(pinkyDistCenter(i,2)-indexDistCenter(i,2))^2);
+    end
+    
+    for i =1:5
+        pawSpreadDistPIRight(i) = sqrt((pinkyDistRight(i,1)-indexDistRight(i,1))^2+(pinkyDistRight(i,2)-indexDistRight(i,2))^2);
     end
 
 end
@@ -330,10 +337,7 @@ function plotPawangle(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistC
 
 end
 
-function calc3DistancePawSpread
-    
-
-end
+function calc3Dist
 
 function plot2DisancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight)
     for i =1:5
