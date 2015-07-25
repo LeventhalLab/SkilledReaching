@@ -335,12 +335,12 @@ function plotPawangle(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistC
 
     
     for i=1:5
-        figure(i) 
+        figure(1) 
         hold on
-        scatter(indexDistCenter(i,1), indexDistCenter(i,2),'r')
-        scatter(middleDistCenter(i,1), middleDistCenter(i,2),'b')
-        scatter(ringDistCenter(i,1),ringDistCenter(i,2),'g')
-        scatter(pinkyDistCenter(i,1),pinkyDistCenter(i,1),'m')
+        scatter(indexDistCenter(i,1), indexDistCenter(i,2),'r','X')
+        scatter(middleDistCenter(i,1), middleDistCenter(i,2),'b','X')
+        scatter(ringDistCenter(i,1),ringDistCenter(i,2),'g','X')
+        scatter(pinkyDistCenter(i,1),pinkyDistCenter(i,1),'m','X')
     end
 
 end
@@ -352,8 +352,11 @@ function plot2DistancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSp
         hold on
         scatter(i,pawSpreadDistPICenter(i),'b')
     end
-        
+     
+    
 end
+
+
 
 function plot3Distance
 end
