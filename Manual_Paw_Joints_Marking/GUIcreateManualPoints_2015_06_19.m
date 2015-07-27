@@ -130,10 +130,10 @@ function GUIcreateManualPoints_2015_06_19_OpeningFcn(hObject, eventdata, handles
 if nargin > 0;
     RatData = varargin{1};
     i = varargin{2};
-    j = varargin{3};
+    k = varargin{3};
     StartFrame = varargin{4};
 end
-video = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(j).name));
+video = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(k).name));
 ProcessedDataFolder = strrep(RatData(i).DateFolders,'-rawdata','-processed');
 handles.ProcessedDataFolder = ProcessedDataFolder;
 
@@ -232,9 +232,9 @@ TotMarkNum = NumOfFrames.*length(FrameRegionInFocus).*length(Finger);
 ReDoMarkerList = cell(TotMarkNum,1);
 m = 1; %Represents marker number out of total
 for i = 1:length(Frames); %Represents Frames element index
-    for j = 1:length(FrameRegionInFocus); %Represents region of focus in frame
-        for k = 1:length(Finger); %Represents marker number out of total marked (16) in every frame region
-            ReDoMarkerList{m} = strjoin(cellstr(['Frame' Frames(i) FrameRegionInFocus(j) Finger(k) AnatMarkerPoints(k)]));
+    for k = 1:length(FrameRegionInFocus); %Represents region of focus in frame
+        for l = 1:length(Finger); %Represents marker number out of total marked (16) in every frame region
+            ReDoMarkerList{m} = strjoin(cellstr(['Frame' Frames(i) FrameRegionInFocus(k) Finger(l) AnatMarkerPoints(l)]));
             m = m+1;
         end
     end
@@ -247,6 +247,51 @@ set(handles.redo_marker_listbox,'String',ReDoMarkerList);
 % they do above. The x,y coordinates for all markers are set to the string 'Marker Not
 % Yet Placed' and will be replaced with either numbers or NaN during
 % marking. 
+ 
+ 
+AllFrames = cell((EndFrame - StartFrame),1);
+v = 0;
+for z = 1:length(AllFrames);
+    AllFrames{z} = num2str(StartFrame+v);
+    v = v +1;
+end
+TotalFramesMarkerLocData = cell(length(AllFrames)*length(FrameRegionInFocus)*length(Finger),10);    
+i = 1;
+m = 1;
+for j = 1:length(AllFrames)
+    for k = 1:length(FrameRegionInFocus);
+        for l = 1:length(Finger);
+            if sum(strcmpi(AllFrames(j),Frames)) == 1;
+                TotalFramesMarkerLocData{i,1} = m;
+                TotalFramesMarkerLocData{i,2} = Frames(find(strcmpi(AllFrames(j),Frames)==1));
+                TotalFramesMarkerLocData{i,3} = FrameRegionInFocus(k);
+                TotalFramesMarkerLocData{i,4} = l;
+                TotalFramesMarkerLocData{i,5} = Finger(l);
+                TotalFramesMarkerLocData{i,6} = AnatMarkerPoints(l);
+                TotalFramesMarkerLocData{i,7} = 'Marker Not Yet Placed';
+                TotalFramesMarkerLocData{i,8} = 'Marker Not Yet Placed';
+                TotalFramesMarkerLocData{i,9} = find(strcmpi(AllFrames(j),Frames)==1);
+                TotalFramesMarkerLocData{i,10} = k;
+                m = m+1;
+            elseif sum(strcmpi(AllFrames(j),Frames)) == 0;
+                TotalFramesMarkerLocData{i,1} = [];
+                TotalFramesMarkerLocData{i,2} = AllFrames(j);
+                TotalFramesMarkerLocData{i,3} = FrameRegionInFocus(k);
+                TotalFramesMarkerLocData{i,4} = l;
+                TotalFramesMarkerLocData{i,5} = Finger(l);
+                TotalFramesMarkerLocData{i,6} = AnatMarkerPoints(l);
+                TotalFramesMarkerLocData{i,7} = 'Marker Not Yet Placed';
+                TotalFramesMarkerLocData{i,8} = 'Marker Not Yet Placed';
+                TotalFramesMarkerLocData{i,9} = [];
+                TotalFramesMarkerLocData{i,10} = k;
+%                 m = m+1;
+            end
+            i = i+1; 
+        end
+    end
+%     m = 1;
+end
+
 m = 1; 
 AllFramesMarkerLocData = cell(TotMarkNum,10);
 for i = 1:length(Frames);
