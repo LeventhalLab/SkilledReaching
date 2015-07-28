@@ -174,7 +174,7 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
     else
     end
     end
-    if RatData(SessNum).VideoFiles(iVideo).Score == 1 || RatData(SessNum).VideoFiles(iVideo).Score == 7
+    if RatData(SessNum).VideoFiles(iVideo).Score == 1 % || RatData(SessNum).VideoFiles(iVideo).Score == 7
         VideoCount = VideoCount+1;
         fprintf('\nWorking on trial %d out of %d for this session\n',iVideo,length(RatData(SessNum).VideoFiles));
         try
