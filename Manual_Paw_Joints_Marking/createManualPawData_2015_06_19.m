@@ -2,30 +2,22 @@
 % Script guides user in placing specific markers on rat's paw and records
 % their position in 8 consecutive frames, equally spaced within the 40
 % frames that follow the start frame. Uses raw video recordings of trial
-% made each day, and proceeds until all trials for all days are marked for
-% the chosen rat.
+% made each day, and proceeds until all trials with first-time successful
+% reaches are marked for the chosen rat and session.
 %
 %% Input
-% * Rat's raw data folder (selected during script execution)
-% * Start frame (also selected during script execution, defined as the
-% first frame in which the rat's complete paw has passed the slot)
+% * None, prompts appear during script execution asking user for needed
+% data
 %
 %% Output
 % # RatData : Structure array containing the following fields
 %
-% * DateFolders: Listing of the paths of all date folders in rat's raw data folder
+% * DateFolders: The paths to the session folder in rat's raw data folder
 % * VideoFiles: Structural array containing info about all video files
 % (.avi files) in a given date folder. Fields include name, data, bytes,
-% isdir, datenum, ManualStartFrame (manually determined start frame), AutomaticTriggerFrame
-% (automatically determined trigger frame by identifyTriggerFrame function
-% in createManualPawData script, may be removed later), AutomaticPeakFrame
-% (automatically determined peak frame by identifyTriggerFrame function
-% in createManualPawData script, may be removed later), Agree (0 if manual
-% start frame and automatic peak frame do not agree, 1 if
-% they do), ROI_Used, Paw_Preference (encodes previous manually determined
-% information about paw used in video, dominant/marked or non-dominant/unmarked)
-% * Accuracy: Average accuracy of identifyTriggerFrame function for a given
-% session, may be removed later
+% isdir, datenum, ManualStartFrame (manually determined start frame, loaded
+% from .csv file for a given rat and session in rat's processed data
+% folder). 
 
 %% Select rat and session for analysis
 clear;
@@ -52,10 +44,10 @@ try
     PawPointFilename = fullfile(pathstr,[RatID '-processed'],[RatID 'Session' SessionName 'PawPointFiles.mat']);
     LocalPawPointFilename = fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName,[RatID 'Session' SessionName 'PawPointFiles.mat']);
     try
-        fprintf('\nLoading local data\n');
+        fprintf('\nLoading local data\nPlease wait, this may take some time.\n');
         load(LocalPawPointFilename);
     catch
-        fprintf('\nLoading NAS data\n');
+        fprintf('\nLoading NAS data\nPlease wait, this may take some time.\n');
         load(PawPointFilename);
     end
     
@@ -169,58 +161,56 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
         % window. 
         % NOTE: THIS DOES NOT ALWAYS CORRESPOND TO THE VIDEO NUMBER SHOWN
         % AT THE END OF THE FILENAME (E.G. THE '001' AT THE END OF
-        % R0030_20140424_14-37-36_001.avi)
-        
+        % R0030_20140424_14-37-36_001.avi). VIDEOS ARE DELETED SOMETIMES,
+        % SO, FOR EXAMPLE, THE FILE THAT ENDS IN '003' MAY BE THE 2ND VIDEO
+        % IN THE LIST. THE SCRIPT WILL DISPLAY THE NUMBER OF THE VIDEO IN
+        % THE LIST (I.E. 2, NOT 3 IN THE PREVIOUS SCENARIO). The filename
+        % is always displayed in RatData.VideoFiles.name though. 
         fprintf('\nWorking on trial %d out of %d for this session\n',iVideo,length(RatData(SessNum).VideoFiles));
+        
+        % Load the start frame if available. If not, a window appears with
+        % the video's filepath and prompts the user to input the start
+        % frame
         try
             StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
             if isempty(StartFrame) || isnan(StartFrame)
-                RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
-                %             ManualStartFrame(iVideo) = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
+                RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo); %#ok<*SAGROW>
                 StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
             end
         catch
             RatData(SessNum).VideoFiles(iVideo).ManualStartFrame = GUIcreateFrameStart_2015_06_19(RatData,SessNum,iVideo);
             StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;
         end
-        %     save(PawPointFilename);
-        %     MarkerNum = input('Please enter the number of the marker you would like to start from. If you would like to start from the beginning, please enter 1: ');
-        %     temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',5,'marker_number',MarkerNum);
+        
+        % Mark paw points for video
         temp = GUIcreateManualPoints_2015_06_19(RatData,SessNum,iVideo,StartFrame,'interval',8);
+        
+        % Close all open windows, save position data written to
+        % RatData.Video.Paw_Points_Tracking_Data, save RatData locally and
+        % (every 10 videos marked) to NAS. 
         close all;
         fprintf('\nDone with marking\n');
         RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
-        %     FrameInfo = FrameInfo(:,[1:10 58]);
-        %     RatData(SessNum).VideoFiles(iVideo).Paw_Points_Frame_Data = FrameInfo;
         fprintf('\nMarking data written to RatData file\n');
-        %     AnalysisRound = AnalysisRound+1;
-        %end
-        fprintf('\nSaving data locally\n');
-        save(LocalPawPointFilename,'RatData','-v7.3');
-        
+        fprintf('\nSaving data locally\nPlease wait, this may take some time.\n');
+        save(LocalPawPointFilename,'RatData','-v7.3');        
         if rem(VideoCount,10) == 0;
-            fprintf('\nSaving data to NAS\n');
+            fprintf('\nSaving data to NAS\nPlease wait, this may take some time.\n');
             save(PawPointFilename,'RatData','-v7.3');
         end
-        %         msgbox('Saving all data to NAS and local folder. Please wait, this may take some time','modal')
-        %         if LocalDataFolderStatus > 0;
-        %             save(LocalPawPointFilename,'-v7.3');
-        %         else
-        %             mkdir(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName));
-        %             save(LocalPawPointFilename,'-v7.3');
-        %         end
-        %         save(PawPointFilename,'-v7.3');
-        %     end
+        
+    % If video score is not 1, skip it.     
     else
         RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = [];
     end
 end
 
-
+% After all videos are marked for a given session, or the user decides to
+% quit early, save data locally and to NAS.
 fprintf('\nMarking complete\n');
-fprintf('\nSaving data locally\n');
+fprintf('\nSaving data locally\nPlease wait, this may take some time.\n');
 save(LocalPawPointFilename,'RatData','-v7.3');
-fprintf('\nSaving data to NAS\n');
+fprintf('\nSaving data to NAS\nPlease wait, this may take some time.\n');
 save(PawPointFilename,'RatData','-v7.3');
 
 %% Developer Notes:
@@ -255,22 +245,10 @@ save(PawPointFilename,'RatData','-v7.3');
         % end
 % - May want to modify code so it doesn't ask you every time you start the
 % program where you would like to save the data locally.
-%%
-% If left click is made after placing marker, record marker position
-% externally.
+% - May want to add functionality to specify which marker you'd like to
+% start from as well
 
-% If right click is made after placing marker, prompt user to redo last
-% marker
-
-% If user selects Yes, display last marker placement dialog box, go
-% back 1 in marking function and overwrite marker position data.
-
-% If user selects No, continue with marker placement.
-
-%% Save marker position data externally
-
-
-%% Old code
+%% Old code (from Titus)
 % %% Reset
 % close all
 % clear all
@@ -342,7 +320,7 @@ save(PawPointFilename,'RatData','-v7.3');
 %
 %     end
 
-%% More old code
+%% More old code (from Vibin)
 %for iDate = 1:(length(RatRawDataLookUp)-3)
 %         for iVideo = 1:(length(RatData(iDate).VideoFiles));
 %             fprintf('Working on video %d out of %d\n',iVideo,(length(RatData(iDate).VideoFiles)));
