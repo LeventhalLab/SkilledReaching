@@ -46,11 +46,10 @@ function analyzeManualTrialData(RatData)
             j = j+1;
         end
     end
- 
     
-   pawSpreadDistPICenter = []; 
-   pawSpreadDistRICenter = [];
-   pawSpreadDistMICenter = [];
+    allPawSpreadDistPICenter = [];
+    allPawSpreadDistRICenter = [];
+    allPawSpreadDistMICenter = [];
     
    for i = 1:length(allPawData)
     pawPointsData = allPawData{1,i}
@@ -58,10 +57,16 @@ function analyzeManualTrialData(RatData)
     [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist);
     [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight] = calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight, middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight)
     plotCenterDistance(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
-    %pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
-    %plot2DistancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight)
+    
+    for j=1:length(pawSpreadDistPICenter)
+        allPawSpreadDistPICenter(i,j) = pawSpreadDistPICenter(j); 
+        allPawSpreadDistRICenter(i,j) = pawSpreadDistRICenter(j);
+        allPawSpreadDistMICenter(i,j) = pawSpreadDistMICenter(j);
+    end
+    %pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight)
    end
-  
+   
+    plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter)
 end
 
 %% Function to read the data from the rat data array structure into indciudal arrays
@@ -385,10 +390,10 @@ end
 
 
 %% Plot the Paw distances  over time
-function plot2DistancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight)
-
-    for i =1:5
-        avgPawSpreadDistMI(i) = mean(pawSpreadDistMICenter(i));
+function plot2DistancePawSpread(allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter)
+   
+    for i =1:length(allPawSpreadDistMICenter)
+        avgPawSpreadDistMI(i) = namean(allPawSpreadDistMICenter(i));
         avgPawSpreadDistRI(i) = mean(pawSpreadDistRICenter(i));
         avgPawSpreadDistPI(i) = mean(pawSpreadDistPICenter(i));
 
@@ -399,9 +404,10 @@ function plot2DistancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSp
 
     frames = 1:5;
     figure(2)
-    scatter(frames,avgPawSpreadDistMI)
-    scatter(frames,avgPawSpreadDistRI)
-    scatter(frames,avgPawSpreadDistPI)
+    hold on
+    scatter(frames,avgPawSpreadDistMI,'r')
+    scatter(frames,avgPawSpreadDistRI,'g')
+    scatter(frames,avgPawSpreadDistPI,'b')
 end
 
 

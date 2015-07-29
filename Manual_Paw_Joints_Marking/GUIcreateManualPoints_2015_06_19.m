@@ -126,7 +126,8 @@ function GUIcreateManualPoints_2015_06_19_OpeningFcn(hObject, eventdata, handles
 % handles    structure with handles and user data (see GUIDATA) varargin
 % command line arguments to GUIcreateManualPoints_2015_06_19 (see % VARARGIN)
 
-% Convert input variables into variables in function workspace.
+% Convert input variables into variables in function workspace. Load video
+% and create processed data folder filepath
 if nargin > 0;
     RatData = varargin{1};
     i = varargin{2};
@@ -137,15 +138,16 @@ video = VideoReader(fullfile(RatData(i).DateFolders,RatData(i).VideoFiles(k).nam
 ProcessedDataFolder = strrep(RatData(i).DateFolders,'-rawdata','-processed');
 handles.ProcessedDataFolder = ProcessedDataFolder;
 
-% Set default values for end frame and interval. Modify according to user
-% input to function as appropriate. Determine number of frames.
+% Set default values for end frame (40 frames after start) and interval
+% (every 10 frames). Modify according to user input to function as
+% appropriate. Determine number of frames.
 EndFrame = StartFrame+40;
 Interval = 10;
 
 for iarg = 5 : 2 : nargin-4
     switch lower(varargin{iarg})
-        case 'start_frame',
-            StartFrame = varargin{iarg + 1};
+%         case 'start_frame',
+%             StartFrame = varargin{iarg + 1};
         case 'interval',
             Interval = varargin{iarg + 1};
         case 'end_frame',
@@ -157,14 +159,17 @@ for iarg = 5 : 2 : nargin-4
     end
 end
 
+%% NOTE TO VIBIN: CONTINUE COMMENTING/EDITING FROM HERE ONWARDS...
 % NumOfFrames = 10+((EndFrame - (StartFrame+10))/Interval);
 NumOfFrames = ((EndFrame - StartFrame)/Interval);
 
 % Create cell array of frame numbers from video to be analyzed, based on
 % start frame and interval
 Frames = cell(NumOfFrames,1);
+
+
 initframeCount = 0;
-finframeCount = 1;
+%finframeCount = 1;
 for i = 1:NumOfFrames;
     %     if i < 11;
     %         Frames{i} = num2str(StartFrame + initframeCount);
