@@ -33,18 +33,35 @@
 
 
 %% Master function for calling all the seperate functions written into script
-
-
 %Feed in the master 
-function analyzeManualTrialData(pawPointsData)
+function analyzeManualTrialData(RatData)
     
+    allPawData = [];
+    Scores=[RatData.VideoFiles.Score]';
+
+    j= 1;
+    for i=1:length(Scores)
+        if Scores(i) == 1
+            allPawData{j}= RatData.VideoFiles(i).Paw_Points_Tracking_Data; 
+            j = j+1;
+        end
+    end
+ 
+    
+   pawSpreadDistPICenter = []; 
+   pawSpreadDistRICenter = [];
+   pawSpreadDistMICenter = [];
+    
+   for i = 1:length(allPawData)
+    pawPointsData = allPawData{1,i}
     [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData);
     [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist);
-    [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight]= calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight);
-    plotPawangle(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
-    pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
-    %plot2DisancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight);
-
+    [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight] = calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight, middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight)
+    plotCenterDistance(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
+    %pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
+    %plot2DistancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight)
+   end
+  
 end
 
 %% Function to read the data from the rat data array structure into indciudal arrays
@@ -269,7 +286,8 @@ function   [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middl
              ringDistCenter(:,2) = temp(:,4);
              ringDistRight(:,1) = temp(:,5);
              ringDistRight(:,2) = temp(:,6);
-
+            
+                
              temp = cell2mat(middleDist_xy);
              middleDistLeft(:,1)  = temp(:,1);
              middleDistLeft(:,2) = temp(:,2);
@@ -301,18 +319,44 @@ function   [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middl
 end
  
 %% This Function is for measuring the spread between the distal knucles of the index finger and pink
-function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight] = calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight)
+function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight] = calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight, middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight)
 
      pawSpreadDistPILeft = [];
      pawSpreadDistPICenter = [];
      pawSpreadDistPIRight = [];
+     
+     
+     pawSpreadDistMILeft = [];
+     pawSpreadDistMICenter = [];
+     pawSpreadDistMIRight = [];
   
+     pawSpreadDistRILeft = [];
+     pawSpreadDistRICenter = [];
+     pawSpreadDistRIRight = [];
+     
+    %Measure the seperation between the pinky and the index finger 
     for i =1:5
         pawSpreadDistPILeft(i) = sqrt((pinkyDistLeft(i,1)-indexDistLeft(i,1))^2+(pinkyDistLeft(i,2)-indexDistLeft(i,2))^2);
         pawSpreadDistPICenter(i) = sqrt((pinkyDistCenter(i,1)-indexDistCenter(i,1))^2+(pinkyDistCenter(i,2)-indexDistCenter(i,2))^2);    
         pawSpreadDistPIRight(i) = sqrt((pinkyDistRight(i,1)-indexDistRight(i,1))^2+(pinkyDistRight(i,2)-indexDistRight(i,2))^2);
     end
-
+    
+   
+    
+    %Measure the seperation between the middle and the index finger 
+    for i =1:5
+        pawSpreadDistMILeft(i) = sqrt((middleDistLeft(i,1)-indexDistLeft(i,1))^2+(middleDistLeft(i,2)-indexDistLeft(i,2))^2);
+        pawSpreadDistMICenter(i) = sqrt((middleDistCenter(i,1)-indexDistCenter(i,1))^2+(middleDistCenter(i,2)-indexDistCenter(i,2))^2);    
+        pawSpreadDistMIRight(i) = sqrt((middleDistRight(i,1)-indexDistRight(i,1))^2+(middleDistRight(i,2)-indexDistRight(i,2))^2);
+    end
+    
+    %Measure the seperation between the ring and the index finger 
+    for i =1:5
+        pawSpreadDistRILeft(i) = sqrt((ringDistLeft(i,1)-indexDistLeft(i,1))^2+(ringDistLeft(i,2)-indexDistLeft(i,2))^2);
+        pawSpreadDistRICenter(i) = sqrt((ringDistCenter(i,1)-indexDistCenter(i,1))^2+(ringDistCenter(i,2)-indexDistCenter(i,2))^2);    
+        pawSpreadDistRIRight(i) = sqrt((ringDistRight(i,1)-indexDistRight(i,1))^2+(ringDistRight(i,2)-indexDistRight(i,2))^2);
+    end
+    
 end
 
 %% Calc 3D distance in space
@@ -327,13 +371,8 @@ function pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCen
    end
 end
 
-%% PlotPawAngle
-function plotPawangle(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
-    
-    
-
-
-    
+%% Plot paw center distance changes
+function plotCenterDistance(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
     for i=1:5
         figure(1) 
         hold on
@@ -342,22 +381,27 @@ function plotPawangle(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistC
         scatter(ringDistCenter(i,1),ringDistCenter(i,2),'g','X')
         scatter(pinkyDistCenter(i,1),pinkyDistCenter(i,1),'m','X')
     end
-
 end
 
 
+%% Plot the Paw distances  over time
+function plot2DistancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight)
 
-function plot2DistancePawSpread (pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight)
     for i =1:5
-        hold on
-        scatter(i,pawSpreadDistPICenter(i),'b')
+        avgPawSpreadDistMI(i) = mean(pawSpreadDistMICenter(i));
+        avgPawSpreadDistRI(i) = mean(pawSpreadDistRICenter(i));
+        avgPawSpreadDistPI(i) = mean(pawSpreadDistPICenter(i));
+
+        stdPawSpreadDistMI(i) = std(pawSpreadDistMICenter(i));
+        stdPawSpreadDistRI(i) = std(pawSpreadDistRICenter(i));
+        stdPawSpreadDistPI(i) = std(pawSpreadDistPICenter(i));
     end
-     
-    
+
+    frames = 1:5;
+    figure(2)
+    scatter(frames,avgPawSpreadDistMI)
+    scatter(frames,avgPawSpreadDistRI)
+    scatter(frames,avgPawSpreadDistPI)
 end
 
-
-
-function plot3Distance
-end
 
