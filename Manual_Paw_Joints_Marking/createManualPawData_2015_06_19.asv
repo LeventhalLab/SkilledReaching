@@ -164,13 +164,6 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
     % successful reach the first time (score = 1).
     if RatData(SessNum).VideoFiles(iVideo).Score == 1 % || RatData(SessNum).VideoFiles(iVideo).Score == 7
         VideoCount = VideoCount+1;
-        
-        % The trial/video number being marked is displayed in the command
-        % window. 
-        % NOTE: THIS DOES NOT ALWAYS CORRESPOND TO THE VIDEO NUMBER SHOWN
-        % AT THE END OF THE FILENAME (E.G. THE '001' AT THE END OF
-        % R0030_20140424_14-37-36_001.avi)
-        
         fprintf('\nWorking on trial %d out of %d for this session\n',iVideo,length(RatData(SessNum).VideoFiles));
         try
             StartFrame = RatData(SessNum).VideoFiles(iVideo).ManualStartFrame;

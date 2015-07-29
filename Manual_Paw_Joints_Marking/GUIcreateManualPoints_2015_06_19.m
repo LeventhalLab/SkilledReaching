@@ -398,7 +398,7 @@ end
 % The code below is what controls marker placement, starting from
 % either 1 or the last marked marker, depending on the value of
 % CurrentMarker, through to all markers
-for MarkerNum = Marker:length(AllFramesMarkerLocData(:,1));
+for MarkerNum = Marker:Marker %length(AllFramesMarkerLocData(:,1));
     
     %Set current marker to whichever marker is currently being worked
     %on, so user can resume from here after completing re-do's
