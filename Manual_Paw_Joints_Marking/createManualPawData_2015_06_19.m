@@ -118,12 +118,12 @@ end
 % the data both locally and to the NAS.
 LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
 if LocalDataFolderStatus > 0;
-    save(LocalPawPointFilename,'-v7.3');
+    save(LocalPawPointFilename,'RatData','-v7.3');
 else
     mkdir(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName));
-    save(LocalPawPointFilename,'-v7.3');
+    save(LocalPawPointFilename,'RatData','-v7.3');
 end
-save(PawPointFilename,'-v7.3');
+save(PawPointFilename,'RatData','-v7.3');
 
 %% Start marking function. Display dialog box indicating which marker and option for indicating not visible and instructions.
 
