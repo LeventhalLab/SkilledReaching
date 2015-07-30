@@ -64,8 +64,7 @@ function analyzeManualTrialData(RatData)
         allPawSpreadDistMICenter(i,j) = pawSpreadDistMICenter(j);
     end
     
-    pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight)
-    
+   pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight)
    end
    
     plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter)
@@ -367,20 +366,12 @@ function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpre
 end
 
 %% Calc 3D distance in space
-function [pinkyDist3, indexDist3]= create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
+function pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
    for i =1:5
-        if     (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistLeft(i,1) ~= 0)
+        if (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistLeft(i,1) ~= 0)
                 pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistLeft(i,1)];
         elseif (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistRight(i,1) ~= 0)
                 pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistRight(i,1)];       
-        end
-   end
-   
-   for i =1:5
-        if     (indexDistCenter(i,1) ~= 0 && indexDistCenter(i,2) ~= 0 && indexDistLeft(i,1) ~= 0)
-                indexDist3{i} = [indexDistCenter(i,1), indexDistCenter(i,2), indexDistLeft(i,1)];
-        elseif (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistRight(i,1) ~= 0)
-                indexDist3{i} = [indexDistCenter(i,1), indexDistCenter(i,2), indexDistRight(i,1)];       
         end
    end
 end
