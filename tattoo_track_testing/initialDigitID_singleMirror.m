@@ -1,12 +1,15 @@
-function maskedPaw = identifyMirrorDigits_dorsum_20150717(video, frameNum, BGimg, rat_metadata, boxMarkers, varargin)
+function maskedPaw = initialDigitID(video, triggerTime, BGimg, rat_metadata, boxMarkers, varargin)
 %
 % usage
 %
 % function to find the initial location of the paw and digits in an image
-% with a clear view of the paw in the mirrors
+% with a clear view of the paw in the mirrors and direct view
 %
 % INPUTS:
-%   image - rgb image
+%   video - videoReader object
+%   triggerTime - time (in seconds) at which a substantial portion of the
+%       paw appears in the mirror view
+%   BGimg - 
 %   pawMask - mask of the paw in the appropriate mirror (logical matrix)
 %   rat_metadata - needed to know whether to look to the left or right of
 %       the dorsal aspect of the paw to exclude points that can't be digits
@@ -19,18 +22,6 @@ function maskedPaw = identifyMirrorDigits_dorsum_20150717(video, frameNum, BGimg
 %       rows are each digit from index finger to pinky
 
 % NEED TO ADJUST THE VALUES TO ENHANCE THE DESIRED PAW BITS
-% decorrStretchMean  = [100.0 127.5 100.0     % to isolate dorsum of paw
-%                       100.0 127.5 100.0     % to isolate blue digits
-%                       100.0 127.5 100.0     % to isolate red digits
-%                       127.5 100.0 127.5     % to isolate green digits
-%                       100.0 127.5 100.0];   % to isolate red digits
-% 
-% decorrStretchSigma = [050 050 050       % to isolate dorsum of paw
-%                       050 050 050       % to isolate blue digits
-%                       050 050 050       % to isolate red digits
-%                       050 050 050       % to isolate green digits
-%                       050 050 050];     % to isolate red digits
-
 decorrStretchMean  = cell(1,3);
 decorrStretchSigma = cell(1,3);
 decorrStretchMean{1}  = [127.5 127.5 127.5     % to isolate dorsum of paw
@@ -75,22 +66,6 @@ for ii = 1 : 3
 end
 
 diff_threshold = 45 / 255;
-% hsv_digitBounds = [0.33 0.33 0.00 0.90 0.00 0.90
-%                    0.67 0.16 0.90 1.00 0.80 1.00
-%                    0.00 0.16 0.90 1.00 0.80 1.00
-%                    0.33 0.16 0.90 1.00 0.90 1.00
-%                    0.00 0.16 0.90 1.00 0.80 1.00];
-% rgb_digitBounds = [0.00 0.50 0.50 1.00 0.00 0.80
-%                    0.00 0.10 0.00 0.60 0.80 1.00
-%                    0.90 1.00 0.00 0.40 0.00 0.40
-%                    0.00 0.70 0.90 1.00 0.00 0.50
-%                    0.00 0.16 0.90 1.00 0.80 1.00];
-
-% rgb_digitBounds = [0.00 0.50 0.00 0.10 0.00 0.10
-%                    0.00 0.10 0.00 0.60 0.80 1.00
-%                    0.90 1.00 0.00 0.40 0.00 0.40
-%                    0.00 0.70 0.90 1.00 0.00 0.50
-%                    0.00 0.16 0.90 1.00 0.80 1.00];
 
 mirrorPawBlob = vision.BlobAnalysis;
 mirrorPawBlob.AreaOutputPort = true;
@@ -98,7 +73,7 @@ mirrorPawBlob.CentroidOutputPort = true;
 mirrorPawBlob.BoundingBoxOutputPort = true;
 mirrorPawBlob.ExtentOutputPort = true;
 mirrorPawBlob.LabelMatrixOutputPort = true;
-mirrorPawBlob.MinimumBlobArea = 1000;
+mirrorPawBlob.MinimumBlobArea = 2500;
 mirrorPawBlob.MaximumBlobArea = 30000;
 
 centerPawBlob = vision.BlobAnalysis;
@@ -114,19 +89,37 @@ centerDigitBlob = vision.BlobAnalysis;
 centerDigitBlob.AreaOutputPort = true;
 centerDigitBlob.CentroidOutputPort = true;
 centerDigitBlob.BoundingBoxOutputPort = true;
-centerPawBlob.ExtentOutputPort = true;
-centerPawBlob.LabelMatrixOutputPort = true;
-centerPawBlob.MinimumBlobArea = 3000;
-centerPawBlob.MaximumBlobArea = 30000;
+centerDigitBlob.ExtentOutputPort = true;
+centerDigitBlob.LabelMatrixOutputPort = true;
+centerDigitBlob.MinimumBlobArea = 100;
+centerDigitBlob.MaximumBlobArea = 30000;
 
-digitBlob = vision.BlobAnalysis;
-digitBlob.AreaOutputPort = true;
-digitBlob.CentroidOutputPort = true;
-digitBlob.BoundingBoxOutputPort = true;
-digitBlob.ExtentOutputPort = true;
-digitBlob.LabelMatrixOutputPort = true;
-digitBlob.MinimumBlobArea = 50;
-digitBlob.MaximumBlobArea = 30000;
+mirrorDigitBlob = vision.BlobAnalysis;
+mirrorDigitBlob.AreaOutputPort = true;
+mirrorDigitBlob.CentroidOutputPort = true;
+mirrorDigitBlob.BoundingBoxOutputPort = true;
+mirrorDigitBlob.ExtentOutputPort = true;
+mirrorDigitBlob.LabelMatrixOutputPort = true;
+mirrorDigitBlob.MinimumBlobArea = 50;
+mirrorDigitBlob.MaximumBlobArea = 30000;
+
+mirror_pdBlob = vision.BlobAnalysis;
+mirror_pdBlob.AreaOutputPort = true;
+mirror_pdBlob.CentroidOutputPort = true;
+mirror_pdBlob.BoundingBoxOutputPort = true;
+mirror_pdBlob.ExtentOutputPort = true;
+mirror_pdBlob.LabelMatrixOutputPort = true;
+mirror_pdBlob.MinimumBlobArea = 50;
+mirror_pdBlob.MaximumBlobArea = 30000;
+
+center_pdBlob = vision.BlobAnalysis;
+center_pdBlob.AreaOutputPort = true;
+center_pdBlob.CentroidOutputPort = true;
+center_pdBlob.BoundingBoxOutputPort = true;
+center_pdBlob.ExtentOutputPort = true;
+center_pdBlob.LabelMatrixOutputPort = true;
+center_pdBlob.MinimumBlobArea = 50;
+center_pdBlob.MaximumBlobArea = 30000;
 
 colorList = {'darkgreen','blue','red','green','red'};
 satLimits = [0.80000    1.00
@@ -139,10 +132,9 @@ valLimits = [0.00001    0.70
              0.95000    1.00
              0.95000    1.00
              0.95000    1.00];
-max_Value = 0.15;
 hueLimits = [0.00, 0.16;    % red
              0.33, 0.16;    % green
-             0.66, 0.05;     % blue
+             0.66, 0.05;    % blue
              0.40  0.16];   % dark green
 h = video.Height;
 w = video.Width;
@@ -161,27 +153,31 @@ for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
         case 'diffthreshold',
             diff_threshold = varargin{iarg + 1};
-        case 'digitbounds',
-            rgb_digitBounds = varargin{iarg + 1};
         case 'decorrstretchmean',
             decorrStretchMean = varargin{iarg + 1};
         case 'decorrstretchsigma',
             decorrStretchSigma = varargin{iarg + 1};
+        case 'colorlist',
+            colorList = varargin{iarg + 1};
+        case 'minsideoverlap',
+            minSideOverlap = varargin{iarg + 1};
+        case 'minmirrorpawarea',
+            mirrorPawBlob.MinimumBlobArea = varargin{iarg + 1};
+        case 'maxmirrorpawarea',
+            mirrorPawBlob.MaximumBlobArea = varargin{iarg + 1};
+            
+            % NEED TO CLEAN UP THE REST OF THE VARARGINS...
     end
 end
 
-% create a mask for the box front in the left and right mirrors
-boxFrontMask = poly2mask(boxMarkers.frontPanel_x(1,:), ...
-                         boxMarkers.frontPanel_y(1,:), ...
-                         h, w);
-boxFrontMask = boxFrontMask | poly2mask(boxMarkers.frontPanel_x(2,:), ...
-                                        boxMarkers.frontPanel_y(2,:), ...
-                                        h, w);
-                                        
+S = whos('BGimg');
+if strcmpi(S.class,'uint8')
+    BGimg = double(BGimg) / 255;
+end
+
 vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
-frameTime = ((frameNum-1) / video.FrameRate);    % need to subtract one because readFrame reads the NEXT frame, not the current frame
-video.CurrentTime = frameTime;
+video.CurrentTime = triggerTime;
 
 switch pawPref
     case 'left',
@@ -265,24 +261,16 @@ while digitMissing
                             [hueLimits(2,:), satLimits(4,:), valLimits(4,:)]);                    
 	tempMask = tempMask & centerMask;
     [A,~,~,~,labMat] = step(centerDigitBlob, tempMask);
-    s = regionprops(tempMask,'area');
-    labMat = bwlabel(tempMask);
-    A = [s.Area];
+    if isempty(A); continue; end
+    
     idx = find(A == max(A));
     tempMask = (labMat == idx);   % make sure there's only one green blob so imreconstruct doesn't get confused
     
     centerMask = imreconstruct(tempMask, centerMask);
-    [A,~,~,~,ctrLabMat] = step(centerPawBlob, centerMask);
-    
+    [A,~,~,~,~] = step(centerPawBlob, centerMask);
+    if isempty(A); continue; end
+
     BG_mask = mirrorMask | centerMask;
-    
-%     pawDorsumBlob = vision.BlobAnalysis;
-%     pawDorsumBlob.AreaOutputPort = true;
-%     pawDorsumBlob.CentroidOutputPort = true;
-%     pawDorsumBlob.BoundingBoxOutputPort = true;
-%     pawDorsumBlob.ExtentOutputPort = true;
-%     pawDorsumBlob.LabelMatrixOutputPort = true;
-%     pawDorsumBlob.MinimumBlobArea = 100;
 
     masked_hsv_enh = cell(1,3);
     region_img = cell(1,3);
@@ -301,12 +289,6 @@ while digitMissing
         rgbMask = double(repmat(mask,1,1,3));
         dMask{iView} = false(size(region_img,1),size(region_img,2),numObjects);
         for ii = 1 : numObjects
-            % CREATE THE ENHANCED IMAGE DEPENDING ON ii BEFORE DOING ANYTHING ELSE
-            
-            
-            
-            % WORKING HERE - FIGURE OUT WHAT THE OPTIMUM DECORRSTRETCH
-            % PARAMETERS ARE IN EACH VIEW
             rgb_enh = enhanceColorImage(region_img, ...
                                         decorrStretchMean{iView}(ii,:), ...
                                         decorrStretchSigma{iView}(ii,:), ...
@@ -366,7 +348,7 @@ while digitMissing
                 % ALTERNATIVE APPROACH - CAN WE KEEP ALL THE BLOBS, THEN
                 % MATCH THEM ACCORDING TO WHETHER THEY APPEAR IN BOTH
                 % VIEWS?
-                [A,~,~,~,labMat] = step(digitBlob, tempMask);
+                [A,~,~,~,labMat] = step(mirrorDigitBlob, tempMask);
                 if ~isempty(A)
                     [~,idx] = sort(A, 'descend');
                     tempMask = false(size(tempMask));
@@ -488,6 +470,10 @@ while digitMissing
     
         pdMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(1,:,:,:)), ...
                       [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)]);   % with the current (201507) tattoo regimen, best mask for paw dorsum is the grayscale
+        if ~any(pdMask(:))
+            isDigitVisible(1,iView) = false;
+            break;
+        end
         if iView ~= 2
             pdMask = fliplr(pdMask);
         end
@@ -510,7 +496,16 @@ while digitMissing
         end
             
         % take the largest blob left
-        [A,~,~,~,labMat] = step(mirrorPawBlob, pdMask);
+        if iView == 2
+            blobObject = center_pdBlob;
+        else
+            blobObject = mirror_pdBlob;
+        end
+        [A,~,~,~,labMat] = step(blobObject, pdMask);
+        if isempty(A)
+            isDigitVisible(1,iView) = false;
+            break;
+        end
         valid_idx = find(A == max(A));
         viewMask{iView}(:,:,1) = (labMat == valid_idx);
         
@@ -544,128 +539,3 @@ for ii = 1 : numObjects
                   viewMask{2}(:,:,ii);
               
 end
-%         for ii = 2 : numObjects
-%             s = regionprops(squeeze(viewMask{iView}(:,:,ii)),'centroid');
-%             sd_centroids = [s.Centroid];
-%             sd_centroids = reshape(sd_centroids,2,[])';   % now an m x 2 array where each row is another centroid
-% 
-%             
-% % 
-% %         end
-% %     
-% %     end
-%     % % sort centroids from top to bottom
-%     % [~, idx] = sort(centroids(:,2));
-%     % centroids = round(centroids(idx,:));
-%     % 
-%     % for ii = 1 : numObjects - 1
-%     %     regionMarker = false(h,w);
-%     %     regionMarker(centroids(ii,2),centroids(ii,1)) = true;
-%     %     dMask(:,:,ii+1) = imreconstruct(regionMarker, fullDigitMask);
-%     % end
-% 
-%     % now identify the dorsum of the paw as everything on the opposite side of
-%     % a line connecting the base of the index finger and pinky compared to the
-%     % digit centroids
-%     % start by creating the convex hull mask for all the digits together
-% 
-%     % [digitHullMask,digitHullPoints] = multiRegionConvexHullMask(fullDigitMask);
-% 
-% 
-%     pdMask = pdMask & (projMask | mirrorMask);
-%     SE = strel('disk',2);
-% 
-%     pdMask = pdMask & ~digitHullMask;    % make 
-%     pdMask = bwdist(pdMask) < 2;
-%     pdMask = imopen(pdMask, SE);
-%     pdMask = imclose(pdMask, SE);
-%     pdMask = imfill(pdMask, 'holes');
-% 
-%     s = regionprops(pdMask, 'area');
-%     pdLabel = bwlabel(pdMask);
-%     A = [s.Area];
-%     maxAreaIdx = find(A == max(A));
-%     pdMask = (pdLabel == maxAreaIdx);
-%     s = regionprops(pdMask,'Centroid');
-%     pdCentroid = s(1).Centroid;
-%     % find the two closest points in the digit region hull to the paw dorsum
-%     % centroid as currently calculated. We are trying to get rid of any parts
-%     % of the paw dorsum mask that really are part of the digit region; at this
-%     % point, there may still be digit points around the edges included in the
-%     % dorsum of the paw.
-% 
-%     % find the hull point for the index finger closest to the paw dorsum
-%     % centroid
-%     s_idx = regionprops(squeeze(dMask(:,:,2)), 'ConvexHull');
-%     [~,idx_nnidx] = findNearestNeighbor(pdCentroid, s_idx(1).ConvexHull, 1);
-%     idx_base = s_idx(1).ConvexHull(idx_nnidx,:);
-%     % find the hull point for the pinky closest to the paw dorsum centroid
-%     [~,pinkyHullPoints] = multiRegionConvexHullMask(squeeze(dMask(:,:,5)));
-%     [~,pinky_nnidx] = findNearestNeighbor(pdCentroid, pinkyHullPoints, 1);
-%     pinky_base = pinkyHullPoints(pinky_nnidx,:);
-%     % now find the hull points for the entire "digits" region closest to the
-%     % hull points for the individual digits that are closest to the paw dorsum
-%     % centroid. This ensures that when we draw a line separating the "digits"
-%     % and "paw dorsum" regions, we take one point from the index finger and one
-%     % point from the pinky finger.
-%     nnHull = zeros(2,2);
-%     [~,nnidx] = findNearestNeighbor(idx_base, digitHullPoints);
-%     nnHull(1,:) = digitHullPoints(nnidx,:);
-%     [~,nnidx] = findNearestNeighbor(pinky_base, digitHullPoints);
-%     nnHull(2,:) = digitHullPoints(nnidx,:);
-% 
-%     % now draw a line between the base of the pinky and index finger;
-%     % everything on the same side of that line as the paw dorsum centroid is
-%     % part of the paw dorsum; everything on the same side as the digit
-%     % centroids is part of the digit region
-%     % to separate these regions, create a mask that separates the image into
-%     % two regions, and has true values on the same side as the index finger
-%     % centroid
-%     s = regionprops(dMask(:,:,2),'centroid');
-%     digitRegionMask = segregateImage(nnHull, s.Centroid, [h, w]);
-%     digitRegionMask = digitRegionMask | ...
-%                       dMask(:,:,2) | ...
-%                       dMask(:,:,3) | ...
-%                       dMask(:,:,4) | ...
-%                       dMask(:,:,5);
-%     pdMask = pdMask & ~digitRegionMask;
-% 
-%     dMask(:,:,1) = pdMask;
-% 
-%     % now have all the fingers and the dorsum of the paw
-%     % make sure none of the blobs overlap; the digit blobs already have been
-%     % separated from each other
-%     for ii = 2 : numObjects
-%         overlapMask = dMask(:,:,ii) & pdMask;
-%         dMask(:,:,ii) = dMask(:,:,ii) & ~overlapMask;
-%         pdMask = pdMask & ~overlapMask;
-%     end
-%     pdMask = imerode(pdMask, strel('disk',1));
-%     dMask(:,:,1) = pdMask;
-% 
-%     [~,P] = imseggeodesic(image, dMask(:,:,2), dMask(:,:,3), dMask(:,:,4));
-%     [~, P2] = imseggeodesic(image, dMask(:,:,1), dMask(:,:,5), dMask(:,:,4));
-% 
-%     maskedPaw = false(h, w, numObjects);
-%     maskedPaw(:,:,1) = (P2(:,:,1) > 0.9) & pawMask & ~digitRegionMask;
-%     maskedPaw(:,:,2) = (P(:,:,1) > 0.9) & pawMask;
-%     maskedPaw(:,:,3) = (P(:,:,2) > 0.9) & pawMask;
-%     maskedPaw(:,:,4) = (P(:,:,3) > 0.9) & pawMask;
-%     maskedPaw(:,:,5) = (P2(:,:,2) > 0.9) & pawMask;
-% 
-%     [pd_a,~,~,~,pdLabMask] = step(pawDorsumBlob, squeeze(maskedPaw(:,:,1)));
-%     maxAreaIdx = find(pd_a == max(pd_a));
-%     maskedPaw(:,:,1) = (pdLabMask == maxAreaIdx);
-% 
-%     for ii = 1 : size(maskedPaw,3)
-%         if ii > 1
-%             [A,~,~,~,labMask] = step(digitBlob, squeeze(maskedPaw(:,:,ii)));
-%             maxAreaIdx = find(A == max(A));
-%             maskedPaw(:,:,ii) = (labMask == maxAreaIdx);    % WORKING HERE...
-%         end
-%         maskedPaw(:,:,ii) = imfill(squeeze(maskedPaw(:,:,ii)),'holes');
-%         maskedPaw(:,:,ii) = maskedPaw(:,:,ii) & ~boxFrontMask;
-%     end
-% 
-% 
-%     end

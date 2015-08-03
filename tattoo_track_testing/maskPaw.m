@@ -19,7 +19,6 @@ decorrStretchSigma = [025 050 025] / 255;
 
 ctr_paw_hsv_thresh_enh = [0.5 0.5 0.40 1.0 0.30 1.0];
 % ctr_paw_hsv_thresh = [0.5 0.5 0.40 1.0 0.40 1.0];
-numFramesToAverage = 5;
 
 centerPawBlob = vision.BlobAnalysis;
 centerPawBlob.AreaOutputPort = true;

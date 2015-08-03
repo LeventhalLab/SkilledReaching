@@ -28,7 +28,6 @@ maxBeadArea = 1500;
 pointsPerRow = 4;    % for the checkerboard detection
 
 test_ratID = 44;
-% rat_idx = find(sr_summary.ratID == 44);
 rat_metadata = create_sr_ratMetadata(sr_summary, test_ratID);
 
 video = VideoReader(sampleVid);
@@ -36,8 +35,6 @@ frame_h = video.Height;
 frame_w = video.Width;
 numFrames = video.numberOfFrames;
 numBGframes = 50;
-ROI_to_find_trigger_frame = [0210         0590         0050         0070
-                             1740         0560         0050         0070];
 
 left_ROI_left  = 0001;ctr_ROI_left = 0930;rgt_ROI_left = 1730;
 left_ROI_top   = 0001;ctr_ROI_top  = 0001;rgt_ROI_top  = 0001;
@@ -46,28 +43,13 @@ ROI_to_mask_paw = [left_ROI_left      left_ROI_top	  left_ROI_width            f
                    ctr_ROI_left       ctr_ROI_top 	  ctr_ROI_width             frame_h-ctr_ROI_top
                    rgt_ROI_left       rgt_ROI_top     frame_w-rgt_ROI_left-1    frame_h-rgt_ROI_top];
 
-%WORKING HERE - NEED TO FIGURE OUT THE BOUNDARIES OF THE REGION OF INTEREST
-%FOR FINDING THE TRANSFORMATION BETWEEN THE LEFT/RIGHT MIRRORS AND THE
-%CENTER IMAGE
-% left_ROI_left   = 0001;ctr_ROI_left = 280;rgt_ROI_left = 1730;
-% left_ROI_top    = 0001;ctr_ROI_top  = 0001;rgt_ROI_top  = 0001;
-% left_ROI_width  = 0269;ctr_ROI_width = 1400;
-% left_ROI_height = 1024-left_ROI_top;
-% register_ROI   = [left_ROI_left      left_ROI_top	  left_ROI_width            frame_h-left_ROI_top
-%                   ctr_ROI_left       ctr_ROI_top 	  ctr_ROI_width             frame_h-ctr_ROI_top
-%                   rgt_ROI_left       rgt_ROI_top     frame_w-rgt_ROI_left-1    frame_h-rgt_ROI_top];
-               
-
-
 gray_paw_limits = [60 125];
 hsvBounds_beads = [0.00    0.16    0.50    1.00    0.00    1.00
                    0.33    0.16    0.00    0.50    0.00    0.50
                    0.66    0.16    0.50    1.00    0.00    1.00];
 hsvBounds_paw   = [];
 maxBeadEcc = 0.8;
-% first row - red digits
-% second row - green digits
-% third row - purple digits
+
                
 % BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
 [boxMarkers.beadLocations, boxMarkers.beadMasks] = identifyBeads(BGimg, ...
@@ -102,17 +84,17 @@ BG_rightctr = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4
                 
 % find the checkerboard points - comment these lines out to make it run
 % faster, put them back in if checkerboard points need to be recalculated****************
-
-% cbLocations.left_mirror_cb  = detect_SR_checkerboard(BG_lft);
+% 
+% [cbLocations.left_mirror_cb, cbLocations.num_left_mirror_cb_rows] = detect_SR_checkerboard(BG_lft);
 % cbLocations.left_mirror_cb(:,1) = cbLocations.left_mirror_cb(:,1) + register_ROI(1,1) - 1;
 % cbLocations.left_mirror_cb(:,2) = cbLocations.left_mirror_cb(:,2) + register_ROI(1,2) - 1;
-% cbLocations.right_mirror_cb = detect_SR_checkerboard(BG_rgt);
+% [cbLocations.right_mirror_cb, cbLocations.num_right_mirror_cb_rows] = detect_SR_checkerboard(BG_rgt);
 % cbLocations.right_mirror_cb(:,1) = cbLocations.right_mirror_cb(:,1) + register_ROI(3,1) - 1;
 % cbLocations.right_mirror_cb(:,2) = cbLocations.right_mirror_cb(:,2) + register_ROI(3,2) - 1;
-% cbLocations.left_center_cb  = detect_SR_checkerboard(BG_leftctr);
+% [cbLocations.left_center_cb, cbLocations.num_left_center_cb_rows]  = detect_SR_checkerboard(BG_leftctr);
 % cbLocations.left_center_cb(:,1) = cbLocations.left_center_cb(:,1) + register_ROI(2,1) - 1;
 % cbLocations.left_center_cb(:,2) = cbLocations.left_center_cb(:,2) + register_ROI(2,2) - 1;
-% cbLocations.right_center_cb = detect_SR_checkerboard(BG_rightctr);
+% [cbLocations.right_center_cb, cbLocations.num_right_center_cb_rows] = detect_SR_checkerboard(BG_rightctr);
 % cbLocations.right_center_cb(:,1) = cbLocations.right_center_cb(:,1) + round(frame_w/2) - 1;
 % cbLocations.right_center_cb(:,2) = cbLocations.right_center_cb(:,2) + register_ROI(2,2) - 1;
 
@@ -122,38 +104,25 @@ boxMarkers.register_ROI = register_ROI;
 
 F = fundMatrixFromBGimg(BGimg, ...
                         boxMarkers, ...
-                        register_ROI, ...
                         'pointsperrow', pointsPerRow);
-             digitMirrorMask_dorsum = identifyMirrorDigits_dorsum_20150716(video, peakFrame, BGimg, rat_metadata, boxMarkers);       
 boxMarkers.F = F;
-% [Fleft, Fright, matchedPoints] = fundMatrixFromBGimg(BGimg, register_ROI, hsvBounds_beads, ...
-%                                                  'minbeadarea',minBeadArea, ...
-%                                                  'maxbeadarea',maxBeadArea, ...
-%                                                  'pointsperrow', pointsPerRow);
-
-% [Fleft, Fright] = fundMatrixFromBGimg(BGimg, register_ROI, hsvBounds_beads, ...
-%                                       'minbeadarea',minBeadArea, ...
-%                                       'maxbeadarea',maxBeadArea, ...
-%                                       'pointsperrow', pointsPerRow);
-                                  
-% calculate epipolar lines and see if they line up correctly
-% leftLines   = epipolarLine(Fleft, matchedPoints{1});
-% righttLines = epipolarLine(Fright, matchedPoints{2});
 
 [digitImg_enh,centerImg_enh] = trackTattooedPaw(video,...
                                                 rat_metadata,...
                                                 F,...
                                                 register_ROI, ...
                                                 boxMarkers,...
-                                                'trigger_roi',ROI_to_find_trigger_frame, ...
                                                 'graypawlimits',gray_paw_limits, ...
                                                 'mask_roi',ROI_to_mask_paw, ...
                                                 'bgimg',BGimg);
 
 
-% hsvBounds_grn = [0.3300    0.4300    0.2500    0.7500    0.2300    1];
-% hsvBounds_paw = [0    0.4    .15    0.67    0.45 .65]; % from Titus' code
-% rgbBounds_paw = [100 255 100 200 90 170];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % the hsv boundaries to create the mask to identify the beads in the
 % background image. First row - red, second row - blue, third row - green.

@@ -1,4 +1,4 @@
-function viewMask = initialDigitID(video, triggerTime, BGimg, rat_metadata, boxMarkers, varargin)
+function maskedPaw = initialDigitID_singleMirror(video, triggerTime, BGimg, rat_metadata, boxMarkers, varargin)
 %
 % usage
 %
@@ -135,7 +135,7 @@ valLimits = [0.00001    0.70
 hueLimits = [0.00, 0.16;    % red
              0.33, 0.16;    % green
              0.66, 0.05;    % blue
-             0.45  0.16];   % dark green
+             0.40  0.16];   % dark green
 h = video.Height;
 w = video.Width;
 
@@ -147,7 +147,7 @@ if iscell(pawPref)
     pawPref = pawPref{1};
 end
 
-minSideOverlap = 0.3;   % mirror image projection into the direct view must
+minSideOverlap = 0.2;   % mirror image projection into the direct view must
                         % overlap by this much to be counted
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -195,10 +195,7 @@ digitMissing = true;
 [mirror_shelf_mask, center_region_mask] = reach_region_mask(boxMarkers, [h,w]);
 
 numObjects = size(decorrStretchMean{1}, 1);
-numFramesChecked = 0;
 while digitMissing
-%     numFramesChecked = numFramesChecked  + 1
-    
     image = readFrame(video);
     image = double(image) / 255;
     BG_diff = imabsdiff(BGimg,image);
@@ -241,7 +238,6 @@ while digitMissing
 
     rightMask_ROI = rightMirrorPawMask(register_ROI(3,2):register_ROI(3,2) + register_ROI(3,4),...
                                        register_ROI(3,1):register_ROI(3,1) + register_ROI(3,3));
-    rightMask_ROI = fliplr(rightMask_ROI);
     leftProjMask  = pawProjectionMask(leftMask_ROI, F.left, [register_ROI(2,4),register_ROI(2,3)]+1);
     rightProjMask = pawProjectionMask(rightMask_ROI, F.right, [register_ROI(2,4),register_ROI(2,3)]+1);
 
@@ -277,6 +273,7 @@ while digitMissing
     BG_mask = mirrorMask | centerMask;
 
     masked_hsv_enh = cell(1,3);
+    region_img = cell(1,3);
     dMask = cell(1,3);
     for iView = 1 : 3
         if iView == pMirrorIdx; continue; end    % don't bother with the palmar view
@@ -305,7 +302,7 @@ while digitMissing
 
     numSameColorObjects = zeros(numObjects, 1);
     isDigitVisible = true(numObjects,3);
-    for ii = 2 : numObjects
+    for ii = 2 : numObjects    % CONSIDER PUTTING A CHECK HERE THAT IF ALL DIGITS AREN'T FOUND, TRY ANOTHER IMAGE
         switch lower(colorList{ii}),
             case 'red',
                 colorIdx = 1;
@@ -332,18 +329,12 @@ while digitMissing
                           
                 tempMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(ii,:,:,:)), ...
                                         [hueLimits(colorIdx,:), satLimits(ii,:), valLimits(ii,:)]);
-
                 regMask = projMask | mirrorMask;
                 regMask = regMask(register_ROI(iView,2) : register_ROI(iView,2) + register_ROI(iView,4), ...
                                   register_ROI(iView,1) : register_ROI(iView,1) + register_ROI(iView,3));
                 tempMask = tempMask & regMask;
 
-                if ~any(tempMask(:))
-                    isDigitVisible(ii, iView) = false;
-                    break;
-                end
-                
-                if strcmpi(colorList{ii},'blue')
+                if ii == 2
                     % eliminate any identified blue regions that overlap with blue
                     % beads
                     tempMask = tempMask & ~blueBeadMask;% squeeze(boxMarkers.beadMasks(:,:,3));
@@ -357,12 +348,7 @@ while digitMissing
                 % ALTERNATIVE APPROACH - CAN WE KEEP ALL THE BLOBS, THEN
                 % MATCH THEM ACCORDING TO WHETHER THEY APPEAR IN BOTH
                 % VIEWS?
-                if iView == 2
-                    blobObject = centerDigitBlob;
-                else
-                    blobObject = mirrorDigitBlob;
-                end
-                [A,~,~,~,labMat] = step(blobObject, tempMask);
+                [A,~,~,~,labMat] = step(mirrorDigitBlob, tempMask);
                 if ~isempty(A)
                     [~,idx] = sort(A, 'descend');
                     tempMask = false(size(tempMask));
@@ -374,17 +360,13 @@ while digitMissing
                     for kk = 1 : min(numSameColorObjects(ii), length(idx))
                         tempMask = tempMask | (labMat == idx(kk));
                     end
+
                 end
             end
 
             overlapMask = dMask{iView}(:,:,ii-1) & tempMask;
             dMask{iView}(:,:,ii-1) = dMask{iView}(:,:,ii-1) & ~overlapMask;
             tempMask = tempMask & ~overlapMask;
-            
-            if ~any(tempMask(:))
-                isDigitVisible(ii, iView) = false;
-                break;
-            end
 
             dMask{iView}(:,:,ii) = tempMask;
 
@@ -395,9 +377,11 @@ while digitMissing
         end
 
     end    % for ii = 2 : numObjects
-
+    % WORKING HERE - LOOP THROUGH EACH VIEW AND IDENTIFY WHICH DIGIT
+    % CORRESPONDS TO WHICH BLOB
     if any(~isDigitVisible(:))   % one of the digits isn't visible in one of the views
-        continue   % go back and try the next video frame
+        digitMissing = true;
+        break   % go back and try the next video frame
     end
 
     fullDigitMask = cell(1,3);   % mask for all objects (digits) found in each view
@@ -413,26 +397,7 @@ while digitMissing
         
         for ii = 2 : numObjects
             tempMask = imerode(dMask{iView}(:,:,ii),strel('disk',1));
-            % make sure erosion didn't separate a single digit blob into
-            % multiple blobs
-            if iView == 2
-                blobObject = centerDigitBlob;
-            else
-                blobObject = mirrorDigitBlob;
-            end
-            labMat = bwlabel(tempMask);
-            s = regionprops(tempMask,'area');
-            A = [s.Area];
-            [~,idx] = sort(A, 'descend');
-            tempMask = false(size(tempMask));
-            if (length(idx) < numSameColorObjects(ii)) && (iView ~= pMirrorIdx)   % OK if can't identify a digit independently in the palmar view
-                % all the digits weren't identified
-                isDigitVisible(ii,iView) = false;  % didn't find the ii'th digit in iView
-                break;
-            end
-            for kk = 1 : min(numSameColorObjects(ii), length(idx))
-                tempMask = tempMask | (labMat == idx(kk));
-            end
+
             if iView ~= 2
                 tempMask = fliplr(tempMask);
             end
@@ -442,6 +407,7 @@ while digitMissing
 
         % now need to assign blobs that are the same color to the appropriate digit
         % start with the index finger
+        
         s = regionprops(fullDigitMask{iView},'centroid');
         fv_centroids = [s.Centroid];
         fv_centroids = round(reshape(fv_centroids,2,[]))';   % now an m x 2 array where each row is another centroid
@@ -503,7 +469,7 @@ while digitMissing
         end
     
         pdMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(1,:,:,:)), ...
-                              [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)]);   % with the current (201507) tattoo regimen, best mask for paw dorsum is the grayscale
+                      [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)]);   % with the current (201507) tattoo regimen, best mask for paw dorsum is the grayscale
         if ~any(pdMask(:))
             isDigitVisible(1,iView) = false;
             break;
@@ -556,8 +522,20 @@ while digitMissing
 
     [validOverlap, overlapFract] = checkDigitOverlap_fromSide(overlapCheckMask, F_side, ...
                                                               'minoverlap', minSideOverlap);
-    if all(validOverlap)
+    if ~any(~validOverlap)
         digitMissing = false;
     end
         
 end    % while digitMissing
+            
+maskedPaw = false(h,w,numObjects);
+for ii = 1 : numObjects
+    maskedPaw(register_ROI(dMirrorIdx,2) : register_ROI(dMirrorIdx,2) + register_ROI(dMirrorIdx,4), ...
+              register_ROI(dMirrorIdx,1) : register_ROI(dMirrorIdx,1) + register_ROI(dMirrorIdx,3),ii) = ...
+                  fliplr(viewMask{dMirrorIdx}(:,:,ii));
+              
+    maskedPaw(register_ROI(2,2) : register_ROI(2,2) + register_ROI(2,4), ...
+              register_ROI(2,1) : register_ROI(2,1) + register_ROI(2,3),ii) = ...
+                  viewMask{2}(:,:,ii);
+              
+end

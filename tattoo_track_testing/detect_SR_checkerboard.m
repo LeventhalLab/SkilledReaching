@@ -1,4 +1,4 @@
-function [cb_pts, varargout] = detect_SR_checkerboard(I, varargin)
+function [cb_pts, numRows, varargout] = detect_SR_checkerboard(I, varargin)
 %
 % usage: 
 
@@ -198,11 +198,6 @@ for iRow = 1 : numRows
     cb_pts(startIdx:endIdx,:) = tempPts;
 end
 
-% figure(1);imshow(blackSquareMask);
-% figure(2);imshow(quadMask);
-% figure(3);imshow(whiteSquareMask);
-% figure(4);imshow(I);
-% figure(5);imshow(blackSquareMask | whiteSquareMask);
-
+numRows = size(cb_pts,1) / pointsPerRow;
 
 end

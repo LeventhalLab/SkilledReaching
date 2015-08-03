@@ -1,4 +1,4 @@
-function [digitMirrorMask_dorsum,digitCenterMask] =trackTattooedPaw( video, rat_metadata, F, register_ROI, boxMarkers, varargin )
+function [digitMirrorMask_dorsum,digitCenterMask] =trackTattooedPaw( video, rat_metadata, F, boxMarkers, varargin )
 %
 % INPUTS:
 %   video - a videoReader object containing the video recorded from 
@@ -33,7 +33,7 @@ maxCenterPawArea = 11000;
 minMirrorPawArea = 3000;
 maxMirrorPawArea = 11000;
 
-for iarg = 1 : 2 : nargin - 5
+for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
         case 'numbgframes',
             numBGframes = varargin{iarg + 1};
@@ -59,20 +59,27 @@ triggerFrame = 511;peakFrame = 532;   % hard code to speed up analysis % peak sh
 preReachFrame = triggerFrame - 25;
 % find a mask for the paw in the lateral, central, and right mirrors for
 % the peak frame
+triggerTime = identifyTriggerTime( video, rat_metadata, boxMarkers);
 
-im_trigger = read(video,triggerFrame);
-im_peak = read(video,peakFrame);
-im_preReach = read(video,preReachFrame);    % this image may or may not turn out to be useful
+% im_trigger = read(video,triggerFrame);
+% im_peak = read(video,peakFrame);
+% im_preReach = read(video,preReachFrame);    % this image may or may not turn out to be useful
+% 
+% peak_paw_img = cell(1,3);
+% for ii = 1 : 3
+%     peak_paw_img{ii} = im_peak(register_ROI(ii,2):register_ROI(ii,2) + register_ROI(ii,4),...
+%                                register_ROI(ii,1):register_ROI(ii,1) + register_ROI(ii,3),:);
+% 	if ii ~= 2
+%         peak_paw_img{ii} = fliplr(peak_paw_img{ii});
+%     end
+% end
+% imDiff = imabsdiff(im_preReach,im_peak);
+digitMasks = initialDigitID(video, triggerTime, BGimg, rat_metadata, boxMarkers);
 
-peak_paw_img = cell(1,3);
-for ii = 1 : 3
-    peak_paw_img{ii} = im_peak(register_ROI(ii,2):register_ROI(ii,2) + register_ROI(ii,4),...
-                               register_ROI(ii,1):register_ROI(ii,1) + register_ROI(ii,3),:);
-	if ii ~= 2
-        peak_paw_img{ii} = fliplr(peak_paw_img{ii});
-    end
-end
-imDiff = imabsdiff(im_preReach,im_peak);
+[P1, P2] = cameraMatricesFromFundMatrix(boxMarkers, rat_metadata);
+% NOW NEED TO CALIBRATE THE CAMERA MATRICES BASED ON THE CHECKERBOARD
+% POINTS
+
 
 fundmat = zeros(2,3,3);
 fundmat(1,:,:) = F.left;
@@ -125,7 +132,7 @@ pawMask = false(size(im_peak,1),size(im_peak,2));
 pawMask(register_ROI(dorsalPawMaskIdx,2):register_ROI(dorsalPawMaskIdx,2) + register_ROI(dorsalPawMaskIdx,4), ...
         register_ROI(dorsalPawMaskIdx,1):register_ROI(dorsalPawMaskIdx,1) + register_ROI(dorsalPawMaskIdx,3)) = temp;
 
-digitMasks = initialDigitID(video, peakFrame, BGimg, rat_metadata, boxMarkers);
+
 % find the digits in the center frame
 % digitCenterMask = identifyCenterDigits(centerImg, digitMirrorMask_dorsum, dorsalFundMat, rat_metadata);
 

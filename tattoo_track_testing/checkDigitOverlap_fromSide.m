@@ -4,7 +4,7 @@ function [validOverlap, overlapFract] = checkDigitOverlap_fromSide(viewMask, F, 
 % viewMask{2} contains masked images in the direct view
 % F is the fundamental matrix going from mirror view to center view
 
-minOverlap = 0.2;   % amount that each digit in the mirror view must overlap with the direct view
+minOverlap = 0.3;   % amount that each digit in the mirror view must overlap with the direct view
 
 for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})

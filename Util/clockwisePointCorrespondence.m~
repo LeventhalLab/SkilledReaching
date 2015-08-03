@@ -1,0 +1,29 @@
+function [imagePoints, worldPoints] = clockwisePointCorrespondence(imPoints)
+% assume 4 x 4 grid of points
+
+% find the top left square corners
+[~, sortIdx] = sort(imPoints(:,2));
+imPoints = imPoints(sortIdx,:);
+
+imRow = zeros(4,2,4);
+for iRow = 1 : 4
+    startIdx = (iRow - 1) * 4 + 1;
+    temp = imPoints(startIdx:startIdx + 3, :);
+    % now arrange from left to right
+    [~,sortIdx] = sort(temp(:,1));
+    imRow(:,:,iRow) = temp(sortIdx,:);
+end
+
+imPoints(1:3,:,1) = imRow(1:3,:,1);
+imPoints(4:6,:,1) = imRow(1:3,:,2);
+
+imPoints(1,:,2) = imRow(1:3,:,1);
+imPoints(4:6,:,2) = imRow(1:3,:,2);
+
+worldPoints = [00 00
+               08 00
+               16 00
+               00 08
+               08 08
+               16 08];
+               

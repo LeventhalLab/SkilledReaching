@@ -2,9 +2,11 @@ function [distances, pts_idx] = calcDistancesBetweenPoints(points)
 %
 %
 % INPUTS:
+%   points - 
 %
 % OUTPUTS:
-%
+%   distances - 
+%   pts_idx - 
 
 numPoints = size(points,1);
 numDims = size(points,2);
