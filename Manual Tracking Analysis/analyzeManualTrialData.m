@@ -47,28 +47,50 @@ function analyzeManualTrialData(RatData)
         end
     end
     
+    
+    
     allPawSpreadDistPICenter = [];
     allPawSpreadDistRICenter = [];
     allPawSpreadDistMICenter = [];
     
    for i = 1:length(allPawData)
-    pawPointsData = allPawData{1,i}
-    [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData);
-    [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist);
-    [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight] = calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight, middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight)
-    %plotCenterDistance(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
-    
-    for j=1:length(pawSpreadDistPICenter)
-        allPawSpreadDistPICenter(i,j) = pawSpreadDistPICenter(j); 
-        allPawSpreadDistRICenter(i,j) = pawSpreadDistRICenter(j);
-        allPawSpreadDistMICenter(i,j) = pawSpreadDistMICenter(j);
-    end
-    
-    pinkyDist3 = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight)
-    
+        pawPointsData = allPawData{1,i};
+        [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData);
+        [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist);
+        
+        allIndexDistCenter{i} = indexDistCenter;
+        allMiddleDistCenter{i} = middleDistCenter; 
+        allRingDistCenter{i} = ringDistCenter;
+        allPinkyDistCenter{i} = pinkyDistCenter;
+        
+        [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight] = calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight, middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight);
+        %plotCenterDistance(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
+
+        
+        
+        for j=1:length(pawSpreadDistPICenter)
+            allPawSpreadDistPICenter(i,j) = pawSpreadDistPICenter(j); 
+            allPawSpreadDistRICenter(i,j) = pawSpreadDistRICenter(j);
+            allPawSpreadDistMICenter(i,j) = pawSpreadDistMICenter(j);
+        end
+
+           [pinkyDist3, indexDist3] = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight);
+
+         for k = 1:length(pinkyDist3)
+           allPinkyDist3(i,k) = pinkyDist3(k);
+           allIndexDist3(i,k) = indexDist3(k);
+         end
+
    end
    
-    plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter)
+   
+   [dispIndex,dispMiddle,dispRing,dispPinky] = calculatePositionChange(allIndexDistCenter);%, allMiddleDistCenter, allRingDistCenter, allPinkyDistCenter)
+   PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3)
+   plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter);
+    
+    JerkCalculation(dispIndex);
+    
+
 end
 
 %% Function to read the data from the rat data array structure into indciudal arrays
@@ -348,8 +370,6 @@ function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpre
         pawSpreadDistPIRight(i) = sqrt((pinkyDistRight(i,1)-indexDistRight(i,1))^2+(pinkyDistRight(i,2)-indexDistRight(i,2))^2);
     end
     
-   
-    
     %Measure the seperation between the middle and the index finger 
     for i =1:5
         pawSpreadDistMILeft(i) = sqrt((middleDistLeft(i,1)-indexDistLeft(i,1))^2+(middleDistLeft(i,2)-indexDistLeft(i,2))^2);
@@ -366,24 +386,59 @@ function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpre
     
 end
 
-%% Calc 3D distance in space
+%% Establish 3D coordinate in space
 function [pinkyDist3, indexDist3]= create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
-   for i =1:5
-        if     (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistLeft(i,1) ~= 0)
-                pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistLeft(i,1)];
-        elseif (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistRight(i,1) ~= 0)
-                pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistRight(i,1)];       
-        end
-   end
    
-   for i =1:5
-        if     (indexDistCenter(i,1) ~= 0 && indexDistCenter(i,2) ~= 0 && indexDistLeft(i,1) ~= 0)
-                indexDist3{i} = [indexDistCenter(i,1), indexDistCenter(i,2), indexDistLeft(i,1)];
-        elseif (pinkyDistCenter(i,1) ~= 0 && pinkyDistCenter(i,2) ~= 0 && pinkyDistRight(i,1) ~= 0)
-                indexDist3{i} = [indexDistCenter(i,1), indexDistCenter(i,2), indexDistRight(i,1)];       
+       for i =1:5
+        
+        tf1=isnan(pinkyDistCenter(i,1));
+        tf2= isnan(pinkyDistCenter(i,2));
+        tf3= isnan(pinkyDistLeft(i,1));
+        tf4 = isnan(pinkyDistRight(i,1));
+       
+        tf6 =isnan(indexDistCenter(i,1));
+        tf7 = isnan(indexDistCenter(i,2));
+        tf8= isnan(indexDistLeft(i,1));
+        tf9 = isnan(indexDistRight(i,1));
+        
+        
+        if     (tf1 == 0 && tf2 == 0 && tf3 == 0)   
+                pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistLeft(i,1)];  
+        elseif (tf1 == 0 && tf2 == 0 && tf4 == 0)    
+                pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistRight(i,1)];  
         end
-   end
+        
+        
+        
+        if     (tf6 == 0 && tf7 == 0 && tf8 == 0)   
+                indexDist3{i} = [indexDistCenter(i,1), indexDistCenter(i,2), indexDistLeft(i,1)];  
+        elseif (tf6 == 0 && tf7 == 0 && tf9 == 0)    
+                indexDist3{i} = [indexDistCenter(i,1), indexDistCenter(i,2), indexDistRight(i,1)];  
+        end
+        
+      end
+   
+ end
+
+
+%% Calc 3D paw spread in space
+function PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3)
+
+    for i = 1:length(allPinkyDist3(1,:))
+        for j = 1:5
+            currentPinky = cell2mat(allPinkyDist3(i,j))
+            currentIndex = cell2mat(allIndexDist3(i,j))
+            
+            if (currentPinky(1) ~= [] && currentIndex(1) ~= [])
+               PI3DistanceSeperation(i,j) = sqrt((currentPinky(:,1)-currentIndex(:,1))^2+ (currentPinky(:,2)-currentIndex(:,2))^2 +(currentPinky(:,3)-currentIndex(:,3))^2);
+            end
+         end
+    end
+    
+  
+
 end
+
 
 %% Plot paw center distance changes
 function plotCenterDistance(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
@@ -426,3 +481,62 @@ function plot2DistancePawSpread(allPawSpreadDistMICenter,allPawSpreadDistRICente
 end
 
 
+%% Calculate the change in position for an individual digit
+function [dispIndex,dispMiddle,dispRing,dispPinky] = calculatePositionChange(indexDistCenter)%, middleDistCenter, ringDistCenter, pinkyDistCenter) %This should return a matrix for each of the individual digits showing the change in position in the given digits
+
+dispIndex = [];
+dispMiddle = [];
+dispRing = [];
+dispPinky = [];
+
+for i = 1:length(indexDistCenter)
+    currentIndexDistCenter = cell2mat(indexDistCenter(:,i));
+%     currentMiddleDistCenter = cell2mat(middleDistCenter(:,i)); 
+%     currentRingDistCenter = cell2mat(ringDistCenter(:,i)) ;
+%     currentPinkyDistCenter = cell2mat(ringDistCenter(:,i)) ;
+    
+    for j=1:4 %There are 5 frames that are taken into account and caluclates 4 distance changes
+        currentDispIndexDistCenter = sqrt((currentIndexDistCenter((j+1),1)-currentIndexDistCenter(j,1))^2 + (currentIndexDistCenter((j+1),2)-currentIndexDistCenter(j,2))^2 );
+        dispIndex(i,j) = currentDispIndexDistCenter;
+        
+
+    
+    end
+    
+    
+    
+end
+end
+
+
+
+%% Calculate the Jerk (aka the 4th derivative of the position vector
+function JerkCalculation (dispIndex)
+
+    ts = 1/300;
+    frames = 0:8:40;
+    time = frames*ts;
+
+    Velocity = [];
+    Acceleration = [];
+    Jerk = [];
+
+    for i = 1:length(dispIndex(:,1))
+        for j = 1:length(dispIndex(1,:))
+            Velocity(i,j) = dispIndex(i,j)/ts; %4 frames x by number of reaches 
+        end
+    end
+    
+    for j = 1:length(Velocity(:,1))
+        for i = 1:length(Velocity(1,:))-1%Number of colums remains constant
+                Acceleration (j,i) = (Velocity(j,i+1)-Velocity(j,i))/ts    ;
+        end
+    end
+    
+     for j = 1:length(Acceleration(:,1))
+        for i = 1:length(Acceleration(1,:))-1%Number of colums remains constant
+                Jerk(j,i) = (Acceleration(j,i+1)-Acceleration(j,i))/ts  ;  
+        end
+    end
+
+end
