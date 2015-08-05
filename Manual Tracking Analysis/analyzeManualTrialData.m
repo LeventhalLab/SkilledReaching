@@ -85,10 +85,10 @@ function analyzeManualTrialData(RatData)
    
    
    [dispIndex,dispMiddle,dispRing,dispPinky] = calculatePositionChange(allIndexDistCenter);%, allMiddleDistCenter, allRingDistCenter, allPinkyDistCenter)
-   PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3)
+   PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3);
    plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter);
-    
-    JerkCalculation(dispIndex);
+   plot3DistancePawSpread (PI3DistanceSeperation)
+   JerkCalculation(dispIndex);
     
 
 end
@@ -424,14 +424,18 @@ function [pinkyDist3, indexDist3]= create3Dpoints (pinkyDistLeft, indexDistLeft,
 %% Calc 3D paw spread in space
 function PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3)
 
-    for i = 1:length(allPinkyDist3(1,:))
+    for i = 1:length(allPinkyDist3(:,1))
         for j = 1:5
-            currentPinky = cell2mat(allPinkyDist3(i,j))
-            currentIndex = cell2mat(allIndexDist3(i,j))
+            currentPinky = cell2mat(allPinkyDist3(i,j));
+            currentIndex = cell2mat(allIndexDist3(i,j));
             
-            if (currentPinky(1) ~= [] && currentIndex(1) ~= [])
+           tfP =  sum(size(currentPinky) == [0 0]);
+           tfI =  sum(size(currentIndex) == [0 0]);
+            
+            
+           if (tfP == 0 && tfI == 0)              
                PI3DistanceSeperation(i,j) = sqrt((currentPinky(:,1)-currentIndex(:,1))^2+ (currentPinky(:,2)-currentIndex(:,2))^2 +(currentPinky(:,3)-currentIndex(:,3))^2);
-            end
+           end
          end
     end
     
@@ -480,6 +484,22 @@ function plot2DistancePawSpread(allPawSpreadDistMICenter,allPawSpreadDistRICente
     errorbar(frames,avgPawSpreadDistPI,stdPawSpreadDistPI,'b')
 end
 
+
+%% Plot paw 3d seperation changes
+function  plot3DistancePawSpread (PI3DistanceSeperation)
+    figure(3)
+    for i=1:length(PI3DistanceSeperation(:,1))
+        avgPawSpreadDistPI3(i) = nanmean(PI3DistanceSeperation(:,1));
+        stdPawSpreadDistPI3(i) = std(PI3DistanceSeperation(:,1));
+        frames = 1:5;
+        
+        figure(3)
+        hold on
+        errorbar(frames, avgPawSpreadDistPI3,stdPawSpreadDistPI3)
+    end      
+
+  
+end
 
 %% Calculate the change in position for an individual digit
 function [dispIndex,dispMiddle,dispRing,dispPinky] = calculatePositionChange(indexDistCenter)%, middleDistCenter, ringDistCenter, pinkyDistCenter) %This should return a matrix for each of the individual digits showing the change in position in the given digits
