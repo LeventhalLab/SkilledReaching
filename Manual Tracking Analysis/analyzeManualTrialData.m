@@ -34,20 +34,32 @@
 
 %% Master function for calling all the seperate functions written into script
 %Feed in the master 
-function analyzeManualTrialData(RatData)
+function  [allVelocity]= analyzeManualTrialData(RatData)
     
     allPawData = [];
     Scores=[RatData.VideoFiles.Score]';
+    
+   
 
     j= 1;
     for i=1:length(Scores)
         if Scores(i) == 1
-            allPawData{j}= RatData.VideoFiles(i).Paw_Points_Tracking_Data; 
+            tempAllPawData = RatData.VideoFiles(i).Paw_Points_Tracking_Data;
+            
+            counter = 1; %This is the counter that represents the actual length of filled data
+            for k =1:length(tempAllPawData)
+                if sum(cell2mat(tempAllPawData(k,1))) > 0
+                    filteredPawData(counter,:) = tempAllPawData(k,:);
+                    
+                    counter = counter + 1;
+                end
+            end         
+            allPawData{j}= filteredPawData; 
             j = j+1;
         end
     end
     
-    
+   
     
     allPawSpreadDistPICenter = [];
     allPawSpreadDistRICenter = [];
@@ -74,22 +86,58 @@ function analyzeManualTrialData(RatData)
             allPawSpreadDistMICenter(i,j) = pawSpreadDistMICenter(j);
         end
 
-           [pinkyDist3, indexDist3] = create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight);
+           [pinkyDist3] = create3Dpoints (pinkyDistLeft,pinkyDistCenter, pinkyDistRight);
+           [middleDist3] = create3Dpoints (middleDistLeft,middleDistCenter, middleDistRight);
+           [ringDist3] = create3Dpoints (ringDistLeft,ringDistCenter, ringDistRight);
+           [indexDist3] = create3Dpoints (indexDistLeft,indexDistCenter, indexDistRight);
 
          for k = 1:length(pinkyDist3)
            allPinkyDist3(i,k) = pinkyDist3(k);
-           allIndexDist3(i,k) = indexDist3(k);
+         end
+         
+         for k = 1:length(indexDist3)
+            allIndexDist3(i,k) = indexDist3(k);
+         end
+         
+         for k = 1:length(middleDist3)
+           allMiddleDist3(i,k) = middleDist3(k);
+         end
+         
+         for k = 1:length(ringDist3)
+           allRingDist3(i,k) = ringDist3(k);
          end
 
    end
    
    
-   [dispIndex,dispMiddle,dispRing,dispPinky] = calculatePositionChange(allIndexDistCenter);%, allMiddleDistCenter, allRingDistCenter, allPinkyDistCenter)
-   PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3);
-   plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter);
-   plot3DistancePawSpread (PI3DistanceSeperation)
-   JerkCalculation(dispIndex);
+    [dispIndex,dispMiddle,dispRing,dispPinky] = calculatePositionChange(allIndexDistCenter);%, allMiddleDistCenter, allRingDistCenter, allPinkyDistCenter)
+    PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3);
+   
+    plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter);
+    plot3DistancePawSpread (PI3DistanceSeperation);
+   
+   
+    [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
+    [dispMiddleDist3D] = calculatePositionChange3D(allMiddleDist3);
+    [dispRingDist3D] = calculatePositionChange3D(allRingDist3);
+    [dispPinkyDist3D] = calculatePositionChange3D(allPinkyDist3);
+   
+    [indexDistVelocity , indexDistAcceleration, indexDistJerk] = KinematicCalc (dispIndexDist3D);
+    [middleDistVelocity , middleDistAcceleration, middleDistJerk] = KinematicCalc (dispMiddleDist3D);
+    [ringDistVelocity , ringDistAcceleration, ringDistJerk] = KinematicCalc (dispRingDist3D);
+    [pinkyDistVelocity , pinkyDistAcceleration, pinkyDistJerk] = KinematicCalc (dispPinkyDist3D);
     
+    
+    allVelocity{1} = indexDistVelocity;
+    allVelovity{2} = middleDistVelocity;
+    allVelocity{3} = ringDistVelocity;
+    allVelocity{4} = pinkyDistVelocity;
+
+    
+        
+     
+    
+   
 
 end
 
@@ -387,34 +435,23 @@ function [pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpre
 end
 
 %% Establish 3D coordinate in space
-function [pinkyDist3, indexDist3]= create3Dpoints (pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight) 
+function [currentMarker3]= create3Dpoints (currentMarkerLeft, currentMarkerCenter, currentMarkerRight) 
    
        for i =1:5
         
-        tf1=isnan(pinkyDistCenter(i,1));
-        tf2= isnan(pinkyDistCenter(i,2));
-        tf3= isnan(pinkyDistLeft(i,1));
-        tf4 = isnan(pinkyDistRight(i,1));
-       
-        tf6 =isnan(indexDistCenter(i,1));
-        tf7 = isnan(indexDistCenter(i,2));
-        tf8= isnan(indexDistLeft(i,1));
-        tf9 = isnan(indexDistRight(i,1));
+        tf1=isnan(currentMarkerCenter(i,1));
+        tf2= isnan(currentMarkerCenter(i,2));
+        tf3= isnan(currentMarkerLeft(i,1));
+        tf4 = isnan(currentMarkerRight(i,1));
+      
         
         
         if     (tf1 == 0 && tf2 == 0 && tf3 == 0)   
-                pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistLeft(i,1)];  
+                currentMarker3{i} = [currentMarkerCenter(i,1), currentMarkerCenter(i,2), currentMarkerLeft(i,1)];  
         elseif (tf1 == 0 && tf2 == 0 && tf4 == 0)    
-                pinkyDist3{i} = [pinkyDistCenter(i,1), pinkyDistCenter(i,2), pinkyDistRight(i,1)];  
+                currentMarker3{i} = [currentMarkerCenter(i,1), currentMarkerCenter(i,2), currentMarkerRight(i,1)];  
         end
         
-        
-        
-        if     (tf6 == 0 && tf7 == 0 && tf8 == 0)   
-                indexDist3{i} = [indexDistCenter(i,1), indexDistCenter(i,2), indexDistLeft(i,1)];  
-        elseif (tf6 == 0 && tf7 == 0 && tf9 == 0)    
-                indexDist3{i} = [indexDistCenter(i,1), indexDistCenter(i,2), indexDistRight(i,1)];  
-        end
         
       end
    
@@ -489,13 +526,9 @@ end
 function  plot3DistancePawSpread (PI3DistanceSeperation)
     figure(3)
     for i=1:length(PI3DistanceSeperation(:,1))
-        avgPawSpreadDistPI3(i) = nanmean(PI3DistanceSeperation(:,1));
-        stdPawSpreadDistPI3(i) = std(PI3DistanceSeperation(:,1));
         frames = 1:5;
-        
-        figure(3)
         hold on
-        errorbar(frames, avgPawSpreadDistPI3,stdPawSpreadDistPI3)
+        plot(frames,PI3DistanceSeperation(i,:))
     end      
 
   
@@ -509,29 +542,47 @@ dispMiddle = [];
 dispRing = [];
 dispPinky = [];
 
-for i = 1:length(indexDistCenter)
-    currentIndexDistCenter = cell2mat(indexDistCenter(:,i));
-%     currentMiddleDistCenter = cell2mat(middleDistCenter(:,i)); 
-%     currentRingDistCenter = cell2mat(ringDistCenter(:,i)) ;
-%     currentPinkyDistCenter = cell2mat(ringDistCenter(:,i)) ;
-    
-    for j=1:4 %There are 5 frames that are taken into account and caluclates 4 distance changes
-        currentDispIndexDistCenter = sqrt((currentIndexDistCenter((j+1),1)-currentIndexDistCenter(j,1))^2 + (currentIndexDistCenter((j+1),2)-currentIndexDistCenter(j,2))^2 );
-        dispIndex(i,j) = currentDispIndexDistCenter;
-        
+    for i = 1:length(indexDistCenter)
+        currentIndexDistCenter = cell2mat(indexDistCenter(:,i));
+    %     currentMiddleDistCenter = cell2mat(middleDistCenter(:,i)); 
+    %     currentRingDistCenter = cell2mat(ringDistCenter(:,i)) ;
+    %     currentPinkyDistCenter = cell2mat(ringDistCenter(:,i)) ;
 
-    
+        for j=1:4 %There are 5 frames that are taken into account and caluclates 4 distance changes
+            currentDispIndexDistCenter = sqrt((currentIndexDistCenter((j+1),1)-currentIndexDistCenter(j,1))^2 + (currentIndexDistCenter((j+1),2)-currentIndexDistCenter(j,2))^2 );
+            dispIndex(i,j) = currentDispIndexDistCenter;
+        end
     end
-    
-    
-    
 end
+
+
+%% Calculate the displacment in 3D 
+function [currentMarkerDisp3D] = calculatePositionChange3D(currentMarker3D)
+currentMarkerDisp3D= [];
+
+    for i = 1:length(currentMarker3D(:,1))
+        for k =1:4 %number of frames
+                
+            
+                currentFrame = cell2mat(currentMarker3D(i,k));
+                nextFrame = cell2mat(currentMarker3D(i,k+1));
+                
+                tf1 = sum(currentFrame) == 0 ;
+                tf2 = sum(nextFrame) == 0;
+                
+                if (tf1 == 0 && tf2 ==0)
+                currentDispIndex = sqrt((currentFrame(1)-nextFrame(1))^2+(currentFrame(2)-nextFrame(2))^2+(currentFrame(3)-nextFrame(3))^2) ;
+                currentMarkerDisp3D(i,k) = currentDispIndex;
+                end
+        end
+        
+    end
 end
 
 
 
 %% Calculate the Jerk (aka the 4th derivative of the position vector
-function JerkCalculation (dispIndex)
+function [Velocity, Acceleration, Jerk] = KinematicCalc (digit3d)
 
     ts = 1/300;
     frames = 0:8:40;
@@ -541,21 +592,21 @@ function JerkCalculation (dispIndex)
     Acceleration = [];
     Jerk = [];
 
-    for i = 1:length(dispIndex(:,1))
-        for j = 1:length(dispIndex(1,:))
-            Velocity(i,j) = dispIndex(i,j)/ts; %4 frames x by number of reaches 
+    for i = 1:length(digit3d(:,1))
+        for j = 1:length(digit3d(1,:))
+            Velocity(i,j) = digit3d(i,j)/ts ;%4 frames x by number of reaches 
         end
     end
     
     for j = 1:length(Velocity(:,1))
         for i = 1:length(Velocity(1,:))-1%Number of colums remains constant
-                Acceleration (j,i) = (Velocity(j,i+1)-Velocity(j,i))/ts    ;
+                Acceleration (j,i) = (Velocity(j,i+1)-Velocity(j,i))/ts  ;  
         end
     end
     
      for j = 1:length(Acceleration(:,1))
         for i = 1:length(Acceleration(1,:))-1%Number of colums remains constant
-                Jerk(j,i) = (Acceleration(j,i+1)-Acceleration(j,i))/ts  ;  
+                Jerk(j,i) = (Acceleration(j,i+1)-Acceleration(j,i))/ts;   
         end
     end
 
