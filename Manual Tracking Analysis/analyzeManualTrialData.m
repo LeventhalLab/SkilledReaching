@@ -129,7 +129,7 @@ function  [allVelocity]= analyzeManualTrialData(RatData)
     
     
     allVelocity{1} = indexDistVelocity;
-    allVelovity{2} = middleDistVelocity;
+    allVelocity{2} = middleDistVelocity;
     allVelocity{3} = ringDistVelocity;
     allVelocity{4} = pinkyDistVelocity;
 
@@ -514,24 +514,24 @@ function plot2DistancePawSpread(allPawSpreadDistMICenter,allPawSpreadDistRICente
     
     frames = 1:5;
     
-    figure(2)
-    hold on
-    errorbar(frames,avgPawSpreadDistMI,stdPawSpreadDistMI,'r')
-    errorbar(frames,avgPawSpreadDistRI,stdPawSpreadDistRI,'g')
-    errorbar(frames,avgPawSpreadDistPI,stdPawSpreadDistPI,'b')
+%     figure(2)
+%     hold on
+%     errorbar(frames,avgPawSpreadDistMI,stdPawSpreadDistMI,'r')
+%     errorbar(frames,avgPawSpreadDistRI,stdPawSpreadDistRI,'g')
+%     errorbar(frames,avgPawSpreadDistPI,stdPawSpreadDistPI,'b')
 end
 
 
 %% Plot paw 3d seperation changes
 function  plot3DistancePawSpread (PI3DistanceSeperation)
-    figure(3)
-    for i=1:length(PI3DistanceSeperation(:,1))
-        frames = 1:5;
-        hold on
-        plot(frames,PI3DistanceSeperation(i,:))
-    end      
-
-  
+%     figure(3)
+%     for i=1:length(PI3DistanceSeperation(:,1))
+%         frames = 1:5;
+%         hold on
+%         plot(frames,PI3DistanceSeperation(i,:))
+%     end      
+% 
+%   
 end
 
 %% Calculate the change in position for an individual digit

@@ -27,16 +27,13 @@
 %      
      
  %Take all the velocities for Day 3
-      indexVelocities = cell2mat(N3Velocities(1))  
+      indexVelocities = cell2mat(N3Velocities(1)) ; 
       middleVelocities =  cell2mat(N3Velocities(2));
       ringVelocities =  cell2mat(N3Velocities(3));
       pinkyVelocities = cell2mat(N3Velocities(4));
       
-      
-      indexVelocitiesAvg = [];
-      
       for i = 1:length(indexVelocities(1,:))
-          indexVelocitiesAvg(i) =  sum(indexVelocities(:,i)) ./ sum(indexVelocities(:,i))
+          indexVelocitiesAvg(i) =  sum(indexVelocities(:,i)) ./ sum(A~=0,2)
       end
       
 
