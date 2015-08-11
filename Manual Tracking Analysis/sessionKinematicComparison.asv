@@ -20,15 +20,13 @@ function sessionKinematicComparison
     
     
     load(N7)
-    [N7distalDistancetoPellet]= analyzeManualTrialData(RatData)
+    [N7distalDistancetoPellet]= analyzeMaynualTrialData(RatData)
     %[N7avgIndexVelocity, N7stdIndexVelocity,N7avgMiddleVelocity, N7stdMiddleVelocity,N7avgRingVelocity, N7stdRingVelocity, N7avgPinkyVelocity, NstdPinkyVelocity ] = getAverageVelocities(N7Velocities);
 
 
     %plotKinematicComparisons(N3avgIndexVelocity, N5avgIndexVelocity, N7avgIndexVelocity,N3stdIndexVelocity,N5stdIndexVelocity, N7stdIndexVelocity)
     
-    plotDistalDistancetoPellet(N3distalDistancetoPellet)
-    plotDistalDistancetoPellet(N5distalDistancetoPellet)
-    plotDistalDistancetoPellet(N7distalDistancetoPellet)
+  
 end
 
 
@@ -39,13 +37,13 @@ function plotDistalDistancetoPellet(currentDayDistances)
         ringVelocities =  cell2mat(currentDayDistances(3));
         pinkyVelocities = cell2mat(currentDayDistances(4));
         
-        figure
-        frames=1:5;
+        frames=1:5
+        
         hold on
-        scatter(frames,indexVelocities,'r')
-        scatter(frames,middleVelocities,'b')
-        scatter(frames,ringVelocities,'g')
-        scatter(frames,pinkyVelocities,'k')
+        scatter(frames,indexVelocities)
+        scatter(frames,middleVelocities)
+        scatter(frames,ringVelocities)
+        scatter(frames,pinkyVelocities)
 
 end
      

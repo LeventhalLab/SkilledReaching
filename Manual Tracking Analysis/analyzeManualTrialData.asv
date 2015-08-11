@@ -92,7 +92,18 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
         allRingDistCenter{i} = ringDistCenter;
         allPinkyDistCenter{i} = pinkyDistCenter;
         
+        %[pawSpreadDistPILeft,pawSpreadDistPICenter,pawSpreadDistPIRight,pawSpreadDistMILeft,pawSpreadDistMICenter,pawSpreadDistMIRight,pawSpreadDistRILeft,pawSpreadDistRICenter,pawSpreadDistRIRight] = calc2DistancePawSpread(pinkyDistLeft, indexDistLeft, pinkyDistCenter, indexDistCenter, pinkyDistRight, indexDistRight, middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight);
+        %plotCenterDistance(indexDistCenter,middleDistCenter,ringDistCenter,pinkyDistCenter)
 
+        
+        
+%         for j=1:length(pawSpreadDistPICenter)
+%             allPawSpreadDistPICenter(i,j) = pawSpreadDistPICenter(j); 
+%             allPawSpreadDistRICenter(i,j) = pawSpreadDistRICenter(j);
+%             allPawSpreadDistMICenter(i,j) = pawSpreadDistMICenter(j);
+%         end
+%         
+           
              
            
            [pinkyProx3] = create3Dpoints (pinkyProxLeft,pinkyProxCenter, pinkyProxRight);
@@ -148,7 +159,7 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
     [dispIndex,dispMiddle,dispRing,dispPinky] = calculatePositionChange(allIndexDistCenter);%, allMiddleDistCenter, allRingDistCenter, allPinkyDistCenter)
     PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3);
    
-  
+  %  plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter);
     plot3DistancePawSpread (PI3DistanceSeperation);
     
     plotDistalPoints3D (allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3);
