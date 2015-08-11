@@ -68,7 +68,7 @@ function  [allVelocity]= analyzeManualTrialData(RatData)
    for i = 1:length(allPawData)
         pawPointsData = allPawData{1,i};
         [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData);
-        [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist);
+        [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight, pelletCenterLeft, pelletCenterCenter, pelletCenterRight,pawBackLeft, pawBackCenter, pawBackRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist);
         
         allIndexDistCenter{i} = indexDistCenter;
         allMiddleDistCenter{i} = middleDistCenter; 
@@ -90,6 +90,7 @@ function  [allVelocity]= analyzeManualTrialData(RatData)
            [middleDist3] = create3Dpoints (middleDistLeft,middleDistCenter, middleDistRight);
            [ringDist3] = create3Dpoints (ringDistLeft,ringDistCenter, ringDistRight);
            [indexDist3] = create3Dpoints (indexDistLeft,indexDistCenter, indexDistRight);
+           [pellet3] = create3Dpoints(pelletCenterLeft,pelletCenterCenter,pelletCenterRight)
 
          for k = 1:length(pinkyDist3)
            allPinkyDist3(i,k) = pinkyDist3(k);
@@ -115,6 +116,8 @@ function  [allVelocity]= analyzeManualTrialData(RatData)
    
     plot2DistancePawSpread (allPawSpreadDistMICenter,allPawSpreadDistRICenter,allPawSpreadDistPICenter);
     plot3DistancePawSpread (PI3DistanceSeperation);
+    
+    plotDistalPoints3D (allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3)
    
    
     [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
@@ -332,10 +335,11 @@ function plotBallStick
 end
 
 
-%% Normalize Data to fixed point
-function   [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist)
+%% Normalize Data 
+function   [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middleDistCenter, middleDistRight,ringDistLeft, ringDistCenter, ringDistRight, pinkyDistLeft, pinkyDistCenter, pinkyDistRight,pelletCenterLeft, pelletCenterCenter, pelletCenterRight,pawBackLeft, pawBackCenter, pawBackRight] = normalizeData(pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist)
      for i= 1:5
             for j =1:3
+            pelletCenter_xy{i,j} = cell2mat(pelletCenter{i,j});
             pawBackCenter_xy{i,j} = cell2mat(pawBackCenter{i,j});
 
             indexProx_xy{i,j} = cell2mat(indexProx{i,j});
@@ -356,6 +360,23 @@ function   [indexDistLeft, indexDistCenter, indexDistRight,middleDistLeft, middl
 
         end
      end
+             temp = cell2mat(pelletCenter_xy);
+             pelletCenterLeft(:,1)  = temp(:,1);
+             pelletCenterLeft(:,2) = temp(:,2);
+             pelletCenterCenter(:,1) = temp(:,3);
+             pelletCenterCenter(:,2) = temp(:,4);
+             pelletCenterRight(:,1) = temp(:,5);
+             pelletCenterRight(:,2) = temp(:,6);
+             
+             temp = cell2mat(pawBackCenter_xy);
+             pawBackLeft(:,1)  = temp(:,1);
+             pawBackLeft(:,2) = temp(:,2);
+             pawBackCenter(:,1) = temp(:,3);
+             pawBackCenter(:,2) = temp(:,4);
+             pawBackRight(:,1) = temp(:,5);
+             pawBackRight(:,2) = temp(:,6);
+     
+     
              temp = cell2mat(ringDist_xy);
              ringDistLeft(:,1)  = temp(:,1);
              ringDistLeft(:,2) = temp(:,2);
@@ -556,6 +577,46 @@ dispPinky = [];
 end
 
 
+%% Plot the distal points in 3d space
+function  plotDistalPoints3D (allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3)
+    
+    allIndexDist3
+    for i =1:length(allIndexDist3(:,1))
+       for j = 1:5
+            currentIndex = cell2mat(allIndexDist3(i,j));
+            currentMiddle = cell2mat(allMiddleDist3(i,j));
+            currentRing = cell2mat(allRingDist3(i,j));
+            currentPinky = cell2mat(allPinkyDist3(i,j));
+            
+            
+     
+            figure(j)
+            hold on
+            
+           
+
+                if size(currentIndex) == [1,3]  
+                   scatter3(currentIndex(1,1),currentIndex(1,2),currentIndex(1,3),'*','b');
+                end
+
+                if size(currentMiddle) == [1,3] 
+                    scatter3(currentMiddle(1,1),currentMiddle(1,2),currentMiddle(1,3),'x','b');
+                end
+
+                if size(currentRing) == [1,3] 
+                    scatter3(currentRing(1,1), currentRing(1,2),currentRing(1,3),'o','b');
+                end
+
+                if size(currentPinky) == [1,3]  
+                    scatter3(currentPinky(1,1), currentPinky(1,2), currentPinky(1,3),'d','b');
+                end
+            
+            
+       end
+    end
+
+end
+
 %% Calculate the displacment in 3D 
 function [currentMarkerDisp3D] = calculatePositionChange3D(currentMarker3D)
 currentMarkerDisp3D= [];
@@ -611,3 +672,12 @@ function [Velocity, Acceleration, Jerk] = KinematicCalc (digit3d)
     end
 
 end
+
+%% Calculate the change in paw angle 
+% function PawAngle(currentMaker3d)
+% 
+% 
+% 
+% 
+% end
+
