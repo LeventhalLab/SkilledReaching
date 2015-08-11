@@ -119,27 +119,32 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
 
          for k = 1:length(pinkyDist3)
             
-            allPinkyProx3(i,k) = pinkyProx3(k)
-            allPinkyMid3(i,k)  = pinkyMid3 (k)
-            allPinkyDist3(i,k) = pinkyDist3(k)
+            allPinkyProx3(i,k) = pinkyProx3(k);
+            allPinkyMid3(i,k)  = pinkyMid3 (k);
+            allPinkyDist3(i,k) = pinkyDist3(k);
      
-            allIndexProx3(i,k) = indexProx3(k)
-            allIndexMid3(i,k)  = indexMid3 (k)
-            allIndexDist3(i,k) = indexDist3(k)
+            allIndexProx3(i,k) = indexProx3(k);
+            allIndexMid3(i,k)  = indexMid3 (k);
+            allIndexDist3(i,k) = indexDist3(k);
        
 
-            allMiddleProx3(i,k) = middleProx3(k)
-            allMiddleMid3(i,k)  = middleMid3 (k)
-            allMiddleDist3(i,k) = middleDist3(k)
+            allMiddleProx3(i,k) = middleProx3(k);
+            allMiddleMid3(i,k)  = middleMid3 (k);
+            allMiddleDist3(i,k) = middleDist3(k);
         
          
-            allRingProx3(i,k) = ringProx3(k)
-            allRingMid3(i,k)  = ringMid3 (k)
-            allRingDist3(i,k) = ringDist3(k)
-   
+            allRingProx3(i,k) = ringProx3(k);
+            allRingMid3(i,k)  = ringMid3 (k);
+            %allRingDist3(i,k) = ringDist3(k) this isnt the same length as
+            %all the others
+         end 
          
+         for k = 1:length(ringDist3)
+            allRingDist3(i,k) = ringDist3(k);
+         end
          
-            allPellet3(i,k) = pellet3(k)
+         for k =1:length(pellet3)
+             allPellet3(i,k) = pellet3(k);
          end
 
    end
@@ -151,7 +156,7 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
   
     plot3DistancePawSpread (PI3DistanceSeperation);
     
-    plotDistalPoints3D (allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3);
+ plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3)
    
    
     [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
@@ -615,38 +620,188 @@ end
 
 
 %% Plot the distal points in 3d space
-function  plotDistalPoints3D (allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3)
+function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3)
     
-    for i =1:length(allIndexDist3(:,1))
-       for j = 1:5
-            currentIndex = cell2mat(allIndexDist3(i,j));
-            currentMiddle = cell2mat(allMiddleDist3(i,j));
-            currentRing = cell2mat(allRingDist3(i,j));
-            currentPinky = cell2mat(allPinkyDist3(i,j));
+    for i =1%:length(allIndexDist3(:,1)) %This reprsents the number of trials in given day
+       for j = 1:5 %This represents the number of frames
+           
+            %Truefalse checks to see if digit points exist 
+            IP = 0;
+            IM = 0;
+            ID = 0;
+            
+            MP = 0;
+            MM = 0;
+            MD = 0;
+            
+            RP = 0;
+            RM = 0;
+            RD = 0;
+            
+            PP = 0;
+            PM = 0;
+            PD = 0;
             
             
+            
+            
+            currentIndexProx = cell2mat(allIndexProx3(i,j));
+            currentMiddleProx = cell2mat(allMiddleProx3(i,j));
+            currentRingProx = cell2mat(allRingProx3(i,j));
+            currentPinkyProx = cell2mat(allPinkyProx3(i,j));
+
+           
+            currentIndexMid = cell2mat(allIndexMid3(i,j));
+            currentMiddleMid = cell2mat(allMiddleMid3(i,j));
+            currentRingMid = cell2mat(allRingMid3(i,j));
+            currentPinkyMid = cell2mat(allPinkyMid3(i,j));
+
+                      
+            currentIndexDist = cell2mat(allIndexDist3(i,j));
+            currentMiddleDist = cell2mat(allMiddleDist3(i,j));
+            currentRingDist = cell2mat(allRingDist3(i,j));
+            currentPinkyDist = cell2mat(allPinkyDist3(i,j));
+
      
             figure(j)
             hold on
+                
             
-           
-
-                if size(currentIndex) == [1,3]  
-                   scatter3(currentIndex(1,1),currentIndex(1,2),currentIndex(1,3),'*','b');
+                %Index Finger
+                if size(currentIndexProx) == [1,3] 
+                   IP = 1;
+                   scatter3(currentIndexProx(1,1),currentIndexProx(1,2),currentIndexProx(1,3),'r');
+                end
+                if size(currentIndexMid) == [1,3]  
+                    IM =1;
+                   scatter3(currentIndexMid(1,1),currentIndexMid(1,2),currentIndexMid(1,3),'r');
+                end
+                if size(currentIndexDist) == [1,3]  
+                    ID = 1;
+                   scatter3(currentIndexDist(1,1),currentIndexDist(1,2),currentIndexDist(1,3),'r');
+                end
+                
+                if (IP == 1 && IM ==1)
+                    x = [currentIndexProx(1,1),currentIndexMid(1,1)];
+                    y = [currentIndexProx(1,2),currentIndexMid(1,2)];
+                    z = [currentIndexProx(1,3),currentIndexMid(1,3)];
+                    line(x,y,z,'color','r')
+                end
+                
+                 
+                if (IM == 1 && ID ==1)
+                    x = [currentIndexDist(1,1),currentIndexMid(1,1)];
+                    y = [currentIndexDist(1,2),currentIndexMid(1,2)];
+                    z = [currentIndexDist(1,3),currentIndexMid(1,3)];
+                    line(x,y,z,'color','r')
+                end
+                
+                
+                %Middle
+                if size(currentMiddleProx) == [1,3] 
+                    MP=1;
+                    scatter3(currentMiddleProx(1,1),currentMiddleProx(1,2),currentMiddleProx(1,3),'b');
+                end
+                if size(currentMiddleMid) == [1,3] 
+                    MM = 1;
+                    scatter3(currentMiddleMid(1,1),currentMiddleMid(1,2),currentMiddleMid(1,3),'b');
+                end
+ 
+                if size(currentMiddleDist) == [1,3] 
+                    MD =1;
+                    scatter3(currentMiddleDist(1,1),currentMiddleDist(1,2),currentMiddleDist(1,3),'b');
+                end
+                
+                
+                if (MP == 1 && MM ==1)
+                    x = [currentMiddleProx(1,1),currentMiddleMid(1,1)];
+                    y = [currentMiddleProx(1,2),currentMiddleMid(1,2)];
+                    z = [currentMiddleProx(1,3),currentMiddleMid(1,3)];
+                    line(x,y,z,'color','b')
+                end
+                
+                 
+                if (MM == 1 && MD ==1)
+                    x = [currentMiddleDist(1,1),currentMiddleMid(1,1)];
+                    y = [currentMiddleDist(1,2),currentMiddleMid(1,2)];
+                    z = [currentMiddleDist(1,3),currentMiddleMid(1,3)];
+                    line(x,y,z,'color','b')
                 end
 
-                if size(currentMiddle) == [1,3] 
-                    scatter3(currentMiddle(1,1),currentMiddle(1,2),currentMiddle(1,3),'x','b');
+                
+                
+                
+               
+                
+                
+ 
+        
+                %Ring
+                if size(currentRingProx) == [1,3] 
+                    RP =1;
+                    scatter3(currentRingProx(1,1), currentRingProx(1,2),currentRingProx(1,3),'g');
+                end
+                if size(currentRingMid) == [1,3] 
+                    RM = 1;
+                    scatter3(currentRingMid(1,1), currentRingMid(1,2),currentRingMid(1,3),'g');
+                end
+                if size(currentRingDist) == [1,3]
+                    RD =1;
+                    scatter3(currentRingDist(1,1), currentRingDist(1,2),currentRingDist(1,3),'g');
+                end
+                
+               if (RP == 1 && RM ==1)
+                    x = [currentRingProx(1,1),currentRingMid(1,1)];
+                    y = [currentRingProx(1,2),currentRingMid(1,2)];
+                    z = [currentRingProx(1,3),currentRingMid(1,3)];
+                    line(x,y,z,'color','g')
+                end
+                
+                 
+                if (RM == 1 && RD ==1)
+                    x = [currentRingDist(1,1),currentRingMid(1,1)];
+                    y = [currentRingDist(1,2),currentRingMid(1,2)];
+                    z = [currentRingDist(1,3),currentRingMid(1,3)];
+                    line(x,y,z,'color','g')
                 end
 
-                if size(currentRing) == [1,3] 
-                    scatter3(currentRing(1,1), currentRing(1,2),currentRing(1,3),'o','b');
+              
+                
+                
+               
+ 
+                
+                %Pinky
+                if size(currentPinkyProx) == [1,3]  
+                    PP = 1;
+                    scatter3(currentPinkyProx(1,1), currentPinkyProx(1,2), currentPinkyProx(1,3),'k');
+                end
+                if size(currentPinkyMid) == [1,3]  
+                    PM =1;
+                    scatter3(currentPinkyMid(1,1), currentPinkyMid(1,2), currentPinkyMid(1,3),'k');
+                end      
+                if size(currentPinkyDist) == [1,3]  
+                    PD = 1;
+                    scatter3(currentPinkyDist(1,1), currentPinkyDist(1,2), currentPinkyDist(1,3),'k');
+                end
+                
+                if (PP == 1 && PM ==1)
+                    x = [currentPinkyProx(1,1),currentPinkyMid(1,1)];
+                    y = [currentPinkyProx(1,2),currentPinkyMid(1,2)];
+                    z = [currentPinkyProx(1,3),currentPinkyMid(1,3)];
+                    line(x,y,z,'color','k')
+                end
+                
+                 
+                if (PM == 1 && PD ==1)
+                    x = [currentPinkyDist(1,1),currentPinkyMid(1,1)];
+                    y = [currentPinkyDist(1,2),currentPinkyMid(1,2)];
+                    z = [currentPinkyDist(1,3),currentPinkyMid(1,3)];
+                    line(x,y,z,'color','k')
                 end
 
-                if size(currentPinky) == [1,3]  
-                    scatter3(currentPinky(1,1), currentPinky(1,2), currentPinky(1,3),'d','b');
-                end
-            
+                
+                
             
        end
     end
