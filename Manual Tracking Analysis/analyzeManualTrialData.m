@@ -6,32 +6,6 @@
 %for the three given prespectives and spit out analysis 
 %Paramaters read in from Paw_Points Tracking Data file
 
-%Each of these is take in for the prespectives Left, Right, Center
-
-%Pellet Center
-
-%Center of Back Surface of Paw
-
-%Thumb Proximal
-%Thumb Distal
-
-% Index proximal
-% Index middle
-% Index distal
-% 
-% Middle proximal
-% Middle middle
-% Middle distal
-% 
-% Ring proximal
-% Ring middle
-% Ring distal
-% 
-% Pinky proximal
-% Pinky middle
-% Pinky distal
-
-
 %% Master function for calling all the seperate functions written into script
 %Feed in the master 
 function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
@@ -98,6 +72,7 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
            [pinkyProx3] = create3Dpoints (pinkyProxLeft,pinkyProxCenter, pinkyProxRight);
            [middleProx3] = create3Dpoints (middleProxLeft,middleProxCenter, middleProxRight);
            [ringProx3] = create3Dpoints (ringProxLeft,ringProxCenter, ringProxRight);
+           
            [indexProx3] = create3Dpoints (indexProxLeft,indexProxCenter, indexProxRight);
  
            
@@ -116,27 +91,49 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
            [pellet3] = create3Dpoints(pelletCenterLeft,pelletCenterCenter,pelletCenterRight);
            
            
-
-         for k = 1:length(pinkyDist3)
-            
+    
+         for k = 1:length(pinkyProx3)
             allPinkyProx3(i,k) = pinkyProx3(k);
-            allPinkyMid3(i,k)  = pinkyMid3 (k);
-            allPinkyDist3(i,k) = pinkyDist3(k);
-     
-            allIndexProx3(i,k) = indexProx3(k);
-            allIndexMid3(i,k)  = indexMid3 (k);
-            allIndexDist3(i,k) = indexDist3(k);
-       
-
-            allMiddleProx3(i,k) = middleProx3(k);
-            allMiddleMid3(i,k)  = middleMid3 (k);
-            allMiddleDist3(i,k) = middleDist3(k);
-        
+         end
          
+         for k = 1:length(pinkyMid3)
+            allPinkyMid3(i,k)  = pinkyMid3 (k);
+         end
+         
+         for k=1:length(pinkyDist3)
+            allPinkyDist3(i,k) = pinkyDist3(k);
+         end
+         
+         for k =1:length(indexProx3)
+            allIndexProx3(i,k) = indexProx3(k);
+         end
+         
+         for k =1:length(indexMid3)   
+            allIndexMid3(i,k)  = indexMid3 (k);
+         end
+         
+         for k=1:length(indexDist3)   
+            allIndexDist3(i,k) = indexDist3(k);
+         end
+         
+         for k=1:length(middleProx3)
+            allMiddleProx3(i,k) = middleProx3(k);
+         end
+         
+         for k=1:length(middleMid3)
+            allMiddleMid3(i,k)  = middleMid3 (k);
+         end
+         
+         for k=1:length(middleDist3) 
+            allMiddleDist3(i,k) = middleDist3(k);
+         end
+         
+         for k=1:length(ringProx3)
             allRingProx3(i,k) = ringProx3(k);
+         end
+         
+         for k=1:length(ringMid3)
             allRingMid3(i,k)  = ringMid3 (k);
-            %allRingDist3(i,k) = ringDist3(k) this isnt the same length as
-            %all the others
          end 
          
          for k = 1:length(ringDist3)
@@ -156,7 +153,7 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
   
     plot3DistancePawSpread (PI3DistanceSeperation);
     
- plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3)
+    plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
    
    
     [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
@@ -620,9 +617,9 @@ end
 
 
 %% Plot the distal points in 3d space
-function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3)
+function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3)
     
-    for i =1%:length(allIndexDist3(:,1)) %This reprsents the number of trials in given day
+    for i =1:length(allIndexDist3(:,1)) %This reprsents the number of trials in given day
        for j = 1:5 %This represents the number of frames
            
             %Truefalse checks to see if digit points exist 
@@ -642,8 +639,11 @@ function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,
             PM = 0;
             PD = 0;
             
+            PE = 0; % Pellet
             
             
+            
+            allPelletStartPos = allPellet3(:,1);
             
             currentIndexProx = cell2mat(allIndexProx3(i,j));
             currentMiddleProx = cell2mat(allMiddleProx3(i,j));
@@ -661,11 +661,21 @@ function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,
             currentMiddleDist = cell2mat(allMiddleDist3(i,j));
             currentRingDist = cell2mat(allRingDist3(i,j));
             currentPinkyDist = cell2mat(allPinkyDist3(i,j));
+            
+            currentPellet = cell2mat(allPellet3(i,j));
 
      
             figure(j)
+%             xlim([-2000, 2000])
+%             ylim([-2000, 2000])
+%             zlim([-2000, 2000])
             hold on
-                
+            
+                %Pellet Center
+                if size(currentPellet) == [1,3] 
+                    PE = 1;
+                    scatter3(currentPellet(1,1),currentPellet(1,2),currentPellet(1,3),200,'k')
+                end  
             
                 %Index Finger
                 if size(currentIndexProx) == [1,3] 
@@ -739,6 +749,9 @@ function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,
                 %Ring
                 if size(currentRingProx) == [1,3] 
                     RP =1;
+                    currentRingProx(1,1)
+                    currentRingProx(1,2)
+                    currentRingProx(1,3)
                     scatter3(currentRingProx(1,1), currentRingProx(1,2),currentRingProx(1,3),'g');
                 end
                 if size(currentRingMid) == [1,3] 
@@ -880,6 +893,8 @@ function  [avgDistanceIndexDisttoPellet, avgDistanceMiddleDisttoPellet, avgDista
     for i = 1:length(allIndexDist3(:,1))
         for j = 1:5
             
+            
+      
             
             currentPellet = cell2mat(allPelletStartPos(i));
             currentIndex = cell2mat(allIndexDist3(i,j));
