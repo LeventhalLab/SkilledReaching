@@ -8,7 +8,7 @@
 
 %% Master function for calling all the seperate functions written into script
 %Feed in the master 
-function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
+function  [allDistalDistancestoPellet, allSemDistalDistancestoPellet]= analyzeManualTrialData(RatData)
     
     allPawData = [];
     Scores=[RatData.VideoFiles.Score]';
@@ -152,8 +152,8 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
     plot3DistancePawSpread (PI3DistanceSeperation);
    
     
-    plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
-    pawAngle(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
+   % plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
+    pawAngle(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3);
     
    
     [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
@@ -168,7 +168,7 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
     
     
     
-   [distanceIndexDisttoPellet, distanceMiddleDisttoPellet, distanceRingDisttoPellet,distancePinkyDisttoPellet] = calcDistancetoPellet(allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
+   [distanceIndexDisttoPellet,semIndex, distanceMiddleDisttoPellet,semMiddle, distanceRingDisttoPellet,semRing, distancePinkyDisttoPellet,semPinky] = calcDistancetoPellet(allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
     
     allVelocity{1} = indexDistVelocity;
     allVelocity{2} = middleDistVelocity;
@@ -180,7 +180,20 @@ function  [allDistalDistancestoPellet]= analyzeManualTrialData(RatData)
     allDistalDistancestoPellet{2} = distanceMiddleDisttoPellet;
     allDistalDistancestoPellet{3} = distanceRingDisttoPellet;
     allDistalDistancestoPellet{4} = distancePinkyDisttoPellet;
+    
+     
+    allSemDistalDistancestoPellet{1} = semIndex;
+    allSemDistalDistancestoPellet{2} = semMiddle;
+    allSemDistalDistancestoPellet{3} = semRing;
+    allSemDistalDistancestoPellet{4} = semPinky;
+    
+
+    
+   
 end
+
+
+
 
 %% Function to read the data from the rat data array structure into indciudal arrays
 function [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData)
@@ -889,7 +902,7 @@ end
 
 
 %% Calculate the distance of the distal digits to the pellet cetner at is orginal spot
-function  [avgDistanceIndexDisttoPellet, avgDistanceMiddleDisttoPellet, avgDistanceRingDisttoPellet,avgDistancePinkyDisttoPellet] = calcDistancetoPellet(allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3)
+function  [avgDistanceIndexDisttoPellet, semDistanceIndexDisttoPellet, avgDistanceMiddleDisttoPellet,semDistanceMiddleDisttoPellet, avgDistanceRingDisttoPellet,semDistanceRingDisttoPellet, avgDistancePinkyDisttoPellet,semDistancePinkyDisttoPellet] = calcDistancetoPellet(allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3)
  
    allPelletStartPos = allPellet3(:,1);
    
@@ -902,10 +915,7 @@ function  [avgDistanceIndexDisttoPellet, avgDistanceMiddleDisttoPellet, avgDista
 
     for i = 1:length(allIndexDist3(:,1))
         for j = 1:5
-            
-            
-      
-            
+           
             currentPellet = cell2mat(allPelletStartPos(i));
             currentIndex = cell2mat(allIndexDist3(i,j));
             currentMiddle = cell2mat(allMiddleDist3(i,j));
@@ -942,11 +952,20 @@ function  [avgDistanceIndexDisttoPellet, avgDistanceMiddleDisttoPellet, avgDista
     
  %This loop will take the averages of the distal point to pellets over 5 frames
     for i = 1:5
-        avgDistanceIndexDisttoPellet(i) = sum(distanceIndexDisttoPellet(:,i))./ sum(distanceIndexDisttoPellet(:,i)~=0);
-        avgDistanceMiddleDisttoPellet(i) = sum(distanceMiddleDisttoPellet(:,i))./ sum(distanceMiddleDisttoPellet(:,i)~=0);
-        avgDistanceRingDisttoPellet(i) = sum(distanceRingDisttoPellet(:,i))./ sum(distanceRingDisttoPellet(:,i)~=0);
-        avgDistancePinkyDisttoPellet(i) = sum(distancePinkyDisttoPellet(:,i))./ sum(distancePinkyDisttoPellet(:,i)~=0);
+        avgDistanceIndexDisttoPellet(i) = mean(nonzeros(distanceIndexDisttoPellet(:,i)))
+        semDistanceIndexDisttoPellet(i) = std(nonzeros(distanceIndexDisttoPellet))/ sqrt(length(nonzeros(distanceIndexDisttoPellet(:,i))));
+        
+        avgDistanceMiddleDisttoPellet(i) = mean(nonzeros(distanceMiddleDisttoPellet(:,i)));
+        semDistanceMiddleDisttoPellet(i) = std(nonzeros(distanceMiddleDisttoPellet(:,i)))/ sqrt(length(nonzeros(distanceMiddleDisttoPellet(:,i))));
+         
+        avgDistanceRingDisttoPellet(i) = mean(nonzeros(distanceRingDisttoPellet(:,i)));
+        semDistanceRingDisttoPellet(i) = std(nonzeros(distanceRingDisttoPellet(:,i)))/ sqrt(length(nonzeros(distanceRingDisttoPellet(:,i))));
+         
+        avgDistancePinkyDisttoPellet(i) =  mean(nonzeros(distancePinkyDisttoPellet(:,i)));
+        semDistancePinkyDisttoPellet(i) = std(nonzeros(distancePinkyDisttoPellet(:,i)))/ sqrt(nonzeros(length(distancePinkyDisttoPellet(:,i))));
     end
+    
+    
     
 end
 
@@ -956,9 +975,26 @@ end
 function pawAngle(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
 %Establish a horizontal plane that is defined by the bottom surface of the
 %pellet
-for i = 1: length(allPellet3(:,1))
+for i = 1%: length(allPellet3(:,1))
+    figure
+    
+    colors= ['r','b','g','k','c'];
     for j = 1:length(allPellet3(1,:))
-        allPellet3(i,j)
+        currentPelletDist = cell2mat(allPellet3(i,j));
+        currentMiddleDist = cell2mat(allMiddleDist3(i,j));
+        
+        
+    
+        hold on
+        
+          if size(currentMiddleDist) == [1,3] 
+               scatter3(currentMiddleDist(1,1),currentMiddleDist(1,2),currentMiddleDist(1,3),colors(j));
+          end
+          
+          if size(currentPelletDist) == [1,3] 
+               scatter3(currentPelletDist(1,1),currentPelletDist(1,2),currentPelletDist(1,3),200,colors(j));
+          end
+                
         
     end
 end
@@ -969,4 +1005,7 @@ end
 
 
 end
+
+
+
 

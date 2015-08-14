@@ -10,42 +10,50 @@ function sessionKinematicComparison
     N7 = 'R0027Session20140516PawPointFiles.mat';
     
     load(N3)
-    [N3distalDistancetoPellet]= analyzeManualTrialData(RatData);
+    [N3distalDistancetoPellet,N3SemDistalDistancestoPellet]= analyzeManualTrialData(RatData);
     %[N3avgIndexVelocity, N3stdIndexVelocity, N3avgMiddleVelocity, N3stdMiddleVelocity,N3avgRingVelocity, N3stdRingVelocity, N3avgPinkyVelocity, N3stdPinkyVelocity ] = getAverageVelocities(N3Velocities);
     
     
     load(N5)
-    [N5distalDistancetoPellet]= analyzeManualTrialData(RatData);
+    [N5distalDistancetoPellet, N5SemDistalDistancestoPellet]= analyzeManualTrialData(RatData);
     %[N5avgIndexVelocity, N5stdIndexVelocity,N5avgMiddleVelocity, N5stdMiddleVelocity,N5avgRingVelocity, N5stdRingVelocity, N5avgPinkyVelocity, N5stdPinkyVelocity ] = getAverageVelocities(N5Velocities);
     
     
     load(N7)
-    [N7distalDistancetoPellet]= analyzeManualTrialData(RatData)
+    [N7distalDistancetoPellet, N7SemDistalDistancestoPellet]= analyzeManualTrialData(RatData)
     %[N7avgIndexVelocity, N7stdIndexVelocity,N7avgMiddleVelocity, N7stdMiddleVelocity,N7avgRingVelocity, N7stdRingVelocity, N7avgPinkyVelocity, NstdPinkyVelocity ] = getAverageVelocities(N7Velocities);
 
 
     %plotKinematicComparisons(N3avgIndexVelocity, N5avgIndexVelocity, N7avgIndexVelocity,N3stdIndexVelocity,N5stdIndexVelocity, N7stdIndexVelocity)
     
-    plotDistalDistancetoPellet(N3distalDistancetoPellet)
-    plotDistalDistancetoPellet(N5distalDistancetoPellet)
-    plotDistalDistancetoPellet(N7distalDistancetoPellet)
+    plotDistalDistancetoPellet(N3distalDistancetoPellet,N3SemDistalDistancestoPellet)
+    plotDistalDistancetoPellet(N5distalDistancetoPellet,N5SemDistalDistancestoPellet)
+    plotDistalDistancetoPellet(N7distalDistancetoPellet,N7SemDistalDistancestoPellet)
 end
 
 
 
-function plotDistalDistancetoPellet(currentDayDistances)
-        indexVelocities = cell2mat(currentDayDistances(1));  
-        middleVelocities = cell2mat(currentDayDistances(2));
-        ringVelocities =  cell2mat(currentDayDistances(3));
-        pinkyVelocities = cell2mat(currentDayDistances(4));
+function plotDistalDistancetoPellet(currentDayDistances,semCurrentDayDistances)
+        indexDistToPellet = cell2mat(currentDayDistances(1));  
+        middleDistToPellet = cell2mat(currentDayDistances(2));
+        ringDistToPellet =  cell2mat(currentDayDistances(3));
+        pinkyDistToPellet = cell2mat(currentDayDistances(4));
+        
+        indexSemDistToPellet = cell2mat(semCurrentDayDistances(1));  
+        middleSemDistToPellet = cell2mat(semCurrentDayDistances(2));
+        ringSemDistToPellet =  cell2mat(semCurrentDayDistances(3));
+        pinkySemDistToPellet = cell2mat(semCurrentDayDistances(4));
+        
+        
+        
         
         figure
         frames=1:5;
         hold on
-        scatter(frames,indexVelocities,'r')
-        scatter(frames,middleVelocities,'b')
-        scatter(frames,ringVelocities,'g')
-        scatter(frames,pinkyVelocities,'k')
+        errorbar(frames,indexDistToPellet, indexSemDistToPellet,'r')
+        errorbar(frames,middleDistToPellet, middleSemDistToPellet,'b')
+        errorbar(frames,ringDistToPellet,ringSemDistToPellet,'g')
+        errorbar(frames,pinkyDistToPellet,pinkySemDistToPellet,'k')
 
 end
      
