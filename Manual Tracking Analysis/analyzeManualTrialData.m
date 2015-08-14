@@ -8,7 +8,7 @@
 
 %% Master function for calling all the seperate functions written into script
 %Feed in the master 
-function  [allDistalDistancestoPellet, allSemDistalDistancestoPellet]= analyzeManualTrialData(RatData)
+function  [allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3]= analyzeManualTrialData(RatData)
     
     allPawData = [];
     Scores=[RatData.VideoFiles.Score]';
@@ -149,11 +149,11 @@ function  [allDistalDistancestoPellet, allSemDistalDistancestoPellet]= analyzeMa
   
     
     PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3);
-    plot3DistancePawSpread (PI3DistanceSeperation);
+   % plot3DistancePawSpread (PI3DistanceSeperation);
    
     
    % plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
-    pawAngle(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3);
+    [index_x ,index_y, index_z] = XYZanalysis(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3);
     
    
     [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
@@ -972,36 +972,60 @@ end
 
 
 %% Calculate the change in paw angle for the given digits
-function pawAngle(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
-%Establish a horizontal plane that is defined by the bottom surface of the
-%pellet
-for i = 1%: length(allPellet3(:,1))
-    figure
-    
-    colors= ['r','b','g','k','c'];
+function [index_x,index_y,index_z]=XYZanalysis(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
+index_x = [];
+index_y = [];
+index_z = [];
+
+for i = 1:length(allPellet3(:,1))
     for j = 1:length(allPellet3(1,:))
-        currentPelletDist = cell2mat(allPellet3(i,j));
-        currentMiddleDist = cell2mat(allMiddleDist3(i,j));
-        
-        
-    
-        hold on
-        
-          if size(currentMiddleDist) == [1,3] 
-               scatter3(currentMiddleDist(1,1),currentMiddleDist(1,2),currentMiddleDist(1,3),colors(j));
+                      
+          currentIndexDist = cell2mat(allIndexDist3(i,j));
+%           currentMiddleDist = cell3mat(allMiddleDist3(i,j));
+%           currentRingDist = cell2mat(allRingDist3(i,j));
+%           currentPinkyDist = cell2mat(allPinkyDist3(i,j));
+            
+            
+          if size(currentIndexDist) == [1,3] 
+               index_x(i,j)=currentIndexDist(1,1);
+               index_y(i,j)=currentIndexDist(1,2);
+               index_z(i,j)=currentIndexDist(1,3);
           end
-          
-          if size(currentPelletDist) == [1,3] 
-               scatter3(currentPelletDist(1,1),currentPelletDist(1,2),currentPelletDist(1,3),200,colors(j));
-          end
-                
         
+%           if size(currentMiddleDist) == [1,3] 
+%                middle_x(i,j)=currentMiddleDist(1,1);
+%                middle_y(i,j)=currentMiddleDist(1,2);
+%                middle_z(i,j)=currentMiddleDist(1,3);
+%           end
+%           
+%           if size(currentRingDist == [1,3])
+%               ring_x(i,j)= currentRingDist(1,1);
+%               ring_y(i,j)= currentRingDist(1,2);
+%               ring_z(i,j)= currentRingDist(1,3);
+%           end
+%           
+%           if size(currentPinkyDist == [1,3])
+%               pinky_x(i,j)= currentPinkyDist(1,1);
+%               pinky_y(i,j)= currentPinkyDist(1,2);
+%               pinky_z(i,j)= currentPinkyDist(1,3);
+%           end
+%     
     end
 end
 
+for i =1:length(index_x(1,:))
+    avgIndex_x(i) = mean(index_x(:,1));
+    varIndex_x=(i) std(index_x(:,i));
+    
+    avgIndex_y(i) = mean(index_y(:,1));
+    varIndex_y=(i) std(index_y(:,i));
+    
+    avgIndex_z(i) = mean(index_z(:,1));
+    varIndex_z=(i) std(index_z(:,i));
+end
 
-%Calculate the angle of each of the distal points of paw digits toward the
-%pellet
+
+
 
 
 end

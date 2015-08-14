@@ -10,25 +10,25 @@ function sessionKinematicComparison
     N7 = 'R0027Session20140516PawPointFiles.mat';
     
     load(N3)
-    [N3distalDistancetoPellet,N3SemDistalDistancestoPellet]= analyzeManualTrialData(RatData);
+    []= analyzeManualTrialData(RatData);
     %[N3avgIndexVelocity, N3stdIndexVelocity, N3avgMiddleVelocity, N3stdMiddleVelocity,N3avgRingVelocity, N3stdRingVelocity, N3avgPinkyVelocity, N3stdPinkyVelocity ] = getAverageVelocities(N3Velocities);
     
     
     load(N5)
-    [N5distalDistancetoPellet, N5SemDistalDistancestoPellet]= analyzeManualTrialData(RatData);
+    []= analyzeManualTrialData(RatData);
     %[N5avgIndexVelocity, N5stdIndexVelocity,N5avgMiddleVelocity, N5stdMiddleVelocity,N5avgRingVelocity, N5stdRingVelocity, N5avgPinkyVelocity, N5stdPinkyVelocity ] = getAverageVelocities(N5Velocities);
     
     
     load(N7)
-    [N7distalDistancetoPellet, N7SemDistalDistancestoPellet]= analyzeManualTrialData(RatData)
+    []= analyzeManualTrialData(RatData)
     %[N7avgIndexVelocity, N7stdIndexVelocity,N7avgMiddleVelocity, N7stdMiddleVelocity,N7avgRingVelocity, N7stdRingVelocity, N7avgPinkyVelocity, NstdPinkyVelocity ] = getAverageVelocities(N7Velocities);
 
 
     %plotKinematicComparisons(N3avgIndexVelocity, N5avgIndexVelocity, N7avgIndexVelocity,N3stdIndexVelocity,N5stdIndexVelocity, N7stdIndexVelocity)
-    
-    plotDistalDistancetoPellet(N3distalDistancetoPellet,N3SemDistalDistancestoPellet)
-    plotDistalDistancetoPellet(N5distalDistancetoPellet,N5SemDistalDistancestoPellet)
-    plotDistalDistancetoPellet(N7distalDistancetoPellet,N7SemDistalDistancestoPellet)
+%     
+%     plotDistalDistancetoPellet(N3distalDistancetoPellet,N3SemDistalDistancestoPellet)
+%     plotDistalDistancetoPellet(N5distalDistancetoPellet,N5SemDistalDistancestoPellet)
+%     plotDistalDistancetoPellet(N7distalDistancetoPellet,N7SemDistalDistancestoPellet)
 end
 
 
@@ -57,8 +57,6 @@ function plotDistalDistancetoPellet(currentDayDistances,semCurrentDayDistances)
 
 end
      
-      
-      
 function [avgIndexVelocity, stdIndexVelocity,avgMiddleVelocity, stdMiddleVelocity, avgRingVelocity, stdRingVelocity, avgPinkyVelocity, stdPinkyVelocity] = getAverageVelocities(currentDayVelocities)
 
         %Take all the velocities for Day 3
