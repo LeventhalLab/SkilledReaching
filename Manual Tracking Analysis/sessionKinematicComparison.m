@@ -10,17 +10,20 @@ function sessionKinematicComparison
     N7 = 'R0027Session20140516PawPointFiles.mat';
     
     load(N3)
-    []= analyzeManualTrialData(RatData);
+    [n3x,n3y,n3z]= analyzeManualTrialData(RatData);
+    plotXYZanalysis(n3x,n3y,n3z,'r') 
     %[N3avgIndexVelocity, N3stdIndexVelocity, N3avgMiddleVelocity, N3stdMiddleVelocity,N3avgRingVelocity, N3stdRingVelocity, N3avgPinkyVelocity, N3stdPinkyVelocity ] = getAverageVelocities(N3Velocities);
     
     
     load(N5)
-    []= analyzeManualTrialData(RatData);
+    [n5x,n5y,n5z]= analyzeManualTrialData(RatData);
+    plotXYZanalysis(n5x,n5y,n5z,'k') 
     %[N5avgIndexVelocity, N5stdIndexVelocity,N5avgMiddleVelocity, N5stdMiddleVelocity,N5avgRingVelocity, N5stdRingVelocity, N5avgPinkyVelocity, N5stdPinkyVelocity ] = getAverageVelocities(N5Velocities);
     
     
     load(N7)
-    []= analyzeManualTrialData(RatData)
+    [n7x,n7y,n7z]= analyzeManualTrialData(RatData);
+    plotXYZanalysis(n7x,n7y,n7z,'b') 
     %[N7avgIndexVelocity, N7stdIndexVelocity,N7avgMiddleVelocity, N7stdMiddleVelocity,N7avgRingVelocity, N7stdRingVelocity, N7avgPinkyVelocity, NstdPinkyVelocity ] = getAverageVelocities(N7Velocities);
 
 
@@ -32,6 +35,30 @@ function sessionKinematicComparison
 end
 
 
+function plotXYZanalysis(currentDay_x,currentDay_y,currentDay_z,color) 
+    
+    for i =1:length(currentDay_x(1,:))
+
+        avgIndex_x(i) = mean(nonzeros(currentDay_x(:,i)));
+        varIndex_x(i)= std(nonzeros(currentDay_x(:,i)));
+
+        avgIndex_y(i) = mean(nonzeros(currentDay_y(:,i)));
+        varIndex_y(i) = std(nonzeros(currentDay_y(:,i)));
+
+        avgIndex_z(i) = mean(nonzeros(currentDay_z(:,i)));
+        varIndex_z(i) = std(nonzeros(currentDay_z(:,i)));
+    end
+ 
+    hold on
+    
+    frames=1:5;
+    subplot(3,1,1)
+    errorbar(frames,avgIndex_x,varIndex_x,color)
+    subplot(3,1,2)
+    errorbar(frames,avgIndex_y,varIndex_y,color)
+    subplot(3,1,3)
+    errorbar(frames,avgIndex_z,varIndex_z,color)
+end
 
 function plotDistalDistancetoPellet(currentDayDistances,semCurrentDayDistances)
         indexDistToPellet = cell2mat(currentDayDistances(1));  

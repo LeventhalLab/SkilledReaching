@@ -8,7 +8,7 @@
 
 %% Master function for calling all the seperate functions written into script
 %Feed in the master 
-function  [allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3]= analyzeManualTrialData(RatData)
+function  [index_x ,index_y, index_z]= analyzeManualTrialData(RatData)
     
     allPawData = [];
     Scores=[RatData.VideoFiles.Score]';
@@ -153,7 +153,7 @@ function  [allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3]= 
    
     
    % plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
-    [index_x ,index_y, index_z] = XYZanalysis(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3);
+    [index_x ,index_y, index_z] = XYZanalysis(allIndexDist3)%, allMiddleDist3, allRingDist3, allPinkyDist3)
     
    
     [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
@@ -952,7 +952,7 @@ function  [avgDistanceIndexDisttoPellet, semDistanceIndexDisttoPellet, avgDistan
     
  %This loop will take the averages of the distal point to pellets over 5 frames
     for i = 1:5
-        avgDistanceIndexDisttoPellet(i) = mean(nonzeros(distanceIndexDisttoPellet(:,i)))
+        avgDistanceIndexDisttoPellet(i) = mean(nonzeros(distanceIndexDisttoPellet(:,i)));
         semDistanceIndexDisttoPellet(i) = std(nonzeros(distanceIndexDisttoPellet))/ sqrt(length(nonzeros(distanceIndexDisttoPellet(:,i))));
         
         avgDistanceMiddleDisttoPellet(i) = mean(nonzeros(distanceMiddleDisttoPellet(:,i)));
@@ -972,13 +972,13 @@ end
 
 
 %% Calculate the change in paw angle for the given digits
-function [index_x,index_y,index_z]=XYZanalysis(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
+function [index_x,index_y,index_z]=XYZanalysis(allIndexDist3)%, allMiddleDist3, allRingDist3, allPinkyDist3)
 index_x = [];
 index_y = [];
 index_z = [];
 
-for i = 1:length(allPellet3(:,1))
-    for j = 1:length(allPellet3(1,:))
+for i = 1:length(allIndexDist3(:,1))
+    for j = 1:length(allIndexDist3(1,:))
                       
           currentIndexDist = cell2mat(allIndexDist3(i,j));
 %           currentMiddleDist = cell3mat(allMiddleDist3(i,j));
@@ -1012,21 +1012,6 @@ for i = 1:length(allPellet3(:,1))
 %     
     end
 end
-
-for i =1:length(index_x(1,:))
-    avgIndex_x(i) = mean(index_x(:,1));
-    varIndex_x=(i) std(index_x(:,i));
-    
-    avgIndex_y(i) = mean(index_y(:,1));
-    varIndex_y=(i) std(index_y(:,i));
-    
-    avgIndex_z(i) = mean(index_z(:,1));
-    varIndex_z=(i) std(index_z(:,i));
-end
-
-
-
-
 
 end
 

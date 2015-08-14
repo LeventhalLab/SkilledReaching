@@ -89,26 +89,31 @@ catch
     ProcessedDataFolder = strrep(RatSessDir,'-rawdata','-processed');
     uiwait(msgbox('Please select the .csv file with the video scores for this session','modal'));
     [CSVfilename,CSVpath] = uigetfile(fullfile(ProcessedDataFolder,'*.csv'),'Select .csv file with video scores');
-    [nums,txt,raw] = xlsread(fullfile(CSVpath,CSVfilename));
-    [r,c] = size(raw);
+    [nums,txt,raw] = xlsread(fullfile(CSVpath,CSVfilename))
+    [r,c] = size(raw)
     o = 1;
     p = 1;
-    try
-        for n = 1:length(nums)
-            if isnumeric(nums(n,2)) && isnan(nums(n,2))== 0;
-                if (isnumeric(nums(n,3)) && isnan(nums(n,3)) == 0)
-                    RatData(SessNum).VideoFiles(o).ManualStartFrame = nums(n,3);
-                    o = o+1;
-                else
-                    RatData(SessNum).VideoFiles(o).ManualStartFrame = NaN;
-                    o = o+1;
-                end
-                RatData(SessNum).VideoFiles(p).Score = nums(n,2);
-                p = p + 1;
-            end
-        end
-    catch
+    for i=1:length(nums)
+        RatData(SessNum).VideoFiles(i).ManualStartFrame = nums(i,3)
+        RatData(SessNum).VideoFiles(i).Score = nums(i,2)
     end
+    
+%     try
+%         for n = 1:length(nums)
+%             %if isnumeric(nums(n,2)) && isnan(nums(n,2))== 0;
+%                 if (isnumeric(nums(n,3)) && isnan(nums(n,3)) == 0)
+%                     RatData(SessNum).VideoFiles(o).ManualStartFrame = nums(n,3);
+%                     o = o+1
+%                 else
+%                     RatData(SessNum).VideoFiles(o).ManualStartFrame = NaN;
+%                     o = o+1
+%                 end
+%                 RatData(SessNum).VideoFiles(p).Score = nums(n,2)
+%                 p = p + 1
+%            % end
+%         end
+%     catch
+  %  end
     
     
 end
@@ -118,12 +123,12 @@ end
 % the data both locally and to the NAS.
 LocalDataFolderStatus = exist(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName),'file');
 if LocalDataFolderStatus > 0;
-    save(LocalPawPointFilename,'RatData','-v7.3');
+    save(LocalPawPointFilename,'RatData');
 else
     mkdir(fullfile(LocalSaveFolder,'Paw_Point_Marking_Data',RatID,SessionName));
-    save(LocalPawPointFilename,'RatData','-v7.3');
+    save(LocalPawPointFilename,'RatData');
 end
-save(PawPointFilename,'RatData','-v7.3');
+save(PawPointFilename,'RatData');
 
 %% Start marking function. Display dialog box indicating which marker and option for indicating not visible and instructions.
 
@@ -193,10 +198,10 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
         RatData(SessNum).VideoFiles(iVideo).Paw_Points_Tracking_Data = CumMarkedMarkersLocations;
         fprintf('\nMarking data written to RatData file\n');
         fprintf('\nSaving data locally\nPlease wait, this may take some time.\n');
-        save(LocalPawPointFilename,'RatData','-v7.3');        
+        save(LocalPawPointFilename,'RatData');        
         if rem(VideoCount,10) == 0;
             fprintf('\nSaving data to NAS\nPlease wait, this may take some time.\n');
-            save(PawPointFilename,'RatData','-v7.3');
+            save(PawPointFilename,'RatData');
         end
         
     % If video score is not 1, skip it.     
@@ -209,9 +214,9 @@ end
 % quit early, save data locally and to NAS.
 fprintf('\nMarking complete\n');
 fprintf('\nSaving data locally\nPlease wait, this may take some time.\n');
-save(LocalPawPointFilename,'RatData','-v7.3');
+save(LocalPawPointFilename,'RatData');
 fprintf('\nSaving data to NAS\nPlease wait, this may take some time.\n');
-save(PawPointFilename,'RatData','-v7.3');
+save(PawPointFilename,'RatData');
 
 %% Developer Notes:
 % - Don't load videos (using VideoReader) in any loops, takes far too long.
