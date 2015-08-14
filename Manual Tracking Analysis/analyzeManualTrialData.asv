@@ -956,12 +956,7 @@ end
 function pawAngle(allPellet3, allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
 %Establish a horizontal plane that is defined by the bottom surface of the
 %pellet
-for i = 1: length(allPellet3(:,1))
-    for j = 1:length(allPellet3(1,:))
-        allPellet3(i,j)
-        
-    end
-end
+
 
 
 %Calculate the angle of each of the distal points of paw digits toward the
