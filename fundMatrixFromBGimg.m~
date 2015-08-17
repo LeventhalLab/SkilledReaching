@@ -16,6 +16,8 @@ function F = fundMatrixFromBGimg(BGimg, boxMarkers, varargin)
 % get coordinates in a segment of the image, subtract the location of the
 % left/top edge of the subset
 
+% note, this is hard-coded from the session R0030_20140430a. Will need
+% other registration points for different sessions
 
 pointsPerRow = 4;    % for the checkerboard detection
 
@@ -95,11 +97,18 @@ rightMirrorPoints(startMatchPoint:endMatchPoint,:) = right_mirror_cb;
 % note: need to flip the points left to right for the center mirror to make
 % them match up
 
+numRows = size(left_center_cb,1) / pointsPerRow;
+for iRow = 1 : numRows
+    startIdx = (iRow-1)*pointsPerRow + 1;
+    endIdx   = iRow*pointsPerRow;
+    left_center_cb(startIdx:endIdx,:) = left_center_cb(endIdx:-1:startIdx,:);
+    right_center_cb(startIdx:endIdx,:) = right_center_cb(endIdx:-1:startIdx,:);
+end
 
 left_center_points(startMatchPoint:endMatchPoint,:) = left_center_cb;
 right_center_points(startMatchPoint:endMatchPoint,:) = right_center_cb;
 % move coordinates into sub-image components, and flip the mirror images
-% TURNS OUT WE DON'T NEED TO DO THIS; JUST MOVES CAMERAS BY A TRANSLATION
+% TURNS OUT WE DON'T NEED TO DO THIS; JUST MOVES
 % left-right
 % leftMirrorPoints(:,1)    = leftMirrorPoints(:,1) - register_ROI(1,1) + 1;
 % leftMirrorPoints(:,1)    = register_ROI(1,3) - leftMirrorPoints(:,1);
@@ -109,7 +118,7 @@ right_center_points(startMatchPoint:endMatchPoint,:) = right_center_cb;
 % right_center_points(:,1) = right_center_points(:,1) - register_ROI(2,1) + 1;
 
 % calculate the fundamental matrices
-F.left  = estimateFundamentalMatrix(left_center_points,leftMirrorPoints,'method','norm8point');
-F.right = estimateFundamentalMatrix(right_center_points,rightMirrorPoints,'method','norm8point');
+F.left  = estimateFundamentalMatrix(leftMirrorPoints, left_center_points,'method','norm8point');
+F.right = estimateFundamentalMatrix(rightMirrorPoints, right_center_points,'method','norm8point');
 
 end

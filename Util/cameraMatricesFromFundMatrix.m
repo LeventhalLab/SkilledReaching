@@ -67,4 +67,6 @@ P2 = zeros(3,4);
 P2(:,1:3) = e_x * F_side';
 P2(:,4) = epipole;
 
+P1 = P1';P2 = P2';   % matlab turns the camera matrices on their sides compared to most conventions
+
 end

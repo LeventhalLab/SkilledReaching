@@ -51,7 +51,7 @@ hsvBounds_paw   = [];
 maxBeadEcc = 0.8;
 
                
-% BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
+BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
 [boxMarkers.beadLocations, boxMarkers.beadMasks] = identifyBeads(BGimg, ...
                                          'minbeadarea',minBeadArea, ...
                                          'maxbeadarea',maxBeadArea, ...
@@ -85,18 +85,18 @@ BG_rightctr = uint8(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4
 % find the checkerboard points - comment these lines out to make it run
 % faster, put them back in if checkerboard points need to be recalculated****************
 % 
-% [cbLocations.left_mirror_cb, cbLocations.num_left_mirror_cb_rows] = detect_SR_checkerboard(BG_lft);
-% cbLocations.left_mirror_cb(:,1) = cbLocations.left_mirror_cb(:,1) + register_ROI(1,1) - 1;
-% cbLocations.left_mirror_cb(:,2) = cbLocations.left_mirror_cb(:,2) + register_ROI(1,2) - 1;
-% [cbLocations.right_mirror_cb, cbLocations.num_right_mirror_cb_rows] = detect_SR_checkerboard(BG_rgt);
-% cbLocations.right_mirror_cb(:,1) = cbLocations.right_mirror_cb(:,1) + register_ROI(3,1) - 1;
-% cbLocations.right_mirror_cb(:,2) = cbLocations.right_mirror_cb(:,2) + register_ROI(3,2) - 1;
-% [cbLocations.left_center_cb, cbLocations.num_left_center_cb_rows]  = detect_SR_checkerboard(BG_leftctr);
-% cbLocations.left_center_cb(:,1) = cbLocations.left_center_cb(:,1) + register_ROI(2,1) - 1;
-% cbLocations.left_center_cb(:,2) = cbLocations.left_center_cb(:,2) + register_ROI(2,2) - 1;
-% [cbLocations.right_center_cb, cbLocations.num_right_center_cb_rows] = detect_SR_checkerboard(BG_rightctr);
-% cbLocations.right_center_cb(:,1) = cbLocations.right_center_cb(:,1) + round(frame_w/2) - 1;
-% cbLocations.right_center_cb(:,2) = cbLocations.right_center_cb(:,2) + register_ROI(2,2) - 1;
+[cbLocations.left_mirror_cb, cbLocations.num_left_mirror_cb_rows] = detect_SR_checkerboard(BG_lft);
+cbLocations.left_mirror_cb(:,1) = cbLocations.left_mirror_cb(:,1) + register_ROI(1,1) - 1;
+cbLocations.left_mirror_cb(:,2) = cbLocations.left_mirror_cb(:,2) + register_ROI(1,2) - 1;
+[cbLocations.right_mirror_cb, cbLocations.num_right_mirror_cb_rows] = detect_SR_checkerboard(BG_rgt);
+cbLocations.right_mirror_cb(:,1) = cbLocations.right_mirror_cb(:,1) + register_ROI(3,1) - 1;
+cbLocations.right_mirror_cb(:,2) = cbLocations.right_mirror_cb(:,2) + register_ROI(3,2) - 1;
+[cbLocations.left_center_cb, cbLocations.num_left_center_cb_rows]  = detect_SR_checkerboard(BG_leftctr);
+cbLocations.left_center_cb(:,1) = cbLocations.left_center_cb(:,1) + register_ROI(2,1) - 1;
+cbLocations.left_center_cb(:,2) = cbLocations.left_center_cb(:,2) + register_ROI(2,2) - 1;
+[cbLocations.right_center_cb, cbLocations.num_right_center_cb_rows] = detect_SR_checkerboard(BG_rightctr);
+cbLocations.right_center_cb(:,1) = cbLocations.right_center_cb(:,1) + round(frame_w/2) - 1;
+cbLocations.right_center_cb(:,2) = cbLocations.right_center_cb(:,2) + register_ROI(2,2) - 1;
 
 boxMarkers.cbLocations = cbLocations;
 boxMarkers = identifyBoxFront(BGimg, register_ROI, boxMarkers);

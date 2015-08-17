@@ -1,4 +1,4 @@
-function [Ps1, Ps2] = scaleCameraMatrices(boxMarkers, rat_metadata, P1, P2, worldPoints)
+function calculated_wPoints = scaleCameraMatrices(boxMarkers, rat_metadata, P1, P2, worldPoints)
 
 pawPref = lower(rat_metadata.pawPref);
 if iscell(pawPref)
@@ -51,5 +51,7 @@ end
 
 calculated_wPoints = triangulate(centerPoints, mirrorPoints, P1, P2);
 
+% calc_w_h = [calculated_wPoints, ones(size(calculated_wPoints,1),1)];
+% w_h      = [worldPoints, ones(size(worldPoints,1),1)];
 end
     
