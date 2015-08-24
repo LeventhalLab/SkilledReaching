@@ -8,7 +8,7 @@
 
 %% Master function for calling all the seperate functions written into script
 %Feed in the master 
-function  [index_x ,index_y, index_z]= analyzeManualTrialData(RatData)
+function  [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring_z,pinky_x,pinky_y,pinky_z]= analyzeManualTrialData(RatData)
     
     allPawData = [];
     Scores=[RatData.VideoFiles.Score]';
@@ -153,7 +153,8 @@ function  [index_x ,index_y, index_z]= analyzeManualTrialData(RatData)
    
     
    % plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
-    [index_x ,index_y, index_z] = XYZanalysis(allIndexDist3)%, allMiddleDist3, allRingDist3, allPinkyDist3)
+   % [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring_z,pinky_x,pinky_y,pinky_z] = XYZanalysis(allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
+    findCentroid(allPinkyDist3 , allIndexDist3)
     
    
     [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
@@ -971,8 +972,8 @@ end
 
 
 
-%% Calculate the change in paw angle for the given digits
-function [index_x,index_y,index_z]=XYZanalysis(allIndexDist3)%, allMiddleDist3, allRingDist3, allPinkyDist3)
+%% Calculate the change in paw xyz dist in 3d
+function [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring_z,pinky_x,pinky_y,pinky_z]=XYZanalysis(allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
 index_x = [];
 index_y = [];
 index_z = [];
@@ -981,40 +982,80 @@ for i = 1:length(allIndexDist3(:,1))
     for j = 1:length(allIndexDist3(1,:))
                       
           currentIndexDist = cell2mat(allIndexDist3(i,j));
-%           currentMiddleDist = cell3mat(allMiddleDist3(i,j));
-%           currentRingDist = cell2mat(allRingDist3(i,j));
-%           currentPinkyDist = cell2mat(allPinkyDist3(i,j));
+          currentMiddleDist = cell2mat(allMiddleDist3(i,j));
+          currentRingDist = cell2mat(allRingDist3(i,j));
+          currentPinkyDist = cell2mat(allPinkyDist3(i,j));
             
-            
-          if size(currentIndexDist) == [1,3] 
+          if size(currentIndexDist) == [1,3]
                index_x(i,j)=currentIndexDist(1,1);
                index_y(i,j)=currentIndexDist(1,2);
                index_z(i,j)=currentIndexDist(1,3);
           end
+          
+       
         
-%           if size(currentMiddleDist) == [1,3] 
-%                middle_x(i,j)=currentMiddleDist(1,1);
-%                middle_y(i,j)=currentMiddleDist(1,2);
-%                middle_z(i,j)=currentMiddleDist(1,3);
-%           end
-%           
-%           if size(currentRingDist == [1,3])
-%               ring_x(i,j)= currentRingDist(1,1);
-%               ring_y(i,j)= currentRingDist(1,2);
-%               ring_z(i,j)= currentRingDist(1,3);
-%           end
-%           
-%           if size(currentPinkyDist == [1,3])
-%               pinky_x(i,j)= currentPinkyDist(1,1);
-%               pinky_y(i,j)= currentPinkyDist(1,2);
-%               pinky_z(i,j)= currentPinkyDist(1,3);
-%           end
-%     
+          if size(currentMiddleDist) == [1,3] 
+               middle_x(i,j)=currentMiddleDist(1,1);
+               middle_y(i,j)=currentMiddleDist(1,2);
+               middle_z(i,j)=currentMiddleDist(1,3);
+          end
+          
+  
+          if size(currentRingDist) == [1,3]
+              ring_x(i,j)= currentRingDist(1,1);
+              ring_y(i,j)= currentRingDist(1,2);
+              ring_z(i,j)= currentRingDist(1,3);
+          end
+          
+          if size(currentPinkyDist) == [1,3]
+              pinky_x(i,j)= currentPinkyDist(1,1);
+              pinky_y(i,j)= currentPinkyDist(1,2);
+              pinky_z(i,j)= currentPinkyDist(1,3);
+          end
+    
     end
 end
 
 end
 
 
+%% Find the centroid between the a line drawn between the pinky and the thumb and angle
+function findCentroid(allPinkyDist3 , allIndexDist3)
+    colors = ['r','g','b','k','c'];
 
+    for i = 2:length(allPinkyDist3(:,1))
+        for j = 1:5
+            currentPinky = cell2mat(allPinkyDist3(i,j));
+            currentIndex = cell2mat(allIndexDist3(i,j));
+            
+           tfP =  sum(size(currentPinky) == [0 0]);
+           tfI =  sum(size(currentIndex) == [0 0]);
+            
+        
+     
+           
+           
+           if (tfP == 0 && tfI == 0)              
+               %PI3DistanceSeperation(i,j) = sqrt((currentPinky(:,1)-currentIndex(:,1))^2+ (currentPinky(:,2)-currentIndex(:,2))^2 +(currentPinky(:,3)-currentIndex(:,3))^2);
+                x = [currentPinky(1,1),currentIndex(1,1)];
+                y = [currentPinky(1,2),currentIndex(1,2)];
+                z = [-currentPinky(1,3),-currentIndex(1,3)];
+                
+                %line(x,y,z,'color',colors(j))
+                
+                x_cen(j) = (currentPinky(1,1)+currentIndex(1,1))/2;
+                y_cen(j) = (currentPinky(1,2)+currentIndex(1,2))/2;
+                z_cen(j) = -(currentPinky(1,3)+currentIndex(1,3))/2;
+                
+          
+                
+           end
+           
+              figure(1)
+              hold on
+              line(x_cen,y_cen,z_cen)
+           
+         end
+    end
+end
 

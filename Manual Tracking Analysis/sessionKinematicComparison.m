@@ -10,21 +10,53 @@ function sessionKinematicComparison
     N7 = 'R0027Session20140516PawPointFiles.mat';
     
     load(N3)
-    [n3x,n3y,n3z]= analyzeManualTrialData(RatData);
-    plotXYZanalysis(n3x,n3y,n3z,'r') 
+    [index_x3,index_y3,index_z3,middle_x3,middle_y3,middle_z3,ring_x3,ring_y3,ring_z3,pinky_x3,pinky_y3,pinky_z3]= analyzeManualTrialData(RatData);
     %[N3avgIndexVelocity, N3stdIndexVelocity, N3avgMiddleVelocity, N3stdMiddleVelocity,N3avgRingVelocity, N3stdRingVelocity, N3avgPinkyVelocity, N3stdPinkyVelocity ] = getAverageVelocities(N3Velocities);
     
     
     load(N5)
-    [n5x,n5y,n5z]= analyzeManualTrialData(RatData);
-    plotXYZanalysis(n5x,n5y,n5z,'k') 
+    [index_x5,index_y5,index_z5,middle_x5,middle_y5,middle_z5,ring_x5,ring_y5,ring_z5,pinky_x5,pinky_y5,pinky_z5]= analyzeManualTrialData(RatData);
+    
     %[N5avgIndexVelocity, N5stdIndexVelocity,N5avgMiddleVelocity, N5stdMiddleVelocity,N5avgRingVelocity, N5stdRingVelocity, N5avgPinkyVelocity, N5stdPinkyVelocity ] = getAverageVelocities(N5Velocities);
     
     
     load(N7)
-    [n7x,n7y,n7z]= analyzeManualTrialData(RatData);
-    plotXYZanalysis(n7x,n7y,n7z,'b') 
+	[index_x7,index_y7,index_z7,middle_x7,middle_y7,middle_z7,ring_x7,ring_y7,ring_z7,pinky_x7,pinky_y7,pinky_z7]= analyzeManualTrialData(RatData);
+
     %[N7avgIndexVelocity, N7stdIndexVelocity,N7avgMiddleVelocity, N7stdMiddleVelocity,N7avgRingVelocity, N7stdRingVelocity, N7avgPinkyVelocity, NstdPinkyVelocity ] = getAverageVelocities(N7Velocities);
+    
+    
+    
+    
+    
+    
+    figure('Name','Index')
+    plotXYZanalysis(index_x3,index_y3,index_z3,'r') 
+    plotXYZanalysis(index_x5,index_y5,index_z5,'k')
+    plotXYZanalysis(index_x7,index_y7,index_z7,'b') 
+  
+
+    
+    figure('Name','Middle')
+    plotXYZanalysis(middle_x3,middle_y3,middle_z3,'r')
+    plotXYZanalysis(middle_x5,middle_y5,middle_z5,'k')
+    plotXYZanalysis(middle_x7,middle_y7,middle_z7,'b') 
+
+
+    
+    
+    figure('Name','Ring')
+    plotXYZanalysis(ring_x3,ring_y3,ring_z3,'r') 
+    plotXYZanalysis(ring_x5,ring_y5,ring_z5,'k')
+   plotXYZanalysis(ring_x7,ring_y7,ring_z7,'b') 
+
+    
+    figure('Name','Pinky')
+    plotXYZanalysis(pinky_x3,pinky_y3,pinky_z3,'r') 
+    plotXYZanalysis(pinky_x5,pinky_y5,pinky_z5,'k')
+     plotXYZanalysis(pinky_x7,pinky_y7,pinky_z7,'b') 
+  
+
 
 
     %plotKinematicComparisons(N3avgIndexVelocity, N5avgIndexVelocity, N7avgIndexVelocity,N3stdIndexVelocity,N5stdIndexVelocity, N7stdIndexVelocity)
@@ -49,15 +81,38 @@ function plotXYZanalysis(currentDay_x,currentDay_y,currentDay_z,color)
         varIndex_z(i) = std(nonzeros(currentDay_z(:,i)));
     end
  
-    hold on
     
-    frames=1:5;
-    subplot(3,1,1)
-    errorbar(frames,avgIndex_x,varIndex_x,color)
-    subplot(3,1,2)
-    errorbar(frames,avgIndex_y,varIndex_y,color)
-    subplot(3,1,3)
-    errorbar(frames,avgIndex_z,varIndex_z,color)
+        
+        
+        frames=1:5;
+
+        hold on
+        subplot(3,1,1)
+        errorbar(frames,avgIndex_x,varIndex_x,color);
+        xlabel('frames');
+        ylabel('x-pos');
+        ylim([800 1200])
+        
+        hold on
+        subplot(3,1,2)
+        errorbar(frames,avgIndex_y,varIndex_y,color);
+        xlabel('frames');
+        ylabel('y-pos');
+        ylim([400 800])
+        
+        hold on
+        subplot(3,1,3)
+        errorbar(frames,avgIndex_z,varIndex_z,color);
+        xlabel('frames');
+        ylabel('z-pos');
+        ylim([-200 2500])
+        
+     legend('Day 3', 'Day 5', 'Day 7');
+   
+
+
+        
+       
 end
 
 function plotDistalDistancetoPellet(currentDayDistances,semCurrentDayDistances)
@@ -113,8 +168,7 @@ function [avgIndexVelocity, stdIndexVelocity,avgMiddleVelocity, stdMiddleVelocit
         end     
         
 end
-    
-
+ 
 function plotKinematicComparisons(Day3Velocities, Day5Velocities, Day7Velocities, Day3STD, Day5STD,Day7STD)
     frames= 1:4;
     hold on 
