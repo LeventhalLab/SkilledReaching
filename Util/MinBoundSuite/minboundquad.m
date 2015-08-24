@@ -42,6 +42,8 @@ if n~=length(y)
   error('MINBOUNDQUAD:size','x and y must be the same sizes')
 end
 
+warning('off','MATLAB:singularMatrix');
+
 % start out with the convex hull of the points to
 % reduce the problem dramatically. Note that any
 % points in the interior of the convex hull are
@@ -211,6 +213,8 @@ for i = 1:nquads
 %  plot(qx,qy,'b-',qxi,qyi,'r:')
 %  hold off
 end
+
+warning('on','MATLAB:singularMatrix');
 
 % plot the points and the quad
 % plot(xy(:,1),xy(:,2),'r.',qx,qy,'b-')

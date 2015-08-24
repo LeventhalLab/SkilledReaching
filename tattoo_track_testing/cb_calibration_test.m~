@@ -1,0 +1,11 @@
+%%
+cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/calibration images';
+cb_files = dir('rubiks*');
+
+fname = fullfile(cb_path, cb_files(ii).name);
+for ii = 1 : length(cb_files)
+    fname = fullfile(cb_path, cb_files(ii).name);
+    
+    if ii == 1
+        im = imread(fname);
+    else

@@ -26,3 +26,28 @@ reprojection2 = [temp(:,1)./temp(:,3),temp(:,2)./temp(:,3)];
 % coordinates
 
 % world points (camera origin) = (worldpoints(checkerboard origin) * R)) + t
+
+%%
+K = createIntrinsicMatrix();
+K = K';
+worldPoints = generateCheckerboardPoints([5,5],8);worldPoints = fliplr(worldPoints);
+wpts_hom = [worldPoints, ones(16,1)];
+mp = matchBoxMarkers(boxMarkers);
+impts = squeeze(mp(7:end,:,2));
+cparams = cameraParameters('intrinsicmatrix',K);
+[R,t] = extrinsics(impts,worldPoints, cparams);
+[R2,t2] = extrinsics(impts(16:-1:1,:),worldPoints(16:-1:1,:), cparams);
+%%
+cb_pts_cam_coord = wpts_hom * R;
+for ii = 1 : size(cb_pts_cam_coord,1);
+    cb_pts_cam_coord(ii,:) = cb_pts_cam_coord(ii,:) + t;
+end
+cb_pts_cam_coord_hom = [cb_pts_cam_coord,ones(16,1)];
+%%
+P = [R;t]*K;
+P2 = [R2;t]*K;
+wpts3D = [worldPoints,zeros(16,1),ones(16,1)];
+projected_pts_hom = wpts3D * P;
+projected_pts_hom2 = wpts3D * P2;
+projected_pts = [projected_pts_hom(:,1)./projected_pts_hom(:,3),projected_pts_hom(:,2)./projected_pts_hom(:,3)];
+projected_pts2 = [projected_pts_hom2(:,1)./projected_pts_hom2(:,3),projected_pts_hom2(:,2)./projected_pts_hom2(:,3)];

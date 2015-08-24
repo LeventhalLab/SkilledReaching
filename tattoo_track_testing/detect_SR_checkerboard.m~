@@ -40,20 +40,46 @@ gray_I = rgb2gray(I);
 blackSquareMask = gray_I < blackThresh;
 blackSquareMask = isolateSquares(blackSquareMask, squareBlob, minExtent, eccLimits);
 
+% at this point, should have the black squares isolated pretty well
+% now find the white squares that satisfy "squareness" criteria. Note, this
+% may miss some edge white squares because of the ruler shelf they sit on
+whiteSquareMask = gray_I > whiteThresh;
+whiteSquareMask = isolateSquares(whiteSquareMask, squareBlob, minExtent, eccLimits);
+
+% at this point, may have fewer white squares than really exist, but should
+% be enough to help define the minimun quadrilateral bounding the
+% checkerboard
+squareMask = blackSquareMask | whiteSquareMask;
+
 % find the minimum quadrilateral that will bound the black squares
+% first, find the convex hull for each square
+[qx_b,qy_b] = minWholeMaskQuad(blackSquareMask);
+[qx_w,qy_w] = minWholeMaskQuad(whiteSquareMask);
+[qx,qy]     = minWholeMaskQuad(squareMask);
+
 [a,b] = minBlobsQuad(blackSquareMask);
 [c,d] = outline_cb(a,b);
 bordersMask = poly2mask(c,d,size(gray_I,1),size(gray_I,2));
 
-% now, identify white squares, but only those squares within bordersMask
+% now, identify white squares again, but only those squares within quadMask
 whiteSquareMask = gray_I > whiteThresh & bordersMask;
 whiteSquareMask = isolateSquares(whiteSquareMask, squareBlob, minExtent, eccLimits);
 squareMask = whiteSquareMask | blackSquareMask;
 
+[qx,qy] = minBlobsQuad(squareMask);
+for ii = 1 : size(qx,3);
 % find minimum bounding qudrilaterals around each square, and that should
 % give us our checkerboard corners for point matching
-[qx,qy] = minBlobsQuad(squareMask);
-qx = qx(:);qy = qy(:);
+blackSquareProps = regionprops(blackSquareMask,'convexhull');
+whiteSquareProps = regionprops(whiteSquareMask,'convexhull');
+props = [blackSquareProps; whiteSquareProps];
+qx = zeros(length(props) * 5,1);qy = zeros(length(props) * 5,1);
+for ii = 1 : length(props)
+    startIdx = (ii-1)*5 + 1;endIdx = ii*5;
+    [qx(startIdx:endIdx),qy(startIdx:endIdx),~] = ...
+        minboundquad(props(ii).ConvexHull(:,1),props(ii).ConvexHull(:,2));
+end
+% get rid of points that are repeats
 vtx = unique([qx,qy],'rows');
 
 % now find points that really represent the same vertex and average them
