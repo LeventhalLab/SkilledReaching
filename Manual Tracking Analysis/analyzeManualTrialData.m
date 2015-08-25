@@ -40,6 +40,7 @@ function  [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring
     allPawSpreadDistMICenter = [];
     
    for i = 1:length(allPawData)
+       
             pawPointsData = allPawData{1,i};
             [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData);
 
@@ -153,6 +154,7 @@ function  [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring
    
     
    % plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
+
    % [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring_z,pinky_x,pinky_y,pinky_z] = XYZanalysis(allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
     findCentroid(allPinkyDist3 , allIndexDist3)
     
@@ -1021,9 +1023,9 @@ end
 
 %% Find the centroid between the a line drawn between the pinky and the thumb and angle
 function findCentroid(allPinkyDist3 , allIndexDist3)
-    colors = ['r','g','b','k','c'];
+  
 
-    for i = 2:length(allPinkyDist3(:,1))
+    for i = 1:length(allPinkyDist3(:,1))
         for j = 1:5
             currentPinky = cell2mat(allPinkyDist3(i,j));
             currentIndex = cell2mat(allIndexDist3(i,j));
@@ -1041,21 +1043,39 @@ function findCentroid(allPinkyDist3 , allIndexDist3)
                 y = [currentPinky(1,2),currentIndex(1,2)];
                 z = [-currentPinky(1,3),-currentIndex(1,3)];
                 
-                %line(x,y,z,'color',colors(j))
+                
+                
                 
                 x_cen(j) = (currentPinky(1,1)+currentIndex(1,1))/2;
                 y_cen(j) = (currentPinky(1,2)+currentIndex(1,2))/2;
-                z_cen(j) = -(currentPinky(1,3)+currentIndex(1,3))/2;
+                z_cen(j) = (currentPinky(1,3)+currentIndex(1,3))/2;
                 
           
                 
            end
            
-              figure(1)
+        end
+         
+        
+              figure(3)
               hold on
-              line(x_cen,y_cen,z_cen)
-           
-         end
+              
+               
+              for k=1:5
+                  hold on
+                  colors = ['r','g','b','k','c'];
+                  scatter3(x_cen(k),y_cen(k),z_cen(k),  'MarkerFaceColor',colors(k))
+              end
+              
+              %line(x_cen,y_cen,z_cen)
+            
+        
     end
+    
+    
+    
+ 
+              
+
 end
 
