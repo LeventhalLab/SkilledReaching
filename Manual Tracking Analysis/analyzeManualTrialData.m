@@ -153,10 +153,10 @@ function  [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring
    % plot3DistancePawSpread (PI3DistanceSeperation);
    
     
-   % plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
+   plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
 
    % [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring_z,pinky_x,pinky_y,pinky_z] = XYZanalysis(allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
-    findCentroid(allPinkyDist3 , allIndexDist3)
+    findCentroid(allIndexDist3,allMiddleDist3, allRingDist3,allPinkyDist3,allPellet3)
     
    
     [dispIndexDist3D] = calculatePositionChange3D(allIndexDist3);
@@ -523,9 +523,9 @@ function [currentMarker3]= create3Dpoints (currentMarkerLeft, currentMarkerCente
         
         
         if     (tf1 == 0 && tf2 == 0 && tf3 == 0)   
-                currentMarker3{i} = [currentMarkerCenter(i,1), currentMarkerCenter(i,2), currentMarkerLeft(i,1)];  
+                currentMarker3{i} = [currentMarkerCenter(i,1),currentMarkerCenter(i,2),currentMarkerLeft(i,1)-250];  
         elseif (tf1 == 0 && tf2 == 0 && tf4 == 0)    
-                currentMarker3{i} = [currentMarkerCenter(i,1), currentMarkerCenter(i,2), currentMarkerRight(i,1)];  
+                currentMarker3{i} = [currentMarkerCenter(i,1),currentMarkerCenter(i,2),currentMarkerRight(i,1)-1830];  
         else
                 currentMarker3{i} = ['Na','Na','Na' ];
         end
@@ -686,7 +686,8 @@ function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,
             figure(j)
 %             xlim([-2000, 2000])
 %             ylim([-2000, 2000])
-             zlim([-2000, 2000])
+             zlim([-200, 200])
+      
             hold on
             
                 %Pellet Center
@@ -839,7 +840,9 @@ function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,
                     line(x,y,z,'color','k')
                 end
 
-                
+             xlabel('x')
+             ylabel('y')
+             zlabel('z')
                 
             
        end
@@ -1022,55 +1025,96 @@ end
 
 
 %% Find the centroid between the a line drawn between the pinky and the thumb and angle
-function findCentroid(allPinkyDist3 , allIndexDist3)
+function findCentroid(allIndexDist3,allMiddleDist3, allRingDist3,allPinkyDist3,allPellet3)
   
 
     for i = 1:length(allPinkyDist3(:,1))
         for j = 1:5
-            currentPinky = cell2mat(allPinkyDist3(i,j));
+          
             currentIndex = cell2mat(allIndexDist3(i,j));
+            currentMiddle = cell2mat(allMiddleDist3(i,j));
+            currentRing = cell2mat(allRingDist3(i,j));
+            currentPinky = cell2mat(allPinkyDist3(i,j));
             
-           tfP =  sum(size(currentPinky) == [0 0]);
+            currentPellet = cell2mat(allPellet3(i,j));
+            
            tfI =  sum(size(currentIndex) == [0 0]);
-            
+           tfM =  sum(size(currentMiddle) == [0, 0]);
+           tfR =  sum(size(currentRing) == [0,0]);
+           tfP =  sum(size(currentPinky) == [0 0]);
         
-     
+           Ptf =  sum(size(currentPellet) == [0,0]);
            
            
-           if (tfP == 0 && tfI == 0)              
+           if (tfI == 0 && tfP == 0)              
                %PI3DistanceSeperation(i,j) = sqrt((currentPinky(:,1)-currentIndex(:,1))^2+ (currentPinky(:,2)-currentIndex(:,2))^2 +(currentPinky(:,3)-currentIndex(:,3))^2);
                 x = [currentPinky(1,1),currentIndex(1,1)];
                 y = [currentPinky(1,2),currentIndex(1,2)];
-                z = [-currentPinky(1,3),-currentIndex(1,3)];
-                
+                z = [currentPinky(1,3),currentIndex(1,3)];
                 
                 
                 
                 x_cen(j) = (currentPinky(1,1)+currentIndex(1,1))/2;
                 y_cen(j) = (currentPinky(1,2)+currentIndex(1,2))/2;
                 z_cen(j) = (currentPinky(1,3)+currentIndex(1,3))/2;
-                
-          
-                
+
+           end
+           
+           
+           
+%            if (tfI == 0 && tfM == 0 && tfR == 0 && tfP == 0)              
+%                %PI3DistanceSeperation(i,j) = sqrt((currentPinky(:,1)-currentIndex(:,1))^2+ (currentPinky(:,2)-currentIndex(:,2))^2 +(currentPinky(:,3)-currentIndex(:,3))^2);
+%                 x = [currentPinky(1,1),currentIndex(1,1),currentRing(1,1),currentPinky(1,1)];
+%                 y = [currentPinky(1,2),currentIndex(1,2),currentRing(1,2),currentPinky(1,2)];
+%                 z = [currentPinky(1,3),currentIndex(1,3),currentRing(1,3),currentPinky(1,3)];
+%                 
+%                 
+%                 
+%                 x_cen(j) = (currentPinky(1,1)+currentIndex(1,1)+currentMiddle(1,1)+currentRing(1,1))/4;
+%                 y_cen(j) = (currentPinky(1,2)+currentIndex(1,2)+currentMiddle(1,2)+currentRing(1,2))/4;
+%                 z_cen(j) = (currentPinky(1,3)+currentIndex(1,3)+currentMiddle(1,3)+currentRing(1,3))/4;
+% 
+%            end
+%            
+           if (Ptf == 0)
+               pel_x(j) = currentPellet(1,1);
+               pel_y(j) = currentPellet(1,2);
+               pel_z(j) = currentPellet(1,3);
            end
            
         end
          
         
-              figure(3)
+              figure(8)
               hold on
               
-               
+          
               for k=1:5
                   hold on
                   colors = ['r','g','b','k','c'];
+                  
+                      x_cen_all(i,k) = x_cen(k);
+                      y_cen_all(i,k) = y_cen(k);
+                      z_cen_all(i,k) = z_cen(k);
+               
+                 
                   scatter3(x_cen(k),y_cen(k),z_cen(k),  'MarkerFaceColor',colors(k))
+                  %line(x_cen,y_cen,z_cen)
+                  %scatter3(pel_x(k),pel_y(k),pel_z(k), 50)
               end
               
-              %line(x_cen,y_cen,z_cen)
-            
-        
-    end
+%             
+%               for m=1:5
+%                  x_cen_avg(:,m) = mean(nonzeros(x_cen_all(:,i)));
+%                  y_cen_avg = mean(nonzeros(y_cen_all(:,i)));
+%                  z_cen_avg = mean(nonzeros(z_cen_all(:,i)));
+%               end
+              
+%               for i=1:5
+%                 scatter3(x_cen_avg,y_cen_avg,z_cen_avg,  'MarkerFaceColor',colors(i))
+%               end
+%         
+     end
     
     
     
