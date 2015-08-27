@@ -36,6 +36,7 @@ x2 = [x2;ones(1,size(x2,2))];
 
 nx1 = NormalizedCoordinates(x1,k);
 nx2 = NormalizedCoordinates(x2,k);
+x3D = zeros(4,size(x1,2),4);
 for i=1:4
     x3D(:,:,i) = LinearTriangulation(nx1, nx2, rot(:,:,i), t(:,:,i));
     x3D(:,:,i) = HomogeneousCoordinates(x3D(:,:,i),'3D');
@@ -43,6 +44,7 @@ end
 
 correct = 0;
 for i=1:4    
+    sprintf('view %d',i)
     % compute the depth & sum the sign
     depth(i,1) = sum(sign(DepthOfPoints(x3D(:,:,i),eye(3),zeros(3,1)))); %using canonical camera
     depth(i,2) = sum(sign(DepthOfPoints(x3D(:,:,i),rot(:,:,i),t(:,:,i)))); % using the recovered camera

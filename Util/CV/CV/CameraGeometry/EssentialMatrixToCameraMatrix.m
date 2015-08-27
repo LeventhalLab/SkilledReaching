@@ -46,8 +46,8 @@ rot1 = u * w  * v';
 rot2 = u * w' * v';
 
 % Two possibilities:
-t1 = u(:,3) ./max(abs(u(:,3)));
-t2 = -u(:,3) ./max(abs(u(:,3)));
+t1 = u(:,3);% ./max(abs(u(:,3)));
+t2 = -u(:,3);% ./max(abs(u(:,3)));
 
 
 % 4 possible choices of the camera matrix P2 based on the 2 possible

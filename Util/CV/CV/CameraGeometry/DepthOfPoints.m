@@ -30,10 +30,12 @@ function d = DepthOfPoints(x3D,rot,t)
 
 x3D = HomogeneousCoordinates(x3D,'3D');
 
+rnorm = norm(rot(3,:));
+sign_detrot = sign(det(rot));
 for i=1:size(x3D,2)
     w = rot(3,:) * (x3D(1:3,i) - c(1:3,:));
     
-    depth = (sign(det(rot)) * w) / x3D(4,i) * norm(rot(3,:));
+    depth = (sign_detrot * w) / (x3D(4,i) * rnorm);
     
     d(i) = depth(1,1);
 end

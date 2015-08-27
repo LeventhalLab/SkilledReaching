@@ -1,11 +1,20 @@
-function cameraParams = cb_calibration(varargin)
+function [cameraParams, imUsed, estimationErrors] = cb_calibration(varargin)
 
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/calibration images';
+num_rad_coeff = 2;
+est_tan_distortion = false;
+estimateSkew = false;
 
 for iarg = 1 : 2 : nargin
     switch lower(varargin{iarg})
         case 'cb_path',
             cb_path = varargin{iarg + 1};
+        case 'numradialdistortioncoefficients',
+            num_rad_coeff = varargin{iarg + 1};
+        case 'estimatetangentialdistortion',
+            est_tan_distortion = varargin{iarg + 1};
+        case 'estimateskew',
+            estimateSkew = varargin{iarg + 1};
     end
 end
 
@@ -25,4 +34,7 @@ end
 [impts,bs] = detectCheckerboardPoints(im);
 worldPoints = generateCheckerboardPoints(bs,20);
 %%
-[cameraParams,imagesUsed,estimationErrors] = estimateCameraParameters(impts,worldPoints);
+[cameraParams,imUsed,estimationErrors] = estimateCameraParameters(impts,worldPoints,...
+                                                                  'numradialdistortioncoefficients',num_rad_coeff, ...
+                                                                  'estimatetangentialdistortion',est_tan_distortion, ...
+                                                                  'estimateskew',estimateSkew);

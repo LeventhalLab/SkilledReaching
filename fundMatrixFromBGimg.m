@@ -58,34 +58,14 @@ rightMirrorPoints(5:6,:) = boxMarkers.beadLocations.right_mirror_shelf_blue_bead
 
 startMatchPoint= 7;
 
-% below images could be useful for debugging
-% BG_lft = double(BGimg(register_ROI(1,2):register_ROI(1,2) + register_ROI(1,4), ...
-%                      register_ROI(1,1):register_ROI(1,1) + register_ROI(1,3), :));
-% BG_ctr = double(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
-%                      register_ROI(2,1):register_ROI(2,1) + register_ROI(2,3), :));
-% BG_rgt = double(BGimg(register_ROI(3,2):register_ROI(3,2) + register_ROI(3,4), ...
-%                      register_ROI(3,1):register_ROI(3,1) + register_ROI(3,3), :));
-% BG_leftctr  = double(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
-%                     register_ROI(2,1):round(imWidth/2), :));
-% BG_rightctr = double(BGimg(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
-%                     round(imWidth/2):register_ROI(2,1) + register_ROI(2,3), :));
-
-% MATCH THE CHECKERBOARD POINTS
-% find the checkerboards, and map them onto coordinates in the original
-% image
-% left_mirror_cb  = detect_SR_checkerboard(BG_lft);
-% right_mirror_cb = detect_SR_checkerboard(BG_rgt);
-% left_center_cb  = detect_SR_checkerboard(BG_leftctr);
-% right_center_cb = detect_SR_checkerboard(BG_rightctr);
-
 left_mirror_cb(:,1) = boxMarkers.cbLocations.left_mirror_cb(:,1);
-left_mirror_cb(:,2) = boxMarkers.cbLocations.left_mirror_cb(:,2) + register_ROI(1,2) - 1;
+left_mirror_cb(:,2) = boxMarkers.cbLocations.left_mirror_cb(:,2);
 right_mirror_cb(:,1) = boxMarkers.cbLocations.right_mirror_cb(:,1);
-right_mirror_cb(:,2) = boxMarkers.cbLocations.right_mirror_cb(:,2) + register_ROI(3,2) - 1;
+right_mirror_cb(:,2) = boxMarkers.cbLocations.right_mirror_cb(:,2);
 left_center_cb(:,1) = boxMarkers.cbLocations.left_center_cb(:,1);
-left_center_cb(:,2) = boxMarkers.cbLocations.left_center_cb(:,2) + register_ROI(2,2) - 1;
+left_center_cb(:,2) = boxMarkers.cbLocations.left_center_cb(:,2);
 right_center_cb(:,1) = boxMarkers.cbLocations.right_center_cb(:,1);
-right_center_cb(:,2) = boxMarkers.cbLocations.right_center_cb(:,2) + register_ROI(2,2) - 1;
+right_center_cb(:,2) = boxMarkers.cbLocations.right_center_cb(:,2);
 
 % now map the points into the point-matching matrices
 num_cb_points = size(left_mirror_cb, 1);
