@@ -17,7 +17,7 @@ function  [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring
 
     j= 1;
     for i=1:length(Scores)
-        if Scores(i) == 1
+        if Scores(i) == 1 
             tempAllPawData = RatData.VideoFiles(i).Paw_Points_Tracking_Data;
             
             counter = 1; %This is the counter that represents the actual length of filled data
@@ -149,11 +149,11 @@ function  [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring
    
   
     
-    PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3);
-   % plot3DistancePawSpread (PI3DistanceSeperation);
+   PI3DistanceSeperation = calc3DistancePawSpread (allPinkyDist3 , allIndexDist3);
+   plot3DistancePawSpread (PI3DistanceSeperation);
    
     
-   % plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
+   plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,allIndexProx3,allMiddleProx3,allRingProx3,allPinkyProx3,allIndexDist3,allMiddleDist3,allRingDist3,allPinkyDist3,allPellet3);
 
    % [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring_z,pinky_x,pinky_y,pinky_z] = XYZanalysis(allIndexDist3, allMiddleDist3, allRingDist3, allPinkyDist3)
     findCentroid(allPinkyDist3 , allIndexDist3)
@@ -523,9 +523,9 @@ function [currentMarker3]= create3Dpoints (currentMarkerLeft, currentMarkerCente
         
         
         if     (tf1 == 0 && tf2 == 0 && tf3 == 0)   
-                currentMarker3{i} = [currentMarkerCenter(i,1), currentMarkerCenter(i,2), currentMarkerLeft(i,1)];  
+                currentMarker3{i} = [currentMarkerCenter(i,1), currentMarkerCenter(i,2), currentMarkerLeft(i,1)-250];  
         elseif (tf1 == 0 && tf2 == 0 && tf4 == 0)    
-                currentMarker3{i} = [currentMarkerCenter(i,1), currentMarkerCenter(i,2), currentMarkerRight(i,1)];  
+                currentMarker3{i} = [currentMarkerCenter(i,1), currentMarkerCenter(i,2), currentMarkerRight(i,1)-1850];  
         else
                 currentMarker3{i} = ['Na','Na','Na' ];
         end
@@ -602,14 +602,14 @@ end
 
 %% Plot paw 3d seperation changes
 function  plot3DistancePawSpread (PI3DistanceSeperation)
-%     figure(3)
-%     for i=1:length(PI3DistanceSeperation(:,1))
-%         frames = 1:5;
-%         hold on
-%         plot(frames,PI3DistanceSeperation(i,:))
-%     end      
-% 
-%   
+    figure(8)
+    for i=1:length(PI3DistanceSeperation(:,1))
+        frames = 1:5;
+        hold on
+        plot(frames,PI3DistanceSeperation(i,:),'b')
+    end      
+
+  
 end
 
 %% Calculate the change in position for an individual digit
@@ -686,7 +686,7 @@ function  plot3DModelofPaw (allIndexMid3,allMiddleMid3,allRingMid3,allPinkyMid3,
             figure(j)
 %             xlim([-2000, 2000])
 %             ylim([-2000, 2000])
-             zlim([-2000, 2000])
+             zlim([-200, 200])
             hold on
             
                 %Pellet Center
@@ -1057,7 +1057,7 @@ function findCentroid(allPinkyDist3 , allIndexDist3)
         end
          
         
-              figure(3)
+              figure(7)
               hold on
               
                
