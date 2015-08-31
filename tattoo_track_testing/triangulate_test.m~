@@ -132,14 +132,20 @@ projected_pts2 = [projected_pts_hom2(:,1)./projected_pts_hom2(:,3),projected_pts
 for ii = 1 : 4
     figure
     set(gcf,'name',sprintf('view %d',ii))
-    plot3(x3D(1,:,ii),x3D(2,:,ii),x3D(3,:,ii),'marker','*','linestyle','none')
+    plot3(x3D(1,:,ii),x3D(2,:,ii),x3D(3,:,ii),'marker','*','linestyle','none','color','b')
     hold on
-    plot3(cam_pt(1,ii),cam_pt(2,ii),cam_pt(3,ii),'markersize',6,'marker','o','linestyle','none')
+    plot3(x3D(1,1,ii),x3D(2,1,ii),x3D(3,1,ii),'marker','o','linestyle','none','color','b')
+    
+    plot3(cam_pt1(1,:,ii),cam_pt1(2,:,ii),cam_pt1(3,:,ii),'markersize',6,'marker','o')
+    plot3(cam_pt1(1,1,ii),cam_pt1(2,1,ii),cam_pt1(3,1,ii),'markersize',6,'marker','+','color','k')
+    plot3(cam_pt2(1,:,ii),cam_pt2(2,:,ii),cam_pt2(3,:,ii),'markersize',6,'marker','o')
+    plot3(cam_pt2(1,1,ii),cam_pt2(2,1,ii),cam_pt2(3,1,ii),'markersize',6,'marker','+','color','k')
     xlabel('x');ylabel('y');zlabel('z')
 end
 
 %%
-cam_pt = zeros(3,2,4);
+cam_pt1 = zeros(3,2,4);
+cam_pt2 = zeros(3,2,4);
 camAxis = ([0 1 0 0 0 0;
             0 0 0 1 0 0;
             0 0 0 0 0 1]);
@@ -150,3 +156,5 @@ for ii = 1 : 4
     cam_pt1(:,:,ii) = eye(3)'*bsxfun(@minus,camPt,zeros(3,1));
     cam_pt2(:,:,ii) = rot(:,:,ii)'*bsxfun(@minus,camPt,t(:,:,ii));
 end
+
+%%

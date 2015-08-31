@@ -1,0 +1,128 @@
+function boxCalibration = calibrate_sr_box(BGimg, varargin)
+%
+% usage: boxCalibration = calibrate_sr_box(BGimg, varargin)
+%
+% INPUTS:
+%   BGimg - undistorted background image. In future versions, will take
+%       multiple calibration images of the same checkerboard. Currently,
+%       detecting the checkerboards mounted on the box
+%
+% VARARG
+%
+% OUTPUTS:
+%   boxCalibration - structure with the following contents:
+%       .boxMarkers - 
+%       .cameraParams - camera parameters obtained from full screen
+%           checkerboard calibration images
+%       .mp - m x 2 x 4 array containing [x,y] pairs of matched points in each
+%           view. The third dimension is for:
+%               1 - left mirror
+%               2 - direct view, points visible in left mirror
+%               3 - direct view, points visible in right mirror
+%               4 - right mirror
+%       .mp_cb - same as above, but only includes checkerboard points. In
+%           future versions, may add a dimension to include multiple
+%           checkerboard images for the same view pairs
+%       .scale - 2 element vector containing the scale factor to go from 3D
+%           reconstructed camera-normalized coordinates to real world
+%           coordinates (in mm)
+%       .F - structure containing F.left and F.right - the fundamental
+%           matrices going from the direct to mirror views
+%       .P - structure containing camera matrices for the left and right
+%           mirrors (P.left and P.right), assuming the direct view camera
+%           matrix is eye(4,3)
+
+cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
+num_rad_coeff = 2;
+est_tan_distortion = false;
+estimateSkew = false;
+
+for iarg = 1 : 2 : nargin - 
+    switch lower(varargin{iarg})
+        case 'cb_path',
+            cb_path = varargin{iarg + 1};
+    end
+end
+
+[cameraParams, ~, ~] = cb_calibration(...
+                       'cb_path', cb_path, ...
+                       'num_rad_coeff', num_rad_coeff, ...
+                       'est_tan_distortion', est_tan_distortion, ...
+                       'estimateskew', estimateSkew);
+K = cameraParams.IntrinsicMatrix;
+
+BGimg_ud = undistortImage(BGimg, cameraParams);   % accounts for lens distortion
+
+% find the box fidelity markers and assemble matching points matrix
+[boxMarkers_ud.beadLocations, boxMarkers_ud.beadMasks] = identifyBeads(BGimg_ud, ...
+                                         'minbeadarea',minBeadArea, ...
+                                         'maxbeadarea',maxBeadArea, ...
+                                         'hsvbounds',hsvBounds_beads, ...
+                                         'maxeccentricity',maxBeadEcc);
+                                     
+% divide up the image so checkerboards can be detected in each
+% mirror/direct view without interference from other checkerboards
+register_ROI(1,1) = 1; register_ROI(1,2) = 1;   % top left corner of left mirror region of interest
+register_ROI(1,3) = round(min(boxMarkers_ud.beadLocations.center_red_beads(:,1))) - 5;  % right edge, move just to the left to make sure red bead centroids can be included in the center image
+register_ROI(1,4) = size(BGimg_ud,1) - register_ROI(1,2);  % bottom edge
+
+register_ROI(2,1) = register_ROI(1,3) + 2; register_ROI(2,2) = 1;   % top left corner of left mirror region of interest
+register_ROI(2,4) = size(BGimg_ud,1) - register_ROI(2,2);  % bottom edge
+
+register_ROI(3,1) = round(max(boxMarkers_ud.beadLocations.center_green_beads(:,1))) + 5;   % left edge
+register_ROI(3,2) = 1;   % top edge of right mirror region of interest
+register_ROI(3,3) = size(BGimg_ud,2) - register_ROI(3,1);  % right edge, extend to edge of the image
+register_ROI(3,4) = size(BGimg_ud,1) - register_ROI(1,2);  % bottom edge
+register_ROI(2,3) = register_ROI(3,1) - register_ROI(2,1) - 2;  % right edge, move just to the left to make sure green bead centroids can be included in the center image
+
+boxMarkers_ud.register_ROI = register_ROI;
+
+% extract the regions of interest from the parent image
+BG_lft = uint8(BGimg_ud(register_ROI(1,2):register_ROI(1,2) + register_ROI(1,4), ...
+                     register_ROI(1,1):register_ROI(1,1) + register_ROI(1,3), :));
+BG_ctr = uint8(BGimg_ud(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
+                     register_ROI(2,1):register_ROI(2,1) + register_ROI(2,3), :));
+BG_rgt = uint8(BGimg_ud(register_ROI(3,2):register_ROI(3,2) + register_ROI(3,4), ...
+                     register_ROI(3,1):register_ROI(3,1) + register_ROI(3,3), :));
+BG_leftctr  = uint8(BGimg_ud(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
+                    register_ROI(2,1):round(frame_w/2), :));
+BG_rightctr = uint8(BGimg_ud(register_ROI(2,2):register_ROI(2,2) + register_ROI(2,4), ...
+                    round(frame_w/2):register_ROI(2,1) + register_ROI(2,3), :));
+                
+% find the checkerboard points - comment these lines out to make it run
+% faster, put them back in if checkerboard points need to be recalculated****************
+% 
+[cbLocations.left_mirror_cb, ~] = detect_SR_checkerboard(BG_lft);
+cbLocations.left_mirror_cb(:,1) = cbLocations.left_mirror_cb(:,1) + register_ROI(1,1) - 1;
+cbLocations.left_mirror_cb(:,2) = cbLocations.left_mirror_cb(:,2) + register_ROI(1,2) - 1;
+[cbLocations.right_mirror_cb, ~] = detect_SR_checkerboard(BG_rgt);
+cbLocations.right_mirror_cb(:,1) = cbLocations.right_mirror_cb(:,1) + register_ROI(3,1) - 1;
+cbLocations.right_mirror_cb(:,2) = cbLocations.right_mirror_cb(:,2) + register_ROI(3,2) - 1;
+[cbLocations.left_center_cb, ~]  = detect_SR_checkerboard(BG_leftctr);
+cbLocations.left_center_cb(:,1) = cbLocations.left_center_cb(:,1) + register_ROI(2,1) - 1;
+cbLocations.left_center_cb(:,2) = cbLocations.left_center_cb(:,2) + register_ROI(2,2) - 1;
+[cbLocations.right_center_cb, boardSize] = detect_SR_checkerboard(BG_rightctr);
+cbLocations.right_center_cb(:,1) = cbLocations.right_center_cb(:,1) + round(frame_w/2) - 1;
+cbLocations.right_center_cb(:,2) = cbLocations.right_center_cb(:,2) + register_ROI(2,2) - 1;
+
+boxMarkers_ud.cbLocations = cbLocations;
+boxMarkers_ud = identifyBoxFront(BGimg_ud, register_ROI, boxMarkers_ud);
+
+mp = matchBoxMarkers(boxMarkers_ud);    % create matched points matrix
+%   mp - m x 2 x n matrix, where m is the number of points, the
+%       second dimension contains (x,y) coordinates, and n is the number of
+%       views. Assumed that n = 1 --> left mirror, n = 2 --> left direct
+%       view, n = 3 --> right direct view, n = 4 --> right mirror view
+
+mp_cb = mp(7:end,:,:);    % contains only the checkerboard points
+
+[scale,F,P1,P2] = calculate_sr_box_3Dparameters(K,mp_cb,boardSize);
+
+boxCalibration.boxMarkers = boxMarkers_ud;
+boxCalibration.cameraParams = cameraParams;
+boxCalibration.mp = mp;
+boxCalibration.mp_cb = mp_cb;
+boxCalibration.scale = scale;
+boxCalibration.F = F;
+boxCalibration.P.left = P1;
+boxCalibration.P.right = P2;

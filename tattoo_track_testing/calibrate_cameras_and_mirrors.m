@@ -1,4 +1,4 @@
-function [R,t,H,Ri,Ti] = calibrate_cameras_and_mirrors(cb_path, impts, varargin)
+function [R,t] = calibrate_cameras_and_mirrors(cb_path, impts, varargin)
 %
 % usage: 
 %
@@ -16,7 +16,10 @@ function [R,t,H,Ri,Ti] = calibrate_cameras_and_mirrors(cb_path, impts, varargin)
 %       coordinates. Default is 5x5 with 8 mm spacing
 %
 % OUTPUTS:
-%   
+%   R - 3 x 3 x numImages matrix containing rotation matrices for each
+%       checkerboard
+%   t - numImages x 3 matrix containing translation vectors for each
+%       checkerboard
 
 num_rad_coeff = 2;
 est_tan_distortion = false;
@@ -53,6 +56,5 @@ t = zeros(numImages, 3);
 
 for ii = 1 : numImages
     [R(:,:,ii), t(ii,:)] = extrinsicsPlanar_DL(squeeze(impts(:,:,ii)),worldPoints, K);
-    
 end
 

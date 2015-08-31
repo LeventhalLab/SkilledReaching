@@ -33,8 +33,8 @@ imshow(BGimg_ud)
 hold on
 %%
 % calculate epipolar lines based on F
-tpts = mp(:,:,2);
-lines = epipolarLine(F.left, tpts);
+tpts = mp(:,:,3);
+lines = epipolarLine(F.right, tpts);
 
 epipts = lineToBorderPoints(lines,size(BGimg_ud));
 [~,epipole] = isEpipoleInImage(F.left,size(BGimg_ud));
