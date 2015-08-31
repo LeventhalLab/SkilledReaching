@@ -9,6 +9,9 @@ function F = fundMatrix_mirror(x1, x2)
 % INPUTS:
 %   x1 - n x 2 vector containing the points in the direct image
 %   x2 - n x 2 vector containing matching points in the mirror image
+%
+% OUTPUTS:
+%   F - fundamental matrix for the transformation from image 1 to image 2
 
 % construct "A" matrix (constraint matrix), given that the fundamental
 % matrix for the direct camera view and its mirror image is skew symmetric
@@ -16,7 +19,6 @@ function F = fundMatrix_mirror(x1, x2)
 % equation of the fundamental matrix, subject to constraint of skew-symmetry:
 %       x2' * F * x1 = 0
 %
-
 A = zeros(size(x1, 1), 3);
 
 A(:,1) = (x2(:,1).*x1(:,2)-x1(:,1).*x2(:,2));

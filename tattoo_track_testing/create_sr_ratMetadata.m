@@ -17,5 +17,8 @@ num_parameters = length(sr_parameters);
 for ii = 1 : num_parameters
     
     rat_metadata.(sr_parameters{ii}) = sr_summary.(sr_parameters{ii})(rat_idx);
+    if iscell(rat_metadata.(sr_parameters{ii}))
+        rat_metadata.(sr_parameters{ii}) = rat_metadata.(sr_parameters{ii}){1};
+    end
     
 end
