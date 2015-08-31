@@ -1,18 +1,19 @@
-function [validOverlap, overlapFract] = checkDigitOverlap_fromSide(viewMask, F, varargin)
+function [validOverlap, overlapFract] = checkDigitOverlap_fromSide(viewMask, F, overlap_bbox, imSize, varargin)
 
 % viewMask{1} contains masked images in the mirror view
 % viewMask{2} contains masked images in the direct view
-% F is the fundamental matrix going from mirror view to center view
+% F is the fundamental matrix going from center view to mirror view
 
 minOverlap = 0.3;   % amount that each digit in the mirror view must overlap with the direct view
 
-for iarg = 1 : 2 : nargin - 2
+for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
         case 'minoverlap',
             minOverlap = varargin{iarg + 1};
     end
 end
 
+F = F';   % now F goes from mirror view to center view
 numObjects = size(viewMask{1},3);
 validOverlap = false(numObjects, 1);
 overlapFract = zeros(numObjects, 1);
@@ -28,8 +29,11 @@ for ii = 1 : numObjects
     
     mirror_ext = bwmorph(viewMask{1}(:,:,ii),'remove');
     [y,x] = find(mirror_ext);
+    y = y + overlap_bbox(1,2)-1;    % move coordinates into the full image from just the bounding box
+    x = x + overlap_bbox(1,1)-1;
+
     epiLines = epipolarLine(F, [x,y]);
-    epi_pts = lineToBorderPoints(epiLines, [size(viewMask{2},1),size(viewMask{2},2)]);
+    epi_pts = lineToBorderPoints(epiLines, imSize);
     
     % find extreme coordinates on each side of the image
     % find the highest edge point on each side
@@ -58,7 +62,9 @@ for ii = 1 : numObjects
     extreme_x(4) = epi_pts(idx,3);
     extreme_y(4) = epi_pts(idx,4);
                 
-    projMask = poly2mask(extreme_x,extreme_y,size(viewMask{2},1),size(viewMask{2},2));
+    projMask = poly2mask(extreme_x,extreme_y,imSize(1),imSize(2));
+    projMask = projMask(overlap_bbox(2,2) : overlap_bbox(2,2) + overlap_bbox(2,4), ...
+                        overlap_bbox(2,1) : overlap_bbox(2,1) + overlap_bbox(2,3));
     
     projectionOverlap = projMask & viewMask{2}(:,:,ii);
     

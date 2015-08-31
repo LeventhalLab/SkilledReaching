@@ -1,4 +1,4 @@
-function triggerTime = identifyTriggerTime( video, rat_metadata, boxMarkers, varargin )
+function triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCalibration, varargin )
 %
 % INPUTS:
 %   video - a VideoReader object for the relevant video
@@ -10,10 +10,7 @@ function triggerTime = identifyTriggerTime( video, rat_metadata, boxMarkers, var
 %       calculate the background
 %
 % OUTPUTS:
-%   triggerFrame - the frame at which the paw is fully through the slot
-tic
-numBGframes = 50;
-BGimg = [];
+%   triggerTime - the time at which the paw is fully through the slot
 
 h = video.Height;
 w = video.Width;
@@ -22,12 +19,10 @@ foregroundThresh = 45/255;
 pawGrayLevels = [60 125] / 255;
 pixCountThresh = 2000;
 
-for iarg = 1 : 2 : nargin - 3
+numBGframes = 50;    % don't look for the paw too early
+
+for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
-        case 'numbgframes',
-            numBGframes = varargin{iarg + 1};
-        case 'bgimg',
-            BGimg = varargin{iarg + 1};
         case 'pawgraylevels',
             pawGrayLevels = varargin{iarg + 1};
         case 'pixelcountthreshold',
@@ -37,14 +32,12 @@ for iarg = 1 : 2 : nargin - 3
     end
 end
 
-if isempty(BGimg)
-    BGimg = extractBGimg( video, 'numbgframes', numBGframes);
-end
-S = whos('BGimg');
-if strcmpi(S.class,'uint8')
-    BGimg = double(BGimg) / 255;
-end
+boxMarkers = boxCalibration.boxMarkers;
 
+S = whos('BGimg_ud');
+if strcmpi(S.class,'uint8')
+    BGimg_ud = double(BGimg_ud) / 255;
+end
 
 vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
@@ -55,7 +48,6 @@ pawPref = lower(rat_metadata.pawPref);
 if iscell(pawPref)
     pawPref = pawPref{1};
 end
-
 
 [mirrorMask,~] = reach_region_mask(boxMarkers, [h,w]);   % mask for region between shelf and checkerboards
 rightHalfMask = false(h,w);
@@ -69,7 +61,7 @@ end
 s = regionprops(mirrorMask, 'BoundingBox');
 reach_bbox = round(s.BoundingBox);
 
-BGimg = BGimg(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
+BGimg_ud = BGimg_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
               reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
 % identify the frames where the paw is visible over the shelf
 pawPixelCount = 0;
@@ -77,17 +69,20 @@ pawPixelCount = 0;
 while pawPixelCount < pixCountThresh
     image = readFrame(video);
     
-    image = image(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
-                  reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
-    image = double(image) / 255;
+    % undistort image
+    image_ud = undistortImage(image, boxCalibration.cameraParams);
     
-    BGdiff = imabsdiff(image, BGimg);
+    image_ud = image_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
+                  reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
+    image_ud = double(image_ud) / 255;
+    
+    BGdiff = imabsdiff(image_ud, BGimg_ud);
     
     BGdiff_gray = mean(BGdiff, 3);
     BG_masked = (BGdiff_gray > foregroundThresh);
     
-    fg_image = repmat(double(BG_masked),1,1,3) .* image;
-    fg_grey = mean(fg_image,3);
+    fg_image_ud = repmat(double(BG_masked),1,1,3) .* image_ud;
+    fg_grey = mean(fg_image_ud,3);
     
     BG_masked = (fg_grey > pawGrayLevels(1) & ...
                  fg_grey < pawGrayLevels(2));
