@@ -20,6 +20,7 @@
 % 3.) Normalize the points to homogeneous points
 % 4.) Shoot into triangulate_DL.
 
+<<<<<<< HEAD
 function   [points3d,reprojectedPoints,errors]= ConvertMarkedPointsToRealWorld
     load('cameraParameters.mat');
     
@@ -49,6 +50,18 @@ function   [points3d,reprojectedPoints,errors]= ConvertMarkedPointsToRealWorld
     x1_hom = [x1, ones(size(x1,1),1)]';
     x2_hom = [x2, ones(size(x2,1),1)]';
 
+=======
+function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x1,x2)
+    load('cameraParameters.mat');
+
+    %Undistort the points
+    x1 = undistortPoints(x1,cameraParams);
+    x2 = undistortPoints(x2,cameraParams);
+    
+    %Create homogenous  verions of the points
+    x1_hom = [x1, ones(size(x1,1),1)]';
+    x2_hom = [x2, ones(size(x2,1),1)]';
+>>>>>>> origin/master
     
     %Grab the intrsic matrix
     k = cameraParams.IntrinsicMatrix;
@@ -73,7 +86,10 @@ function   [points3d,reprojectedPoints,errors]= ConvertMarkedPointsToRealWorld
      
      %Use the triangulation function 
     [points3d,reprojectedPoints,errors] = triangulate_DL(x1, x2, P1, P2)
+<<<<<<< HEAD
     
+=======
+>>>>>>> origin/master
 
 end
 

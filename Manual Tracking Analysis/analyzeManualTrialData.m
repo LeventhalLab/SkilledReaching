@@ -195,9 +195,6 @@ function  [index_x,index_y,index_z,middle_x,middle_y,middle_z,ring_x,ring_y,ring
    
 end
 
-
-
-
 %% Function to read the data from the rat data array structure into indciudal arrays
 function [pelletCenter, pawBackCenter, thumbProx, thumbDist, indexProx, indexMid, indexDist, middleProx, middleMid, middleDist, ringProx, ringMid, ringDist, pinkyProx, pinkyMid, pinkyDist] = readDataFromPawPoints (pawPointsData)
 
@@ -227,7 +224,7 @@ pinkyDist = [];
 
 
 
-overallCounter = 1;
+    overallCounter = 1;
 
     for i=1:5
         for j=1:3
