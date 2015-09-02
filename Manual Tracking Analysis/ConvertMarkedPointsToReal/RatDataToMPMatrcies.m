@@ -17,7 +17,7 @@ function  [X1,X2] = RatDataToMPMatrcies(RatData)
     end
 
     
-   for i =1%:length(allLeft)
+   for i =1:5%length(allLeft)
        trialLeft = allLeft{1,i};
        trialCenter = allCenter{1,i};
        for j = 1:5
