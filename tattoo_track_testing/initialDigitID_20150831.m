@@ -1,15 +1,17 @@
-function viewMask = initialDigitID_20150831(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, varargin)
+function [viewMask, mask_bbox, refImageTime] = initialDigitID_20150831(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, varargin)
 %
 % usage
 %
 % function to find the initial location of the paw and digits in an image
-% with a clear view of the paw in the mirrors and direct view
+% with a clear view of the paw in the mirrors and direct view. It will
+% continue to look for an image where all the digits are clearly visible in
+% both views until it finds one.
 %
 % INPUTS:
 %   video - videoReader object
 %   triggerTime - time (in seconds) at which a substantial portion of the
 %       paw appears in the mirror view
-%   BGimg_ud - 
+%   BGimg_ud - undistorted background image
 %   pawMask - mask of the paw in the appropriate mirror (logical matrix)
 %   rat_metadata - needed to know whether to look to the left or right of
 %       the dorsal aspect of the paw to exclude points that can't be digits
@@ -17,9 +19,15 @@ function viewMask = initialDigitID_20150831(video, triggerTime, BGimg_ud, rat_me
 % VARARGS:
 %
 % OUTPUTS:
-%   maskedPaw - m x n x 5 matrix, where each m x n matrix contains a mask
-%       for a part of the paw. 1st row - dorsum of paw, 2nd through 5th
-%       rows are each digit from index finger to pinky
+%   viewMask - cell array. viewMask{1} for the left mirror, viewMask{2} is
+%       the direct view, viewMask{3} is the right mirror. These are binary
+%       masks the size of the bounding box around the initial paw masking
+%   mask_bbox - 3 x 4 matrix, where each row contains the bounding box for
+%       each viewMask. Format of each row is [x,y,w,h], where x,y is the
+%       upper left corner of the bounding box, and w and h are the width
+%       and height, respectively
+%   refImageTime - the time in the video at which the reference image was
+%       taken
 
 % NEED TO ADJUST THE VALUES TO ENHANCE THE DESIRED PAW BITS
 decorrStretchMean  = cell(1,3);
@@ -149,8 +157,11 @@ if iscell(pawPref)
     pawPref = pawPref{1};
 end
 
-minSideOverlap = 0.3;   % mirror image projection into the direct view must
+minSideOverlap = 0.6;   % mirror image projection into the direct view must
                         % overlap by this much to be counted
+                        
+numViews = 3;
+
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
         case 'diffthreshold',
@@ -170,6 +181,10 @@ for iarg = 1 : 2 : nargin - 5
             
             % NEED TO CLEAN UP THE REST OF THE VARARGINS...
     end
+end
+
+if diff_threshold > 1
+    diff_threshold = diff_threshold / 255;
 end
 
 S = whos('BGimg_ud');
@@ -198,8 +213,10 @@ digitMissing = true;
 
 numObjects = size(decorrStretchMean{1}, 1);
 numFramesChecked = 0;
+
+blueBeadMask = boxMarkers.beadMasks(:,:,3);
 while digitMissing
-%     numFramesChecked = numFramesChecked  + 1
+    numFramesChecked = numFramesChecked  + 1;
     
     image = readFrame(video);
     image_ud = undistortImage(image, boxCalibration.cameraParams);
@@ -238,8 +255,8 @@ while digitMissing
 
     mirrorMask = leftMirrorPawMask | rightMirrorPawMask;
     
-    leftProjMask  = pawProjectionMask(leftMirrorPawMask, F.left, [h,w]);
-    rightProjMask = pawProjectionMask(rightMirrorPawMask, F.right, [h,w]);
+    leftProjMask  = pawProjectionMask(leftMirrorPawMask, F.left', [h,w]);
+    rightProjMask = pawProjectionMask(rightMirrorPawMask, F.right', [h,w]);
 
     projMask = (leftProjMask & rightProjMask);
     projMask = imdilate(projMask,strel('disk',10));
@@ -270,26 +287,47 @@ while digitMissing
 
     BG_mask = mirrorMask | centerMask;
 
-    masked_hsv_enh = cell(1,3);
-    dMask = cell(1,3);
-    for iView = 1 : 3
+    masked_hsv_enh = cell(numViews,1);
+    dMask = cell(numViews,1);
+    mask_bbox = zeros(numViews,4);
+    for iView = 1 : numViews
+            
+        switch iView
+            case 1,
+                mask = (leftMask & ~center_region_mask) & BG_mask;
+            case 2,
+                mask = center_region_mask & BG_mask;
+            case 3,
+                mask = (~leftMask & ~center_region_mask) & BG_mask;
+        end
+        mask = mask & BG_mask;
+        % find the bounding box for the current region
+        S = regionprops(mask, 'boundingbox');
+        mask_bbox(iView,:) = floor(S.BoundingBox) - 10;
+        mask_bbox(iView,3:4) = mask_bbox(iView,3:4) + 30;
+        
         if iView == pMirrorIdx; continue; end    % don't bother with the palmar view
         
-        masked_hsv_enh{iView} = zeros(numObjects,h,w,3);
-        region_img = image_ud(register_ROI(iView,2):register_ROI(iView,2) + register_ROI(iView,4), ...
-                           register_ROI(iView,1):register_ROI(iView,1) + register_ROI(iView,3), :);
-                                  
-        mask = BG_mask(register_ROI(iView,2):register_ROI(iView,2) + register_ROI(iView,4), ...
-                       register_ROI(iView,1):register_ROI(iView,1) + register_ROI(iView,3));
+        mask = mask(mask_bbox(iView,2):mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                    mask_bbox(iView,1):mask_bbox(iView,1) + mask_bbox(iView,3));
         rgbMask = double(repmat(mask,1,1,3));
-        dMask{iView} = false(size(region_img,1),size(region_img,2),numObjects);
+
+        masked_hsv_enh{iView} = zeros(mask_bbox(iView,4)+1, ...
+                                      mask_bbox(iView,3)+1, ...
+                                      3, numObjects);
+        dMask{iView} = false(mask_bbox(iView,4)+1, ...
+                             mask_bbox(iView,3)+1, ...
+                             numObjects);
         for ii = 1 : numObjects
-            rgb_enh = enhanceColorImage(region_img, ...
+            im_bbox = image_ud(mask_bbox(iView,2):mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                               mask_bbox(iView,1):mask_bbox(iView,1) + mask_bbox(iView,3),:);
+            rgb_enh = enhanceColorImage(im_bbox, ...
                                         decorrStretchMean{iView}(ii,:), ...
                                         decorrStretchSigma{iView}(ii,:), ...
                                         'mask',mask);
 %                                     figure(1);imshow(rgb_enh);figure(2);imshow(rgb2hsv(rgb_enh));
-            masked_hsv_enh{iView}(ii,:,:,:) = rgb2hsv(rgbMask .* rgb_enh);
+
+            masked_hsv_enh{iView}(:,:,:,ii) = rgb2hsv(rgbMask .* rgb_enh);
         end
     end
 
@@ -307,27 +345,25 @@ while digitMissing
                 colorIdx = 3;
             case 'darkgreen',
                 colorIdx = 4;
-
         end
         sameColIdx = find(strcmp(colorList{ii},colorList));
         numSameColorObjects(ii) = length(sameColIdx);
 
-        for iView = 1 : 3
+        for iView = 1 : numViews
             if iView == pMirrorIdx; continue; end    % don't bother with the palmar view
            
-            blueBeadMask = boxMarkers.beadMasks(register_ROI(iView,2) : register_ROI(iView,2) + register_ROI(iView,4), ...
-                                                register_ROI(iView,1) : register_ROI(iView,1) + register_ROI(iView,3), 3);
             if any(sameColIdx < ii)   % if mask already computed for a color, use the previous mask
                 lastColIdx = max(sameColIdx(sameColIdx < ii));
-                tempMask = dMask{iView}(:,:,lastColIdx);
+                tempMask = squeeze(dMask{iView}(:,:,lastColIdx));
             else
-                          
-                tempMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(ii,:,:,:)), ...
+                tempMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(:,:,:,ii)), ...
                                         [hueLimits(colorIdx,:), satLimits(ii,:), valLimits(ii,:)]);
 
                 regMask = projMask | mirrorMask;
-                regMask = regMask(register_ROI(iView,2) : register_ROI(iView,2) + register_ROI(iView,4), ...
-                                  register_ROI(iView,1) : register_ROI(iView,1) + register_ROI(iView,3));
+%                 regMask = regMask(register_ROI(iView,2) : register_ROI(iView,2) + register_ROI(iView,4), ...
+%                                   register_ROI(iView,1) : register_ROI(iView,1) + register_ROI(iView,3));
+                regMask = regMask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                                  mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
                 tempMask = tempMask & regMask;
 
                 if ~any(tempMask(:))
@@ -336,9 +372,11 @@ while digitMissing
                 end
                 
                 if strcmpi(colorList{ii},'blue')
+                    bbox_blueBeadMask = blueBeadMask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                                                     mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
                     % eliminate any identified blue regions that overlap with blue
                     % beads
-                    tempMask = tempMask & ~blueBeadMask;% squeeze(boxMarkers.beadMasks(:,:,3));
+                    tempMask = tempMask & ~bbox_blueBeadMask;% squeeze(boxMarkers.beadMasks(:,:,3));
                 end
 
                 tempMask = imopen(tempMask, SE);
@@ -392,16 +430,13 @@ while digitMissing
         continue   % go back and try the next video frame
     end
 
-    fullDigitMask = cell(1,3);   % mask for all objects (digits) found in each view
-    viewMask = cell(1,3);        % mask for each individual object (digit) found in each view
-
-    for iView = 1 : 3
+    fullDigitMask = cell(numViews,1);
+    viewMask = cell(numViews,1);
+    for iView = 1 : numViews
         if iView == pMirrorIdx; continue; end    % don't bother with the palmar view
         
-        fullDigitMask{iView} = false(register_ROI(iView,4)+1, ...
-                                     register_ROI(iView,3)+1);
-        viewMask{iView} = false(register_ROI(iView,4)+1, ...
-                                register_ROI(iView,3)+1, numObjects);
+        fullDigitMask{iView} = false(mask_bbox(iView,4)+1,mask_bbox(iView,3)+1);
+        viewMask{iView} = false(mask_bbox(iView,4)+1,mask_bbox(iView,3) + 1,numObjects+1);
         
         for ii = 2 : numObjects
             tempMask = imerode(dMask{iView}(:,:,ii),strel('disk',1));
@@ -491,7 +526,7 @@ while digitMissing
                 colorIdx = 4;
         end
     
-        pdMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(1,:,:,:)), ...
+        pdMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(:,:,:,1)), ...
                               [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)]);   % with the current (201507) tattoo regimen, best mask for paw dorsum is the grayscale
         if ~any(pdMask(:))
             isDigitVisible(1,iView) = false;
@@ -539,11 +574,26 @@ while digitMissing
     overlapCheckMask = cell(1,2);
     overlapCheckMask{1} = viewMask{dMirrorIdx};
     overlapCheckMask{2} = viewMask{2};
+    overlap_bbox = zeros(2, 4);
+    overlap_bbox(1,:) = mask_bbox(dMirrorIdx,:);
+    overlap_bbox(2,:) = mask_bbox(2,:);
 
-    [validOverlap, overlapFract] = checkDigitOverlap_fromSide(overlapCheckMask, F_side, ...
+    [validOverlap, overlapFract] = checkDigitOverlap_fromSide(overlapCheckMask, ...
+                                                              F_side, ...
+                                                              overlap_bbox, ...
+                                                              [h,w], ...
                                                               'minoverlap', minSideOverlap);
+% CONSIDER ADDING ANOTHER CRITERION THAT THE REPROJECTION ERRORS OF THE
+% REGION CENTROIDS HAVE TO BE LESS THAN SOME THRESHOLD
     if all(validOverlap)
         digitMissing = false;
     end
         
 end    % while digitMissing
+
+refImageTime = video.CurrentTime - 1/video.FrameRate;
+
+for iView = 1 : 3
+    viewMask{iView}(:,:,6) = BG_mask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                                     mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
+end

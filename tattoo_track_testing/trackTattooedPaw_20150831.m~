@@ -40,6 +40,12 @@ function [digitMirrorMask_dorsum,digitCenterMask] = ...
 % might be able to set the ROI automatically based on automatic detection
 % of the box edges
 
+% ROI_to_find_trigger_frame = [0210         0590         0050         0070
+%                              1740         0560         0050         0070];
+gray_paw_limits = [60 125];
+BGimg = [];
+decorrStretchMean  = [100.5 127.5 100.5];
+decorrStretchSigma = [025 050 025];
 
 diff_threshold = 45;
 extentLimit = 0.5;
@@ -62,20 +68,16 @@ for iarg = 1 : 2 : nargin - 4
     end
 end
 
-if isempty(BGimg)
-    BGimg = extractBGimg( video, 'numbgframes', numBGframes);
+BGimg_info = whos('BGimg_ud');
+if strcmpi(BGimg_info.class,'uint8')
+    BGimg_ud = double(BGimg_ud) / 255;
 end
-BGimg = double(BGimg) / 255;
-% put the line below back in when done debugging
-% [triggerFrame, peakFrame]= identifyTriggerFrame( video, rat_metadata.pawPref, ...
-%                                                   'bgimg', BGimg, ...
-%                                                   'trigger_roi',ROI_to_find_trigger_frame,...
-%                                                   'grylimits',gray_paw_limits);
+
 triggerFrame = 511;peakFrame = 532;   % hard code to speed up analysis % peak should be 532
 preReachFrame = triggerFrame - 25;
 % find a mask for the paw in the lateral, central, and right mirrors for
 % the peak frame
-triggerTime = identifyTriggerTime( video, rat_metadata, boxMarkers);
+triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCalibration);
 
 % im_trigger = read(video,triggerFrame);
 % im_peak = read(video,peakFrame);
@@ -90,12 +92,7 @@ triggerTime = identifyTriggerTime( video, rat_metadata, boxMarkers);
 %     end
 % end
 % imDiff = imabsdiff(im_preReach,im_peak);
-digitMasks = initialDigitID(video, triggerTime, BGimg, rat_metadata, boxMarkers);
-
-[P1, P2] = cameraMatricesFromFundMatrix(boxMarkers, rat_metadata);
-% NOW NEED TO CALIBRATE THE CAMERA MATRICES BASED ON THE CHECKERBOARD
-% POINTS
-
+[digitMasks, mask_bbox] = initialDigitID_20150831(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration);
 
 fundmat = zeros(2,3,3);
 fundmat(1,:,:) = F.left;

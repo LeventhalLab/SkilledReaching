@@ -3,7 +3,10 @@ function [points3d,reprojectedPoints,errors] = triangulate_DL(mp1, mp2, P1, P2, 
 % modified from matlab's computer vision toolbox to perform nonlinear
 % optimization of reprojection errors after initial closed form solutions
 % are found
-
+%
+% INPUTS:
+%   mp1 and mp2 are the matched points in the two views. m x 2 matrices
+%       where m is the number of points
 refine_estimates = true;
 
 for iarg = 1 : 2 : nargin - 4

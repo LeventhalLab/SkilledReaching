@@ -13,27 +13,40 @@ function mask = pawProjectionMask(mirrorMask, fundmat, imSize)
 %    mask - mask showing region in which projection from the mirror could
 %       exist in the direct view
 
-[mirrorMaskRows,mirrorMaskCols] = find(squeeze(mirrorMask));
-mirrorBotIdx = find(mirrorMaskRows == max(mirrorMaskRows),1);
-mirrorTopIdx = find(mirrorMaskRows == min(mirrorMaskRows),1);
-mirrorBottom = [mirrorMaskCols(mirrorBotIdx), mirrorMaskRows(mirrorBotIdx)];
-mirrorTop    = [mirrorMaskCols(mirrorTopIdx), mirrorMaskRows(mirrorTopIdx)];
+mirror_ext = bwmorph(mirrorMask,'remove');
+[y,x] = find(mirror_ext);
 
-lines = epipolarLine(fundmat, [mirrorTop;mirrorBottom]);
-pts   = lineToBorderPoints(lines, imSize);
+epiLines = epipolarLine(fundmat, [x,y]);
+epi_pts = lineToBorderPoints(epiLines, imSize);
 
-polyCorners = zeros(size(pts,1)*2,2);
-for ii = 1 : size(pts, 1)
-    polyCorners(2*ii-1,:) = pts(ii,1:2);
-    polyCorners(2*ii,:)   = pts(ii,3:4);
-end
+% find extreme coordinates on each side of the image
+% find the highest edge point on each side
+extreme_x = zeros(5,1);
+extreme_y = zeros(5,1);
 
-polyCenter = mean(polyCorners,1);
-polyRef = [polyCorners(:,1) - polyCenter(1), polyCorners(:,2) - polyCenter(2)];   % corner points in a coordinate system centered on the average of the corners
-polyAngles = angle(polyRef(:,1) + 1i*polyRef(:,2));
-[~, sortIdx] = sort(polyAngles);
-polyCorners = polyCorners(sortIdx,:);
+idx = find(epi_pts(:,2) == min(epi_pts(:,2)));
+idx = idx(1);   % in case there's more than one line with the same extreme point
+extreme_x(1) = epi_pts(idx,1);
+extreme_x(5) = epi_pts(idx,1);
+extreme_y(1) = epi_pts(idx,2);
+extreme_y(5) = epi_pts(idx,2);
 
-mask = poly2mask(polyCorners(:,1), polyCorners(:,2), imSize(1), imSize(2));
+idx = find(epi_pts(:,2) == max(epi_pts(:,2)));
+idx = idx(1);   % in case there's more than one line with the same extreme point
+extreme_x(2) = epi_pts(idx,1);
+extreme_y(2) = epi_pts(idx,2);
+
+idx = find(epi_pts(:,4) == max(epi_pts(:,4)));
+idx = idx(1);   % in case there's more than one line with the same extreme point
+extreme_x(3) = epi_pts(idx,3);
+extreme_y(3) = epi_pts(idx,4);
+
+idx = find(epi_pts(:,4) == min(epi_pts(:,4)));
+idx = idx(1);   % in case there's more than one line with the same extreme point
+extreme_x(4) = epi_pts(idx,3);
+extreme_y(4) = epi_pts(idx,4);
+
+
+mask = poly2mask(extreme_x,extreme_y,imSize(1),imSize(2));
 
 end

@@ -40,8 +40,8 @@ function [digitMirrorMask_dorsum,digitCenterMask] = ...
 % might be able to set the ROI automatically based on automatic detection
 % of the box edges
 
-ROI_to_find_trigger_frame = [0210         0590         0050         0070
-                             1740         0560         0050         0070];
+% ROI_to_find_trigger_frame = [0210         0590         0050         0070
+%                              1740         0560         0050         0070];
 gray_paw_limits = [60 125];
 BGimg = [];
 decorrStretchMean  = [100.5 127.5 100.5];
@@ -55,6 +55,8 @@ maxCenterPawArea = 11000;
 minMirrorPawArea = 3000;
 maxMirrorPawArea = 11000;
 
+minSideOverlap = 0.6;    % minimum that the projections of the mirror views
+                         % must overlap with the front view
 for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
         case 'numbgframes',
@@ -65,6 +67,8 @@ for iarg = 1 : 2 : nargin - 4
             gray_paw_limits = varargin{iarg + 1};
         case 'bgimg',
             BGimg = varargin{iarg + 1};
+        case 'minsideoverlap',
+            minSideOverlap = varargin{iarg + 1};
     end
 end
 
@@ -73,8 +77,8 @@ if strcmpi(BGimg_info.class,'uint8')
     BGimg_ud = double(BGimg_ud) / 255;
 end
 
-triggerFrame = 511;peakFrame = 532;   % hard code to speed up analysis % peak should be 532
-preReachFrame = triggerFrame - 25;
+% triggerFrame = 511;peakFrame = 532;   % hard code to speed up analysis % peak should be 532
+% preReachFrame = triggerFrame - 25;
 % find a mask for the paw in the lateral, central, and right mirrors for
 % the peak frame
 triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCalibration);
@@ -92,7 +96,19 @@ triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCalibration
 %     end
 % end
 % imDiff = imabsdiff(im_preReach,im_peak);
-digitMasks = initialDigitID(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration);
+[initDigitMasks, init_mask_bbox, refImageTime] = ...
+    initialDigitID_20150831(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, ...
+                            'minsideoverlap',minSideOverlap);
+
+
+
+centroids = track3Dpaw_20150831(video, ...
+                                BGimg_ud, ...
+                                refImageTime, ...
+                                initDigitMasks, ...
+                                init_mask_bbox, ...
+                                rat_metadata, ...
+                                boxCalibration);
 
 fundmat = zeros(2,3,3);
 fundmat(1,:,:) = F.left;
@@ -154,7 +170,7 @@ pawMask(register_ROI(dorsalPawMaskIdx,2):register_ROI(dorsalPawMaskIdx,2) + regi
 % reconstruction can contribute to the tracking cost function
 
 centroids = track3Dpaw(video, ...
-                       BGimg, ...
+                       BGimg_ud, ...
                        peakFrame, ...
                        fundmat, ...
                        paw_mask, ...

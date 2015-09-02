@@ -1,4 +1,4 @@
-function BGimg = extractBGimg( video, varargin )
+function BGimg  = extractBGimg( video, varargin )
 %
 % INPUTS:
 %   video - a VideoReader object
