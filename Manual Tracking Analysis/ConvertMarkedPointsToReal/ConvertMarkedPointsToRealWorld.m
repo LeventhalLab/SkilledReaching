@@ -20,37 +20,6 @@
 % 3.) Normalize the points to homogeneous points
 % 4.) Shoot into triangulate_DL.
 
-<<<<<<< HEAD
-function   [points3d,reprojectedPoints,errors]= ConvertMarkedPointsToRealWorld
-    load('cameraParameters.mat');
-    
-    x1 = [1101.151996	595.9071792
-1121.499822	601.5593532
-1136.760692	610.6028314
-1078.543301	591.9506575
-1094.369388	605.5158749
-1107.369388	626.4289184
-
-
-];
-
-    x2= [1880.773196	574.8494036
-1911.994127	588.3784733
-1914.075522	602.4278919
-1906.270289	576.9307989
-1934.369127	583.174985
-1947.377848	597.7447524
-];
-
-%     %Undistort the points
-    x1 = undistortPoints(x1,cameraParams);
-    x2 = undistortPoints(x2,cameraParams);
-    
-    %Create homogenous  verions of the points    
-    x1_hom = [x1, ones(size(x1,1),1)]';
-    x2_hom = [x2, ones(size(x2,1),1)]';
-
-=======
 function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x1,x2)
     load('cameraParameters.mat');
 
@@ -61,14 +30,20 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     %Create homogenous  verions of the points
     x1_hom = [x1, ones(size(x1,1),1)]';
     x2_hom = [x2, ones(size(x2,1),1)]';
->>>>>>> origin/master
+
     
     %Grab the intrsic matrix
     k = cameraParams.IntrinsicMatrix;
   
-    
     %Calculate the fundemental matrix
-    F = fundMatrix_mirror(x1_hom, x2_hom);
+   F = fundMatrix_mirror(x1_hom, x2_hom)
+%     F =[
+% 
+%          0   -0.0012    0.7073
+%     0.0012         0   -0.7070
+%    -0.7073    0.7070         0];
+    %Hardcodded based on the rubiks cub
+    
     
     %Calculate the essential matric
     E = k * F *k';
@@ -86,11 +61,6 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
      
      %Use the triangulation function 
     [points3d,reprojectedPoints,errors] = triangulate_DL(x1, x2, P1, P2)
-<<<<<<< HEAD
-    
-=======
->>>>>>> origin/master
-
 end
 
 

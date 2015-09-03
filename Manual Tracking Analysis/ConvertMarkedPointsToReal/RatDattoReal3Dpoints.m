@@ -10,31 +10,31 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
     
     [X1,X2] = RatDataToMPMatrcies(RatData);
 
-    for i=2%:length(X1(:,1))
+    for i=1%:%length(X1(:,1))
         for j= 1:5
             x1 = X1{i,j};
             x2 = X2{i,j};
              [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x1,x2);
              all3dPoints{i,j} = points3d;
-        end
-        
-           
+        end          
     end
 
-
-   
-end
-
-
-
-for i =2%:length(all3dPoints)
-    for j=1:5
-        currentFrame = all3dPoints{i,j};
-        x = currentFrame(:,1);
-        y = currentFrame(:,2);
-        z = currentFrame(:,3);
-        figure(j)
-        scatter3(x,y,z)
-    end
-end
     
+    
+    for i =1%:length(all3dPoints)
+        for j=1:5
+            currentFrame = cell2mat(all3dPoints(i,j));
+            x = currentFrame(:,1);
+            y = currentFrame(:,2);
+            z = currentFrame(:,3);
+            scatter3(x,y,z)
+            figure(j)
+        end
+    end
+end
+
+
+
+
+
+%sqrt((points3d(6,1)-points3d(5,1))^2+(points3d(6,2)-points3d(5,2))^2)

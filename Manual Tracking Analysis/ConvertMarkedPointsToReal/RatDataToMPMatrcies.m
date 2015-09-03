@@ -11,30 +11,47 @@ function  [X1,X2] = RatDataToMPMatrcies(RatData)
 
     [allPawData] = ReadPawDataFromRatData(RatData);
     
+    counter = 1;
     for i = 1:length(allPawData) 
-        pawPointsData = allPawData{1,i};
-        [allLeft{i},allCenter{i},allRight{i}] = SplitPawData(pawPointsData);
+            pawPointsData = allPawData{1,i};
+            if size(pawPointsData) ~= [0,0]
+                [allLeft{counter},allCenter{counter},allRight{counter}] = SplitPawData(pawPointsData);
+                counter = counter + 1;
+            end
     end
 
     
-   for i =1:5%length(allLeft)
+   for i =1:length(allLeft)
        trialLeft = allLeft{1,i};
        trialCenter = allCenter{1,i};
        for j = 1:5
-            frameLeft = cell2mat(trialLeft{1,j});
-            frameCenter = cell2mat(trialCenter{1,j}); 
+            frameLeft = cell2mat(trialLeft(1,j));
+            frameCenter = cell2mat(trialCenter(1,j)); 
             counterLeft = 1;
+            
+            
+            x1= [];
+            x2 = [];
+            
             for k = 1:16
-                if sum(frameCenter(k,:)) > 0 
-                    if sum(frameLeft(k,:)) > 0
+                
+                   
+                TFC = isnan(frameCenter(k,1)); 
+                TFL = isnan(frameLeft(k,1)) ;
+
+                if TFC  == 0
+                    if TFL == 0
+                        
+                        
                         x1(counterLeft,:) = frameCenter(k,:);
                         x2(counterLeft,:) = frameLeft(k,:);
                         counterLeft = counterLeft + 1;
+                        
+                        X1{i,j} = x1;
+                        X2{i,j} = x2;
                     end
-               end
+                end
             end
-           X1{i,j} = x1;
-           X2{i,j} = x2;
        end
    end
     
@@ -91,20 +108,26 @@ function [left,center,right] = SplitPawData(pawPointsData)
 
 end
 
+
 function [allPawData] = ReadPawDataFromRatData(RatData) 
     allPawData = [];
+    filteredPawData = [];
     Scores=[RatData.VideoFiles.Score]';
 
     j= 1;
     for i=1:length(Scores)
         if Scores(i) == 1 
             tempAllPawData = RatData.VideoFiles(i).Paw_Points_Tracking_Data;
-            
+          
             counter = 1; %This is the counter that represents the actual length of filled data
+            
             for k =1:length(tempAllPawData)
-                if sum(cell2mat(tempAllPawData(k,1))) > 0
-                    filteredPawData(counter,:) = tempAllPawData(k,:);
-                    
+              
+                if isnumeric(cell2mat(tempAllPawData(k,7)))  
+                   
+                
+                    filteredPawData(counter,7) = cell2mat(tempAllPawData(k,7));
+                    filteredPawData(counter,8) = cell2mat(tempAllPawData(k,8));
                     counter = counter + 1;
                 end
             end         
