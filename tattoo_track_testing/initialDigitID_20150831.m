@@ -584,7 +584,10 @@ while digitMissing
                                                               [h,w], ...
                                                               'minoverlap', minSideOverlap);
 % CONSIDER ADDING ANOTHER CRITERION THAT THE REPROJECTION ERRORS OF THE
-% REGION CENTROIDS HAVE TO BE LESS THAN SOME THRESHOLD
+% REGION CENTROIDS HAVE TO BE LESS THAN SOME THRESHOLD. ALSO MAKE SURE THAT
+% WE PICK THE MAXIMUM PAW EXTENT IN THE MIRROR VIEW. CAN CONSIDER TAKING A
+% PICTURE OF THE PAW IN A CALIBRATED VIEW IN THE FUTURE SO WE HAVE AN
+% ESTIMATE OF HOW BIG THE DIGITS AND PAW SHOULD BE.
     if all(validOverlap)
         digitMissing = false;
     end

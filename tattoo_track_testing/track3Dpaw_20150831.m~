@@ -87,12 +87,12 @@ for ii = 1 : 3
     decorrStretchSigma{ii} = decorrStretchSigma{ii} / 255;
 end
 
-min_h_range = 0.05;
-min_s_range = 0.20;
-min_v_range = 0.10;
-num_h_stds = 3;
-num_s_stds = 3;
-num_v_stds = 3;
+HSVthresh_parameters.min_thresh(1) = 0.05;    % minimum distance hue threshold must be from mean. Note hue is circular (hue = 1 is the same as hue = 0)
+HSVthresh_parameters.min_thresh(2) = 0.10;    % minimum distance saturation threshold must be from mean 
+HSVthresh_parameters.min_thresh(3) = 0.05;    % minimum distance value threshold must be from mean 
+HSVthresh_parameters.num_stds(1) = 5;         % number of standard deviations hue can deviate from mean (unless less than min_thresh)
+HSVthresh_parameters.num_stds(2) = 5;         % number of standard deviations saturation can deviate from mean (unless less than min_thresh)
+HSVthresh_parameters.num_stds(3) = 5;         % number of standard deviations value can deviate from mean (unless less than min_thresh)
 
 diff_threshold = 45;
 maxDistPerFrame = 20;
@@ -154,10 +154,11 @@ digitBlob{2}.CentroidOutputPort = true;
 digitBlob{2}.BoundingBoxOutputPort = true;
 digitBlob{2}.ExtentOutputPort = true;
 digitBlob{2}.LabelMatrixOutputPort = true;
-digitBlob{2}.MinimumBlobArea = 50;
+digitBlob{2}.MinimumBlobArea = 40;
 digitBlob{2}.MaximumBlobArea = 30000;
 
-
+trackCheck.maxDistPerFrame = 5;    % in mm
+trackCheck.maxReprojError = 0.1;   % not sure what this needs to be, will need some trial and error
 % =======
 % >>>>>>> origin/master
 for iarg = 1 : 2 : nargin - 10
@@ -176,9 +177,14 @@ for iarg = 1 : 2 : nargin - 10
             decorrStretchSigma_center = varargin{iarg + 1};
         case 'colorlist',
             colorList = varargin{iarg + 1};
+        case 'maxdistperframe',
+            trackCheck.maxDistPerFrame = varargin{iarg + 1};
+        case 'maxreprojerror',
+            trackCheck.maxReprojError = varargin{iarg + 1};
     end
 end
 
+digitColors = unique(colorList(2:5));   % possible digit colors
 if diff_threshold > 1
     diff_threshold = diff_threshold / 255;
 end
@@ -199,6 +205,13 @@ switch pawPref
         P2 = P.left;
         scale = boxCalibration.scale(1);
 end
+trackingBoxParams.K = K;
+trackingBoxParams.F = F_side;
+trackingBoxParams.P1 = eye(4,3);
+trackingBoxParams.P2 = P2;
+trackingBoxParams.scale = scale;
+[~,trackingBoxParams.epipole] = isEpipoleInImage(F_side,[size(BGimg_ud,1),size(BGimg_ud,2)]);
+
 % make the first view the direct view, the second view is the mirror view
 P1 = eye(4,3);
 digitMasks = cell(2,1);
@@ -252,7 +265,7 @@ for ii = 1 : num_elements_to_track
             paw_hsv = rgb2hsv(paw_enh);
             
             [meanHSV(iView,ii,:), stdHSV(iView,ii,:)] = ...
-                calcHSVstats(paw_hsv, digitMask);
+                calcHSVstats(paw_hsv, digitMasks{iView}(:,:,ii));
             
         else
             consecInvisibleCount(ii,iView) = consecInvisibleCount(ii,iView) + 1;
@@ -287,6 +300,7 @@ mp2_norm = normalize_points(mp2, K);
 % what will points3d be if one of the digits is missing from one of the
 % views?
 [points3d,~,~] = triangulate_DL(mp1_norm, mp2_norm, P1, P2);    % multiply by scale factor to get real 3d coordinates w.r.t. the direct camera view
+points3d = points3d * scale;
 
 tracks = initializeTracks();
 for ii = 1 : num_elements_to_track
@@ -312,7 +326,9 @@ end
 % now that tracks are initialized, do the actual tracking
 paw_hsv = cell(1,2);
 HSVlimits = zeros(num_elements_to_track-1, 6, 2);
+numFrames = 0;
 while video.CurrentTime < video.Duration
+    numFrames = numFrames + 1
     image = readFrame(video);
     image_ud = undistortImage(image, boxCalibration.cameraParams);
     image_ud = double(image_ud) / 255;
@@ -379,280 +395,70 @@ while video.CurrentTime < video.Duration
             hsvMask = double(repmat(current_paw_mask{iView},1,1,3));
             paw_hsv{iView}(:,:,:,ii) = rgb2hsv(hsvMask .* paw_enh);
             
-            if ii < num_elements_to_track
-                % set hsv thresholds based on previous hsv means and standard
-                % deviations
-                HSVlimits(ii,1,iView) = tracks(ii).meanHSV(iView,1);            % hue mean
-                HSVlimits(ii,2,iView) = max(min_h_range, tracks(ii).stdHSV(iView,1) * num_h_stds);  % hue range
-
-                s_range = max(min_s_range/2, tracks(ii).stdHSV(iView,2) * num_s_stds);
-                HSVlimits(ii,3,iView) = max(0.001, tracks(ii).meanHSV(iView,2) - s_range);    % saturation lower bound
-                HSVlimits(ii,4,iView) = min(1.000, tracks(ii).meanHSV(iView,2) + s_range);    % saturation upper bound
-
-                v_range = max(min_v_range/2, tracks(ii).stdHSV(iView,3) * num_v_stds);
-                HSVlimits(ii,5,iView) = max(0.001, tracks(ii).meanHSV(iView,3) - v_range);    % saturation lower bound
-                HSVlimits(ii,6,iView) = min(1.000, tracks(ii).meanHSV(iView,3) + v_range);    % saturation upper bound            
-            end
         end
     end
     
     % now do the thresholding
-    isDigitVisible = true(num_elements_to_track,2);
+    hsv = cell(1,2);
+    prelim_digitMask = cell(1,num_elements_to_track-1);
+    
     for ii = 2 : num_elements_to_track - 1    % do the digits first
+        prelim_digitMask{ii} = cell(1,2);
         
         sameColIdx = find(strcmp(colorList{ii},colorList));
         numSameColorObjects = length(sameColIdx);
         
         for iView = 1 : 2
-            tempMask = HSVthreshold(squeeze(paw_hsv{iView}(:,:,:,ii)), ...
-                                    HSVlimits(ii,:,iView));
-                                
-            if ~any(tempMask(:))
-                isDigitVisible(ii, iView) = false;
-                tracks(ii).isvisible(iView) = false;
-                tracks(ii).consecutiveInvisibleCount(iView) = 1;
-                break;
-            end
-                 
+            hsv{iView} = squeeze(paw_hsv{iView}(:,:,:,ii));
+        end
+        tempMask = thresholdDigits(tracks(ii).meanHSV, ...
+                                   tracks(ii).stdHSV, ...
+                                   HSVthresh_parameters, ...
+                                   hsv, ...
+                                   numSameColorObjects, ...
+                                   digitBlob);
+        for iView = 1 : 2
             if strcmpi(colorList{ii},'blue')
                 bbox_blueBeadMask = blueBeadMask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
                                                  mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
                 % eliminate any identified blue regions that overlap with blue
                 % beads
-                tempMask = tempMask & ~bbox_blueBeadMask;% squeeze(boxMarkers.beadMasks(:,:,3));
+                tempMask{iView} = tempMask{iView} & ~bbox_blueBeadMask;% squeeze(boxMarkers.beadMasks(:,:,3));
             end
-            
-            SE = strel('disk',2);
-            tempMask = imopen(tempMask, SE);
-            tempMask = imclose(tempMask, SE);
-            tempMask = imfill(tempMask, 'holes');
-            
-            [A,~,~,~,labMat] = step(digitBlob{iView}, tempMask);
-            if isempty(A)
-                isDigitVisible(ii, iView) = false;
-                tracks(ii).isvisible(iView) = false;
-                tracks(ii).consecutiveInvisibleCount(iView) = ...
-                    tracks(ii).consecutiveInvisibleCount(iView) + 1;
-                break;
-            end
-            % take at most the numSameColorObjects largest blobs
-            [~,idx] = sort(A, 'descend');
-            tempMask = false(size(tempMask));
-            for kk = 1 : min(numSameColorObjects, length(idx))
-                tempMask = tempMask | (labMat == idx(kk));
-            end
-            
-            if length(A) == 1 && numSameColorObjects == 1
-                % verify that this blob is consistent with the previously found blob for this digit
-                % for now, assume it's correct
-                s = regionprops(tempMask,'BoundingBox');
-                if iView == 1
-                    tracks(ii).digitmask1 = tempMask;
-                else
-                    tracks(ii).digitmask2 = tempMask;
-                end
-                [meanHSV, stdHSV] = calcHSVstats(paw_hsv, digitMask);
-                tracks(ii).meanHSV(iView,:) = meanHSV;
-                tracks(ii).stdHSV(iView,:) = stdHSV;
-                tracks(ii).age = tracks(ii).age + 1;
-                tracks(ii).isvisible(iView) = true;
-                tracks(ii).totalVisibleCount(iView) = ...
-                    tracks(ii).totalVisibleCount(iView) + 1;
-                tracks(ii).consecutiveInvisibleCount(iView) = 0;
-                
-                continue;
-            end
-            otherTrackIdx = sameColIdx(sameColIdx ~= ii);
-            if length(A) == 2    % need to figure out which blob to assign to the current track
-
-                blobID = selectBlobForTrack(tempMask, ...
-                                            paw_hsv, ...
-                                            tracks(ii), ...
-                                            tracks(otherTrackIdx), ...
-                                            iView, ...
-                                            prev_mask_bbox(iView,:), ...
-                                            mask_bbox(iView,:));
-
-            else     % length(A) = 1, need to figure out whether the blob belongs to the current
-                     % digit, or the other one that's the same color
-                
-                trackID = selectTrackForBlob(tempMask, paw_hsv, tracks(ii), tracks(otherTrackIdx));
-                
-            end
-
+            prelim_digitMask{ii}{iView} = tempMask{iView};
         end
-    end
-       
-satLimits = [0.80000    1.00
-             0.90000    1.00
-             0.90000    1.00
-             0.90000    1.00
-             0.90000    1.00];
-valLimits = [0.00001    0.70
-             0.95000    1.00
-             0.95000    1.00
-             0.95000    1.00
-             0.95000    1.00];
-hueLimits = [0.00, 0.16;    % red
-             0.33, 0.16;    % green
-             0.66, 0.05;    % blue
-             0.45  0.16];   % dark green
-                        tempMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(:,:,:,ii)), ...
-                                        [hueLimits(colorIdx,:), satLimits(ii,:), valLimits(ii,:)]);
-        masked_mirror_hsv = rgb2hsv(masked_mirror_img_enh);
-
-        masked_center_img_enh = enhanceColorImage(masked_center_img, ...
-                                                  decorrStretchMean_center(ii,:), ...
-                                                  decorrStretchSigma_center(ii,:), ...
-                                                  'mask',prev_paw_mask_center);
-        masked_center_hsv = rgb2hsv(masked_center_img_enh);
-        
-        mirror_bbox = step(tracks(ii).CAMshiftTracker, masked_mirror_hsv(:,:,1));
-        center_bbox = step(tracks(ii+num_elements_to_track).CAMshiftTracker, masked_center_hsv(:,:,1));
-        
-        figure(1)
-        rectangle('position',mirror_bbox,'edgecolor','r');
-        rectangle('position',center_bbox,'edgecolor','r');
-        
-        figure(2)
-        if ii == 1
-            imshow(masked_mirror_img_enh)
-        end
-        rectangle('position',mirror_bbox,'edgecolor','r');
-        
-        figure(3)
-        if ii == 1
-            imshow(masked_center_img_enh)
-        end
-        rectangle('position',center_bbox,'edgecolor','r');
-    
-% <<<<<<< HEAD
-    masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...
-                                              decorrStretchMean_mirror(2,:), ...
-                                              decorrStretchSigma_mirror(2,:), ...
-                                              'mask',prev_paw_mask_center);
-    [~,mirror_P] = imseggeodesic(masked_mirror_img_enh, mirror_zmask(:,:,2), mirror_zmask(:,:,3), mirror_zmask(:,:,4));
-    [~,mirror_P2] = imseggeodesic(masked_mirror_img_enh, mirror_zmask(:,:,3), mirror_zmask(:,:,4), mirror_zmask(:,:,5));
-    
-    masked_center_img_enh = enhanceColorImage(masked_center_img, ...
-                                              decorrStretchMean_center(2,:), ...
-                                              decorrStretchSigma_center(2,:), ...
-                                              'mask',prev_paw_mask_center);
-    [~,center_P] = imseggeodesic(masked_center_img_enh, center_zmask(:,:,2), center_zmask(:,:,3), center_zmask(:,:,4));
-    [~,center_P2] = imseggeodesic(masked_center_img_enh, center_zmask(:,:,3), center_zmask(:,:,4), center_zmask(:,:,5));
-        
-    mirrorMask = false(h,w,num_elements_to_track);
-    centerMask = false(h,w,num_elements_to_track);
-    SE = strel('disk',2);
-    for ii = 2 : num_elements_to_track
-        switch ii,
-            case 2,   % index finger
-                mirrorMask(:,:,ii) = (mirror_P(:,:,1) > pthresh);
-                centerMask(:,:,ii) = (center_P(:,:,1) > pthresh);
-            case 3,   % middle finger
-                mirrorMask(:,:,ii) = (mirror_P(:,:,2) > pthresh);
-                centerMask(:,:,ii) = (center_P(:,:,2) > pthresh);
-            case 4,   % ring finger
-                mirrorMask(:,:,ii) = (mirror_P2(:,:,2) > pthresh);
-                centerMask(:,:,ii) = (center_P2(:,:,2) > pthresh);
-            case 5,   % pinky finger
-                mirrorMask(:,:,ii) = (mirror_P2(:,:,3) > pthresh);
-                centerMask(:,:,ii) = (center_P2(:,:,3) > pthresh);
-        end
-    
-        mirrorMask(:,:,ii) = imopen(mirrorMask(:,:,ii), SE);
-        mirrorMask(:,:,ii) = imclose(mirrorMask(:,:,ii), SE);
-        mirrorMask(:,:,ii) = imfill(mirrorMask(:,:,ii), 'holes');
-        
-        centerMask(:,:,ii) = imopen(centerMask(:,:,ii), SE);
-        centerMask(:,:,ii) = imclose(centerMask(:,:,ii), SE);
-        centerMask(:,:,ii) = imfill(centerMask(:,:,ii), 'holes');
         
     end
-    
-
-    
-    masked_mirror_img_enh = enhanceColorImage(masked_mirror_img, ...    % for paw dorsum
-                                              decorrStretchMean_center(1,:), ...
-                                              decorrStretchSigma_center(1,:), ...
-                                              'mask',prev_paw_mask_center);
+    % now have preliminary masks in each view, need to assign blobs to
+    % digits
+    for iColor = 1 : length(digitColors)
         
-        
-%         mirror_idx = find(mirror_bboxMask);
-%         center_idx = find(center_bboxMask);
-%         
-%         RGBdist = zeros(h,w);
-%         for jj = 1 : 3
-%             masked_mirror_img_enh(mirror_bbox(2):mirror_bbox(2)+mirror_bbox(4)-1,...
-%                         mirror_bbox(1):mirror_bbox(1)+mirror_bbox(3)-1)
-%             colPlane = squeeze(masked_mirror_img_enh(:,:,jj));
-%             mirror_RGBdist(jj) = colPlane(mirror_idx) - tracks(ii).meanRGBenh(jj);
-%             
-%             colPlane = squeeze(masked_center_img_enh(:,:,jj));
-%             center_RGBdist(jj) = colPlane(center_idx) - tracks(ii+num_elements_to_track).meanRGBenh(jj);
-%         end
-% %         mirror_RGBdist = 
-%         figure(1)
-%         rectangle('position',mirror_bbox,'edgecolor','r');
-%         rectangle('position',center_bbox,'edgecolor','r');
-%         
-%         figure(2)
-%         if ii == 1
-%             imshow(masked_mirror_img_enh)
-%         end
-%         rectangle('position',mirror_bbox,'edgecolor','r');
-%         
-%         figure(3)
-%         if ii == 1
-%             imshow(masked_center_img_enh)
-%         end
-%         rectangle('position',center_bbox,'edgecolor','r');
-    
-% =======
-% >>>>>>> origin/master
-        
-%     paw_mask = maskPaw_moving(image, BGimg, prev_paw_mask, register_ROI, F, rat_metadata, boxMarkers);
-%     diff_image  = imabsdiff(image, BGimg);
-%     thresh_mask = (rgb2gray(diff_image) > diff_threshold);
-%     
-%     curr_mask = thresh_mask & prev_paw_mask;
-%     
-%     hsv_image = rgb2hsv(image.*uint8(repmat(curr_mask,1,1,3)));
-%     figure(1)
-%     imshow(image)
-%     hold on
-
-%     for ii = 1 : numTracks
-%         bbox = step(tracks(ii).CAMshiftTracker, hsv_image(:,:,1));
-%         rectangle('position',bbox,'edgecolor','r');
-%     end
-%     paw_mask = maskPaw_moving(image, BGimg, digitMirrorMask_dorsum, digitCenterMask, register_ROI, F, rat_metadata, boxMarkers);
+        sameColIdx = find(strcmp(digitColors{iColor},colorList));
+        numSameColorObjects = length(sameColIdx);
+        colorTracks = initializeTracks();
+        prelimMask = cell(numSameColorObjects, 2);
+        for iDigit = 1 : numSameColorObjects
+            colorTracks(iDigit) = tracks(sameColIdx(iDigit));
+            for iView = 1 : 2
+                prelimMask{iDigit,iView} = prelim_digitMask{sameColIdx(iDigit)}{iView};
+            end
+        end
+            
+        newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
+                                                  prelimMask, ...
+                                                  prev_mask_bbox, ...
+                                                  mask_bbox, ...
+                                                  trackingBoxParams, ...
+                                                  trackCheck);
+            
+        for iDigit = 1 : numSameColorObjects
+            tracks(sameColIdx(iDigit)) = newTracks(iDigit);
+        end
+    end    % end for iColor...
     
     
-%     figure(2)
-%     imshow(image);
 end
-% detector = vision.ForegroundDetector(...
-%    'NumTrainingFrames', 50, ... % 5 because of short video
-%    'InitialVariance', 30*30); % initial standard deviation of 30
-blob = vision.BlobAnalysis(...
-   'CentroidOutputPort', false, 'AreaOutputPort', false, ...
-   'BoundingBoxOutputPort', true, ...
-   'MinimumBlobAreaSource', 'Property', 'MinimumBlobArea', 200);
 
-sTime = (peakFrameNum / video.FrameRate);
-figure(1)
-frameNum = 0;
-while video.CurrentTime < video.Duration
-    image = readFrame(video);
-    fgMask = step(detector, image);
-    imshow(fgMask);
-    frameNum = frameNum + 1;
-end
-mirrorTracks_dorsum = initializeTracks();
-centerTracks        = initializeTracks();
-
-% rewind 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -725,6 +531,8 @@ end
 
 function [meanHSV, stdHSV] = calcHSVstats(paw_hsv, digitMask)
 
+    meanHSV = zeros(1,3);
+    stdHSV  = zeros(1,3);
     idx = squeeze(digitMask);
     idx = idx(:);
     for jj = 1 : 3
@@ -733,11 +541,11 @@ function [meanHSV, stdHSV] = calcHSVstats(paw_hsv, digitMask)
         if jj == 1
             meanAngle = wrapTo2Pi(circ_mean(colPlane(idx)*2*pi));
             stdAngle = wrapTo2Pi(circ_std(colPlane(idx)*2*pi));
-            meanHSV(iView,ii,jj) = meanAngle / (2*pi);
-            stdHSV(iView,ii,jj) = stdAngle / (2*pi);
+            meanHSV(jj) = meanAngle / (2*pi);
+            stdHSV(jj) = stdAngle / (2*pi);
         else
-            meanHSV(iView,ii,jj) = mean(colPlane(idx));
-            stdHSV(iView,ii,jj) = std(colPlane(idx));
+            meanHSV(jj) = mean(colPlane(idx));
+            stdHSV(jj) = std(colPlane(idx));
         end
     end
     
@@ -753,7 +561,8 @@ function blobID = selectBlobForTrack(blobMask, ...
                                      iView, ...
                                      prev_mask_bbox, ...
                                      mask_bbox)
-
+% INPUTS:
+%   blobMask - mask of the currently detected blobs    
     % figure out where the previous mask for this digit is in the
     % current bounding box
     switch iView
@@ -786,14 +595,17 @@ function blobID = selectBlobForTrack(blobMask, ...
     s = regionprops(blobMask,'Centroid','Area');
     L = bwlabel(blobMask);
     % calculate mean hsv values in each blob
+    meanHSV = zeros(length(s),3);
     for ii = 1 : length(s)
+        [meanHSV(ii,:), stdHSV] = calcHSVstats(paw_hsv, (L == ii));   % not sure if stdHSV will be useful or not
+    end
         
     if currentTrack.isvisible(iView) && otherTrack.isvisible(iView)
 
         % calculate Euclidean distances between the centroids of the blobs
         % in blobMask and the previous digit blobs
         
-        
+    end
 
 %     prev_bbox = track.bbox(iView,:);
 %     prev_bbox(1:2) = prev_bbox(1:2) - mask_bbox(iView,1:2) + 1;
@@ -802,6 +614,326 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function [mp1, mp2] = points3d_to_images(points3d, P1, P2, K)
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function digitMask = thresholdDigits(meanHSV, ...
+                                     stdHSV, ...
+                                     HSVthresh_parameters, ...
+                                     hsv, ...
+                                     numSameColorObjects, ...
+                                     digitBlob)
+%
+% INPUTS:
+%   meanHSV - 
+%   stdHSV - 
+%   HSVthresh_parameters - 
+%   hsv - 2-element cell array containing the enhanced hsv image of the paw
+%       within the bounding box for the direct view (index 1) and mirror
+%       view (index 2)
+%   numSameColorObjects - scalar, number of digits that have the same color
+%       tattoo as the current digit
+%   digitBlob - cell array of blob objects containing blob parameters for
+%       the direct view (index 1) and mirror view (index 2)
+%
+% OUTPUTS:
+%   
+    min_thresh = HSVthresh_parameters.min_thresh;
+    num_stds   = HSVthresh_parameters.num_stds;
+    
+    HSVlimits = zeros(2,6);
+    digitMask = cell(1,2);
+    for iView = 1 : 2
+        % construct HSV limits vector from track, HSVthresh_parameters
+        HSVlimits(iView,1) = meanHSV(iView,1);            % hue mean
+        HSVlimits(iView,2) = max(min_thresh(1), stdHSV(iView,1) * num_stds(1));  % hue range
+
+        s_range = max(min_thresh(2), stdHSV(iView,2) * num_stds(2));
+        HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
+        HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
+
+        v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
+        HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % saturation lower bound
+        HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % saturation upper bound    
+        
+        % threshold the image
+        tempMask = HSVthreshold(squeeze(hsv{iView}), ...
+                                HSVlimits(iView,:));
+
+        if ~any(tempMask(:)); continue; end
+
+        SE = strel('disk',2);
+        tempMask = imopen(tempMask, SE);
+        tempMask = imclose(tempMask, SE);
+        tempMask = imfill(tempMask, 'holes');
+
+        [A,~,~,~,labMat] = step(digitBlob{iView}, tempMask);
+        % take at most the numSameColorObjects largest blobs
+        [~,idx] = sort(A, 'descend');
+        if ~isempty(A)
+            tempMask = false(size(tempMask));
+            for kk = 1 : min(numSameColorObjects, length(idx))
+                tempMask = tempMask | (labMat == idx(kk));
+            end
+        end
+        
+        digitMask{iView} = tempMask;
+    end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
+                                                   prelimMask, ...
+                                                   prev_mask_bbox, ...
+                                                   mask_bbox, ...
+                                                   trackingBoxParams, ...
+                                                   trackCheck)
+%
+% INPUTS:
+%   colorTracks - cell array containing 
+%   prelimMask - m x 2 cell array, where m is the number of digits with the
+%       same coloring (should be one or two), and the second index is the
+%       direct view (index 1) or mirror view (index 2)
+%   prev_mask_bbox - 2 x 4 array, 1st row is bounding box for the direct
+%       view, second row is for the mirror view
+%   mask_bbox - 
+%
+% OUTPUTS:
+%
+
+% first, check 3D reconstructions of prelimMask in mirror and center views;
+% is there a large reprojection error? If more than one blob in each view,
+% which combo has the smallest reprojection errors?
+
+if length(colorTracks) == 1
+    % only one color to deal with
+    newTracks = checkSingleTrack(colorTracks, ...
+                                 prelimMask, ...
+                                 prev_mask_bbox, ...
+                                 mask_bbox, ...
+                                 trackingBoxParams, ...
+                                 trackCheck);
+else
+    newTracks = checkTwoTracks(colorTracks, ...
+                               prelimMask, ...
+                               prev_mask_bbox, ...
+                               mask_bbox, ...
+                               trackingBoxParams, ...
+                               trackCheck);
+end
+
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function newTrack = checkSingleTrack(prevTrack, ...
+                                     prelimMask, ...
+                                     prev_mask_bbox, ...
+                                     mask_bbox, ...
+                                     trackingBoxParams, ...
+                                     trackCheck)
+
+	newTrack = prevTrack;
+    
+    % several possibilities: a blob is visible in both views, a blob is
+    % visible in one view but not the other, blob isn't visible in either view
+    if any(prelimMask{1,1}(:)) && any(prelimMask{1,2}(:))
+
+        new_centroids = zeros(2,2);
+        % triangulate the centroids of the direct and mirror view blobs
+        s_direct = regionprops(prelimMask{1},'Centroid');
+        s_mirror = regionprops(prelimMask{2},'Centroid');
+
+        new_centroids(1,:) = s_direct.Centroid + mask_bbox(1,1:2) - 1;
+        new_centroids(2,:) = s_mirror.Centroid + mask_bbox(2,1:2) - 1;
+
+        new_centroids_norm = normalize_points(new_centroids, trackingBoxParams.K);
+        [points3d,~,reprojErrors] = triangulate_DL(new_centroids_norm(1,:), ...
+                                                new_centroids_norm(2,:), ...
+                                                trackingBoxParams.P1, ...
+                                                trackingBoxParams.P2); 
+        % calculate mean reprojection error
+        meanReprojError = mean(sqrt(sum(reprojErrors.^2,2)));
+        points3d = points3d * trackingBoxParams.scale;
+
+        % distance from previous point
+        d3d = norm(points3d - prevTrack.centroid3D);
+        
+        % if reprojection errors and/or 3-d distance don't make sense, is
+        % one of the blobs off? Is the other OK, or are both mistakes? If
+        % so, how do we estimate current 3D point?
+        if d3d > trackCheck.maxDistPerFrame || ...
+           meanReprojError > trackCheck.maxReprojError
+        % WORKING HERE... NOW NEED TO DETERMINE IF REPROJECTION ERRORS ARE
+        % SMALL ENOUGH AND CURRENT 3D POINT IS CLOSE ENOUGH TO THE PREVIOUS
+        % POINT TO ACCEPT IT. IF SO, UPDATE NEW TRACK WITH THE NEW MASK. IF
+        % NOT, DECIDE THAT THIS DIGIT IS NOT VISIBLE IN AT LEAST ONE OF THE
+        % VIEWS; THEN NEED TO DECIDE IF ONE OF THE VIEWS IS VALID. FOR NOW,
+        % ASSUME TRACKING IS OK
+        
+        else
+            newTrack.digitmask1 = prelimMask{1};
+            newTrack.digitmask1 = prelimMask{2};
+            newTrack.centroid3D = points3d;
+            newTrack.isvisible = true(1,2);
+            newTrack.totalVisibleCount = newTrack.totalVisibleCount + 1;
+            newTrack.consecutiveInvisibleCount = [0 0];
+        end
+    end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function newTracks = checkTwoTracks(prevTracks, ...
+                                    prelimMask, ...
+                                    prev_mask_bbox, ...
+                                    mask_bbox, ...
+                                    trackingBoxParams, ...
+                                    trackCheck)
+
+% INPUTS:
+%   prevTracks - track structures for the two tracks that are the same
+%       color
+%   prelimMask - m x 2 cell array, where m is the number of digits with the
+%       same coloring (should be one or two), and the second index is the
+%       direct view (index 1) or mirror view (index 2)
+%
+	newTracks = prevTracks;
+    prev_3dpoints = zeros(2,3);
+    prev_3dpoints(1,:) = prevTracks(1).centroid3D;
+    prev_3dpoints(2,:) = prevTracks(2).centroid3D;
+    
+    % several possibilities: two blobs visible in both views; one blob
+    % visible in one view, two blobs in the other; none in one view, two in
+    % the other, etc.
+    
+    % figure out how many blobs in each view
+    numBlobs = zeros(2,2);
+    s = cell(2,2);
+    digLabelMask = cell(2,2);
+    for iTrack = 1 : 2
+        for iView = 1 : 2
+            s{iTrack,iView} = regionprops(prelimMask{iTrack,iView},'area','centroid');
+            numBlobs(iTrack,iView) = length(s{iTrack,iView});
+            digLabelMask{iTrack,iView} = bwlabel(prelimMask{iTrack,iView});
+        end
+        if numBlobs(iTrack,1) == 2 && numBlobs(iTrack,2) == 2
+            % two blobs visible in each view
+
+            new_centroids = zeros(2,2,2);
+%             points3d = zeros(2,3);   % first dimension indexes the 3d points,
+%                                      % second dimension is [x,y,z], third
+%                                      % dimension is different combinations
+            % triangulate the centroids of the direct and mirror view blobs
+            for iView = 1 : 2
+                for iBlob = 1 : 2
+                    new_centroids(iView,iBlob,:) = s{iTrack,iView}(iBlob).Centroid + mask_bbox(iView,1:2) - 1;
+%                     new_centroids_norm(iView,iBlob,:) = ...
+%                         normalize_points(squeeze(new_centroids(iView,iBlob,:))', trackingBoxParams.K);
+                end
+            end
+            % find intersections of lines connecting centroids of the blobs
+            % in the direct and mirror views
+            % for blobs that are correctly paired, they should interect at
+            % the epipole because of the planar mirror geometry
+            test_epipoles = zeros(2,2);
+            epi_error = zeros(1,2);
+            m = zeros(2,2);
+            b = zeros(2,2);
+            for ii = 1 : 2    % ii is the index of the blob in the front view
+                % calculate slopes and y-intercepts
+                m(1,ii) = (new_centroids(1,ii,2) - new_centroids(2,ii,2)) / ...
+                          (new_centroids(1,ii,1) - new_centroids(2,ii,1));
+                m(2,ii) = (new_centroids(1,ii,2) - new_centroids(2,3-ii,2)) / ...
+                          (new_centroids(1,ii,1) - new_centroids(2,3-ii,1));
+                b(1,ii) = new_centroids(1,ii,2) - m(1,ii) * new_centroids(1,ii,1);
+                b(2,ii) = new_centroids(1,ii,2) - m(2,ii) * new_centroids(1,ii,1);
+            end
+            for jj = 1 : 2    % jj is the index of the combination
+                test_epipoles(jj,1) = (b(jj,2) - b(jj,1)) / (m(jj,1)-m(jj,2));
+                test_epipoles(jj,2) = m(jj,1)*test_epipoles(jj,1) + b(jj,1);
+                epi_error(jj) = norm(test_epipoles(jj,:) - trackingBoxParams.epipole);
+            end
+            % figure out which "test" epipole is closest to the real
+            % epipole
+            direct_view_pts = squeeze(new_centroids(1,:,:));
+            if epi_error(1) < epi_error(2)    % indices of blobs in the two views match up
+                mirror_view_pts = squeeze(new_centroids(2,:,:));
+            else    % indices of blobs in the two views don't match up
+                mirror_view_pts = squeeze(new_centroids(2,2:-1:1,:));
+            end
+            direct_view_pts_norm = normalize_points(direct_view_pts, trackingBoxParams.K);
+            mirror_view_pts_norm = normalize_points(mirror_view_pts, trackingBoxParams.K);
+            [points3d,~,reprojErrors] = triangulate_DL(direct_view_pts_norm, ...
+                                                       mirror_view_pts_norm, ...
+                                                       trackingBoxParams.P1, ...
+                                                       trackingBoxParams.P2);
+            points3d = points3d * trackingBoxParams.scale;
+            % now need to assign one of these points to the current digit.
+            % To do this, find the distance between both 3d points and each
+            % of the previous digit 3d locations. Then pick the assignments
+            % that minimize the maximum distance between the current points
+            % and the previous points.
+            % does direct view centroid 1 correspond to previous 3d
+            % centroid from first or second track?
+            poss_3d_diffs = zeros(4,3);
+            maxDist = zeros(1,2);
+            poss_3d_diffs(1:2,:) = bsxfun(@minus,prev_3dpoints,points3d(1,:));
+            poss_3d_diffs(3:4,:) = bsxfun(@minus,prev_3dpoints,points3d(2,:));
+            poss_distances = sqrt(sum(poss_3d_diffs.^2,2));
+            % poss_distances is a 4 x 1 vector. The first and fourth
+            % entries go together, as do the 2nd and third
+            maxDist(1) = max(poss_distances([1,4]));
+            maxDist(2) = max(poss_distances(2:3));
+            
+            if maxDist(1) < maxDist(2)
+                % first center view blob corresponds with 1st track
+                centerMask = (digLabelMask{iTrack,1} == iTrack);
+                if epi_error(1) < epi_error(2)
+                    mirrorMask = (digLabelMask{iTrack,2} == iTrack);
+                else
+                    mirrorMask = (digLabelMask{iTrack,2} == (3-iTrack));
+                end
+                curr_3dpoint = points3d(iTrack,:);
+                curr_reproj_error = reprojErrors(iTrack,:);
+            else
+                centerMask = (digLabelMask{iTrack,1} == (3-iTrack));
+                if epi_error(1) < epi_error(2)
+                    mirrorMask = (digLabelMask{iTrack,2} == (3-iTrack));
+                else
+                    mirrorMask = (digLabelMask{iTrack,2} == iTrack);
+                end
+                curr_3dpoint = points3d((3-iTrack),:);
+                curr_reproj_error = reprojErrors((3-iTrack),:);
+            end
+            meanReprojError = mean(sqrt(sum(reprojErrors.^2,2)));
+            d3d = norm(curr_3dpoint - prev_3dpoints(iTrack,:));
+            
+            if d3d > trackCheck.maxDistPerFrame || ...
+               meanReprojError > trackCheck.maxReprojError
+
+            end
+            
+            newTracks(iTrack).digitmask1 = centerMask;
+            newTracks(iTrack).digitmask2 = mirrorMask;
+            newTracks(iTrack).centroid3D = curr_3dpoint;
+            newTracks(iTrack).isvisible = true(1,2);
+            newTracks(iTrack).totalVisibleCount = newTracks(iTrack).totalVisibleCount + 1;
+            newTracks(iTrack).consecutiveInvisibleCount = [0 0];
+
+        else    % what to do if all the blobs aren't there for this digit track?
+            
+        end
+
+    end
 
 end

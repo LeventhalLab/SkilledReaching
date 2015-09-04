@@ -7,6 +7,16 @@ function [points3d,reprojectedPoints,errors] = triangulate_DL(mp1, mp2, P1, P2, 
 % INPUTS:
 %   mp1 and mp2 are the matched points in the two views. m x 2 matrices
 %       where m is the number of points
+%   P1 - camera matrix for camera 1 (usually eye(4,3))
+%   P2 - camera matrix for camera 2
+%
+% VARARGs:
+%
+% OUTPUTS:
+%   points3d - 
+%   reprojectedPoints -
+%   errors -
+
 refine_estimates = true;
 
 for iarg = 1 : 2 : nargin - 4
@@ -27,7 +37,7 @@ reprojectionErrors = zeros(numPoints, 1, 'like', points2d);
 for iPoint = 1 : numPoints
     [points3d(iPoint, :), reprojection, errors] = ...
         triangulateOnePoint_DL(cameraMatrices, squeeze(points2d(iPoint, :, :))',refine_estimates);
-    reprojectionErrors(iPoint) = mean(hypot(errors(:, 1), errors(:, 2)));
+%     reprojectionErrors(iPoint) = mean(hypot(errors(:, 1), errors(:, 2)));
     reprojectedPoints(iPoint,:,1) = reprojection(1,:);
     reprojectedPoints(iPoint,:,2) = reprojection(2,:);
 end
