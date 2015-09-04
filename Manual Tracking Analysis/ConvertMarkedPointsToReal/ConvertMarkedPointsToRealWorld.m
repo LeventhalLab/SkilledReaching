@@ -36,12 +36,12 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     k = cameraParams.IntrinsicMatrix;
   
     %Calculate the fundemental matrix
-   F = fundMatrix_mirror(x1_hom, x2_hom)
-%     F =[
-% 
-%          0   -0.0012    0.7073
-%     0.0012         0   -0.7070
-%    -0.7073    0.7070         0];
+   %F = fundMatrix_mirror(x1_hom, x2_hom)
+    F =[
+
+         0   -0.0012    0.7073
+    0.0012         0   -0.7070
+   -0.7073    0.7070         0];
     %Hardcodded based on the rubiks cub
     
     

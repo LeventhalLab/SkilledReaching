@@ -14,7 +14,7 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
     
     [X1,X2] = RatDataToMPMatrcies(RatData);
 
-    for i=5%:%length(X1(:,1))
+    for i=1:length(X1(:,1))
         for j= 1:5
             x1 = X1{i,j};
             x2 = X2{i,j};
@@ -29,15 +29,22 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
     end
 
     
-    
-    for i =5%:length(all3dPoints)
+        
+    for i =1:length(all3dPoints)
+        figure(i)
         for j=1:5
+            
+        
+            
             currentFrame = cell2mat(all3dPoints(i,j));
             x = currentFrame(:,1);
             y = currentFrame(:,2);
             z = currentFrame(:,3);
             scatter3(x,y,z)
-            figure(j)
+            
+            
+            hold on
+            
         end
     end
 end

@@ -11,9 +11,14 @@ function  [X1,X2] = RatDataToMPMatrcies(RatData)
 
     [allPawData] = ReadPawDataFromRatData(RatData);
     
+    [allPawDataFiltered] = KnockoutCoordinates(allPawData); 
+    
+    
+    
+    
     counter = 1;
-    for i = 1:length(allPawData) 
-            pawPointsData = allPawData{1,i};
+     for i = 1:length(allPawDataFiltered) 
+            pawPointsData = allPawDataFiltered{1,i};
             if size(pawPointsData) ~= [0,0]
                 [allLeft{counter},allCenter{counter},allRight{counter}] = SplitPawData(pawPointsData);
                 counter = counter + 1;
@@ -140,5 +145,25 @@ function [allPawData] = ReadPawDataFromRatData(RatData)
             allPawData{j}= filteredPawData; 
             j = j+1;
         end
+    end
+end
+
+
+function [allPawDataFiltered] = KnockoutCoordinates(allPawData) 
+    for i = 1:length(allPawData)
+         pawPointsData = allPawData{1,i};
+         for j =1:length(pawPointsData)
+            if mod(j,16) == 7 || mod(j,16) == 10 || mod(j,16) == 13 || mod(j,16) == 0
+           % if  mod(j,16) == 7  || mod(j,16) == 0
+                pawPointsDataFilt(j,7) =   pawPointsData(j,7);
+                pawPointsDataFilt(j,8) =   pawPointsData(j,8);
+               
+            else
+                pawPointsDataFilt(j,7) = NaN;
+                pawPointsDataFilt(j,8) = NaN;
+            end
+         end
+         
+        allPawDataFiltered{i}  = pawPointsDataFilt ;
     end
 end
