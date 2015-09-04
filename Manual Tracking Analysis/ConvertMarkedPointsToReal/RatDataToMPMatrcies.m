@@ -24,11 +24,16 @@ function  [X1,X2] = RatDataToMPMatrcies(RatData)
    for i =1:length(allLeft)
        trialLeft = allLeft{1,i};
        trialCenter = allCenter{1,i};
+       trialRight = allRight{1,i};
+       
        for j = 1:5
             frameLeft = cell2mat(trialLeft(1,j));
             frameCenter = cell2mat(trialCenter(1,j)); 
-            counterLeft = 1;
+            frameRight = cell2mat(trialRight(1,j));
             
+            
+            counterLeft = 1;
+            counterRight =1;
             
             x1= [];
             x2 = [];
@@ -37,7 +42,8 @@ function  [X1,X2] = RatDataToMPMatrcies(RatData)
                 
                    
                 TFC = isnan(frameCenter(k,1)); 
-                TFL = isnan(frameLeft(k,1)) ;
+                TFL = isnan(frameLeft(k,1));
+                TFR = isnan(frameRight(k,1));
 
                 if TFC  == 0
                     if TFL == 0
