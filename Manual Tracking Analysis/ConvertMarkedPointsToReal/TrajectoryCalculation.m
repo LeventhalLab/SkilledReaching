@@ -12,9 +12,11 @@
 
 function  TrajectoryCalculation(all3dPoints)
 
+load pxRubickCalib
+
     for i = 1:length(all3dPoints(:,1))
         for j =1:5
-            currentFrame = all3dPoints{i,j};
+            currentFrame = all3dPoints{i,j} .* pxRubickCalib;
             currentFrame =currentFrame(1:end-6,:);
             filteredAll3dPoints{i,j} = currentFrame;
         end 
@@ -35,14 +37,16 @@ end
 
 function [allCentroid] = calculateCentroid(filteredAll3dPoints)
 
-    for i = 1:length(filteredAll3dPoints)
-        for j =1:5
+size(filteredAll3dPoints)
+
+    for i = 1:length(filteredAll3dPoints(:,1));
+        for j =1:length(filteredAll3dPoints(1,:));
             
             x = [];
             y = [];
             z = [];
             
-             currentFrame = filteredAll3dPoints{i,j};
+             currentFrame = filteredAll3dPoints{i,j}
              TF = isnan(sum(currentFrame(:,1)));
              
              if TF == 0
@@ -86,11 +90,14 @@ z_std = [];
            
            for k = 1:4
                [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
-               plot3(x,y,z)
+               %plot3(x,y,z)
            end
            
            
             plot3(x_avg,y_avg,z_avg)
+            xlabel('x');
+            ylabel('y');
+            zlabel('z');
            
             
             
@@ -100,29 +107,40 @@ end
 
 function plotCentroidTrajectories(allCentroid)
     
-    
+check = 0 ; %This is a check to stop plotting if NAN exisit     
+
     for i =1:length(allCentroid(:,1))
         
                     x = [];
                     y = [];
                     z = [];
+                    
+        check = 0;
         
         for j = 1:5
              currentFrame = allCentroid{i,j};
              TF = isnan(currentFrame(:,1)); 
              
-             if TF == 0
+             if TF == 0 && check == 0;
                    
                     
                     x(j) = currentFrame(:,1);
                     y(j) = currentFrame(:,2);
                     z(j) = currentFrame(:,3);
                     
+             elseif TF == 1
+                check =1; 
              end
+             
+             
         end
         
         figure(2)
         plot3(x,y,z)
+        
+        xlabel('x');
+        ylabel('y');
+        zlabel('z');
         hold on
     end
 end

@@ -30,23 +30,23 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
 
     
         
-    for i =1:length(all3dPoints)
-        figure(i)
-        for j=1:5
-            
-        
-            
-            currentFrame = cell2mat(all3dPoints(i,j));
-            x = currentFrame(:,1);
-            y = currentFrame(:,2);
-            z = currentFrame(:,3);
-            scatter3(x,y,z)
-            
-            
-            hold on
-            
-        end
-    end
+%     for i =1:length(all3dPoints)
+%         figure(i)
+%         for j=1:5
+%             
+%         
+%             
+%             currentFrame = cell2mat(all3dPoints(i,j));
+%             x = currentFrame(:,1);
+%             y = currentFrame(:,2);
+%             z = currentFrame(:,3);
+%             scatter3(x,y,z)
+%             
+%             
+%             hold on
+%             
+%         end
+%     end
 end
 
 
