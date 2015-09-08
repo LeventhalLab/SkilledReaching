@@ -28,9 +28,9 @@ function x3D = LinearTriangulation(x1,x2,rot,t)
 %        Date: 03/06/2008
 %----------------------------------------------------------
 
-% Convert to homogeneous coordinates.
-x1 = HomogeneousCoordinates(x1,'2D');
-x2 = HomogeneousCoordinates(x2,'2D');
+% % Convert to homogeneous coordinates.
+% x1 = HomogeneousCoordinates(x1,'2D');
+% x2 = HomogeneousCoordinates(x2,'2D');
 
 % Normalization
 % Transform the image coordinates according to x^_i = Tx_i and x'^_i =

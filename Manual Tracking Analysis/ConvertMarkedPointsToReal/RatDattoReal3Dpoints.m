@@ -19,18 +19,22 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
             x1 = X1{i,j};
             x2 = X2{i,j};
             
-            %add in the rubiks dimensions
-            x1 = vertcat(x1,rubiksX1);
-            x2 = vertcat(x2,rubiksX2);
             
-             [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x1,x2);
-             all3dPoints{i,j} = points3d;
+  
+           
+          if size(x1) > 1
+                [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x1,x2);
+                all3dPoints{i,j} = points3d;
+          else
+               all3dPoints{i,j} = [];
+          end
+             
         end          
     end
 
     
-        
-%     for i =1:length(all3dPoints)
+%         
+%     for i =1:length(all3dPoints(:,1))
 %         figure(i)
 %         for j=1:5
 %             
@@ -41,8 +45,8 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
 %             y = currentFrame(:,2);
 %             z = currentFrame(:,3);
 %             scatter3(x,y,z)
-%             
-%             
+%             xlabel('x');ylabel('y');zlabel('z');
+%             xlim([-1,1]);ylim([-1 1]),zlim([-1,1]);
 %             hold on
 %             
 %         end

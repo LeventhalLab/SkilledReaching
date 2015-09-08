@@ -40,8 +40,8 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     [J,newOrigin] = undistortImage(I,cameraParams);
     imshow(J)
     hold on
-    scatter(x1(:,1),x1(:,2),'r')
-    scatter(x2(:,1),x2(:,2),'b') 
+   scatter(x1(:,1),x1(:,2),'r')
+   scatter(x2(:,1),x2(:,2),'b') 
     
     
     
@@ -53,8 +53,8 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     x2_hom = [x2, ones(size(x2,1),1)]';
     
     %Normalize points
-    x1_norm = (k' \ x1_hom)';   
-    x2_norm = (k' \ x2_hom)';   
+   x1_norm = (k' \ x1_hom)';   
+   x2_norm = (k' \ x2_hom)';   
     
   
     %Calculate the fundemental matrix
@@ -68,7 +68,7 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     [rot,t] = EssentialMatrixToCameraMatrix(E);
     
     %Select correct rot and t 
-    [cRot,cT,correct] = SelectCorrectEssentialCameraMatrix_mirrorTJ(rot,t,x1_norm,x2_norm);
+    [cRot,cT,correct] = SelectCorrectEssentialCameraMatrix_mirrorTJ(rot,t,x1,x2);
    
     %Create the projection matricies
     P1= eye(4,3);% P1 stays constants 4x3 matrix
@@ -76,7 +76,7 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     
      
     %Use the triangulation function 
-    [points3d,reprojectedPoints,errors] = triangulate_DL(x1_norm, x2_norm, P1, P2);
+    [points3d,reprojectedPoints,errors] = triangulate_DL(x1, x2, P1, P2);
     
     figure(3)
     [J,newOrigin] = undistortImage(I,cameraParams);

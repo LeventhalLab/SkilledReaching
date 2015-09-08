@@ -164,6 +164,7 @@ function [allPawDataFiltered] = KnockoutCoordinates(allPawData)
             end
          end
          
+         
         allPawDataFiltered{i}  = pawPointsDataFilt ;
     end
 end

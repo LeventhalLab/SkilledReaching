@@ -16,17 +16,15 @@ load pxRubickCalib
 
     for i = 1:length(all3dPoints(:,1))
         for j =1:5
-            currentFrame = all3dPoints{i,j} .* pxRubickCalib;
-            currentFrame =currentFrame(1:end-6,:);
+            currentFrame = all3dPoints{i,j};
+            %currentFrame = currentFrame(1:end-6,:);
             filteredAll3dPoints{i,j} = currentFrame;
         end 
     end
     
     [allCentroids] = calculateCentroid(filteredAll3dPoints);
     
-    
     averagedCentroids = averageCentroids(allCentroids)
-    
     
     plotCentroidTrajectories(allCentroids)
     
@@ -46,10 +44,12 @@ size(filteredAll3dPoints)
             y = [];
             z = [];
             
-             currentFrame = filteredAll3dPoints{i,j}
-             TF = isnan(sum(currentFrame(:,1)));
+           
+             currentFrame = filteredAll3dPoints{i,j};
              
-             if TF == 0
+
+             
+             if size(currentFrame) > 0
                  x = currentFrame(:,1);
                  y = currentFrame(:,2);
                  z = currentFrame(:,3);
@@ -107,7 +107,7 @@ end
 
 function plotCentroidTrajectories(allCentroid)
     
-check = 0 ; %This is a check to stop plotting if NAN exisit     
+check = 0 ; %This is a check to stop plotting if NaN exisit     
 
     for i =1:length(allCentroid(:,1))
         
@@ -119,7 +119,13 @@ check = 0 ; %This is a check to stop plotting if NAN exisit
         
         for j = 1:5
              currentFrame = allCentroid{i,j};
-             TF = isnan(currentFrame(:,1)); 
+              
+             
+             if size(currentFrame)> 0
+                 TF = 0;
+             else
+                 TF = 1;
+             end
              
              if TF == 0 && check == 0;
                    

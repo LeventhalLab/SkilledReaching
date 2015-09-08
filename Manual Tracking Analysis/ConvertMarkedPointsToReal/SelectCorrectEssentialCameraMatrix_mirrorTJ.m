@@ -38,14 +38,13 @@ function [cRot,cT,correct] = SelectCorrectEssentialCameraMatrix_mirrorTJ(rot,t,x
         %Modified by Titus John 9/2015 for manual marking of code
 %----------------------------------------------------------
 % 
-%    %Calculate the normalize points
-    nx1 = inv(k)*x1;
-    nx2 = inv(k)*x2;
+ nx1 = x1;
+ nx2 = x2;
 
 x3D = zeros(4,size(x1,2),4);
 for i=1:4
     x3D(:,:,i) = LinearTriangulation(nx1, nx2, rot(:,:,i), t(:,:,i));
-    x3D(:,:,i) = HomogeneousCoordinates(x3D(:,:,i),'3D');
+    %x3D(:,:,i) = HomogeneousCoordinates(x3D(:,:,i),'3D');
 end
 
 correct = 0;
