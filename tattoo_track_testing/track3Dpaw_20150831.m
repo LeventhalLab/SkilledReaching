@@ -90,9 +90,12 @@ end
 HSVthresh_parameters.min_thresh(1) = 0.05;    % minimum distance hue threshold must be from mean. Note hue is circular (hue = 1 is the same as hue = 0)
 HSVthresh_parameters.min_thresh(2) = 0.10;    % minimum distance saturation threshold must be from mean 
 HSVthresh_parameters.min_thresh(3) = 0.05;    % minimum distance value threshold must be from mean 
-HSVthresh_parameters.num_stds(1) = 5;         % number of standard deviations hue can deviate from mean (unless less than min_thresh)
-HSVthresh_parameters.num_stds(2) = 5;         % number of standard deviations saturation can deviate from mean (unless less than min_thresh)
-HSVthresh_parameters.num_stds(3) = 5;         % number of standard deviations value can deviate from mean (unless less than min_thresh)
+HSVthresh_parameters.max_thresh(1) = 0.16;    % maximum distance hue threshold can be from mean. Note hue is circular (hue = 1 is the same as hue = 0)
+HSVthresh_parameters.max_thresh(2) = 0.15;    % maximum distance saturation threshold can be from mean 
+HSVthresh_parameters.max_thresh(3) = 0.30;    % maximum distance value threshold can be from mean 
+HSVthresh_parameters.num_stds(1) = 5;         % number of standard deviations hue can deviate from mean (unless less than min_thresh or greater than max_thresh)
+HSVthresh_parameters.num_stds(2) = 5;         % number of standard deviations saturation can deviate from mean (unless less than min_thresh or greater than max_thresh)
+HSVthresh_parameters.num_stds(3) = 5;         % number of standard deviations value can deviate from mean (unless less than min_thresh or greater than max_thresh)
 
 diff_threshold = 45;
 maxDistPerFrame = 20;
@@ -156,6 +159,24 @@ digitBlob{2}.ExtentOutputPort = true;
 digitBlob{2}.LabelMatrixOutputPort = true;
 digitBlob{2}.MinimumBlobArea = 40;
 digitBlob{2}.MaximumBlobArea = 30000;
+
+pdBlob{1} = vision.BlobAnalysis;
+pdBlob{1}.AreaOutputPort = true;
+pdBlob{1}.CentroidOutputPort = true;
+pdBlob{1}.BoundingBoxOutputPort = true;
+pdBlob{1}.ExtentOutputPort = true;
+pdBlob{1}.LabelMatrixOutputPort = true;
+pdBlob{1}.MinimumBlobArea = 50;
+pdBlob{1}.MaximumBlobArea = 30000;
+
+pdBlob{2} = vision.BlobAnalysis;
+pdBlob{2}.AreaOutputPort = true;
+pdBlob{2}.CentroidOutputPort = true;
+pdBlob{2}.BoundingBoxOutputPort = true;
+pdBlob{2}.ExtentOutputPort = true;
+pdBlob{2}.LabelMatrixOutputPort = true;
+pdBlob{2}.MinimumBlobArea = 50;
+pdBlob{2}.MaximumBlobArea = 30000;
 
 trackCheck.maxDistPerFrame = 5;    % in mm
 trackCheck.maxReprojError = 0.1;   % not sure what this needs to be, will need some trial and error
@@ -431,6 +452,13 @@ while video.CurrentTime < video.Duration
     end
     % now have preliminary masks in each view, need to assign blobs to
     % digits
+%     fullDigitMasks = cell(1,2);
+%     fullDigitMasks{1} = false(size(hsv{1},1),size(hsv{1},2));
+%     fullDigitMasks{2} = false(size(hsv{2},1),size(hsv{2},2));
+% not using the above right now, instead passing all the tracks data to the
+% paw dorsum identification subroutine
+
+%     digit_centroids = 
     for iColor = 1 : length(digitColors)
         
         sameColIdx = find(strcmp(digitColors{iColor},colorList));
@@ -453,12 +481,29 @@ while video.CurrentTime < video.Duration
             
         for iDigit = 1 : numSameColorObjects
             tracks(sameColIdx(iDigit)) = newTracks(iDigit);
+%             fullDigitMasks{1} = fullDigitMasks{1} | ...
+%                                 tracks(sameColIdx(iDigit)).digitmask1;
+%             fullDigitMasks{2} = fullDigitMasks{2} | ...
+%                                 tracks(sameColIdx(iDigit)).digitmask2;
         end
     end    % end for iColor...
     
+    % find the 3d points of all digits visible in both views
+    [digitMarkers, dorsumRegionMask] = ...
+        findDorsumRegion(tracks, pawPref)
+    
+    
+    
     % now should have the digits - need to identify the dorsal aspect of
     % the paw...
-    
+    hsv{iView} = squeeze(paw_hsv{iView}(:,:,:,1));
+    pdMask = thresholdDorsum(tracks(1).meanHSV, ...
+                             tracks(1).stdHSV, ..., ...
+                             HSVthresh_parameters, ...
+                             hsv, ...
+                             tracks, ...
+                             pdBlob);
+
 end
 
 end
@@ -631,9 +676,17 @@ function digitMask = thresholdDigits(meanHSV, ...
                                      digitBlob)
 %
 % INPUTS:
-%   meanHSV - 
-%   stdHSV - 
-%   HSVthresh_parameters - 
+%   meanHSV - 3 element vector with mean hue, saturation, and value values,
+%       respectively for the target region
+%   stdHSV - 3 element vector with standard deviation of the hue, 
+%       saturation, and value values, respectively for the target region
+%   HSVthresh_parameters - structure with the following fields:
+%       .min_thresh - 3 element vector containing mininum distance h/s/v
+%           thresholds must be from their respective means
+%       .num_stds - 3 element vector containing number of standard
+%           deviations away from the mean h/s/v values to set threshold.
+%           The threshold is set as whichever is further from the mean -
+%           min_thresh or num_stds * std
 %   hsv - 2-element cell array containing the enhanced hsv image of the paw
 %       within the bounding box for the direct view (index 1) and mirror
 %       view (index 2)
@@ -643,8 +696,15 @@ function digitMask = thresholdDigits(meanHSV, ...
 %       the direct view (index 1) and mirror view (index 2)
 %
 % OUTPUTS:
-%   
+%   digitMask - 1 x 2 cell array containing the mask for the direct
+%       (center) and mirror views, respectively
+
+
+% consider adjusting this algorithm to include knowledge from the previous
+% frame
+
     min_thresh = HSVthresh_parameters.min_thresh;
+    max_thresh = HSVthresh_parameters.max_thresh;
     num_stds   = HSVthresh_parameters.num_stds;
     
     HSVlimits = zeros(2,6);
@@ -653,12 +713,15 @@ function digitMask = thresholdDigits(meanHSV, ...
         % construct HSV limits vector from track, HSVthresh_parameters
         HSVlimits(iView,1) = meanHSV(iView,1);            % hue mean
         HSVlimits(iView,2) = max(min_thresh(1), stdHSV(iView,1) * num_stds(1));  % hue range
+        HSVlimits(iView,2) = min(max_thresh(1), HSVlimits(iView,2));  % hue range
 
         s_range = max(min_thresh(2), stdHSV(iView,2) * num_stds(2));
+        s_range = min(max_thresh(2), s_range);
         HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
         HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
 
         v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
+        v_range = min(max_thresh(3), v_range);
         HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % saturation lower bound
         HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % saturation upper bound    
         
@@ -684,6 +747,103 @@ function digitMask = thresholdDigits(meanHSV, ...
         end
         
         digitMask{iView} = tempMask;
+    end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function pdMask = thresholdDorsum(meanHSV, ...
+                                  stdHSV, ...
+                                  HSVthresh_parameters, ...
+                                  hsv, ...
+                                  tracks, ...
+                                  pawPref, ...
+                                  pdBlob)
+%
+% INPUTS:
+%   meanHSV - 3 element vector with mean hue, saturation, and value values,
+%       respectively for the target region
+%   stdHSV - 3 element vector with standard deviation of the hue, 
+%       saturation, and value values, respectively for the target region
+%   HSVthresh_parameters - structure with the following fields:
+%       .min_thresh - 3 element vector containing mininum distance h/s/v
+%           thresholds must be from their respective means
+%       .num_stds - 3 element vector containing number of standard
+%           deviations away from the mean h/s/v values to set threshold.
+%           The threshold is set as whichever is further from the mean -
+%           min_thresh or num_stds * std
+%   hsv - 2-element cell array containing the enhanced hsv image of the paw
+%       within the bounding box for the direct view (index 1) and mirror
+%       view (index 2)
+%   digitMasks - 1 x 2 cell array containing the center (direct) view 
+%       (index 1) and mirror (index 2) view digit masks
+%   pdBlob - cell array of blob objects containing blob parameters for
+%       the direct view (index 1) and mirror view (index 2)
+%
+% OUTPUTS:
+%   digitMask - 1 x 2 cell array containing the mask for the direct
+%       (center) and mirror views, respectively
+
+    min_thresh = HSVthresh_parameters.min_thresh;
+    max_thresh = HSVthresh_parameters.max_thresh;
+    num_stds   = HSVthresh_parameters.num_stds;
+    
+    HSVlimits = zeros(2,6);
+    pdMask = cell(1,2);
+    
+    digitMasks = cell(1,2);
+    digitMasks{1} = false(size(hsv{1},1),size(hsv{1},2));
+    digitMasks{2} = false(size(hsv{2},1),size(hsv{2},2));
+    currentMask = cell(1,2);
+    currentMask{1} = false(size(hsv{1},1),size(hsv{1},2));
+    currentMask{2} = false(size(hsv{2},1),size(hsv{2},2));
+    
+
+    for iView = 2 : -1 : 1   % easier to start with the mirror view
+
+            
+        % construct HSV limits vector from track, HSVthresh_parameters
+        % construct HSV limits vector from track, HSVthresh_parameters
+        HSVlimits(iView,1) = meanHSV(iView,1);            % hue mean
+        HSVlimits(iView,2) = max(min_thresh(1), stdHSV(iView,1) * num_stds(1));  % hue range
+        HSVlimits(iView,2) = min(max_thresh(1), HSVlimits(iView,2));  % hue range
+
+        s_range = max(min_thresh(2), stdHSV(iView,2) * num_stds(2));
+        s_range = min(max_thresh(2), s_range);
+        HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
+        HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
+
+        v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
+        v_range = min(max_thresh(3), v_range);
+        HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % saturation lower bound
+        HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % saturation upper bound  
+        
+        % constraints on where the dorsum of the paw can be based on where
+        % the digits are. First, find the convex hull around the collection
+        % of digits
+        [digitsHull,hullPoints] = multiRegionConvexHullMask(digitMasks{iView});
+        % threshold the image
+        tempMask = HSVthreshold(squeeze(hsv{iView}), ...
+                                HSVlimits(iView,:));
+
+        if ~any(tempMask(:)); continue; end
+
+        SE = strel('disk',2);
+        tempMask = imopen(tempMask, SE);
+        tempMask = imclose(tempMask, SE);
+        tempMask = imfill(tempMask, 'holes');
+
+        tempMask = tempMask & ~digitsHull;
+        
+        [A,~,~,~,labMat] = step(pdBlob{iView}, tempMask);
+        % take at most the numSameColorObjects largest blobs
+        [~,idx] = sort(A, 'descend');
+        tempMask = (labMat == idx(1));
+
+        
+        pdMask{iView} = tempMask;
     end
 
 end
@@ -937,5 +1097,132 @@ function newTracks = checkTwoTracks(prevTracks, ...
         end
 
     end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function testPoint = selectDorsumTestPoint(pawPref, iView, currentMask)
+
+% function to find a test point to determine where the dorsum of the paw
+% should be with respect to the digits
+
+    if iView == 1    % direct view
+        if strcmpi(pawPref,'right')
+            testPoint = [1,1];
+        else
+            testPoint = [1,size(currentMask{iView},2)];
+        end
+    else    % mirror view
+        if strcmpi(pawPref,'right')
+            testPoint = round([size(curentMask{iView},1)/2, size(currentMask{iView},2)]);
+        else
+            testPoint = round([size(curentMask{iView},1)/2, 1]);
+        end
+    end
+    
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [digitMarkers, dorsumRegionMask] = ...
+    findDorsumRegion(tracks, pawPref)
+%
+% INPUTS:
+%
+% OUTPUTS:
+%
+
+% assume
+fixed_pts = zeros(3,2,2);    % 3 points by (x,y) coords by 2 views (1 - direct, 2 - mirror)
+switch lower(pawPref)
+    case 'right',
+        fixed_pts(:,:,1) = [0.0  0.0    % most radial digit
+                            2.0  0.0    % most ulnar digit
+                            1.0  3.0];  % palm region
+        fixed_pts(:,:,2) = [0.0  0.0
+                            0.0  1.0
+                            1.5  0.5];
+    case 'left',
+        fixed_pts(:,:,1) = [0.0  0.0    % most radial digit
+                           -2.0  0.0    % most ulnar digit
+                           -1.0  1.5];  % palm region
+        fixed_pts(:,:,2) = [0.0  0.0
+                            0.0  2.0
+                           -0.5  1.0];
+end
+% CHECK THAT I'M DOING THIS ROTATION RIGHT FOR BOTH SIDES!
+
+
+digitMarkers = zeros(length(tracks)-2, 2, 3, 2);    % number of digits by (x,y) by base/centroid/tip by view number
+
+firstVisibleDigitFound = false(1,2);
+digCentroids = zeros(2,2,2);
+currentMask = cell(1,2);
+digitMasks = cell(1,2);
+digitMasks{1} = false(size(tracks(2).digitmask1));
+digitMasks{2} = false(size(tracks(2).digitmask2));
+firstMask = cell(1,2);
+lastMask = cell(1,2);
+for ii = 2 : length(tracks)-1
+    currentMask{1} = tracks(ii).digitmask1;
+    currentMask{2} = tracks(ii).digitmask2;
+    digitMasks{1} = digitMasks{1} | currentMask{1};
+    digitMasks{2} = digitMasks{2} | currentMask{2};
+
+    for iView = 1 : 2
+        if tracks(ii).isvisible(iView)
+            s = regionprops(currentMask{iView},'centroid');
+            if ~firstVisibleDigitFound(iView)
+                firstVisibleDigitFound(iView) = true;
+                digCentroids(1,:,iView) = s.Centroid;
+                digitMarkers(ii-1,:,2,iView) = s.Centroid;
+                firstMask{iView} = currentMask{iView};
+            else
+                digCentroids(2,:,iView) = s.Centroid;
+                lastMask{iView} = currentMask{iView};
+                digitMarkers(ii-1,:,2,iView) = s.Centroid;
+            end
+        end
+    end
+end
+
+H = zeros(3,3,2);
+for iView = 1 : 2
+    movingPoints = squeeze(digCentroids(:,:,iView));
+    tform = fitgeotrans(squeeze(fixed_pts(1:2,:,iView)), movingPoints, 'nonreflectivesimilarity');
+    H(:,:,iView) = tform.T';
+    fixed_pts_hom = [squeeze(fixed_pts(:,:,iView)), ones(3,1)];
+    pts_transformed = (H(:,:,iView) * fixed_pts_hom')';
+    pts_transformed = bsxfun(@rdivide,pts_transformed(:,1:2), pts_transformed(:,3));
+    
+    % find the points from each digit closest to and farthest from the
+    % estimated paw dorsum centroid. WOULD PROBABLY WORK BETTER IF I
+    % CALCULATED THE DISTANCE FROM A LINE PARALLEL TO THE LINE BETWEEN
+    % DIGIT CENTROIDS INSTEAD OF THE DORSUM CENTER - OR MOVE THE DORSUM
+    % CENTER FURTHER AWAY
+    for ii = 2 : length(tracks) - 1
+        if iView == 1
+            currentMask{iView} = tracks(ii).digitmask1;
+        else
+            currentMask{iView} = tracks(ii).digitmask2;
+        end
+     
+        [y,x] = find(currentMask{iView});
+        [~,nnidx] = findNearestNeighbor(pts_transformed(3,:), [x,y]);
+        digitMarkers(ii-1,:,1,iView) = [x(nnidx),y(nnidx)];
+        [~,nnidx] = findFarthestPoint(pts_transformed(3,:), [x,y]);
+        digitMarkers(ii-1,:,3,iView) = [x(nnidx),y(nnidx)];
+    end
+    dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:), ...
+                                             pts_transformed(3,:), size(digitMasks{iView}));
+    
+    [digitsHull,hullPoints] = multiRegionConvexHullMask(digitMasks{iView});
+end
+        
+            
+            
 
 end

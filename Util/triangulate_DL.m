@@ -32,7 +32,7 @@ cameraMatrices = cat(3, P1, P2);
 
 points3d = zeros(numPoints, 3, 'like', points2d);
 reprojectedPoints = zeros(numPoints, 2, 2, 'like', points2d);
-reprojectionErrors = zeros(numPoints, 1, 'like', points2d);
+% reprojectionErrors = zeros(numPoints, 1, 'like', points2d);
 
 for iPoint = 1 : numPoints
     [points3d(iPoint, :), reprojection, errors] = ...
