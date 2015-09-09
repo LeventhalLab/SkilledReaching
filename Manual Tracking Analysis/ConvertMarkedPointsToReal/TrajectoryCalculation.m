@@ -17,7 +17,7 @@ load pxRubickCalib
     for i = 1:length(all3dPoints(:,1))
         for j =1:5
             currentFrame = all3dPoints{i,j};
-            %currentFrame = currentFrame(1:end-6,:);
+           % currentFrame = currentFrame(1:end-6,:);
             filteredAll3dPoints{i,j} = currentFrame;
         end 
     end

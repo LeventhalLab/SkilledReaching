@@ -18,10 +18,7 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
         for j= 1:5
             x1 = X1{i,j};
             x2 = X2{i,j};
-            
-            
-  
-           
+    
           if size(x1) > 1
                 [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x1,x2);
                 all3dPoints{i,j} = points3d;
