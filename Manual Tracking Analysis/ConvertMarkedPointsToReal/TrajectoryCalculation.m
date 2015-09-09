@@ -10,21 +10,21 @@
 
 
 
-function  TrajectoryCalculation(all3dPoints)
+function  [allCentroids]= TrajectoryCalculation(all3dPoints)
 
-load pxRubickCalib
+load pxToMm
 
     for i = 1:length(all3dPoints(:,1))
         for j =1:5
             currentFrame = all3dPoints{i,j};
-           % currentFrame = currentFrame(1:end-6,:);
+            currentFrame = currentFrame(1:end-6,:);
             filteredAll3dPoints{i,j} = currentFrame;
         end 
     end
     
     [allCentroids] = calculateCentroid(filteredAll3dPoints);
     
-    averagedCentroids = averageCentroids(allCentroids)
+   % averagedCentroids = averageCentroids(allCentroids)
     
     plotCentroidTrajectories(allCentroids)
     
@@ -141,12 +141,16 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
              
         end
         
-        figure(2)
+        figure(i)
         plot3(x,y,z)
         
         xlabel('x');
         ylabel('y');
         zlabel('z');
         hold on
+        
+        az = 0;
+        el = 90;
+        view(az, el);
     end
 end
