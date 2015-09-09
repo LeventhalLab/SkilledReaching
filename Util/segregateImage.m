@@ -1,4 +1,4 @@
-function mask = segregateImage(linePoints, ptInRegion, imSize)
+function [mask, borderPts] = segregateImage(linePoints, ptInRegion, imSize)
 %
 % usage:
 %

@@ -600,3 +600,143 @@ for iView = 1 : 3
     viewMask{iView}(:,:,6) = BG_mask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
                                      mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
 end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%WORKING HERE - NEED TO ADAPT THIS ALGORITHM FOR THE INITIAL DIGIT ID PART
+%- GOAL IS TO FIND THE REGION WHERE THE PAW DORSUM CAN BE GIVEN DIGIT
+%LOCATIONS, AS WELL AS FIND THE EXTREME POINTS ON THE DIGITS
+function [digitMarkers, dorsumRegionMask] = ...
+    findInitDorsumRegion(viewMask, pawPref)
+%
+% INPUTS:
+%   viewMask - 
+%   pawPref - string containing 'left' or 'right'
+%
+% OUTPUTS:
+%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%       dimension is (x,y), third dimension is proximal,centroid,tip of
+%       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
+%   dorsumRegionMask - cell array containing masks for where the paw dorsum
+%       can be with respect to the digits (index 1 id direct view, index 2
+%       is mirror view)
+
+fixed_pts = zeros(3,2,2);    % 3 points by (x,y) coords by 2 views (1 - direct, 2 - mirror)
+switch lower(pawPref)
+    case 'right',
+        fixed_pts(:,:,1) = [ 2.0   0.0    % most radial digit
+                             0.0   0.0    % most ulnar digit
+                             1.0  -1.0];  % palm region
+        fixed_pts(:,:,2) = [0.0  0.0
+                            0.0  2.0
+                            1.0  1.0];
+    case 'left',
+        fixed_pts(:,:,1) = [0.0  0.0    % most radial digit
+                            2.0  0.0    % most ulnar digit
+                            1.0  -1.0];  % palm region
+        fixed_pts(:,:,2) = [1.0  0.0
+                            1.0  2.0
+                            0.0  1.0];
+end
+
+digitMarkers = zeros(length(tracks)-2, 2, 3, 2);    % number of digits by (x,y) by base/centroid/tip by view number
+
+firstVisibleDigitFound = false(1,2);
+digCentroids = zeros(2,2,2);
+currentMask = cell(1,2);
+digitMasks = cell(1,2);
+digitMasks{1} = false(size(tracks(2).digitmask1));
+digitMasks{2} = false(size(tracks(2).digitmask2));
+firstMask = cell(1,2);
+lastMask = cell(1,2);
+for ii = 2 : length(tracks)-1
+    currentMask{1} = tracks(ii).digitmask1;
+    currentMask{2} = tracks(ii).digitmask2;
+    digitMasks{1} = digitMasks{1} | currentMask{1};
+    digitMasks{2} = digitMasks{2} | currentMask{2};
+
+    for iView = 1 : 2
+        if tracks(ii).isvisible(iView)
+            s = regionprops(currentMask{iView},'centroid');
+            if ~firstVisibleDigitFound(iView)
+                firstVisibleDigitFound(iView) = true;
+                digCentroids(1,:,iView) = s.Centroid;
+                digitMarkers(ii-1,:,2,iView) = s.Centroid;
+                firstMask{iView} = currentMask{iView};
+            else
+                digCentroids(2,:,iView) = s.Centroid;
+                lastMask{iView} = currentMask{iView};
+                digitMarkers(ii-1,:,2,iView) = s.Centroid;
+            end
+        end
+    end
+end
+
+H = zeros(3,3,2);
+linepts = zeros(2,2);
+validImageBorderPts = zeros(2,2);
+dorsumRegionMask = cell(1,2);
+for iView = 1 : 2
+    movingPoints = squeeze(digCentroids(:,:,iView));
+    tform = fitgeotrans(squeeze(fixed_pts(1:2,:,iView)), movingPoints, 'nonreflectivesimilarity');
+    H(:,:,iView) = tform.T';
+    fixed_pts_hom = [squeeze(fixed_pts(:,:,iView)), ones(3,1)];
+    pts_transformed = (H(:,:,iView) * fixed_pts_hom')';
+    pts_transformed = bsxfun(@rdivide,pts_transformed(:,1:2), pts_transformed(:,3));
+    
+    [A,B,C] = constructParallelLine(pts_transformed(1,:), ...
+                                    pts_transformed(2,:), ...
+                                    pts_transformed(3,:));
+    borderPts = lineToBorderPoints([A,B,C], size(digitMasks{iView}));
+    
+    linepts(1,:) = borderPts(1:2);
+    linepts(2,:) = borderPts(3:4);
+    % find the points from each digit closest to and farthest from the
+    % estimated paw dorsum centroid. WOULD PROBABLY WORK BETTER IF I
+    % CALCULATED THE DISTANCE FROM A LINE PARALLEL TO THE LINE BETWEEN
+    % DIGIT CENTROIDS INSTEAD OF THE DORSUM CENTER - OR MOVE THE DORSUM
+    % CENTER FURTHER AWAY
+    firstValidIdx = 0;lastValidIdx = 0;
+    for ii = 2 : length(tracks) - 1
+        if ~tracks(ii).isvisible(iView)
+            continue;
+        end
+        if firstValidIdx == 0; firstValidIdx = ii-1; end
+        lastValidIdx = ii-1;
+        
+        if iView == 1
+            currentMask{iView} = tracks(ii).digitmask1;
+        else
+            currentMask{iView} = tracks(ii).digitmask2;
+        end
+        
+        edge_I = bwmorph(currentMask{iView},'remove');
+        [y,x] = find(edge_I);
+        [~,nnidx] = findNearestPointToLine(linepts, [x,y]);
+%         [~,nnidx] = findNearestNeighbor(pts_transformed(3,:), [x,y]);
+        digitMarkers(ii-1,:,1,iView) = [x(nnidx),y(nnidx)];
+        [~,nnidx] = findFarthestPointFromLine(linepts, [x,y]);
+%         [~,nnidx] = findFarthestPoint(pts_transformed(3,:), [x,y]);
+        digitMarkers(ii-1,:,3,iView) = [x(nnidx),y(nnidx)];
+    end
+    validImageBorderPts(1,:) = squeeze(digitMarkers(firstValidIdx,:,1,iView));
+    validImageBorderPts(2,:) = squeeze(digitMarkers(lastValidIdx,:,1,iView));
+    dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
+                                             pts_transformed(3,:), size(digitMasks{iView}));
+%     dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:), ...
+%                                              pts_transformed(3,:), size(digitMasks{iView}));
+    
+    [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull;
+end
+        
+            
+            
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

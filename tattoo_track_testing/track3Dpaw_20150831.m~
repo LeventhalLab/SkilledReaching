@@ -324,10 +324,14 @@ mp2_norm = normalize_points(mp2, K);
 points3d = points3d * scale;
 
 tracks = initializeTracks();
+markers3D = zeros(3);
 for ii = 1 : num_elements_to_track
     
     bbox = [s(:,ii).BoundingBox];
     bbox = reshape(bbox,[4,2])';
+    
+    markers3D(2,:) = points3d(ii,:);
+    
     newTrack = struct(...
         'id', ii, ...
         'bbox', bbox, ...
@@ -335,7 +339,7 @@ for ii = 1 : num_elements_to_track
         'digitmask2', squeeze(digitMasks{2}(:,:,ii)), ...
         'meanHSV', squeeze(meanHSV(:,ii,:)), ...
         'stdHSV', squeeze(stdHSV(:,ii,:)), ...
-        'centroid3D', points3d(ii,:), ...
+        'markers3D', markers3D, ...
         'age', 1, ...
         'isvisible', isVisible(ii,:), ...
         'totalVisibleCount', totalVisCount(ii,:), ...
@@ -474,7 +478,6 @@ while video.CurrentTime < video.Duration
             
         newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                   prelimMask, ...
-                                                  prev_mask_bbox, ...
                                                   mask_bbox, ...
                                                   trackingBoxParams, ...
                                                   trackCheck);
@@ -488,11 +491,12 @@ while video.CurrentTime < video.Duration
         end
     end    % end for iColor...
     
-    % find the 3d points of all digits visible in both views
+    % find the 3d points of all digits visible in both views, and the
+    % general region in which the dorsum of the paw must appear
     [digitMarkers, dorsumRegionMask] = ...
-        findDorsumRegion(tracks, pawPref)
-    
-    
+        findDorsumRegion(tracks, pawPref);
+    % triangulate all available digit markers
+	tracks(2:5) = digit3Dpoints(digitMarkers, trackingBoxParams, tracks(2:5), mask_bbox);
     
     % now should have the digits - need to identify the dorsal aspect of
     % the paw...
@@ -501,7 +505,8 @@ while video.CurrentTime < video.Duration
                              tracks(1).stdHSV, ..., ...
                              HSVthresh_parameters, ...
                              hsv, ...
-                             tracks, ...
+                             digitMarkers, ...
+                             dorsumRegionMask, ...
                              pdBlob);
 
 end
@@ -519,7 +524,7 @@ function tracks = initializeTracks()
         'digitmask2', {}, ...
         'meanHSV', {}, ...
         'stdHSV', {}, ...
-        'centroid3D', {}, ...
+        'markers3D', {}, ...
         'age', {}, ...
         'isvisible', {}, ...
         'totalVisibleCount', {}, ...
@@ -566,7 +571,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [normalized_points] = normalize_points(points2d, K)
-
+% INPUTS
+%   points2d - m x 2 array containing (x,y) pairs in each row
+%   K - intrinsic matrix (lower triangular format)
 homogeneous_points = [points2d,ones(size(points2d,1),1)];
 normalized_points  = (K' \ homogeneous_points')';
 normalized_points = bsxfun(@rdivide,normalized_points(:,1:2),normalized_points(:,3));
@@ -758,8 +765,8 @@ function pdMask = thresholdDorsum(meanHSV, ...
                                   stdHSV, ...
                                   HSVthresh_parameters, ...
                                   hsv, ...
-                                  tracks, ...
-                                  pawPref, ...
+                                  digitMarkers, ...
+                                  dorsumRegionMask, ...
                                   pdBlob)
 %
 % INPUTS:
@@ -777,8 +784,12 @@ function pdMask = thresholdDorsum(meanHSV, ...
 %   hsv - 2-element cell array containing the enhanced hsv image of the paw
 %       within the bounding box for the direct view (index 1) and mirror
 %       view (index 2)
-%   digitMasks - 1 x 2 cell array containing the center (direct) view 
-%       (index 1) and mirror (index 2) view digit masks
+%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%       dimension is (x,y), third dimension is proximal,centroid,tip of
+%       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
+%   dorsumRegionMask - cell array containing masks for where the paw dorsum
+%       can be with respect to the digits (index 1 id direct view, index 2
+%       is mirror view)
 %   pdBlob - cell array of blob objects containing blob parameters for
 %       the direct view (index 1) and mirror view (index 2)
 %
@@ -786,6 +797,8 @@ function pdMask = thresholdDorsum(meanHSV, ...
 %   digitMask - 1 x 2 cell array containing the mask for the direct
 %       (center) and mirror views, respectively
 
+
+                        
     min_thresh = HSVthresh_parameters.min_thresh;
     max_thresh = HSVthresh_parameters.max_thresh;
     num_stds   = HSVthresh_parameters.num_stds;
@@ -793,16 +806,12 @@ function pdMask = thresholdDorsum(meanHSV, ...
     HSVlimits = zeros(2,6);
     pdMask = cell(1,2);
     
-    digitMasks = cell(1,2);
-    digitMasks{1} = false(size(hsv{1},1),size(hsv{1},2));
-    digitMasks{2} = false(size(hsv{2},1),size(hsv{2},2));
     currentMask = cell(1,2);
     currentMask{1} = false(size(hsv{1},1),size(hsv{1},2));
     currentMask{2} = false(size(hsv{2},1),size(hsv{2},2));
     
 
     for iView = 2 : -1 : 1   % easier to start with the mirror view
-
             
         % construct HSV limits vector from track, HSVthresh_parameters
         % construct HSV limits vector from track, HSVthresh_parameters
@@ -820,10 +829,6 @@ function pdMask = thresholdDorsum(meanHSV, ...
         HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % saturation lower bound
         HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % saturation upper bound  
         
-        % constraints on where the dorsum of the paw can be based on where
-        % the digits are. First, find the convex hull around the collection
-        % of digits
-        [digitsHull,hullPoints] = multiRegionConvexHullMask(digitMasks{iView});
         % threshold the image
         tempMask = HSVthreshold(squeeze(hsv{iView}), ...
                                 HSVlimits(iView,:));
@@ -835,13 +840,14 @@ function pdMask = thresholdDorsum(meanHSV, ...
         tempMask = imclose(tempMask, SE);
         tempMask = imfill(tempMask, 'holes');
 
-        tempMask = tempMask & ~digitsHull;
+        tempMask = tempMask & dorsumRegionMask{iView};
         
         [A,~,~,~,labMat] = step(pdBlob{iView}, tempMask);
         % take at most the numSameColorObjects largest blobs
         [~,idx] = sort(A, 'descend');
-        tempMask = (labMat == idx(1));
-
+        if ~isempty(idx)
+            tempMask = (labMat == idx(1));
+        end
         
         pdMask{iView} = tempMask;
     end
@@ -853,7 +859,6 @@ end
 
 function newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                    prelimMask, ...
-                                                   prev_mask_bbox, ...
                                                    mask_bbox, ...
                                                    trackingBoxParams, ...
                                                    trackCheck)
@@ -878,14 +883,12 @@ if length(colorTracks) == 1
     % only one color to deal with
     newTracks = checkSingleTrack(colorTracks, ...
                                  prelimMask, ...
-                                 prev_mask_bbox, ...
                                  mask_bbox, ...
                                  trackingBoxParams, ...
                                  trackCheck);
 else
     newTracks = checkTwoTracks(colorTracks, ...
                                prelimMask, ...
-                               prev_mask_bbox, ...
                                mask_bbox, ...
                                trackingBoxParams, ...
                                trackCheck);
@@ -897,7 +900,6 @@ end
 
 function newTrack = checkSingleTrack(prevTrack, ...
                                      prelimMask, ...
-                                     prev_mask_bbox, ...
                                      mask_bbox, ...
                                      trackingBoxParams, ...
                                      trackCheck)
@@ -926,7 +928,7 @@ function newTrack = checkSingleTrack(prevTrack, ...
         points3d = points3d * trackingBoxParams.scale;
 
         % distance from previous point
-        d3d = norm(points3d - prevTrack.centroid3D);
+        d3d = norm(points3d - prevTrack.markers3D(2,:));
         
         % if reprojection errors and/or 3-d distance don't make sense, is
         % one of the blobs off? Is the other OK, or are both mistakes? If
@@ -943,7 +945,7 @@ function newTrack = checkSingleTrack(prevTrack, ...
         else
             newTrack.digitmask1 = prelimMask{1};
             newTrack.digitmask2 = prelimMask{2};
-            newTrack.centroid3D = points3d;
+            newTrack.markers3D(2,:) = points3d;
             newTrack.isvisible = true(1,2);
             newTrack.totalVisibleCount = newTrack.totalVisibleCount + 1;
             newTrack.consecutiveInvisibleCount = [0 0];
@@ -957,7 +959,6 @@ end
 
 function newTracks = checkTwoTracks(prevTracks, ...
                                     prelimMask, ...
-                                    prev_mask_bbox, ...
                                     mask_bbox, ...
                                     trackingBoxParams, ...
                                     trackCheck)
@@ -967,12 +968,13 @@ function newTracks = checkTwoTracks(prevTracks, ...
 %       color
 %   prelimMask - m x 2 cell array, where m is the number of digits with the
 %       same coloring (should be one or two), and the second index is the
-%       direct view (index 1) or mirror view (index 2)
-%
+%       direct view (index 1) or mirror view (index 2)\
+%   mask_bbox - 
+%	trackingBoxParams - 
 	newTracks = prevTracks;
     prev_3dpoints = zeros(2,3);
-    prev_3dpoints(1,:) = prevTracks(1).centroid3D;
-    prev_3dpoints(2,:) = prevTracks(2).centroid3D;
+    prev_3dpoints(1,:) = prevTracks(1).markers3D(2,:);
+    prev_3dpoints(2,:) = prevTracks(2).markers3D(2,:);
     
     % several possibilities: two blobs visible in both views; one blob
     % visible in one view, two blobs in the other; none in one view, two in
@@ -1087,7 +1089,7 @@ function newTracks = checkTwoTracks(prevTracks, ...
             
             newTracks(iTrack).digitmask1 = centerMask;
             newTracks(iTrack).digitmask2 = mirrorMask;
-            newTracks(iTrack).centroid3D = curr_3dpoint;
+            newTracks(iTrack).markers3D(2,:) = curr_3dpoint;
             newTracks(iTrack).isvisible = true(1,2);
             newTracks(iTrack).totalVisibleCount = newTracks(iTrack).totalVisibleCount + 1;
             newTracks(iTrack).consecutiveInvisibleCount = [0 0];
@@ -1131,30 +1133,37 @@ function [digitMarkers, dorsumRegionMask] = ...
     findDorsumRegion(tracks, pawPref)
 %
 % INPUTS:
+%   tracks - the full set of digit tracks, after the digits have been
+%       identified for the current frame
+%   pawPref - string containing 'left' or 'right'
 %
 % OUTPUTS:
-%
+%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%       dimension is (x,y), third dimension is proximal,centroid,tip of
+%       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
+%   dorsumRegionMask - cell array containing masks for where the paw dorsum
+%       can be with respect to the digits (index 1 id direct view, index 2
+%       is mirror view)
 
-% assume
 fixed_pts = zeros(3,2,2);    % 3 points by (x,y) coords by 2 views (1 - direct, 2 - mirror)
 switch lower(pawPref)
     case 'right',
-        fixed_pts(:,:,1) = [0.0  0.0    % most radial digit
-                            1.0  0.0    % most ulnar digit
-                            0.5  0.5];  % palm region
+        fixed_pts(:,:,1) = [ 2.0   0.0    % most radial digit
+                             0.0   0.0    % most ulnar digit
+                             1.0  -1.0];  % palm region
         fixed_pts(:,:,2) = [0.0  0.0
-                            0.0  1.0
-                            0.5  0.5];
+                            0.0  2.0
+                            1.0  1.0];
     case 'left',
         fixed_pts(:,:,1) = [0.0  0.0    % most radial digit
-                           -1.0  0.0    % most ulnar digit
-                            0.5  0.5];  % palm region
-        fixed_pts(:,:,2) = [0.0  0.0
-                            0.0  1.0
-                           -0.5  0.5];
+                            2.0  0.0    % most ulnar digit
+                            1.0  -1.0];  % palm region
+        fixed_pts(:,:,2) = [1.0  0.0
+                            1.0  2.0
+                            0.0  1.0];
 end
 
-% 
+digitMarkers = zeros(length(tracks)-2, 2, 3, 2);    % number of digits by (x,y) by base/centroid/tip by view number
 
 firstVisibleDigitFound = false(1,2);
 digCentroids = zeros(2,2,2);
@@ -1176,34 +1185,113 @@ for ii = 2 : length(tracks)-1
             if ~firstVisibleDigitFound(iView)
                 firstVisibleDigitFound(iView) = true;
                 digCentroids(1,:,iView) = s.Centroid;
+                digitMarkers(ii-1,:,2,iView) = s.Centroid;
                 firstMask{iView} = currentMask{iView};
             else
                 digCentroids(2,:,iView) = s.Centroid;
                 lastMask{iView} = currentMask{iView};
+                digitMarkers(ii-1,:,2,iView) = s.Centroid;
             end
         end
     end
 end
 
 H = zeros(3,3,2);
+linepts = zeros(2,2);
+validImageBorderPts = zeros(2,2);
+dorsumRegionMask = cell(1,2);
 for iView = 1 : 2
     movingPoints = squeeze(digCentroids(:,:,iView));
-    tform{iView} = fitgeotrans(squeeze(fixed_pts(1:2,:,iView)), movingPoints, 'nonreflectivesimilarity');
-    H(:,:,iView) = tform{iView}.T';
+    tform = fitgeotrans(squeeze(fixed_pts(1:2,:,iView)), movingPoints, 'nonreflectivesimilarity');
+    H(:,:,iView) = tform.T';
     fixed_pts_hom = [squeeze(fixed_pts(:,:,iView)), ones(3,1)];
     pts_transformed = (H(:,:,iView) * fixed_pts_hom')';
     pts_transformed = bsxfun(@rdivide,pts_transformed(:,1:2), pts_transformed(:,3));
     
-    % find the points from the most radial and ulnar digits closest to the
-    % transformed "dorsum" point
+    [A,B,C] = constructParallelLine(pts_transformed(1,:), ...
+                                    pts_transformed(2,:), ...
+                                    pts_transformed(3,:));
+    borderPts = lineToBorderPoints([A,B,C], size(digitMasks{iView}));
     
-    dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:), ...
+    linepts(1,:) = borderPts(1:2);
+    linepts(2,:) = borderPts(3:4);
+
+    firstValidIdx = 0;lastValidIdx = 0;
+    for ii = 2 : length(tracks) - 1
+        if ~tracks(ii).isvisible(iView)
+            continue;
+        end
+        if firstValidIdx == 0; firstValidIdx = ii-1; end
+        lastValidIdx = ii-1;
+        
+        if iView == 1
+            currentMask{iView} = tracks(ii).digitmask1;
+        else
+            currentMask{iView} = tracks(ii).digitmask2;
+        end
+        
+        edge_I = bwmorph(currentMask{iView},'remove');
+        [y,x] = find(edge_I);
+        [~,nnidx] = findNearestPointToLine(linepts, [x,y]);
+%         [~,nnidx] = findNearestNeighbor(pts_transformed(3,:), [x,y]);
+        digitMarkers(ii-1,:,1,iView) = [x(nnidx),y(nnidx)];
+        [~,nnidx] = findFarthestPointFromLine(linepts, [x,y]);
+%         [~,nnidx] = findFarthestPoint(pts_transformed(3,:), [x,y]);
+        digitMarkers(ii-1,:,3,iView) = [x(nnidx),y(nnidx)];
+    end
+    validImageBorderPts(1,:) = squeeze(digitMarkers(firstValidIdx,:,1,iView));
+    validImageBorderPts(2,:) = squeeze(digitMarkers(lastValidIdx,:,1,iView));
+    dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
                                              pts_transformed(3,:), size(digitMasks{iView}));
+%     dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:), ...
+%                                              pts_transformed(3,:), size(digitMasks{iView}));
     
-    [digitsHull,hullPoints] = multiRegionConvexHullMask(digitMasks{iView});
+    [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull;
 end
         
             
             
 
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tracks = digit3Dpoints(digitMarkers, trackingBoxParams, tracks, mask_bbox)
+% INPUTS:
+%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%       dimension is (x,y), third dimension is proximal,centroid,tip of
+%       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
+%   tracks - tracks structures containing only the 4 digits (index 1 is
+%       index finger, index 4 is pinky)
+%   mask_bbox - 2 x 4 array, where each row is a standard bounding box
+%       vector [x,y,w,h]
+
+P1 = trackingBoxParams.P1;
+P2 = trackingBoxParams.P2;
+numDigits = size(digitMarkers,1);
+matched_points = zeros(3,2,2);
+for iDigit = 1 : numDigits
+
+    currentTrack = tracks(iDigit);
+    if any(~currentTrack.isvisible); continue; end   % can't see the digit in at least one view
+
+    for iView = 1 : 2
+        for iSite = 1 : 3
+            matched_points(iSite,:,iView) = squeeze(digitMarkers(iDigit,:,iSite,iView));
+        end
+        matched_points(:,1,iView) = matched_points(:,1,iView) + mask_bbox(iView,1);
+        matched_points(:,2,iView) = matched_points(:,2,iView) + mask_bbox(iView,2);
+        % WORKING HERE - NEED TO MOVE THE MATCHED PONTS BACK INTO FULL
+        % IMAGE COORDINATES FROM THE BOUNDING BOX COORDINATES (SHOULD BE
+        % ABLE TO PULL FROM TRACKS(6))
+        matched_points(:,:,iView) = normalize_points(squeeze(matched_points(:,:,iView)), ...
+                                                         trackingBoxParams.K);
+    end
+    
+    [points3d,~,~] = triangulate_DL(squeeze(matched_points(:,:,1)), ...
+                                    squeeze(matched_points(:,:,2)), ...
+                                    P1, P2);
+    tracks(iDigit).markers3D = points3d * trackingBoxParams.scale;
+    end
 end

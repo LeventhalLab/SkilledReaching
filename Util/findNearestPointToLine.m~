@@ -1,0 +1,41 @@
+function [nndist, nnidx] = findNearestPointToLine(Q, Q0, varargin)
+%
+% usage: 
+%
+% function to find the point(s) in y closest to a single point "x"
+%
+% INPUTS:
+%    Q - 2 x 2 or 2 x 3 matrix containing points defining the line, where
+%       each row is an [x,y,(z)] point
+%    Q0 - an m x n matrix where each row is a different point in an
+%       n (2 or 3)-dimensional space
+%
+% VARARGs:
+%    optional 3rd argument indicates how many points to return - default is
+%       one
+%
+% OUTPUTS:
+%    nndist - the distance(s) from the point "x" to its nearest neighbors
+%    nnidx  - the row indices in Q0 of the points closest to the line
+%       defined by Q
+
+numNeighbors = 1;
+if nargin == 3
+    numNeighbors = varargin{1};
+end
+
+if size(Q,2) ~= size(Q0,2)
+    error('Q and Q must have the same number of columns');
+end
+
+dist = zeros(size(y));
+for ii = 1 : size(Q0, 1)
+    diffMatrix(:,ii) = x(ii) - y(:,ii);
+end
+
+dist = sum(diffMatrix.^2, 2);
+[distsort, sortidx] = sort(dist);
+nndist = distsort(1:numNeighbors);
+nnidx  = sortidx(1:numNeighbors);
+
+end
