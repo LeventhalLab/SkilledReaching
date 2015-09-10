@@ -24,8 +24,8 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
             x2= vertcat(x2,r27514x2);
     
           if size(x1) > 1
-                [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x1,x2);
-                all3dPoints{i,j} = points3d;%*pxToMm;
+                [points3d,reprojectedPoints,errors,pxToMm] = ConvertMarkedPointsToRealWorld(x1,x2);
+                all3dPoints{i,j} = points3d*pxToMm;
           else
                all3dPoints{i,j} = [];
           end
@@ -35,30 +35,30 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData)
 
 
         
-    colors = ['r','b','g','k','c'];
-        
-    for i = 1:length(all3dPoints)
-        figure(i)
-        for j=1:5
-            
-            
-           currentFrame = cell2mat(all3dPoints(i,j));
-           
-            if size(currentFrame) ~= [0,0]
-                x = currentFrame(:,1);
-                y = currentFrame(:,2);
-                z = currentFrame(:,3);
-                scatter3(x,y,z,colors(j))
-                xlabel('x');ylabel('y');zlabel('z');
-                %xlim([0,.05]);ylim([0 .05]),zlim([-1,1]);
-                hold on
-                
-                az = 0;
-                el = 90;
-                view(az, el);
-            end
-        end
-    end
+%     colors = ['r','b','g','k','c'];
+%         
+%     for i = 1:length(all3dPoints(:,1))
+%         figure(i)
+%         for j=1:5
+%             
+%             
+%            currentFrame = cell2mat(all3dPoints(i,j));
+%            
+%             if size(currentFrame) ~= [0,0]
+%                 x = currentFrame(:,1);
+%                 y = currentFrame(:,2);
+%                 z = currentFrame(:,3);
+%                 scatter3(x,y,z,colors(j))
+%                 xlabel('x');ylabel('y');zlabel('z');
+%                 %xlim([0,.05]);ylim([0 .05]),zlim([-1,1]);
+%                 hold on
+%                 
+%                 az = 0;
+%                 el = -90;
+%                 view(az, el);
+%             end
+%         end
+%     end
     
 end
 

@@ -20,7 +20,7 @@
 % 3.) Normalize the points to homogeneous points
 % 4.) Shoot into triangulate_DL.
 
-function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x1,x2)
+function  [points3d,reprojectedPoints,errors,pxToMm] = ConvertMarkedPointsToRealWorld(x1,x2,rx1,rx2)
     load('cameraParameters.mat');
     I = imread('rubiksCalibration.png');
     [J,newOrigin] = undistortImage(I,cameraParams);
@@ -28,13 +28,6 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     %Undistort the points
     x1 = undistortPoints(x1,cameraParams);
     x2 = undistortPoints(x2,cameraParams);
-
-%     figure(1)
-%     imshow(J)
-%     hold on
-%     scatter(x1(:,1),x1(:,2),'r')
-%     scatter(x2(:,1),x2(:,2),'b') 
-    
     
     %Grab the intrsic matrix
     k = cameraParams.IntrinsicMatrix;
@@ -51,14 +44,6 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     %remove the homogenous from normalized points
     x1_norm(:,3) = [];
     x2_norm(:,3) = [];
-    
-    
-     
-    hold on
-
-    
-    scatter(x1_norm(:,1),x1_norm(:,2),'r');
-    scatter(x2_norm(:,1),x2_norm(:,2),'b');
     
   
     %Calculate the fundemental matrix
@@ -87,7 +72,7 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     %Use the triangulation function 
     [points3d,reprojectedPoints,errors] = triangulate_DL(x1_norm, x2_norm, P1, P2); 
   
-%     figure(3)
+%     figure(4)
 %     [J,newOrigin] = undistortImage(I,cameraParams);
 %     imshow(J)
 %     hold on
@@ -107,32 +92,32 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
 %     scatter(x1_scaled(:,1),x1_scaled(:,2))
 %     scatter(x2_scaled(:,1),x2_scaled(:,2))
 %     
-    figure(4)
+%     figure(5)
+%     
+%     
+%     x1_reprojected = reprojectedPoints(:,:,1);
+%     x2_reprojected = reprojectedPoints(:,:,2);
+%     hold on 
+%     
+%     scatter(x1_reprojected(:,1),x1_reprojected(:,2),'r')
+%     scatter(x2_reprojected(:,1),x2_reprojected(:,2),'b')
+%     
+%     x = points3d(:,1);
+%     y = points3d(:,2);
+%     z = points3d(:,3);
+%     scatter3(x,y,z)
+%     
+%     xlim([-1,1])
+%     ylim([-1,1])
+%     zlim([-1,1])
+%     
+%     xlabel('x')
+%     ylabel('y')
+%     zlabel('z')
+     
     
-    
-    x1_reprojected = reprojectedPoints(:,:,1);
-    x2_reprojected = reprojectedPoints(:,:,2);
-    hold on 
-    
-    scatter(x1_reprojected(:,1),x1_reprojected(:,2),'r')
-    scatter(x2_reprojected(:,1),x2_reprojected(:,2),'b')
-    
-    x = points3d(:,1);
-    y = points3d(:,2);
-    z = points3d(:,3);
-    scatter3(x,y,z)
-    
-    xlim([-1,1])
-    ylim([-1,1])
-    zlim([-1,1])
-    
-    xlabel('x')
-    ylabel('y')
-    zlabel('z')
-    
-    
-    A = points3d(5,:);
-    B = points3d(6,:);
+    A = points3d(end-1,:);
+    B = points3d(end,:);
     
     a1 = A(:,1);
     a2 = A(:,2);
@@ -142,8 +127,8 @@ function  [points3d,reprojectedPoints,errors] = ConvertMarkedPointsToRealWorld(x
     b2 = B(:,2);
     b3 = B(:,3);
 
-    dist =sqrt((a1-b1)^2+(a2-b2)^2+(a3-b3)^2)
-    pxToMm = 17.5 / dist %17.5 mm is legnth of rubicks cube square
+    dist =sqrt((a1-b1)^2+(a2-b2)^2+(a3-b3)^2);
+    pxToMm = 17.5 / dist; %17.5 mm is legnth of rubicks cube square
     
 end
 

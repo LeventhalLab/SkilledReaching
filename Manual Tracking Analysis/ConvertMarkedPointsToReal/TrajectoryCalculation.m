@@ -24,7 +24,7 @@ load pxToMm
     
     [allCentroids] = calculateCentroid(filteredAll3dPoints);
     
-   % averagedCentroids = averageCentroids(allCentroids)
+    averagedCentroids = averageCentroids(allCentroids)
     
     plotCentroidTrajectories(allCentroids)
     
@@ -90,7 +90,6 @@ z_std = [];
            
            for k = 1:4
                [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
-               %plot3(x,y,z)
            end
            
            
@@ -98,6 +97,11 @@ z_std = [];
             xlabel('x');
             ylabel('y');
             zlabel('z');
+            
+            
+            az = 0;
+            el = -90;
+            view(az, el);
            
             
             
@@ -141,7 +145,7 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
              
         end
         
-        figure(i)
+        figure(2)
         plot3(x,y,z)
         
         xlabel('x');
@@ -150,7 +154,7 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
         hold on
         
         az = 0;
-        el = 90;
+        el = -90;
         view(az, el);
     end
 end
