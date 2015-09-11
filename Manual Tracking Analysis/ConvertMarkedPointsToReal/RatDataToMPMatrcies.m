@@ -6,10 +6,10 @@
 %matricies x1 and x2 respectively that are then fed into
 %convertMarkedPointstoRealWorld script. 
 
-function  [X1,X2] = RatDataToMPMatrcies(RatData)
+function  [X1,X2] = RatDataToMPMatrcies(RatData,score)
 
 
-    [allPawData] = ReadPawDataFromRatData(RatData);
+    [allPawData] = ReadPawDataFromRatData(RatData,score);
     
     [allPawDataFiltered] = KnockoutCoordinates(allPawData); 
     
@@ -120,50 +120,61 @@ function [left,center,right] = SplitPawData(pawPointsData)
 end
 
 
-function [allPawData] = ReadPawDataFromRatData(RatData) 
+function [allPawData] = ReadPawDataFromRatData(RatData,score) 
     allPawData = [];
     filteredPawData = [];
     Scores=[RatData.VideoFiles.Score]';
 
     j= 1;
     for i=1:length(Scores)
-        if Scores(i) == 1 
+        if Scores(i) == score 
             tempAllPawData = RatData.VideoFiles(i).Paw_Points_Tracking_Data;
+            
+           
           
             counter = 1; %This is the counter that represents the actual length of filled data
             
-            for k =1:length(tempAllPawData)
-              
-                if isnumeric(cell2mat(tempAllPawData(k,7)))  
-                   
-                
-                    filteredPawData(counter,7) = cell2mat(tempAllPawData(k,7));
-                    filteredPawData(counter,8) = cell2mat(tempAllPawData(k,8));
-                    counter = counter + 1;
-                end
-            end         
-            allPawData{j}= filteredPawData; 
-            j = j+1;
+            
+            
+            if size(tempAllPawData) ~= [0,0]
+                for k =1:length(tempAllPawData)
+
+
+
+                    if isnumeric(cell2mat(tempAllPawData(k,7)))  
+
+
+                        filteredPawData(counter,7) = cell2mat(tempAllPawData(k,7));
+                        filteredPawData(counter,8) = cell2mat(tempAllPawData(k,8));
+                        counter = counter + 1;
+                    end
+                end         
+                allPawData{j}= filteredPawData; 
+                j = j+1;
+            end
         end
     end
 end
 
 
 function [allPawDataFiltered] = KnockoutCoordinates(allPawData) 
+
+    
     for i = 1:length(allPawData)
-         pawPointsData = allPawData{1,i};
-         for j =1:length(pawPointsData)
-            if mod(j,16) == 7 || mod(j,16) == 10 || mod(j,16) == 13 || mod(j,16) == 0
-          % if  mod(j,16) ~= 1
-                pawPointsDataFilt(j,7) =   pawPointsData(j,7);
-                pawPointsDataFilt(j,8) =   pawPointsData(j,8);
-                
-            else
-                pawPointsDataFilt(j,7) = NaN;
-                pawPointsDataFilt(j,8) = NaN;
-            end
-         end
-         
+         pawPointsData = allPawData{1,i};  
+        
+             for j =1:length(pawPointsData)
+                if mod(j,16) == 7 || mod(j,16) == 10 || mod(j,16) == 13 || mod(j,16) == 0 
+               %if  mod(j,16) == 1
+                    pawPointsDataFilt(j,7) =   pawPointsData(j,7);
+                    pawPointsDataFilt(j,8) =   pawPointsData(j,8);
+
+                else
+                    pawPointsDataFilt(j,7) = NaN;
+                    pawPointsDataFilt(j,8) = NaN;
+                end
+             end
+        
          
         allPawDataFiltered{i}  = pawPointsDataFilt ;
     end

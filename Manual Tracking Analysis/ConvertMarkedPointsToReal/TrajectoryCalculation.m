@@ -10,23 +10,49 @@
 
 
 
-function  [allCentroids]= TrajectoryCalculation(all3dPoints)
+function  [allCentroids]= TrajectoryCalculation(all3dPoints,score,fig_num_avg,fig_num_all)
 
-load pxToMm
 
     for i = 1:length(all3dPoints(:,1))
         for j =1:5
             currentFrame = all3dPoints{i,j};
-            currentFrame = currentFrame(1:end-6,:);
+            
+             x = currentFrame(:,1);
+             y = currentFrame(:,2);
+             z = currentFrame(:,3);
+                
+            
+             rubX = x(end-6:end-1);
+             rubY = y(end-6:end-1);
+             rubZ = z(end-6:end-1);
+                
+             pelX = x(end);
+             pelY = y(end);
+             pelZ = z(end);
+                
+            
+            
+            currentFrame = currentFrame(1:end-7,:);
             filteredAll3dPoints{i,j} = currentFrame;
         end 
     end
     
     [allCentroids] = calculateCentroid(filteredAll3dPoints);
+%     
+%     hold on
+%     scatter3(pelX,pelY,pelZ,'k','filled')
+%     scatter3(rubX,rubY,rubZ,'k','filled')
+%     
     
-    averagedCentroids = averageCentroids(allCentroids)
+    averagedCentroids = averageCentroids(allCentroids,score,fig_num_avg)
+        
+
+    plotCentroidTrajectories(allCentroids,score,fig_num_all)
     
-    plotCentroidTrajectories(allCentroids)
+%     
+%     hold on
+%     scatter3(pelX,pelY,pelZ,'k','filled')
+%     scatter3(rubX,rubY,rubZ,'k','filled')
     
     
 
@@ -61,7 +87,7 @@ size(filteredAll3dPoints)
     end
 end
 
-function  [averagedCentroids] = averageCentroids(allCentroids)
+function  [averagedCentroids] = averageCentroids(allCentroids,score,fig_num_avg)
 
 x_std = [];
 y_std = [];
@@ -73,34 +99,48 @@ z_std = [];
             end
             
             
+           
+            
            for k = 1:5
-                    currentFrameAVG = averagedCentroids{k};
-                    x_avg(k) = currentFrameAVG(:,1);
-                    y_avg(k) = currentFrameAVG(:,2);
-                    z_avg(k) = currentFrameAVG(:,3);
-                    
-                    currentFrameSTD = stdCentroids{k};
-                    x_std(k) = currentFrameSTD(:,1);
-                    y_std(k) = currentFrameSTD(:,2);
-                    z_std(k) = currentFrameSTD(:,3);
+                    currentFrameAVG = averagedCentroids{k}
+                
+                    if size(currentFrameAVG) == [1, 3]
+                        x_avg(k) = currentFrameAVG(:,1);
+                        y_avg(k) = currentFrameAVG(:,2);
+                        z_avg(k) = currentFrameAVG(:,3);
+
+                        currentFrameSTD = stdCentroids{k};
+                        x_std(k) = currentFrameSTD(:,1);
+                        y_std(k) = currentFrameSTD(:,2);
+                        z_std(k) = currentFrameSTD(:,3);
+                    end
            end
             
-           figure(1)
+           figure(fig_num_avg)
            hold on
+%            
+%            for k = 1:4
+%                [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
+%            end
+%            
            
-           for k = 1:4
-               [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
+           if score == 1 
+            plot3(x_avg,y_avg,z_avg,'r')
+           elseif score ==7
+            plot3(x_avg,y_avg,z_avg,'b')
            end
            
+           xlim([-5, -1]);
+           ylim([0, 3]);
+           zlim([54, 62]);
            
-            plot3(x_avg,y_avg,z_avg)
             xlabel('x');
             ylabel('y');
             zlabel('z');
             
             
-            az = 0;
-            el = -90;
+            az = -150;
+            el = 50;
             view(az, el);
            
             
@@ -108,8 +148,7 @@ z_std = [];
             
 end
 
-
-function plotCentroidTrajectories(allCentroid)
+function plotCentroidTrajectories(allCentroid,score,fig_num_all)
     
 check = 0 ; %This is a check to stop plotting if NaN exisit     
 
@@ -145,16 +184,26 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
              
         end
         
-        figure(2)
-        plot3(x,y,z)
+        figure(fig_num_all)
+        if score == 1
+            plot3(x,y,z,'r')
+        elseif score == 7
+            plot3(x,y,z,'b')
+        end
         
         xlabel('x');
         ylabel('y');
         zlabel('z');
         hold on
         
-        az = 0;
-        el = -90;
+            
+           xlim([-5, -1]);
+           ylim([0, 3]);
+           zlim([54, 62]);
+        
+        
+        az = -150;
+        el = 50;
         view(az, el);
     end
 end
