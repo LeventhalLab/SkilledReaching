@@ -24,4 +24,5 @@ function pawPositions = pawModel(pawOrigin, wristRot, digitAngles)
 % digits = zeros(2,2,4);    % 2 points define each digit segment, 2 segments per digit, 4 digits
 % digits(1,1,:) = linspace(0,1,4);
 
-pawPositions = 
+pawPositions = zeros(5,4,3);
+pawPositions(1,:,:)

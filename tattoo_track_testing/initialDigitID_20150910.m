@@ -1,4 +1,4 @@
-function [viewMask, mask_bbox, refImageTime] = initialDigitID_20150831(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, varargin)
+function [viewMask, mask_bbox, digitMarkers, refImageTime] = initialDigitID_20150910(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, varargin)
 %
 % usage
 %
@@ -26,6 +26,9 @@ function [viewMask, mask_bbox, refImageTime] = initialDigitID_20150831(video, tr
 %       each viewMask. Format of each row is [x,y,w,h], where x,y is the
 %       upper left corner of the bounding box, and w and h are the width
 %       and height, respectively
+%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%       dimension is (x,y), third dimension is proximal,centroid,tip of
+%       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
 %   refImageTime - the time in the video at which the reference image was
 %       taken
 
@@ -111,23 +114,23 @@ mirrorDigitBlob.LabelMatrixOutputPort = true;
 mirrorDigitBlob.MinimumBlobArea = 50;
 mirrorDigitBlob.MaximumBlobArea = 30000;
 
-mirror_pdBlob = vision.BlobAnalysis;
-mirror_pdBlob.AreaOutputPort = true;
-mirror_pdBlob.CentroidOutputPort = true;
-mirror_pdBlob.BoundingBoxOutputPort = true;
-mirror_pdBlob.ExtentOutputPort = true;
-mirror_pdBlob.LabelMatrixOutputPort = true;
-mirror_pdBlob.MinimumBlobArea = 50;
-mirror_pdBlob.MaximumBlobArea = 30000;
+pdBlob{1} = vision.BlobAnalysis;
+pdBlob{1}.AreaOutputPort = true;
+pdBlob{1}.CentroidOutputPort = true;
+pdBlob{1}.BoundingBoxOutputPort = true;
+pdBlob{1}.ExtentOutputPort = true;
+pdBlob{1}.LabelMatrixOutputPort = true;
+pdBlob{1}.MinimumBlobArea = 50;
+pdBlob{1}.MaximumBlobArea = 30000;
 
-center_pdBlob = vision.BlobAnalysis;
-center_pdBlob.AreaOutputPort = true;
-center_pdBlob.CentroidOutputPort = true;
-center_pdBlob.BoundingBoxOutputPort = true;
-center_pdBlob.ExtentOutputPort = true;
-center_pdBlob.LabelMatrixOutputPort = true;
-center_pdBlob.MinimumBlobArea = 50;
-center_pdBlob.MaximumBlobArea = 30000;
+pdBlob{2} = vision.BlobAnalysis;
+pdBlob{2}.AreaOutputPort = true;
+pdBlob{2}.CentroidOutputPort = true;
+pdBlob{2}.BoundingBoxOutputPort = true;
+pdBlob{2}.ExtentOutputPort = true;
+pdBlob{2}.LabelMatrixOutputPort = true;
+pdBlob{2}.MinimumBlobArea = 50;
+pdBlob{2}.MaximumBlobArea = 30000;
 
 colorList = {'darkgreen','blue','red','green','red'};
 satLimits = [0.80000    1.00
@@ -514,76 +517,49 @@ while digitMissing
                 viewMask{iView}(:,:,jj) = imreconstruct(regionMarker, viewMask{iView}(:,:,jj));
             end
         end    % for jj = 3 : numObjects
-
-        hsv{iView} = squeeze(masked_hsv_enh{iView}(:,:,:,1));
-       
+      
     end    % for iView
-    if any(isDigitVisible(:)); continue; end
+    if any(~isDigitVisible(:)); continue; end
     
     [digitMarkers, dorsumRegionMask] = ...
         findInitDorsumRegion(viewMask, pawPref);
-    
+    switch lower(colorList{1}),
+        case 'red',
+            colorIdx = 1;
+        case 'green',
+            colorIdx = 2;
+        case 'blue',
+            colorIdx = 3;
+        case 'darkgreen',
+            colorIdx = 4;
+    end
+        
     HSVlimits = zeros(2,6);
     HSVlimits(1,:) = [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)];
     HSVlimits(2,:) = [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)];
     
+    hsv{1} = squeeze(masked_hsv_enh{2}(:,:,:,1));
+    hsv{2} = squeeze(masked_hsv_enh{dMirrorIdx}(:,:,:,1));
+
     pdMask = initThresholdDorsum(HSVlimits, ...
                                  hsv, ...
                                  digitMarkers, ...
                                  dorsumRegionMask, ...
                                  pdBlob);
-    for iView = 1 : numViews
-    
-        if iView == pMirrorIdx; continue; end    % don't bother with the palmar view
+    for iView = 1 : 2    % this is confusing. Here, iView = 1 for direct view, 2 for the mirror view with the paw dorsum
 
-        % can we find the dorsal aspect of the paw proper?
-        switch lower(colorList{1}),
-            case 'red',
-                colorIdx = 1;
-            case 'green',
-                colorIdx = 2;
-            case 'blue',
-                colorIdx = 3;
-            case 'darkgreen',
-                colorIdx = 4;
+        switch iView
+            case 1,
+                viewIdx = 2;
+            case 2,
+                viewIdx = dMirrorIdx;
         end
-
-        if ~any(pdMask(:))
-            isDigitVisible(1,iView) = false;
-            break;
-        end
-        
-        SE = strel('disk',2);
-        pdMask = bwdist(pdMask) < 2;
-        pdMask = imopen(pdMask, SE);
-        pdMask = imclose(pdMask,SE);
-        pdMask = imfill(pdMask,'holes');
-        
-%         overlapMask = pdMask & fullDigitMask{iView};
-        % keep the digits separate from the paw dorsum mask
-%         for jj = 2 : numObjects
-%             viewMask{iView}(:,:,jj) = viewMask{iView}(:,:,jj) & ~overlapMask;
-%         end
-%         pdMask = pdMask & ~overlapMask;
-        pdMask = pdMask & dorsumRegionMask{iView};
-        if ~any(pdMask(:))
-            isDigitVisible(1, iView) = false;
+        if ~any(pdMask{iView}(:))
+            isDigitVisible(1, viewIdx) = false;
             break;
         end
             
-        % take the largest blob left
-        if iView == 2
-            blobObject = center_pdBlob;
-        else
-            blobObject = mirror_pdBlob;
-        end
-        [A,~,~,~,labMat] = step(blobObject, pdMask);
-        if isempty(A)
-            isDigitVisible(1,iView) = false;
-            break;
-        end
-        valid_idx = find(A == max(A));
-        viewMask{iView}(:,:,1) = (labMat == valid_idx);
+        viewMask{viewIdx}(:,:,1) = pdMask{iView};
         
     end    % for iView...
     
@@ -653,6 +629,7 @@ function [digitMarkers, dorsumRegionMask] = ...
 
 
 fixed_pts = zeros(3,2,2);    % 3 points by (x,y) coords by 2 views (1 - direct, 2 - mirror)
+processingMask = cell(1,2);
 switch lower(pawPref)
     case 'right',
         fixed_pts(:,:,1) = [ 2.0   0.0    % most radial digit
@@ -661,6 +638,7 @@ switch lower(pawPref)
         fixed_pts(:,:,2) = [0.0  0.0
                             0.0  2.0
                             1.0  1.0];
+        processingMask{2} = viewMask{1};
     case 'left',
         fixed_pts(:,:,1) = [0.0  0.0    % most radial digit
                             2.0  0.0    % most ulnar digit
@@ -668,11 +646,11 @@ switch lower(pawPref)
         fixed_pts(:,:,2) = [1.0  0.0
                             1.0  2.0
                             0.0  1.0];
-        viewMask{1} = viewMask{3};       % for now, look only at the paw dorsum mirror
+        processingMask{2} = viewMask{3};       % for now, look only at the paw dorsum mirror
 end
-viewMask = viewMask{1:2};       % for now, look only at the paw dorsum mirror
+processingMask{1} = viewMask{2};
 
-numDigits = size(viewMask{1},3) - 2;
+numDigits = size(processingMask{1},3) - 2;
 digitMarkers = zeros(numDigits, 2, 3, 2);    % number of digits by (x,y) by base/centroid/tip by view number
 
 firstVisibleDigitFound = false(1,2);
@@ -680,13 +658,13 @@ digCentroids = zeros(2,2,2);
 currentMask = cell(1,2);
 digitMasks = cell(1,2);
 for iView = 1 : 2
-    digitMasks{iView} = false(size(viewMask{iView},1),size(viewMask{iView},2));
+    digitMasks{iView} = false(size(processingMask{iView},1),size(processingMask{iView},2));
 end
 firstMask = cell(1,2);
 lastMask = cell(1,2);
 for ii = 2 : numDigits+1
     for iView = 1 : 2
-        currentMask{iView} = viewMask{iView}(:,:,ii);
+        currentMask{iView} = processingMask{iView}(:,:,ii);
         digitMasks{iView} = digitMasks{iView} | currentMask{iView};
 
         if any(currentMask{iView}(:))
@@ -737,7 +715,7 @@ for iView = 1 : 2
         if firstValidIdx == 0; firstValidIdx = ii-1; end
         lastValidIdx = ii-1;
         
-        currentMask{iView} = viewMask{iView}(:,:,ii);
+        currentMask{iView} = processingMask{iView}(:,:,ii);
         
         edge_I = bwmorph(currentMask{iView},'remove');
         [y,x] = find(edge_I);
@@ -820,6 +798,14 @@ function pdMask = initThresholdDorsum(HSVlimits, ...
             tempMask = (labMat == idx(1));
         end
         
+        % use the convex hull of the current mask, but make sure it doesn't
+        % overlap with the digits
+        
+        % CHECK TO SEE THAT THE IDENTIFIED DORSUM REGIONS OVERLAP WELL?
+        % CENTROIDS MATCH UP?
+        
+        [tempMask,~] = multiRegionConvexHullMask(tempMask);
+        tempMask = tempMask & dorsumRegionMask{iView};
         pdMask{iView} = tempMask;
     end
 

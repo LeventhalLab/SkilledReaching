@@ -432,7 +432,6 @@ while digitMissing
 
     fullDigitMask = cell(numViews,1);
     viewMask = cell(numViews,1);
-    hsv = cell(1,2);
     for iView = 1 : numViews
         if iView == pMirrorIdx; continue; end    % don't bother with the palmar view
         
@@ -515,18 +514,14 @@ while digitMissing
             end
         end    % for jj = 3 : numObjects
 
-        hsv{iView} = squeeze(masked_hsv_enh{iView}(:,:,:,1));
        
     end    % for iView
-    if any(isDigitVisible(:)); continue; end
     
     [digitMarkers, dorsumRegionMask] = ...
         findInitDorsumRegion(viewMask, pawPref);
-    
     HSVlimits = zeros(2,6);
     HSVlimits(1,:) = [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)];
     HSVlimits(2,:) = [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)];
-    
     pdMask = initThresholdDorsum(HSVlimits, ...
                                  hsv, ...
                                  digitMarkers, ...
@@ -547,7 +542,11 @@ while digitMissing
             case 'darkgreen',
                 colorIdx = 4;
         end
+        
 
+                         
+        pdMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(:,:,:,1)), ...
+                              );   % with the current (201507) tattoo regimen, best mask for paw dorsum is the grayscale
         if ~any(pdMask(:))
             isDigitVisible(1,iView) = false;
             break;
@@ -774,8 +773,7 @@ function pdMask = initThresholdDorsum(HSVlimits, ...
                                       pdBlob)
 %
 % INPUTS:
-%   HSVlimits - 2 x 6 array containing HSV thresholding limits for the
-%       direct (first row) and mirror views (second row)
+%   HSVlimits - 
 %   hsv - 2-element cell array containing the enhanced hsv image of the paw
 %       within the bounding box for the direct view (index 1) and mirror
 %       view (index 2)
@@ -796,9 +794,27 @@ function pdMask = initThresholdDorsum(HSVlimits, ...
     pdMask = cell(1,2);
     
     currentMask = cell(1,2);
+    currentMask{1} = false(size(hsv{1},1),size(hsv{1},2));
+    currentMask{2} = false(size(hsv{2},1),size(hsv{2},2));
+    
 
     for iView = 2 : -1 : 1   % easier to start with the mirror view
-        currentMask{iView} = false(size(hsv{iView},1),size(hsv{iView},2));
+            
+        % construct HSV limits vector from track, HSVthresh_parameters
+        % construct HSV limits vector from track, HSVthresh_parameters
+        HSVlimits(iView,1) = meanHSV(iView,1);            % hue mean
+        HSVlimits(iView,2) = max(min_thresh(1), stdHSV(iView,1) * num_stds(1));  % hue range
+        HSVlimits(iView,2) = min(max_thresh(1), HSVlimits(iView,2));  % hue range
+
+        s_range = max(min_thresh(2), stdHSV(iView,2) * num_stds(2));
+        s_range = min(max_thresh(2), s_range);
+        HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
+        HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
+
+        v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
+        v_range = min(max_thresh(3), v_range);
+        HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % saturation lower bound
+        HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % saturation upper bound  
         
         % threshold the image
         tempMask = HSVthreshold(squeeze(hsv{iView}), ...
