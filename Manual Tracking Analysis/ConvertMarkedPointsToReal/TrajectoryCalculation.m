@@ -129,10 +129,10 @@ z_std = [];
            elseif score ==7
             plot3(x_avg,y_avg,z_avg,'b')
            end
-           
-           xlim([-5, -1]);
-           ylim([0, 3]);
-           zlim([54, 62]);
+%            
+%            xlim([-5, -1]);
+%            ylim([0, 3]);
+%            zlim([54, 62]);
            
             xlabel('x');
             ylabel('y');
@@ -197,9 +197,9 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
         hold on
         
             
-           xlim([-5, -1]);
-           ylim([0, 3]);
-           zlim([54, 62]);
+%            xlim([-5, -1]);
+%            ylim([0, 3]);
+%            zlim([54, 62]);
         
         
         az = -150;
