@@ -10,7 +10,7 @@
 
 
 
-function  [allCentroids]= TrajectoryCalculation(all3dPoints,score,fig_num_avg,fig_num_all)
+function  [allCentroids,euclidianDistVariance]= TrajectoryCalculation(all3dPoints,score,fig_num_avg,fig_num_all)
 
 
     for i = 1:length(all3dPoints(:,1))
@@ -44,10 +44,11 @@ function  [allCentroids]= TrajectoryCalculation(all3dPoints,score,fig_num_avg,fi
 %     scatter3(rubX,rubY,rubZ,'k','filled')
 %     
     
-    averagedCentroids = averageCentroids(allCentroids,score,fig_num_avg)
+    averagedCentroids = averageCentroids(allCentroids,score,fig_num_avg);
         
-
-    plotCentroidTrajectories(allCentroids,score,fig_num_all)
+    euclidianDistVariance = calculateVariance(allCentroids,averagedCentroids);
+    
+    plotCentroidTrajectories(allCentroids,score,fig_num_all);
     
 %     
 %     hold on
@@ -59,7 +60,7 @@ function  [allCentroids]= TrajectoryCalculation(all3dPoints,score,fig_num_avg,fi
 end
 
 
-function [allCentroid] = calculateCentroid(filteredAll3dPoints)
+function  [allCentroid] = calculateCentroid(filteredAll3dPoints)
 
 size(filteredAll3dPoints)
 
@@ -118,11 +119,11 @@ z_std = [];
             
            figure(fig_num_avg)
            hold on
-%            
-%            for k = 1:4
-%                [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
-%            end
-%            
+           
+           for k = 1:4
+               [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
+           end
+           
            
            if score == 1 
             plot3(x_avg,y_avg,z_avg,'r')
@@ -146,6 +147,18 @@ z_std = [];
             
             
             
+end
+
+function [euclidianDistVariance] = calculateVariance(allCentroids,averagedCentroids)
+    for i =1:length(allCentroids(:,1))
+        for j=1:5
+            if size(allCentroids{i,j}) ~= [0,0]
+                euclidianDistVariance{i,j} = abs(averagedCentroids{1,j} - allCentroids{i,j});
+            else
+                euclidianDistVariance{i,j} = [];
+            end
+        end
+    end
 end
 
 function plotCentroidTrajectories(allCentroid,score,fig_num_all)

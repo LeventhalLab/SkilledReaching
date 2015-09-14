@@ -162,7 +162,7 @@ function [allPawDataFiltered] = KnockoutCoordinates(allPawData)
     
     for i = 1:length(allPawData)
          pawPointsData = allPawData{1,i};  
-        
+         
              for j =1:length(pawPointsData)
                 if mod(j,16) == 7 || mod(j,16) == 10 || mod(j,16) == 13 || mod(j,16) == 0 
                %if  mod(j,16) == 1
