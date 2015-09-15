@@ -859,8 +859,8 @@ currentMarkerDisp3D= [];
                 tf2 = sum(nextFrame) == 0;
                 
                 if (tf1 == 0 && tf2 ==0)
-                currentDispIndex = sqrt((currentFrame(1)-nextFrame(1))^2+(currentFrame(2)-nextFrame(2))^2+(currentFrame(3)-nextFrame(3))^2) ;
-                currentMarkerDisp3D(i,k) = currentDispIndex;
+                    currentDispIndex = sqrt((currentFrame(1)-nextFrame(1))^2+(currentFrame(2)-nextFrame(2))^2+(currentFrame(3)-nextFrame(3))^2) ;
+                    currentMarkerDisp3D(i,k) = currentDispIndex;
                 end
         end
         

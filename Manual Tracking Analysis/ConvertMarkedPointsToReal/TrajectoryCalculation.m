@@ -38,22 +38,16 @@ function  [allCentroids,euclidianDistVariance]= TrajectoryCalculation(all3dPoint
     end
     
     [allCentroids] = calculateCentroid(filteredAll3dPoints);
-%     
-%     hold on
-%     scatter3(pelX,pelY,pelZ,'k','filled')
-%     scatter3(rubX,rubY,rubZ,'k','filled')
-%     
     
     averagedCentroids = averageCentroids(allCentroids,score,fig_num_avg);
         
-    euclidianDistVariance = calculateVariance(allCentroids,averagedCentroids);
+    [euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd] = calculateVariance(allCentroids,averagedCentroids);
+
+    [averagedCentroidsDisp] = calculatePositionChange3D(averagedCentroids)
+    
+    [Velocity, Acceleration, Jerk] = KinematicCalc (averagedCentroidsDisp)
     
     plotCentroidTrajectories(allCentroids,score,fig_num_all);
-    
-%     
-%     hold on
-%     scatter3(pelX,pelY,pelZ,'k','filled')
-%     scatter3(rubX,rubY,rubZ,'k','filled')
     
     
 
@@ -103,7 +97,7 @@ z_std = [];
            
             
            for k = 1:5
-                    currentFrameAVG = averagedCentroids{k}
+                    currentFrameAVG = averagedCentroids{k};
                 
                     if size(currentFrameAVG) == [1, 3]
                         x_avg(k) = currentFrameAVG(:,1);
@@ -149,15 +143,21 @@ z_std = [];
             
 end
 
-function [euclidianDistVariance] = calculateVariance(allCentroids,averagedCentroids)
+function [euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd] = calculateVariance(allCentroids,averagedCentroids)
     for i =1:length(allCentroids(:,1))
         for j=1:5
             if size(allCentroids{i,j}) ~= [0,0]
-                euclidianDistVariance{i,j} = abs(averagedCentroids{1,j} - allCentroids{i,j});
+                euclidianDistDiff{i,j} = abs(averagedCentroids{1,j} - allCentroids{i,j});
             else
-                euclidianDistVariance{i,j} = [];
+                euclidianDistDiff{i,j} = [];
             end
         end
+    end
+    
+    for i=1:length(euclidianDistDiff(1,:))
+        euclidianDistDiffMean(:,i) = mean(cell2mat(euclidianDistDiff(:,i)));
+        euclidianDistDiffStd(:,i) = std(cell2mat(euclidianDistDiff(:,i)));
+        
     end
 end
 
@@ -219,4 +219,55 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
         el = 50;
         view(az, el);
     end
+end
+
+%% Calculate the displacment in 3D 
+function [averagedCentroidsDisp] = calculatePositionChange3D(averagedCentroids)
+averagedCentroidsDisp= [];
+
+        for k =1:4 %number of frames
+                
+            
+                currentFrame = cell2mat(averagedCentroids(1,k));
+                nextFrame = cell2mat(averagedCentroids(1,k+1));
+                
+                tf1 = sum(currentFrame) == 0 ;
+                tf2 = sum(nextFrame) == 0;
+                
+                if (tf1 == 0 && tf2 ==0)
+                    currentDispIndex = sqrt((currentFrame(1)-nextFrame(1))^2+(currentFrame(2)-nextFrame(2))^2+(currentFrame(3)-nextFrame(3))^2) ;
+                    averagedCentroidsDisp(1,k) = currentDispIndex;
+                end
+        end
+
+end
+
+%% Calculate the Jerk (aka the 4th derivative of the position vector
+function [Velocity, Acceleration, Jerk] = KinematicCalc (averagedCentroidsDisp)
+
+    ts = 1/300;
+    frames = 0:8:40;
+    time = frames*ts;
+
+    Velocity = [];
+    Acceleration = [];
+    Jerk = [];
+    
+
+        for j = 1:length(averagedCentroidsDisp(1,:))
+            Velocity(1,j) = averagedCentroidsDisp(1,j)/ts ;%4 frames x by number of reaches 
+        end
+
+    for j = 1:length(Velocity(:,1))
+        for i = 1:length(Velocity(1,:))-1%Number of colums remains constant
+                Acceleration (j,i) = (Velocity(j,i+1)-Velocity(j,i))/ts  ;  
+        end
+    end
+    
+     for j = 1:length(Acceleration(:,1))
+        for i = 1:length(Acceleration(1,:))-1%Number of colums remains constant
+                Jerk(j,i) = (Acceleration(j,i+1)-Acceleration(j,i))/ts;   
+        end
+    end
+
 end
