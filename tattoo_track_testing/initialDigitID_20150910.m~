@@ -32,9 +32,6 @@ function [viewMask, mask_bbox, digitMarkers, refImageTime] = initialDigitID_2015
 %   refImageTime - the time in the video at which the reference image was
 %       taken
 
-% TO DO - ADD IN MASKING OUT THE FRONT PANEL MASK IF NOT ALREADY THERE
-
-
 % NEED TO ADJUST THE VALUES TO ENHANCE THE DESIRED PAW BITS
 decorrStretchMean  = cell(1,3);
 decorrStretchSigma = cell(1,3);

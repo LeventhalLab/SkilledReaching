@@ -2,12 +2,13 @@ function triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCa
 %
 % INPUTS:
 %   video - a VideoReader object for the relevant video
-%   boxMarkers - 
+%   BGimg_ud - undistorted background image
 %   rat_metadata - 
 %
 % VARARGs:
-%   numbgframes - number of frames to use at the beginning of the video to
-%       calculate the background
+%   pawgraylevels - 
+%   pixelcountthreshold - 
+%   foregroundthresh - 
 %
 % OUTPUTS:
 %   triggerTime - the time at which the paw is fully through the slot
@@ -34,8 +35,7 @@ end
 
 boxMarkers = boxCalibration.boxMarkers;
 
-S = whos('BGimg_ud');
-if strcmpi(S.class,'uint8')
+if strcmpi(class(BGimg_ud),'uint8')
     BGimg_ud = double(BGimg_ud) / 255;
 end
 

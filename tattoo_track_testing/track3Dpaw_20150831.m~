@@ -43,16 +43,6 @@ function pawTrajectory = track3Dpaw_20150831(video, ...
 % OUTPUTS:
 %
 
-
-% NEXT STEP - SEE HOW TRACKING DOES OVER TIME, THEN WORK ON ALGORITHM TO
-% GUESS AT LOCATIONS OF HIDDEN DIGITS (AND DETERMINE IF DIGITS ARE
-% PARTIALLY OBSCURED). IF DIGITS ARE PARTIALLY OBSCURED, WHAT'S THE BEST
-% WAY TO GUESS AT THE "TRUE" 3D COORDINATES? MAY BE ABLE TO START WITH PAW
-% DORSUM IN THE FIRST IMAGE...
-
-
-
-
 decorrStretchMean  = cell(1,3);
 decorrStretchSigma = cell(1,3);
 decorrStretchMean{1}  = [127.5 127.5 127.5     % to isolate dorsum of paw
@@ -279,7 +269,7 @@ trackingBoxParams.P1 = eye(4,3);
 trackingBoxParams.P2 = P2;
 trackingBoxParams.scale = scale;
 trackingBoxParams.epipole = zeros(2,2);
-trackingBoxParams.imSize = [h,w];
+trackingBoxParams
 for iSide = 1 : 2
     [~,trackingBoxParams.epipole(iSide,:)] = isEpipoleInImage(fundMat(:,:,iSide),[size(BGimg_ud,1),size(BGimg_ud,2)]);
 end
@@ -561,7 +551,7 @@ while video.CurrentTime < video.Duration
     % find the 3d points of all digits visible in both views, and the
     % general region in which the dorsum of the paw must appear
     [digitMarkers, dorsumRegionMask] = ...
-        findDorsumRegion(tracks, pawPref, paw_img, whiteFurThresh);
+        findDorsumRegion(tracks, pawPref, paw_img, whiteFurThresh, mask_bbox);
     % triangulate all available digit markers
     
     % WORKING HERE, NEED TO THINK OF A BETTER WAY TO IDENTIFY PAW DORSUM -
@@ -577,9 +567,7 @@ while video.CurrentTime < video.Duration
                              hsv, ...
                              digitMarkers, ...
                              dorsumRegionMask, ...
-                             pdBlob, ...
-                             trackingBoxParams, ...
-                             mask_bbox);
+                             pdBlob);
 
 	tracks(1).digitmask1 = pdMask{1};
     tracks(1).digitmask2 = pdMask{2};
@@ -890,9 +878,7 @@ function pdMask = thresholdDorsum(meanHSV, ...
                                   hsv, ...
                                   digitMarkers, ...    % might use this to verify whether we have the full paw dorsum
                                   dorsumRegionMask, ...
-                                  pdBlob, ...
-                                  trackingBoxParams, ...
-                                  mask_bbox)
+                                  pdBlob)
 %
 % INPUTS:
 %   meanHSV - 3 element vector with mean hue, saturation, and value values,
@@ -948,12 +934,10 @@ function pdMask = thresholdDorsum(meanHSV, ...
         HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
         HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
 
-%         v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
-%         v_range = min(max_thresh(3), v_range);
-%         HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % value lower bound
-%         HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % value upper bound  
-        HSVlimits(iView,5:6) = [0.001 1.00];   % don't theshold on value for the paw dorsum
-        
+        v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
+        v_range = min(max_thresh(3), v_range);
+        HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % saturation lower bound
+        HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % saturation upper bound  
         
         % threshold the image
         tempMask = HSVthreshold(squeeze(hsv{iView}), ...
@@ -967,9 +951,6 @@ function pdMask = thresholdDorsum(meanHSV, ...
         tempMask = imfill(tempMask, 'holes');
 
         tempMask = tempMask & dorsumRegionMask{iView};
-        if iView == 1
-            tempMask = tempMask & projMask;
-        end
         
         [A,~,~,~,labMat] = step(pdBlob{iView}, tempMask);
         % take at most the numSameColorObjects largest blobs
@@ -983,15 +964,6 @@ function pdMask = thresholdDorsum(meanHSV, ...
         tempMask = tempMask & dorsumRegionMask{iView};
         [tempMask,~] = multiRegionConvexHullMask(tempMask);
         
-        if iView == 2
-            % calculate projection into the direct view
-            projMask = calcProjMask(tempMask, ...
-                                    trackingBoxParams.F(:,:,1)', ...
-                                    mask_bbox(2,:), ...
-                                    trackingBoxParams.imSize);
-            projMask = projMask(mask_bbox(1,2) : mask_bbox(1,2) + mask_bbox(1,4), ...
-                                          mask_bbox(1,1) : mask_bbox(1,1) + mask_bbox(1,3));
-        end
         % CHECK TO SEE THAT THE IDENTIFIED DORSUM REGIONS OVERLAP WELL?
         
         pdMask{iView} = tempMask;
@@ -1275,7 +1247,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [digitMarkers, dorsumRegionMask] = ...
-    findDorsumRegion(tracks, pawPref, paw_img, whiteFurThresh)
+    findDorsumRegion(tracks, pawPref, paw_img, whiteFurThresh, trackingBoxParams, mask_bbox)
 %
 % INPUTS:
 %   tracks - the full set of digit tracks, after the digits have been
@@ -1406,8 +1378,15 @@ for iView = 1 : 2
     [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull;
     
+    if iView == 2
+        % calculate projection into the direct view
+        projMask = calcProjMask(dorsumRegionMask{2}, ...
+                                trackingBoxParams.F(:,:,1)', ...
+                                mask_bbox(2,:), ...
+                                trackingBoxParams.imSize);
 end
         
+            
             
 
 end
