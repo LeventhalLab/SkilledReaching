@@ -10,7 +10,7 @@
 
 
 
-function  [allCentroids,euclidianDistVariance]= TrajectoryCalculation(all3dPoints,score,fig_num_avg,fig_num_all)
+function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,fig_num_avg,fig_num_all)
 
 
     for i = 1:length(all3dPoints(:,1))
