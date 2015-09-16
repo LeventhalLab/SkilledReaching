@@ -127,8 +127,43 @@ function  [points3d,reprojectedPoints,errors,pxToMm] = ConvertMarkedPointsToReal
     b2 = B(:,2);
     b3 = B(:,3);
 
-    dist =sqrt((a1-b1)^2+(a2-b2)^2+(a3-b3)^2);
-    pxToMm = 17.5 / dist; %17.5 mm is legnth of rubicks cube square
+    dist1 =sqrt((a1-b1)^2+(a2-b2)^2+(a3-b3)^2);
+    
+    
+    A = points3d(end-4,:);
+    B = points3d(end-3,:);
+    
+    a1 = A(:,1);
+    a2 = A(:,2);
+    a3 = A(:,3);
+
+    b1 = B(:,1);
+    b2 = B(:,2);
+    b3 = B(:,3);
+    
+    
+    dist2 =sqrt((a1-b1)^2+(a2-b2)^2+(a3-b3)^2);
+    
+     
+    A = points3d(end-6,:);
+    B = points3d(end-5,:);
+    
+    a1 = A(:,1);
+    a2 = A(:,2);
+    a3 = A(:,3);
+
+    b1 = B(:,1);
+    b2 = B(:,2);
+    b3 = B(:,3);
+    
+    
+    dist3 =sqrt((a1-b1)^2+(a2-b2)^2+(a3-b3)^2);
+    
+    meanRubiksDist = (dist1+dist2+dist3)/3;
+    
+    
+    
+    pxToMm = 17.5 / meanRubiksDist; %17.5 mm is legnth of rubicks cube square
     
 end
 

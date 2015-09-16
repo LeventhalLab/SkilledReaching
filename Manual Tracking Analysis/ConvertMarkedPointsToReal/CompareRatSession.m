@@ -1,7 +1,7 @@
 load('C:\Users\Administrator\Desktop\Rat 27 PawTracking Data\Scores 1\R0027Session20140512PawPointFiles.mat');     
 score = 1;
 [all3dPoints] = RatDattoReal3Dpoints(RatData,score);
-[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,1,2);
+[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,'Day 3',1,2);
 
 allEuclidianDistDiff{1} = euclidianDistDiff;
 allEuclidianDistDiffMean{1} = euclidianDistDiffMean;
@@ -14,7 +14,7 @@ hold on
 load('C:\Users\Administrator\Desktop\Rat 27 PawTracking Data\Scores 7\R0027Session20140512PawPointFiles.mat');
 score = 7;
 [all3dPoints] = RatDattoReal3Dpoints(RatData,score);
-[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,1,2);
+[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,'Day 3',1,2);
 
 allEuclidianDistDiff{2} = euclidianDistDiff;
 allEuclidianDistDiffMean{2} = euclidianDistDiffMean;
@@ -27,7 +27,7 @@ allJerk{2} = Jerk;
 load('C:\Users\Administrator\Desktop\Rat 27 PawTracking Data\Scores 1\R0027Session20140514PawPointFiles.mat');     
 score = 1;
 [all3dPoints] = RatDattoReal3Dpoints(RatData,score);
-[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,3,4);
+[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,'Day 5',3,4);
 
 allEuclidianDistDiff{3} = euclidianDistDiff;
 allEuclidianDistDiffMean{3} = euclidianDistDiffMean;
@@ -40,7 +40,7 @@ hold on
 load('C:\Users\Administrator\Desktop\Rat 27 PawTracking Data\Scores 7\R0027Session20140514PawPointFiles.mat');
 score = 7;
 [all3dPoints] = RatDattoReal3Dpoints(RatData,score);
-[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,3,4);
+[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,'Day 5',3,4);
 
 allEuclidianDistDiff{4} = euclidianDistDiff;
 allEuclidianDistDiffMean{4} = euclidianDistDiffMean;
@@ -52,7 +52,7 @@ allJerk{4} = Jerk;
 load('C:\Users\Administrator\Desktop\Rat 27 PawTracking Data\Scores 1\R0027Session20140516PawPointFiles.mat');      
 score = 1;
 [all3dPoints] = RatDattoReal3Dpoints(RatData,score);
-[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,5,6);
+[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,'Day 7',5,6);
 
 allEuclidianDistDiff{5} = euclidianDistDiff;
 allEuclidianDistDiffMean{5} = euclidianDistDiffMean;
@@ -65,7 +65,7 @@ hold on
 load('C:\Users\Administrator\Desktop\Rat 27 PawTracking Data\Scores 7\R0027Session20140516PawPointFiles.mat');
 score = 7;
 [all3dPoints] = RatDattoReal3Dpoints(RatData,score);
-[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,5,6);
+[allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,'Day 7',5,6);
 
 allEuclidianDistDiff{6} = euclidianDistDiff;
 allEuclidianDistDiffMean{6} = euclidianDistDiffMean;

@@ -10,7 +10,7 @@
 
 
 
-function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,fig_num_avg,fig_num_all)
+function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,day,fig_num_avg,fig_num_all)
 
 
     for i = 1:length(all3dPoints(:,1))
@@ -39,7 +39,7 @@ function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDist
     
     [allCentroids] = calculateCentroid(filteredAll3dPoints);
     
-    averagedCentroids = averageCentroids(allCentroids,score,fig_num_avg);
+    averagedCentroids = averageCentroids(allCentroids,score,day,fig_num_avg);
         
     [euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd] = calculateVariance(allCentroids,averagedCentroids);
 
@@ -47,7 +47,7 @@ function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDist
     
     [Velocity, Acceleration, Jerk] = KinematicCalc (averagedCentroidsDisp)
     
-    plotCentroidTrajectories(allCentroids,score,fig_num_all);
+    plotCentroidTrajectories(allCentroids,score,day,fig_num_all);
     
     
 
@@ -82,7 +82,7 @@ size(filteredAll3dPoints)
     end
 end
 
-function  [averagedCentroids] = averageCentroids(allCentroids,score,fig_num_avg)
+function  [averagedCentroids] = averageCentroids(allCentroids,score,day,fig_num_avg)
 
 x_std = [];
 y_std = [];
@@ -120,23 +120,24 @@ z_std = [];
            
            
            if score == 1 
-            plot3(x_avg,y_avg,z_avg,'r')
+            plot3(x_avg,z_avg,y_avg,'r')
            elseif score ==7
-            plot3(x_avg,y_avg,z_avg,'b')
+            plot3(x_avg,z_avg,y_avg,'b')
            end
-%            
-%            xlim([-5, -1]);
-%            ylim([0, 3]);
-%            zlim([54, 62]);
+           
+           xlim([0, 15]);
+           zlim([0, 15]);
+           ylim([170, 190]);
            
             xlabel('x');
-            ylabel('y');
-            zlabel('z');
+            ylabel('z');
+            zlabel('y');
+            title(day)
             
-            
-            az = -150;
-            el = 50;
+            az = -160;
+            el = 42;
             view(az, el);
+            set(gca,'zdir','reverse');
            
             
             
@@ -161,7 +162,7 @@ function [euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd] = cal
     end
 end
 
-function plotCentroidTrajectories(allCentroid,score,fig_num_all)
+function plotCentroidTrajectories(allCentroid,score,day,fig_num_all)
     
 check = 0 ; %This is a check to stop plotting if NaN exisit     
 
@@ -197,27 +198,28 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
              
         end
         
-        figure(fig_num_all)
-        if score == 1
-            plot3(x,y,z,'r')
-        elseif score == 7
-            plot3(x,y,z,'b')
-        end
-        
-        xlabel('x');
-        ylabel('y');
-        zlabel('z');
         hold on
         
-            
-%            xlim([-5, -1]);
-%            ylim([0, 3]);
-%            zlim([54, 62]);
+        figure(fig_num_all)
+           if score == 1 
+            plot3(x,z,y,'r')
+           elseif score ==7
+            plot3(x,z,y,'b')
+           end
+           
+           xlim([0, 15]);
+           zlim([0, 15]);
+           ylim([170, 190]);
+           
+            xlabel('x');
+            ylabel('z');
+            zlabel('y');
+            title(day)
         
-        
-        az = -150;
-        el = 50;
+        az = -160;
+        el = 42;
         view(az, el);
+        set(gca,'zdir','reverse');
     end
 end
 
