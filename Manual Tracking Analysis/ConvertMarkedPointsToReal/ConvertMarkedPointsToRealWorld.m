@@ -116,8 +116,8 @@ function  [points3d,reprojectedPoints,errors,pxToMm] = ConvertMarkedPointsToReal
 %     zlabel('z')
      
     
-    A = points3d(end-1,:);
-    B = points3d(end,:);
+    A = points3d(end-2,:);
+    B = points3d(end-1,:);
     
     a1 = A(:,1);
     a2 = A(:,2);
