@@ -8,19 +8,43 @@ function tracks = reconstructPartiallyHiddenObjects(tracks, bboxes, fundMat, imS
 %   fundMat is the fundamental matrix going from view 1 to view 2
 %   imSize - 1 x 2 vector containing the height and width of the image
 
-
-
-F = cell(1,2);
-F{1} = fundMat;    % from view 1 to view 2
-F{2} = fundMat';   % from view 2 to view 1
-
-validOverlap = false(numObjects, 1);
-overlapFract = zeros(1,2);
+F = fundMat(:,:,1);    % from view 1 to view 2
 
 for iTrack = 2 : length(tracks)    % start with the digits
     
-    centerMask = tracks(iTrack).digitmask1;
-    mirrorMask = tracks(iTrack).digitmask2;
+    % calculate the distance from the epipolar lines for each proximal/
+    % centroid/distal point to its image point
+    centerDigitMarkers = tracks(iTrack).digitMarkers(:,:,1)';
+    centerDigitMarkers 
+    center_epiLines = epipolarLine(F, tracks(iTrack).digitMarkers(:,:,1)');
+    mirror_epiLines = epipolarLine(F', tracks(iTrack).digitMarkers(:,:,2)');
+    
+    center_epiPts = lineToBorderPoints(center_epiLines, imSize);
+    mirror_epiPts = lineToBorderPoints(mirror_epiLines, imSize);
+    d = zeros(3,2);
+    center_pts1 = center_epiPts(:,1:2);
+    center_pts2 = center_epiPts(:,3:4);
+    
+    mirror_pts1 = mirror_epiPts(:,1:2);
+    mirror_pts2 = mirror_epiPts(:,3:4);
+    for iMarker = 1 : 3   % proximal, centroid, distal
+        
+        d(iMarker,1) = distanceToLine(center_pts1(iMarker,:), ...
+                                      center_pts2(iMarker,:), ...
+                                      tracks(iTrack).digitMarkers(:,iMarker,2));
+        d(iMarker,2) = distanceToLine(mirror_pts1(iMarker,:), ...
+                                      mirror_pts1(iMarker,:), ...
+                                      tracks(iTrack).digitMarkers(:,iMarker,1));
+    end
+    
+    centerMask = false(imSize);
+    mirrorMask = false(imSize);
+    centerMask(bboxes(1,2) : bboxes(1,2) + bboxes(1,4), ...
+               bboxes(1,1) : bboxes(1,1) + bboxes(1,3)) = tracks(iTrack).digitmask1;
+    mirrorMask(bboxes(1,2) : bboxes(1,2) + bboxes(1,4), ...
+               bboxes(1,1) : bboxes(1,1) + bboxes(1,3)) = tracks(iTrack).digitmask2;
+           
+end
 for iView = 1 : 2
     
     projMask = calcProjMask(masks{iView}, F{iView}, bboxes(iView,:), imSize);

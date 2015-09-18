@@ -102,19 +102,20 @@ for ii = 1 : 3
 end
 
 HSVthresh_parameters.min_thresh(1) = 0.05;    % minimum distance hue threshold must be from mean. Note hue is circular (hue = 1 is the same as hue = 0)
-HSVthresh_parameters.min_thresh(2) = 0.05;    % minimum distance saturation threshold must be from mean 
-HSVthresh_parameters.min_thresh(3) = 0.05;    % minimum distance value threshold must be from mean 
+HSVthresh_parameters.min_thresh(2) = 0.02;    % minimum distance saturation threshold must be from mean 
+HSVthresh_parameters.min_thresh(3) = 0.02;    % minimum distance value threshold must be from mean 
 HSVthresh_parameters.max_thresh(1) = 0.16;    % maximum distance hue threshold can be from mean. Note hue is circular (hue = 1 is the same as hue = 0)
 HSVthresh_parameters.max_thresh(2) = 0.15;    % maximum distance saturation threshold can be from mean 
 HSVthresh_parameters.max_thresh(3) = 0.30;    % maximum distance value threshold can be from mean 
-HSVthresh_parameters.num_stds(1) = 3;         % number of standard deviations hue can deviate from mean (unless less than min_thresh or greater than max_thresh)
-HSVthresh_parameters.num_stds(2) = 3;         % number of standard deviations saturation can deviate from mean (unless less than min_thresh or greater than max_thresh)
-HSVthresh_parameters.num_stds(3) = 3;         % number of standard deviations value can deviate from mean (unless less than min_thresh or greater than max_thresh)
+HSVthresh_parameters.num_stds(1) = 1;         % number of standard deviations hue can deviate from mean (unless less than min_thresh or greater than max_thresh)
+HSVthresh_parameters.num_stds(2) = 1;         % number of standard deviations saturation can deviate from mean (unless less than min_thresh or greater than max_thresh)
+HSVthresh_parameters.num_stds(3) = 1;         % number of standard deviations value can deviate from mean (unless less than min_thresh or greater than max_thresh)
 
 diff_threshold = 35;
 raw_threshold = 0.2;
 whiteFurThresh = 0.35;
 maxDistPerFrame = 20;
+dorsum_gray_thresh = 0.35;
 % <<<<<<< HEAD
 RGBradius = 0.1;
 color_zlim = 2;
@@ -182,7 +183,7 @@ pdBlob{1}.CentroidOutputPort = true;
 pdBlob{1}.BoundingBoxOutputPort = true;
 pdBlob{1}.ExtentOutputPort = true;
 pdBlob{1}.LabelMatrixOutputPort = true;
-pdBlob{1}.MinimumBlobArea = 50;
+pdBlob{1}.MinimumBlobArea = 100;
 pdBlob{1}.MaximumBlobArea = 30000;
 
 pdBlob{2} = vision.BlobAnalysis;
@@ -191,7 +192,7 @@ pdBlob{2}.CentroidOutputPort = true;
 pdBlob{2}.BoundingBoxOutputPort = true;
 pdBlob{2}.ExtentOutputPort = true;
 pdBlob{2}.LabelMatrixOutputPort = true;
-pdBlob{2}.MinimumBlobArea = 50;
+pdBlob{2}.MinimumBlobArea = 100;
 pdBlob{2}.MaximumBlobArea = 30000;
 
 trackCheck.maxDistPerFrame = 5;    % in mm
@@ -341,7 +342,6 @@ for ii = 1 : num_elements_to_track
             
             [meanHSV(iView,ii,:), stdHSV(iView,ii,:)] = ...
                 calcHSVstats(paw_hsv, digitMasks{iView}(:,:,ii));
-            
         else
             consecInvisibleCount(ii,iView) = consecInvisibleCount(ii,iView) + 1;
             switch lower(colorList{ii}),
@@ -404,6 +404,14 @@ HSVlimits = zeros(num_elements_to_track-1, 6, 2);
 numFrames = 0;
 current_BG_mask = cell(1,3);
 current_paw_mask = cell(1,3);
+
+dorsum_decorrStretchMean = cell(1,2);
+dorsum_decorrStretchSigma = cell(1,2);
+for iView = 1 : 2
+    dorsum_decorrStretchMean{iView} = decorrStretchMean{iView}(1,:);
+    dorsum_decorrStretchSigma{iView} = decorrStretchSigma{iView}(1,:);
+end
+
 while video.CurrentTime < video.Duration
     numFrames = numFrames + 1
     currentFrame = currentFrame + 1;
@@ -579,32 +587,36 @@ while video.CurrentTime < video.Duration
 
     % find the 3d points of all digits visible in both views, and the
     % general region in which the dorsum of the paw must appear
-    [digitMarkers, dorsumRegionMask] = ...
-        findDorsumRegion(tracks, pawPref, paw_img, current_BG_mask);
+    
+    [tracks, pdMask] = findDorsumRegion(tracks, ...
+                                        pawPref, ...
+                                        paw_img, ...
+                                        current_BG_mask, ...
+                                        dorsum_decorrStretchMean, ...
+                                        dorsum_decorrStretchSigma, ...
+                                        dorsum_gray_thresh, ...
+                                        pdBlob, ...
+                                        trackingBoxParams, ...
+                                        mask_bbox, ...
+                                        [h,w]);
+
+                                          
+    % now have to deal with partially or completely hidden objects
+    tracks = reconstructPartiallyHiddenObjects(tracks, mask_bbox, fundMat, [h,w], current_BG_mask);
+
     % triangulate all available digit markers
-    
-    
-    % FOR GREEN DIGITS, MAY HAVE TO MASK OUT THE DARK GREEN ON THE DORSUM
-    % OF THE PAW BEFORE THRESHOLDING; OR, ONLY ALLOW GREEN DIGIT ON THE
-    % SAME SIDE OF A LINE CONNECTING THE BASES OF THE OTHER DIGITS
-    
-    
-    % WORKING HERE, NEED TO THINK OF A BETTER WAY TO IDENTIFY PAW DORSUM -
-    % GET THE DIFFERENCE FROM THE MIRROR?
-    % ALSO NEED TO THINK ABOUT HOW TO DEAL WITH OVERLAPS - CAN WE LOOK AT
-    % USING THE OVERLAP TO EXTEND PARTIALLY HIDDEN DIGITS?
 	tracks(2:5) = digit3Dpoints(digitMarkers, trackingBoxParams, tracks(2:5), mask_bbox);
     
-    hsv{iView} = squeeze(paw_hsv{iView}(:,:,:,1));
-    pdMask = thresholdDorsum(tracks(1).meanHSV, ...
-                             tracks(1).stdHSV, ..., ...
-                             HSVthresh_parameters, ...
-                             hsv, ...
-                             digitMarkers, ...
-                             dorsumRegionMask, ...
-                             pdBlob, ...
-                             trackingBoxParams, ...
-                             mask_bbox);
+%     hsv{iView} = squeeze(paw_hsv{iView}(:,:,:,1));
+%     pdMask = thresholdDorsum(tracks(1).meanHSV, ...
+%                              tracks(1).stdHSV, ..., ...
+%                              HSVthresh_parameters, ...
+%                              hsv, ...
+%                              digitMarkers, ...
+%                              dorsumRegionMask, ...
+%                              pdBlob, ...
+%                              trackingBoxParams, ...
+%                              mask_bbox);
 
 	tracks(1).digitmask1 = pdMask{1};
     tracks(1).digitmask2 = pdMask{2};
@@ -634,19 +646,20 @@ while video.CurrentTime < video.Duration
 %       view (1 = direct, 2 = mirror)
     % now have to do something about objects that aren't visible in one of
     % the views...
-            
+    
     tracks = updateHSVparams(tracks, paw_hsv);
 
+
+        
+        
+    
+    
 	% now establish all 3d points that are available from visible points in
 	% both views
     % for now, only calculating the centroid of the dorsum of the paw
     for iTrack = 1 : 5
         pawTrajectory(currentFrame,iTrack,:,:) = tracks(iTrack).markers3D;
     end
-    
-	% now have to deal with partially or completely hidden objects
-
-    
     
 end
 
@@ -1302,8 +1315,18 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [digitMarkers, dorsumRegionMask] = ...
-    findDorsumRegion(tracks, pawPref, paw_img, BG_mask)
+function [tracks, dorsumRegionMask] = ...
+    findDorsumRegion(tracks, ...
+                     pawPref, ...
+                     paw_img, ...
+                     BG_mask, ...
+                     decorrStretchMean, ...
+                     dorsum_decorrStretchSigma, ...
+                     dorsum_gray_thresh, ...
+                     pdBlob, ...
+                     trackingBoxParams, ...
+                     mask_bbox, ...
+                     imSize)
 %
 % INPUTS:
 %   tracks - the full set of digit tracks, after the digits have been
@@ -1311,7 +1334,7 @@ function [digitMarkers, dorsumRegionMask] = ...
 %   pawPref - string containing 'left' or 'right'
 %   paw_img - 1 x 2 cell array containing the undistorted masked paw image
 %       in the direct and mirror views, respectively
-%   whiteFurThresh - 
+%   BG_mask - 
 %   trackingBoxParams - 
 %
 % OUTPUTS:
@@ -1333,8 +1356,13 @@ dorsumRegionMask = cell(1,2);
 
 
 [digitMarkers, pts_transformed, digitsHull] = findDigitMarkers(tracks, pawPref);
+for iTrack = 2 : 5
+    tracks(iTrack).digitMarkers = squeeze(digitMarkers(iTrack-1,:,:,:));
+end
+
 validImageBorderPts = zeros(2,2);
 
+SE = strel('disk',2);
 for iView = 2 : -1 : 1
     dMaskString = sprintf('digitmask%d',iView);
     
@@ -1351,18 +1379,59 @@ for iView = 2 : -1 : 1
     validImageBorderPts(2,:) = squeeze(digitMarkers(lastValidIdx,:,1,iView));
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
                                              pts_transformed(3,:,iView), size(tracks(ii).(dMaskString)));
-    dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:,iView), ...
-                                             pts_transformed(3,:,iView), size(tracks(ii).(dMaskString)));
+%     dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:,iView), ...
+%                                              pts_transformed(3,:,iView), size(tracks(ii).(dMaskString)));
 
 %     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~whiteFurMask{iView};
-    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull{iView};
-    dorsumRegionMask{iView} = dorsumRegionMask{iView} & BG_mask{iView};
+    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ...
+                              ~digitsHull{iView} & ...
+                              BG_mask{iView};
+%     dorsumRegionMask{iView} = dorsumRegionMask{iView} & BG_mask{iView};
+    if iView == 1
+        dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;
+    end
+    % now enhance the color image of just the dorsum region
+    dorsum_enh = enhanceColorImage(paw_img{iView}, ...
+                                   decorrStretchMean{iView}, ...
+                                   dorsum_decorrStretchSigma{iView}, ...
+                                   'mask', dorsumRegionMask{iView});
+                               
+    dorsum_gray = mean(dorsum_enh,3);            
+	dorsum_mask = (dorsum_gray > 0.00001) & (dorsum_gray < dorsum_gray_thresh);
+    dorsum_mask = bwdist(dorsum_mask) < 2;
+    dorsum_mask = imopen(dorsum_mask, SE);
+    dorsum_mask = imclose(dorsum_mask,SE);
+    dorsum_mask = imfill(dorsum_mask,'holes');
+    [A,~,~,~,labMat] = step(pdBlob{iView}, dorsum_mask);
+    dorsum_mask = (labMat > 0);
     
-    % WORKING HERE - TRY USING THE PAW DORSUM MASK FROM THE SIDE VIEW TO
-    % CONSTRAIN WHERE THE DORSUM OF THE PAW IS IN THE DIRECT VIEW. MAY NEED
-    % A MAXIMUM DISTANCE THE DORSUM OF THE PAW CAN EXTEND BACK FROM THE
-    % BAES OF THE DIGITS IF I CAN'T DISTINGUISH THE WHITE FUR FROM THE
-    % TATTOO RELIABLY...
+    % find the blob closest to the digits blob
+    s_digits = regionprops(digitsHull{iView}, 'centroid');
+    s_pd = regionprops(dorsum_mask, 'centroid');
+    
+    numCentroids = length(s_pd);
+    pd_centroids = [s_pd.Centroid];
+    pd_centroids = reshape(pd_centroids,[2,numCentroids])';
+    
+    [~, nnidx] = findNearestNeighbor(s_digits.Centroid, pd_centroids);
+    dorsum_mask = (labMat == nnidx);
+    dorsum_mask = multiRegionConvexHullMask(dorsum_mask);
+    dorsum_mask = dorsum_mask & ~digitsHull{iView};
+    dorsum_mask = dorsum_mask & dorsumRegionMask{iView};
+	dorsumRegionMask{iView} = imerode(dorsum_mask, strel('disk',1));
+    
+    % take only the blob closest to the centroid of the digits hull
+    
+    if iView == 2
+        % calculate projection into center view
+        projMask = calcProjMask(dorsum_mask, ...
+                                trackingBoxParams.F(:,:,1)', ...
+                                mask_bbox(iView,:), ...
+                                imSize);
+        projMask = projMask(mask_bbox(1,2) : mask_bbox(1,2) + mask_bbox(1,4), ...
+                            mask_bbox(1,1) : mask_bbox(1,1) + mask_bbox(1,3));
+    end
+
 end
     
 end
@@ -1380,30 +1449,9 @@ function tracks = digit3Dpoints(digitMarkers, trackingBoxParams, tracks, mask_bb
 %       vector [x,y,w,h]
 
 markers3D = digitMarkersTo3D(digitMarkers, trackingBoxParams, mask_bbox);
-% P1 = trackingBoxParams.P1;
-% P2 = trackingBoxParams.P2;
-% numDigits = size(digitMarkers,1);
-% matched_points = zeros(3,2,2);
 
 numDigits = size(digitMarkers,1);
 for iDigit = 1 : numDigits
-
-%     currentTrack = tracks(iDigit);
-%     if any(~currentTrack.isvisible); continue; end   % can't see the digit in at least one view
-% 
-%     for iView = 1 : 2
-%         for iSite = 1 : 3
-%             matched_points(iSite,:,iView) = squeeze(digitMarkers(iDigit,:,iSite,iView));
-%         end
-%         matched_points(:,1,iView) = matched_points(:,1,iView) + mask_bbox(iView,1);
-%         matched_points(:,2,iView) = matched_points(:,2,iView) + mask_bbox(iView,2);
-%         matched_points(:,:,iView) = normalize_points(squeeze(matched_points(:,:,iView)), ...
-%                                                          trackingBoxParams.K);
-%     end
-%     
-%     [points3d,~,~] = triangulate_DL(squeeze(matched_points(:,:,1)), ...
-%                                     squeeze(matched_points(:,:,2)), ...
-%                                     P1, P2);
     tracks(iDigit).markers3D = squeeze(markers3D(iDigit,:,:));
 end
 
@@ -1495,7 +1543,8 @@ function [digitMarkers, pts_transformed, digitsHull] = ...
 %
 % INPUTS:
 %   tracks - the full set of digit tracks, after the digits have been
-%       identified for the current frame
+%       identified for the current frame (includes paw dorsum track as
+%       index 1)
 %   pawPref - string containing 'left' or 'right'
 %   paw_img - 1 x 2 cell array containing the undistorted masked paw image
 %       in the direct and mirror views, respectively
@@ -1545,8 +1594,7 @@ end
 
 H = zeros(3,3,2);
 linepts = zeros(2,2);
-% validImageBorderPts = zeros(2,2);
-% dorsumRegionMask = cell(1,2);
+
 pts_transformed = zeros(3,2,2);
 for iView = 1 : 2
     movingPoints = squeeze(digCentroids(:,:,iView));

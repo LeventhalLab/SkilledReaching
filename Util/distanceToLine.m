@@ -4,7 +4,7 @@ function d = distanceToLine(Q1,Q2,Q0)
 %
 % INPUTS:
 %   Q1, Q2 are points that define the line
-%   Q0 is the point to which we are trying to find the shortest distance
+%   Q0 is the point to which we are trying to find the distance
 %
 % OUTPUTS:
 %   d - Euclidean distance to the line
