@@ -14,38 +14,7 @@ function [all3dPoints] = RatDatatoReal3Dpoints(RatData,score)
    
    pel1 = [1053 626];
    pel2 = [154 595];
-   
-   %hardcode the pellet location
-   
-%    %R27 512
-%    pel1 = [1045 626];
-%    pel2 = [141 597];
-   
-   %R27 514
-%    pel1 = [1058 629];
-%    pel2 = [95 595];
-   
-   %R27 516
-%     pel1 = [1053 626];
-%     pel2 = [114 589];
-
-%     %R28 425
-%     pel1 = [866 627];
-%     pel2 = [1935 596];
-% 
-%     R29 425
-%     pel1 = [972 626];
-%     pel2 = [69 595];
-    
-   % R29 427
-%     pel1 = [1053 626];
-%     pel2 = [90 595];
-
-%     %R29 429
-%     pel1 = [1053 626];
-%     pel2 = [154 595];
-%    
-   
+  
    
    all3dPoints=[];
     

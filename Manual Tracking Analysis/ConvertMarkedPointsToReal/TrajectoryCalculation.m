@@ -10,7 +10,7 @@
 
 
 
-function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,day,fig_num_avg,fig_num_all)
+function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,RatID,day,fig_num_avg,fig_num_all,sucessRate,totalNumReaches)
 
 
     for i = 1:length(all3dPoints(:,1))
@@ -39,7 +39,7 @@ function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDist
     
     [allCentroids] = calculateCentroid(filteredAll3dPoints);
     
-    averagedCentroids = averageCentroids(allCentroids,score,day,fig_num_avg);
+    averagedCentroids = averageCentroids(allCentroids,score,day,fig_num_avg,sucessRate,RatID,totalNumReaches);
         
     [euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd] = calculateVariance(allCentroids,averagedCentroids);
 
@@ -47,7 +47,7 @@ function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDist
     
     [Velocity, Acceleration, Jerk] = KinematicCalc (averagedCentroidsDisp)
     
-    plotCentroidTrajectories(allCentroids,score,day,fig_num_all);
+    plotCentroidTrajectories(allCentroids,score,day,fig_num_all,sucessRate,RatID,totalNumReaches);
     
     
 
@@ -82,7 +82,7 @@ size(filteredAll3dPoints)
     end
 end
 
-function  [averagedCentroids] = averageCentroids(allCentroids,score,day,fig_num_avg)
+function  [averagedCentroids] = averageCentroids(allCentroids,score,day,fig_num_avg,sucessRate,RatID,totalNumReaches)
 
 x_std = [];
 y_std = [];
@@ -114,9 +114,9 @@ z_std = [];
            figure(fig_num_avg)
            hold on
            
-           for k = 1:4
-               [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
-           end
+%            for k = 1:4
+%                [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
+%            end
            
            
            if score == 1 
@@ -124,15 +124,17 @@ z_std = [];
            elseif score ==7
             plot3(x_avg,z_avg,y_avg,'b')
            end
-           
-           xlim([0, 15]);
-           zlim([0, 15]);
-           ylim([170, 190]);
+%            
+%            xlim([0, 20]);
+%            zlim([0, 20]);
+%            ylim([170, 190]);
            
             xlabel('x');
             ylabel('z');
             zlabel('y');
-            title(day)
+            titleString  = strcat('Rat:', num2str(RatID), ' Day:',num2str(day),' Sucess Rate:',num2str(sucessRate,2), ' Total Reaches: ', num2str(totalNumReaches));
+            title(titleString)
+        
             
             az = -160;
             el = 42;
@@ -162,7 +164,7 @@ function [euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd] = cal
     end
 end
 
-function plotCentroidTrajectories(allCentroid,score,day,fig_num_all)
+function plotCentroidTrajectories(allCentroid,score,day,fig_num_all,sucessRate,RatID,totalNumReaches)
     
 check = 0 ; %This is a check to stop plotting if NaN exisit     
 
@@ -206,15 +208,16 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
            elseif score ==7
             plot3(x,z,y,'b')
            end
-           
-           xlim([0, 15]);
-           zlim([0, 15]);
-           ylim([170, 190]);
-           
+%            
+%            xlim([0, 20]);
+%            zlim([0, 20]);
+%            ylim([170, 190]);
+%            
             xlabel('x');
             ylabel('z');
             zlabel('y');
-            title(day)
+            titleString  = strcat('Rat:', num2str(RatID), ' Day:',num2str(day),' Sucess Rate:',num2str(sucessRate,2),' Total Reaches: ', num2str(totalNumReaches));
+            title(titleString)
         
         az = -160;
         el = 42;
