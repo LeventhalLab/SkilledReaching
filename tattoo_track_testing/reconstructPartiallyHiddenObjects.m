@@ -9,8 +9,37 @@ function tracks = reconstructPartiallyHiddenObjects(tracks, bboxes, fundMat, imS
 %   imSize - 1 x 2 vector containing the height and width of the image
 
 F = fundMat(:,:,1);    % from view 1 to view 2
+maxDistFromEpipolarLine = 5;
 
-for iTrack = 2 : length(tracks)    % start with the digits
+for iarg = 1 : 2 : nargin - 5
+    switch lower(varargin{iarg})
+        case 'maxdistfromepipolarline',
+            maxDistFromEpipolarLine = varargin{iarg + 1};
+    end
+end
+
+obscuredPoints = identifyObscuredPoints(tracks, bboxes, F, imSize, maxDistFromEpipolarLine);
+
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function obscuredPoints = identifyObscuredPoints(tracks, bboxes, F, imSize, maxDistFromEpipolarLine)
+
+obscuredPoints = false(length(tracks)-2, 3, 2);    % number of digits x 3 points per view x 2 views
+
+for iTrack = 2 : length(tracks)-1    % start with the digits
+    
+    skipDigit = false;
+    for iView = 1 : 2
+        if ~tracks(iTrack).isvisible(iView)
+            obscuredPoints(iTrack-1,:,iView) = true;
+            skipDigit = true;
+        end
+    end
+    if skipDigit; continue; end
     
     % calculate the distance from the epipolar lines for each proximal/
     % centroid/distal point to its image point
@@ -32,65 +61,112 @@ for iTrack = 2 : length(tracks)    % start with the digits
     
     mirror_pts1 = mirror_epiPts(:,1:2);
     mirror_pts2 = mirror_epiPts(:,3:4);
+    center_test_pt = zeros(3,2);
+    mirror_test_pt = zeros(3,2);
     for iMarker = 1 : 3   % proximal, centroid, distal
         
-        center_test_pt = tracks(iTrack).digitMarkers(:,iMarker,1)';
-        center_test_pt(1) = center_test_pt(1) + bboxes(1,1);
-        center_test_pt(2) = center_test_pt(2) + bboxes(1,2);
+        center_test_pt(iMarker,:) = tracks(iTrack).digitMarkers(:,iMarker,1)';
+        center_test_pt(iMarker,1) = center_test_pt(iMarker,1) + bboxes(1,1);
+        center_test_pt(iMarker,2) = center_test_pt(iMarker,2) + bboxes(1,2);
         
-        mirror_test_pt = tracks(iTrack).digitMarkers(:,iMarker,2)';
-        mirror_test_pt(1) = mirror_test_pt(1) + bboxes(2,1);
-        mirror_test_pt(2) = mirror_test_pt(2) + bboxes(2,2);
+        mirror_test_pt(iMarker,:) = tracks(iTrack).digitMarkers(:,iMarker,2)';
+        mirror_test_pt(iMarker,1) = mirror_test_pt(iMarker,1) + bboxes(2,1);
+        mirror_test_pt(iMarker,2) = mirror_test_pt(iMarker,2) + bboxes(2,2);
         d(iMarker,1) = distanceToLine(center_pts1(iMarker,:), ...
                                       center_pts2(iMarker,:), ...
-                                      mirror_test_pt);
+                                      mirror_test_pt(iMarker,:));
         d(iMarker,2) = distanceToLine(mirror_pts1(iMarker,:), ...
                                       mirror_pts2(iMarker,:), ...
-                                      center_test_pt);
+                                      center_test_pt(iMarker,:));
+                                  
+        if mean(d(iMarker,:)) > maxDistFromEpipolarLine
+            % logic here is that if the epipolar line of one of the
+            % identified points in one of the views intersects the mask in 
+            % the other view, the mask containing the original identified
+            % point is probably partially occluded. If, however, the
+            % epipolar line does not intersect the mask in the other view,
+            % the mask in the original view is probably complete
+            maskIntersect = doesEpipolarLineIntersectMask(center_epiPts(iMarker,:), ...
+                                                          mirror_epiPts(iMarker,:), ...
+                                                          tracks(iTrack), ...
+                                                          bboxes, ...
+                                                          imSize);
+                                                          
+            if any(~maskIntersect)
+                obscuredPoints(iTrack-1, iMarker, :) = ~maskIntersect;
+            end
+                                                       
+        end
     end
     
-    % WORKING HERE... NOW HAVE A MEASURE OF HOW FAR EACH POINT IS FROM THE
-    % EPIPOLAR LINE PROJECTED FROM THE OTHER VIEW; IF TOO FAR APART, ONE OF
-    % THEM MUST BE PARTIALLY OBSCURED. HOW TO TELL? TRY ASSUMING THAT THE
-    % REGION WHOSE PROJECTION INTO THE OTHER VIEW MORE COMPLETELY ENCLOSES
-    % THE OTHER IS THE FULL VIEW. THEN NEED TO ESTIMATE WHERE THE PARTIALLY
-    % HIDDEN POINTS REALLY ARE...
-    
-    centerMask = false(imSize);
-    mirrorMask = false(imSize);
-    centerMask(bboxes(1,2) : bboxes(1,2) + bboxes(1,4), ...
-               bboxes(1,1) : bboxes(1,1) + bboxes(1,3)) = tracks(iTrack).digitmask1;
-    mirrorMask(bboxes(1,2) : bboxes(1,2) + bboxes(1,4), ...
-               bboxes(1,1) : bboxes(1,1) + bboxes(1,3)) = tracks(iTrack).digitmask2;
-           
 end
-for iView = 1 : 2
-    
-    projMask = calcProjMask(masks{iView}, F{iView}, bboxes(iView,:), imSize);
-    projMask = projMask(bboxes(2,2) : bboxes(2,2) + bboxes(2,4), ...
-                        bboxes(2,1) : bboxes(2,1) + bboxes(2,3));
-    
-                    
-% WORKING HERE - WANT TO SET THIS UP SO THAT:
-%   1) NO POINTS INCLUDED IN A DIGIT OR PAW DORSUM MASK CAN BE OUTSIDE THE
-%   ORIGINAL PAW MASK
-%   2) "HIDDEN" POINTS ARE IDENTIFIED BY ASSUMING THAT THE LARGER BOUNDING
-%   MASK CONTAINS THE REAL DIGIT 3D COORDINATES (AS LONG AS ITS PROJECTION
-%   DOESN'T EXTEND OUTSIDE THE BACKGROUND SUBTRACTED MASKING)
-%   3) NEED TO FIGURE OUT HOW TO CONSTRAIN OBJECTS SO THAT THEY DON'T GROW
-%   TOO MUCH WHEN I TRY TO FILL OUT THE PROJECTION MASK IN DIRECTIONS THAT
-%   AREN'T IMPORTANT (MAYBE 3D RECONSTRUCTION CONSTRAINGS ALL POINTS TO BE
-%   WITHIN COME RADIUS OF EACH OTHER?)
-%   4) GET AROUND OBSCURATION BY THE BOX BY KNOWING WHERE THAT WILL OCCUR,
-%   AND WHEN THE BOUNDING BOX OF THE PAW REACHES THOSE BORDERS, EXTEND THE
-%   BBOX THROUGH THAT REGION?
-    projectionOverlap = projMask & viewMask{2}(:,:,ii);
-    
-    numPts = length(find(viewMask{2}(:,:,ii)));
-    numOverlapPts = length(find(projectionOverlap));
-    
-    overlapFract(ii) = numOverlapPts / numPts;
-    if overlapFract(ii) > minOverlap
-        validOverlap(ii) = true;
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function maskIntersect = doesEpipolarLineIntersectMask(center_epiPts, ...
+                                                       mirror_epiPts, ...
+                                                       track, ...
+                                                       bboxes, ...
+                                                       imSize)
+%
+% INPUTS:
+%   center_epiPts, mirror_epiPts - the points on the edge of the full mask
+%       image defining the epipolar lines from each view
+%   track - 
+%   
+% OUTPUTS:
+%   maskIntersect - 1 x 2 boolean array indicating whether the epipolar
+%       line from the center view point intersects the mirror mask (index
+%       1) and/or the epipolar line from the mirror view point intersects
+%       the direct view mask (index 2)
+
+maskIntersect = false(1,2);
+
+center_mask_edge = false(imSize);
+mirror_mask_edge = false(imSize);
+
+center_bbox_edge = bwmorph(track.digitmask1,'remove');
+mirror_bbox_edge = bwmorph(track.digitmask2,'remove');
+
+center_mask_edge(bboxes(1,2) : bboxes(1,2) + bboxes(1,4), ...
+                 bboxes(1,1) : bboxes(1,1) + bboxes(1,3)) = center_bbox_edge;
+mirror_mask_edge(bboxes(2,2) : bboxes(2,2) + bboxes(2,4), ...
+                 bboxes(2,1) : bboxes(2,1) + bboxes(2,3)) = mirror_bbox_edge;
+
+[center_y, center_x] = find(center_mask_edge);
+[mirror_y, mirror_x] = find(mirror_mask_edge);
+
+for ii = 1 : length(center_y)
+    d = distanceToLine(center_epiPts(1:2), ...
+                       center_epiPts(3:4), ...
+                       [center_x(ii), center_y(ii)]);
+	if d < 1
+        maskIntersect(1) = true;
+        break;
     end
+end
+
+for ii = 1 : length(mirror_y)
+    d = distanceToLine(mirror_epiPts(1:2), ...
+                       mirror_epiPts(3:4), ...
+                       [mirror_x(ii), mirror_y(ii)]);
+	if d < 1
+        maskIntersect(1) = true;
+        break;
+    end
+end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function predicted_point = predictObscuredPoint(tracks, obscuredPoints, BG_mask)
+% calculate the epipolar line from the non-obscured view of a point on a
+% digit, then find the closest point within the background-subtracted mask
+% to the "obscured" point
+
 end
