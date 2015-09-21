@@ -1,15 +1,10 @@
-function d = distanceToLine(Q1,Q2,Q0)
-%
-% function to find the shortest distance between a point and a line
+function np = findNearestPointOnLine(Q1,Q2,Q0)
 %
 % INPUTS:
-%   Q1, Q2 are points that define the line
-%   Q0 is the point to which we are trying to find the distance
 %
 % OUTPUTS:
-%   d - Euclidean distance to the line
+%
 
-% make sure all are row vectors 
 if size(Q1,1) == length(Q1)
     Q1 = Q1';
 end
@@ -27,9 +22,9 @@ end
 
 % 2D or 3D case
 if length(Q1) == 2
-    d = calc2Ddistance(Q1,Q2,Q0);
+    np = find2Dpoint(Q1,Q2,Q0);
 elseif length(Q1) == 3
-    d = calc3Ddistance(Q1,Q2,Q0);
+    np = find3Dpoint(Q1,Q2,Q0);
 else
     error('must be 2D or 3D points')
 end
@@ -38,16 +33,30 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function d = calc2Ddistance(Q1,Q2,Q0)
+function np = find2Dpoint(Q1,Q2,Q0)
+% 2D case
 
-d = abs(det([Q2-Q1;Q0-Q1]))/norm(Q2-Q1);
+np = zeros(1,2);
+if Q1(1) == Q2(1)
+    np(1) = Q1(1);
+    np(2) = Q0(2);
+    return;
+elseif Q1(2) == Q2(2)
+    np(1) = Q0(1);
+    np(2) = Q1(2);
+    return;
+end
+
+m1 = (Q2(2)-Q1(2)) / (Q2(1) - Q1(1));
+m2 = -1/m1;
+
+np(1) = (m1*Q1(1) - m2*Q0(1) + Q0(2) - Q1(2)) / (m1-m2);
+np(2) = m2 * (np(1) - Q0(1)) + Q0(2);
 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function d = calc3Ddistance(Q1,Q2,Q0)
-
-d = norm(cross(Q2-Q1,Q0-Q1))/norm(Q2-Q1);
-
+function np = find3Dpoint(Q1,Q2,Q0)
+    
 end

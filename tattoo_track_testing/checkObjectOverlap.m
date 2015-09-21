@@ -1,21 +1,12 @@
-function [validOverlap, overlapFract] = checkObjectOverlap(masks, bboxes, fundMat, imSize, varargin)
+function tracks = reconstructPartiallyHiddenObjects(tracks, bboxes, fundMat, imSize, BG_mask, varargin)
 %
 % INPUTS:
-%   masks - 2-element cell array containing the masks of the object within
+%   tracks - 2-element cell array containing the masks of the object within
 %       a bounding box in each view
 %   bboxes - 2 x 4 array containing the bounding boxes of mask1 and mask2
 %       within their larger images. (row 1--> mask 1, row 2 --> mask2)
 %   fundMat is the fundamental matrix going from view 1 to view 2
 %   imSize - 1 x 2 vector containing the height and width of the image
-
-minOverlap = 0.3;   % amount that each digit in the mirror view must overlap with the direct view
-
-for iarg = 1 : 2 : nargin - 4
-    switch lower(varargin{iarg})
-        case 'minoverlap',
-            minOverlap = varargin{iarg + 1};
-    end
-end
 
 
 
@@ -26,6 +17,10 @@ F{2} = fundMat';   % from view 2 to view 1
 validOverlap = false(numObjects, 1);
 overlapFract = zeros(1,2);
 
+for iTrack = 2 : length(tracks)    % start with the digits
+    
+    centerMask = tracks(iTrack).digitmask1;
+    mirrorMask = tracks(iTrack).digitmask2;
 for iView = 1 : 2
     
     projMask = calcProjMask(masks{iView}, F{iView}, bboxes(iView,:), imSize);

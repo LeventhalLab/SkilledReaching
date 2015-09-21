@@ -39,6 +39,7 @@ end
 
 if numCentroids == 0
     new_mask = old_mask;
+    hullPoints = [];
     return;
 end
 
