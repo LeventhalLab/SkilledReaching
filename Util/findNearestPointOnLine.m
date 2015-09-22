@@ -1,6 +1,12 @@
 function np = findNearestPointOnLine(Q1,Q2,Q0)
 %
+% find the point on a line specified by Q1 and Q2 that is closest to Q0
+%
 % INPUTS:
+%   Q1,Q2 - (x,y) or (x,y,z) coordinates of two points that specify the
+%       line
+%   Q0  - (x,y) or (x,y,z) coordinates of the point to which we want to
+%       find the closest point on the line specified by Q1 and Q2
 %
 % OUTPUTS:
 %

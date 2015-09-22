@@ -7,6 +7,14 @@ function tracks = reconstructPartiallyHiddenObjects(tracks, bboxes, fundMat, imS
 %       within their larger images. (row 1--> mask 1, row 2 --> mask2)
 %   fundMat is the fundamental matrix going from view 1 to view 2
 %   imSize - 1 x 2 vector containing the height and width of the image
+%   BG_mask - 1 x 3 cell array containing the background mask in the
+%       center, dorsum mirror, and palm mirror, respectively. The mask only
+%       contains the corresponding bounding boxes defined by bboxes
+% VARARGs:
+%   maxdistfromepipolarline - 
+%
+% OUTPUTS:
+%   tracks - 
 
 F = fundMat(:,:,1);    % from view 1 to view 2
 maxDistFromEpipolarLine = 5;
@@ -20,6 +28,9 @@ end
 
 obscuredPoints = identifyObscuredPoints(tracks, bboxes, F, imSize, maxDistFromEpipolarLine);
 
+new_tracks = predictObscuredPoints(tracks(2:5), obscuredPoints, BG_mask, bboxes, imSize, F);
+
+tracks(2:5) = new_tracks;
 
 end
 
@@ -27,6 +38,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function obscuredPoints = identifyObscuredPoints(tracks, bboxes, F, imSize, maxDistFromEpipolarLine)
+%
+% INPUTS:
+%   tracks - 
+%   bboxes - 
+%
+% OUTUPUTS:
+%   obscuredPoints - 4 x 3 x 2 boolean array (digit ID x prox vs centroid
+%       vs distal point x 2 views)
 
 obscuredPoints = false(length(tracks)-2, 3, 2);    % number of digits x 3 points per view x 2 views
 
@@ -81,11 +100,11 @@ for iTrack = 2 : length(tracks)-1    % start with the digits
                                   
         if mean(d(iMarker,:)) > maxDistFromEpipolarLine
             % logic here is that if the epipolar line of one of the
-            % identified points in one of the views intersects the mask in 
-            % the other view, the mask containing the original identified
-            % point is probably partially occluded. If, however, the
-            % epipolar line does not intersect the mask in the other view,
-            % the mask in the original view is probably complete
+            % identified points in one of the views intersects the digit 
+            % mask in the other view, the mask containing the original
+            % identified point is probably partially occluded. If, however,
+            % the epipolar line does not intersect the mask in the other
+            % view, the mask in the original view is probably complete
             maskIntersect = doesEpipolarLineIntersectMask(center_epiPts(iMarker,:), ...
                                                           mirror_epiPts(iMarker,:), ...
                                                           tracks(iTrack), ...
@@ -164,9 +183,88 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function predicted_point = predictObscuredPoint(tracks, obscuredPoints, BG_mask)
+function new_tracks = predictObscuredPoints(tracks, obscuredPoints, BG_mask, bboxes, imSize, F)
+%
+% INPUTS:
+%
+%
+% OUTPUTS:
+%
+% predicted_points = zeros(size(obscuredPoints,1),...
+%                          2, ...
+%                          size(obscuredPoints,2),...
+%                          size(obscuredPoints,3));
+
+new_tracks = tracks;
+
+for iDigit = 1 : size(obscuredPoints, 1)
+    for iPoint = 1 : 3
+        for iView = 1 : 2
+            if obscuredPoints(iDigit,iPoint,iView)
+                new_tracks(iDigit) = ...
+                    predictObscuredPoint(tracks(iDigit),...
+                                         iPoint,...
+                                         iView,...
+                                         BG_mask,...
+                                         bboxes,...
+                                         imSize,...
+                                         F);
+            end
+        end
+    end
+end
+
+end    % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function newTrack = predictObscuredPoint(track, iPoint, iView, BG_mask, bboxes, imSize, F)
 % calculate the epipolar line from the non-obscured view of a point on a
 % digit, then find the closest point within the background-subtracted mask
 % to the "obscured" point
 
+%   iPoint, iView - the indices of the point (prox, centroid, distal) and
+%       view (1 = center, 2 = mirror) in which the partial oscuration
+%       occurred
+%   BG_mask - 
+%   F - fundamental matrix going from direct view to paw dorsum mirror view
+%
+
+newTrack = track;
+
+visiblePtIdx = 3 - iView;
+visible_bbox = bboxes(3-iView,:);
+obscured_bbox = bboxes(iView,:);
+if iView == 1
+    F = F';
 end
+
+visiblePt  = track.digitMarkers(:,iPoint,visiblePtIdx)';
+obscuredPt = track.digitMarkers(:,iPoint,iView)';
+visiblePt = visiblePt + visible_bbox(1:2);
+obscuredPt = obscuredPt + obscured_bbox(1:2);
+
+epiLine = epipolarLine(F, visiblePt);
+epiPts  = lineToBorderPoints(epiLine, imSize);
+
+predicted_point = findNearestPointOnLine(epiPts(1:2),epiPts(3:4),obscuredPt);
+
+% make sure the predicted point is within the paw mask
+paw_mask = false(imSize);
+ptMask = false(imSize);
+paw_mask(obscured_bbox(2) : obscured_bbox(2) + obscured_bbox(4),...
+         obscured_bbox(1) : obscured_bbox(1) + obscured_bbox(3)) = BG_mask{iView};
+ptMask(round(predicted_point(2)),round(predicted_point(1))) = true;
+overlap = ptMask & paw_mask;
+
+if ~any(overlap(:))    % predicted point is not within the paw mask
+    paw_edge = bwmorph(paw_mask,'remove');
+    [y, x] = find(paw_edge);
+    [~,nnidx] = findNearestNeighbor(predicted_point,[x,y]);
+    predicted_point = [x(nnidx),y(nnidx)];
+end
+
+newTrack.digitMarkers(:,iPoint,iView) = (predicted_point - obscured_bbox(1:2))';
+
+end % function

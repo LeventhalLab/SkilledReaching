@@ -520,6 +520,7 @@ while video.CurrentTime < video.Duration
     
     % now do the thresholding
     hsv = cell(1,2);
+    beadMask = cell(1,2);
     prelim_digitMask = cell(1,num_elements_to_track-1);
     for ii = 2 : num_elements_to_track - 1    % do the digits first
         prelim_digitMask{ii} = cell(1,2);
@@ -529,21 +530,28 @@ while video.CurrentTime < video.Duration
         
         for iView = 1 : 2
             hsv{iView} = squeeze(paw_hsv{iView}(:,:,:,ii));
+            if strcmpi(colorList{ii},'blue')
+                beadMask{iView} = blueBeadMask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                                               mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
+            else
+                beadMask{iView} = false(size(hsv{iView},1),size(hsv{iView},2));
+            end
         end
         tempMask = thresholdDigits(tracks(ii).meanHSV, ...
                                    tracks(ii).stdHSV, ...
                                    HSVthresh_parameters, ...
                                    hsv, ...
                                    numSameColorObjects, ...
-                                   digitBlob);
+                                   digitBlob, ...
+                                   beadMask);
         for iView = 1 : 2
-            if strcmpi(colorList{ii},'blue')
-                bbox_blueBeadMask = blueBeadMask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
-                                                 mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
-                % eliminate any identified blue regions that overlap with blue
-                % beads
-                tempMask{iView} = tempMask{iView} & ~bbox_blueBeadMask;% squeeze(boxMarkers.beadMasks(:,:,3));
-            end
+%             if strcmpi(colorList{ii},'blue')
+%                 bbox_blueBeadMask = blueBeadMask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
+%                                                  mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
+%                 % eliminate any identified blue regions that overlap with blue
+%                 % beads
+%                 tempMask{iView} = tempMask{iView} & ~bbox_blueBeadMask;% squeeze(boxMarkers.beadMasks(:,:,3));
+%             end
             prelim_digitMask{ii}{iView} = tempMask{iView};
         end
         
@@ -601,11 +609,15 @@ while video.CurrentTime < video.Duration
                                         [h,w]);
 
                                           
-    % now have to deal with partially or completely hidden objects
+    % now have to deal with partially hidden objects
     tracks = reconstructPartiallyHiddenObjects(tracks, mask_bbox, fundMat, [h,w], current_BG_mask);
 
     % triangulate all available digit markers
-	tracks(2:5) = digit3Dpoints(digitMarkers, trackingBoxParams, tracks(2:5), mask_bbox);
+    tracks(2:5) = digit3Dpoints(trackingBoxParams, tracks(2:5), mask_bbox);
+% 	tracks(2:5) = digit3Dpoints(digitMarkers, trackingBoxParams, tracks(2:5), mask_bbox);
+    
+    % now have to deal with completely hidden digits
+    tracks = reconstructCompletelyHiddenObjects(tracks, mask_bbox, [h,w], current_BG_mask);
     
 %     hsv{iView} = squeeze(paw_hsv{iView}(:,:,:,1));
 %     pdMask = thresholdDorsum(tracks(1).meanHSV, ...
@@ -660,6 +672,8 @@ while video.CurrentTime < video.Duration
     for iTrack = 1 : 5
         pawTrajectory(currentFrame,iTrack,:,:) = tracks(iTrack).markers3D;
     end
+    
+%     plotTracks(tracks, image_ud, mask_bbox)
     
 end
 
@@ -841,7 +855,8 @@ function digitMask = thresholdDigits(meanHSV, ...
                                      HSVthresh_parameters, ...
                                      hsv, ...
                                      numSameColorObjects, ...
-                                     digitBlob)
+                                     digitBlob,...
+                                     beadMask)
 %
 % INPUTS:
 %   meanHSV - 3 element vector with mean hue, saturation, and value values,
@@ -865,6 +880,7 @@ function digitMask = thresholdDigits(meanHSV, ...
 %       tattoo as the current digit
 %   digitBlob - cell array of blob objects containing blob parameters for
 %       the direct view (index 1) and mirror view (index 2)
+%   beadMask - 
 %
 % OUTPUTS:
 %   digitMask - 1 x 2 cell array containing the mask for the direct
@@ -899,6 +915,8 @@ function digitMask = thresholdDigits(meanHSV, ...
         % threshold the image
         tempMask = HSVthreshold(hsv{iView}, ...
                                 HSVlimits(iView,:));
+
+        tempMask = tempMask & ~beadMask{iView};
 
         if ~any(tempMask(:)); continue; end
 
@@ -1095,7 +1113,8 @@ function newTrack = checkSingleTrack(prevTrack, ...
     % several possibilities: a blob is visible in both views, a blob is
     % visible in one view but not the other, blob isn't visible in either view
     if any(prelimMask{1,1}(:)) && any(prelimMask{1,2}(:))
-
+        % blob visible in both views
+        
         new_centroids = zeros(2,2);
         % triangulate the centroids of the direct and mirror view blobs
         s_direct = regionprops(prelimMask{1},'Centroid');
@@ -1133,7 +1152,7 @@ function newTrack = checkSingleTrack(prevTrack, ...
             newTrack.digitmask2 = prelimMask{2};
             newTrack.markers3D(2,:) = points3d;
             newTrack.isvisible = [true,true,false];
-            newTrack.totalVisibleCount = newTrack.totalVisibleCount + 1;
+            newTrack.totalVisibleCount(1:2) = newTrack.totalVisibleCount(1:2) + 1;
             newTrack.consecutiveInvisibleCount = [0 0];
         end
     end
@@ -1277,7 +1296,7 @@ function newTracks = checkTwoTracks(prevTracks, ...
             newTracks(iTrack).digitmask2 = mirrorMask;
             newTracks(iTrack).markers3D(2,:) = curr_3dpoint;
             newTracks(iTrack).isvisible = [true,true,false];
-            newTracks(iTrack).totalVisibleCount = newTracks(iTrack).totalVisibleCount + 1;
+            newTracks(iTrack).totalVisibleCount(1:2) = newTracks(iTrack).totalVisibleCount(1:2) + 1;
             newTracks(iTrack).consecutiveInvisibleCount = [0 0];
 
         else    % what to do if all the blobs aren't there for this digit track?
@@ -1338,6 +1357,7 @@ function [tracks, dorsumRegionMask] = ...
 %   trackingBoxParams - 
 %
 % OUTPUTS:
+%   tracks - 
 %   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
 %       dimension is (x,y), third dimension is proximal,centroid,tip of
 %       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
@@ -1438,7 +1458,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tracks = digit3Dpoints(digitMarkers, trackingBoxParams, tracks, mask_bbox)
+function tracks = digit3Dpoints(trackingBoxParams, tracks, mask_bbox)
 % INPUTS:
 %   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
 %       dimension is (x,y), third dimension is proximal,centroid,tip of
@@ -1448,9 +1468,14 @@ function tracks = digit3Dpoints(digitMarkers, trackingBoxParams, tracks, mask_bb
 %   mask_bbox - 2 x 4 array, where each row is a standard bounding box
 %       vector [x,y,w,h]
 
+digitMarkers = zeros(length(tracks),2,3,2);
+numDigits = length(tracks);
+for iDigit = 1 : numDigits
+    digitMarkers(iDigit,:,:,:) = tracks(iDigit).digitMarkers;
+end
+
 markers3D = digitMarkersTo3D(digitMarkers, trackingBoxParams, mask_bbox);
 
-numDigits = size(digitMarkers,1);
 for iDigit = 1 : numDigits
     tracks(iDigit).markers3D = squeeze(markers3D(iDigit,:,:));
 end

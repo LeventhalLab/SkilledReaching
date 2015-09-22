@@ -1,17 +1,20 @@
-function tracks = reconstructPartiallyHiddenObjects(tracks, bboxes, fundMat, imSize, BG_mask, varargin)
+function tracks = reconstructCompletelyHiddenObjects(tracks, bboxes, imSize, BG_mask, varargin)
 %
 % INPUTS:
 %   tracks - 2-element cell array containing the masks of the object within
 %       a bounding box in each view
 %   bboxes - 2 x 4 array containing the bounding boxes of mask1 and mask2
 %       within their larger images. (row 1--> mask 1, row 2 --> mask2)
-%   fundMat is the fundamental matrix going from view 1 to view 2
 %   imSize - 1 x 2 vector containing the height and width of the image
 %   BG_mask - 1 x 3 cell array containing the background mask in the
 %       center, dorsum mirror, and palm mirror, respectively. The mask only
 %       contains the corresponding bounding boxes defined by bboxes
+% VARARGs:
+%   maxdistfromepipolarline - 
+%
+% OUTPUTS:
+%   tracks - 
 
-F = fundMat(:,:,1);    % from view 1 to view 2
 maxDistFromEpipolarLine = 5;
 
 for iarg = 1 : 2 : nargin - 5
@@ -21,9 +24,21 @@ for iarg = 1 : 2 : nargin - 5
     end
 end
 
+% first task is to compute the ray projecting back from the point that we
+% do know
+for iDigit = 1 : 4
+    currentTrack = tracks(iDigit + 1);
+    obscuredView = find(currentTrack.isvisible);
+    
+    if isempty(obscuredView); continue; end    % no obscured views for this digit
+    
+    if length(obscuredView) == 1    % one of the views is obscured
+        obscured_bbox = bboxe
 obscuredPoints = identifyObscuredPoints(tracks, bboxes, F, imSize, maxDistFromEpipolarLine);
 
 new_tracks = predictObscuredPoints(tracks(2:5), obscuredPoints, BG_mask, bboxes, imSize, F);
+
+tracks(2:5) = new_tracks;
 
 end
 
@@ -235,10 +250,9 @@ end
 
 visiblePt  = track.digitMarkers(:,iPoint,visiblePtIdx)';
 obscuredPt = track.digitMarkers(:,iPoint,iView)';
-visiblePt(1) = visiblePt(1) + visible_bbox(1);
-visiblePt(2) = visiblePt(2) + visible_bbox(2);
-obscuredPt(1) = obscuredPt(1) + obscured_bbox(1);
-obscuredPt(2) = obscuredPt(2) + obscured_bbox(2);
+visiblePt = visiblePt + visible_bbox(1:2);
+obscuredPt = obscuredPt + obscured_bbox(1:2);
+
 epiLine = epipolarLine(F, visiblePt);
 epiPts  = lineToBorderPoints(epiLine, imSize);
 
@@ -259,5 +273,6 @@ if ~any(overlap(:))    % predicted point is not within the paw mask
     predicted_point = [x(nnidx),y(nnidx)];
 end
 
-newTrack.digitMarkers(:,iPoint,iView) = predicted_point';
+newTrack.digitMarkers(:,iPoint,iView) = (predicted_point - obscured_bbox(1:2))';
+
 end % function
