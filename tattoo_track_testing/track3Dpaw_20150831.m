@@ -129,7 +129,7 @@ F = boxCalibration.F;
 P = boxCalibration.P;
 K = boxCalibration.cameraParams.IntrinsicMatrix;
 
-blueBeadMask = boxMarkers.beadMasks(:,:,3);
+blueBeadMask = boxMarkers.beadReflectionMasks(:,:,3);
 
 pawPref = lower(rat_metadata.pawPref);
 if iscell(pawPref)
@@ -197,6 +197,7 @@ pdBlob{2}.MaximumBlobArea = 30000;
 
 trackCheck.maxDistPerFrame = 5;    % in mm
 trackCheck.maxReprojError = 0.1;   % not sure what this needs to be, will need some trial and error
+trackCheck.maxPixelsPerFrame = 20;  % not sure what this needs to be, will need some trial and error
 % =======
 % >>>>>>> origin/master
 for iarg = 1 : 2 : nargin - 10
@@ -573,6 +574,7 @@ while video.CurrentTime < video.Duration
         newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                   prelimMask, ...
                                                   mask_bbox, ...
+                                                  prev_mask_bbox, ...
                                                   trackingBoxParams, ...
                                                   trackCheck);
             
@@ -1064,6 +1066,7 @@ end
 function newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                    prelimMask, ...
                                                    mask_bbox, ...
+                                                   prev_bbox, ...
                                                    trackingBoxParams, ...
                                                    trackCheck)
 %
@@ -1075,6 +1078,8 @@ function newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
 %   prev_mask_bbox - 2 x 4 array, 1st row is bounding box for the direct
 %       view, second row is for the mirror view
 %   mask_bbox - 
+%   trackingBoxParams - 
+%   trackCheck -
 %
 % OUTPUTS:
 %
@@ -1088,12 +1093,14 @@ if length(colorTracks) == 1
     newTracks = checkSingleTrack(colorTracks, ...
                                  prelimMask, ...
                                  mask_bbox, ...
+                                 prev_bbox, ...
                                  trackingBoxParams, ...
                                  trackCheck);
 else
     newTracks = checkTwoTracks(colorTracks, ...
                                prelimMask, ...
                                mask_bbox, ...
+                               prev_bbox, ...
                                trackingBoxParams, ...
                                trackCheck);
 end
@@ -1105,11 +1112,12 @@ end
 function newTrack = checkSingleTrack(prevTrack, ...
                                      prelimMask, ...
                                      mask_bbox, ...
+                                     prev_bbox, ...
                                      trackingBoxParams, ...
                                      trackCheck)
 
 	newTrack = prevTrack;
-    
+
     % several possibilities: a blob is visible in both views, a blob is
     % visible in one view but not the other, blob isn't visible in either view
     if any(prelimMask{1,1}(:)) && any(prelimMask{1,2}(:))
@@ -1140,22 +1148,48 @@ function newTrack = checkSingleTrack(prevTrack, ...
         % so, how do we estimate current 3D point?
         if d3d > trackCheck.maxDistPerFrame || ...
            meanReprojError > trackCheck.maxReprojError
-        % WORKING HERE... NOW NEED TO DETERMINE IF REPROJECTION ERRORS ARE
-        % SMALL ENOUGH AND CURRENT 3D POINT IS CLOSE ENOUGH TO THE PREVIOUS
-        % POINT TO ACCEPT IT. IF SO, UPDATE NEW TRACK WITH THE NEW MASK. IF
-        % NOT, DECIDE THAT THIS DIGIT IS NOT VISIBLE IN AT LEAST ONE OF THE
-        % VIEWS; THEN NEED TO DECIDE IF ONE OF THE VIEWS IS VALID. FOR NOW,
-        % ASSUME TRACKING IS OK
-        
+            % WORKING HERE... NOW NEED TO DETERMINE IF REPROJECTION ERRORS ARE
+            % SMALL ENOUGH AND CURRENT 3D POINT IS CLOSE ENOUGH TO THE PREVIOUS
+            % POINT TO ACCEPT IT. IF SO, UPDATE NEW TRACK WITH THE NEW MASK. IF
+            % NOT, DECIDE THAT THIS DIGIT IS NOT VISIBLE IN AT LEAST ONE OF THE
+            % VIEWS; THEN NEED TO DECIDE IF ONE OF THE VIEWS IS VALID. 
+            prev_centroids = zeros(2,2);
+            for iView = 1 : 2
+                prev_centroids(iView,:) = prevTrack.digitMarkers(2,:,iView)' +...
+                                          prev_bbox(iView,1:2) - 1;
+            end
+            temp = prev_centroids - new_centroids;
+            centroid_diffs_across_frames = zeros(1,2);
+            for iView = 1 : 2
+                centroid_diffs_across_frames(iView) = norm(temp(iView,:));
+                if centroid_diffs_across_frames > trackCheck.maxPixelsPerFrame
+                    prelimMask{1,iView} = false(size(prelimMask{1,iView}));
+                    newTrack.isvisible(iView) = false;
+                    newTrack.consecutiveInvisibleCount(iView) = newTrack.consecutiveInvisibleCount(iView) + 1;
+                end
+            end
+            
         else
-            newTrack.digitmask1 = prelimMask{1};
-            newTrack.digitmask2 = prelimMask{2};
             newTrack.markers3D(2,:) = points3d;
             newTrack.isvisible = [true,true,false];
             newTrack.totalVisibleCount(1:2) = newTrack.totalVisibleCount(1:2) + 1;
             newTrack.consecutiveInvisibleCount = [0 0];
         end
+    else    % blob not visible in at least one of the views
+        for iView = 1 : 2
+            if any(prelimMask{1,iView}(:))
+                newTrack.isvisible(iView) = true;
+                newTrack.totalVisibleCount(iView) = newTrack.totalVisibleCount(iView) + 1;
+                newTrack.consecutiveInvisibleCount(iView) = 0;
+            else
+                newTrack.isvisible(iView) = false;
+                newTrack.consecutiveInvisibleCount(iView) = newTrack.consecutiveInvisibleCount(iView) + 1;
+            end
+        end
     end
+    
+    newTrack.digitmask1 = prelimMask{1};
+    newTrack.digitmask2 = prelimMask{2};
 
 end
 
@@ -1165,6 +1199,7 @@ end
 function newTracks = checkTwoTracks(prevTracks, ...
                                     prelimMask, ...
                                     mask_bbox, ...
+                                    prev_bbox, ...
                                     trackingBoxParams, ...
                                     trackCheck)
 
@@ -1646,6 +1681,7 @@ for iView = 1 : 2
 %         end
 %         if firstValidIdx == 0; firstValidIdx = ii-1; end
 %         lastValidIdx = ii-1;
+        if any(~tracks(ii).isvisible(1:2)); continue; end    % if digit not visible in one of the views, skip finding markers
         
         if iView == 1
             currentMask{iView} = tracks(ii).digitmask1;

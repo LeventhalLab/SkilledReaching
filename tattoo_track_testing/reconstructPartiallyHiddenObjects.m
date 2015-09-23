@@ -198,6 +198,7 @@ function new_tracks = predictObscuredPoints(tracks, obscuredPoints, BG_mask, bbo
 new_tracks = tracks;
 
 for iDigit = 1 : size(obscuredPoints, 1)
+    if ~all(tracks(iDigit).isvisible(1:2)); continue; end
     for iPoint = 1 : 3
         for iView = 1 : 2
             if obscuredPoints(iDigit,iPoint,iView)

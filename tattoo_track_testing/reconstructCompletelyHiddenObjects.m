@@ -26,6 +26,10 @@ end
 % do know
 for iDigit = 1 : 4
     currentTrack = tracks(iDigit + 1);
+    
+    if all(currentTrack.isvisible(1:2)); continue; end  % no point in doing calculations on points that have an at least partially visible portion in both views
+    
+    
     obscuredView = find(currentTrack.isvisible);
     
     if isempty(obscuredView); continue; end    % no obscured views for this digit

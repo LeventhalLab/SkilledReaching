@@ -1,4 +1,4 @@
-function [beadLocations, beadMasks] = identifyBeads(I, varargin)
+function [beadLocations, beadMasks, beadReflectionMasks] = identifyBeads(I, varargin)
 
 minBeadArea = 0300;
 maxBeadArea = 2000;
@@ -13,6 +13,9 @@ maxEccentricity = 0.8;
 hsvBounds_beads = [0.00    0.16    0.50    1.00    0.00    1.00
                    0.33    0.16    0.00    0.50    0.00    0.50
                    0.66    0.16    0.50    1.00    0.00    1.00];
+hsvBounds_reflections = [0.00    0.16    0.50    1.00    0.00    1.00
+                         0.33    0.16    0.00    0.50    0.00    0.50
+                         0.66    0.16    0.30    1.00    0.00    1.00];
 for iarg = 1 : 2 : nargin - 1
     switch lower(varargin{iarg})
         case 'minbeadarea',
@@ -41,10 +44,15 @@ h_beadBlob.LabelMatrixOutputPort = true;
 beadCent = cell(1,3);
 beadSortIdx = cell(1,3);
 beadMasks = false(size(I,1),size(I,2), 3);
+beadReflectionMasks = false(size(I,1),size(I,2), 3);
 for ii = 1 : 3
     
     thresh_mask = HSVthreshold(I_hsv, hsvBounds_beads(ii,:));
     thresh_mask = imfill(thresh_mask,'holes');
+    
+	reflection_thresh_mask = HSVthreshold(I_hsv, hsvBounds_reflections(ii,:));
+    reflection_thresh_mask = imfill(reflection_thresh_mask,'holes');
+    
     beadMasks(:,:,ii) = thresh_mask;
     
     [~,~,~,beadEcc,beadLabelMatrix] = ...
@@ -55,6 +63,8 @@ for ii = 1 : 3
         end
     end
     beadMasks(:,:,ii) = (beadLabelMatrix > 0);
+    beadReflectionMasks(:,:,ii) = imreconstruct(beadMasks(:,:,ii), reflection_thresh_mask);
+    
     [~,beadCent{ii},~,~,~] = ...
         step(h_beadBlob,squeeze(beadMasks(:,:,ii)));
 
