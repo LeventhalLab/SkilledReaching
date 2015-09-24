@@ -67,11 +67,11 @@ for iTrack = 2 : length(tracks)-1    % start with the digits
     
     % calculate the distance from the epipolar lines for each proximal/
     % centroid/distal point to its image point
-    centerDigitMarkers = tracks(iTrack).currentDigitMarkers(:,:,1)';
+    centerDigitMarkers = tracks(iTrack).digitMarkers(:,:,1)';
     centerDigitMarkers(:,1) = centerDigitMarkers(:,1) + bboxes(1,1);
     centerDigitMarkers(:,2) = centerDigitMarkers(:,2) + bboxes(1,2);
     
-    mirrorDigitMarkers = tracks(iTrack).currentDigitMarkers(:,:,2)';
+    mirrorDigitMarkers = tracks(iTrack).digitMarkers(:,:,2)';
     mirrorDigitMarkers(:,1) = mirrorDigitMarkers(:,1) + bboxes(2,1);
     mirrorDigitMarkers(:,2) = mirrorDigitMarkers(:,2) + bboxes(2,2);
     center_epiLines = epipolarLine(F, centerDigitMarkers);
@@ -89,11 +89,11 @@ for iTrack = 2 : length(tracks)-1    % start with the digits
     mirror_test_pt = zeros(3,2);
     for iMarker = 1 : 3   % proximal, centroid, distal
         
-        center_test_pt(iMarker,:) = tracks(iTrack).currentDigitMarkers(:,iMarker,1)';
+        center_test_pt(iMarker,:) = tracks(iTrack).digitMarkers(:,iMarker,1)';
         center_test_pt(iMarker,1) = center_test_pt(iMarker,1) + bboxes(1,1);
         center_test_pt(iMarker,2) = center_test_pt(iMarker,2) + bboxes(1,2);
         
-        mirror_test_pt(iMarker,:) = tracks(iTrack).currentDigitMarkers(:,iMarker,2)';
+        mirror_test_pt(iMarker,:) = tracks(iTrack).digitMarkers(:,iMarker,2)';
         mirror_test_pt(iMarker,1) = mirror_test_pt(iMarker,1) + bboxes(2,1);
         mirror_test_pt(iMarker,2) = mirror_test_pt(iMarker,2) + bboxes(2,2);
         d(iMarker,1) = distanceToLine(center_pts1(iMarker,:), ...
@@ -250,17 +250,13 @@ if iView == 1
     F = F';
 end
 
-paw_mask = false(imSize);
-paw_mask(obscured_bbox(2) : obscured_bbox(2) + obscured_bbox(4),...
-         obscured_bbox(1) : obscured_bbox(1) + obscured_bbox(3)) = BG_mask{iView};    
-
-visiblePt  = track.currentDigitMarkers(:,iPoint,visiblePtIdx)';
-obscuredPt = track.currentDigitMarkers(:,iPoint,iView)';
+visiblePt  = track.digitMarkers(:,iPoint,visiblePtIdx)';
+obscuredPt = track.digitMarkers(:,iPoint,iView)';
 visiblePt = visiblePt + visible_bbox(1:2);
 obscuredPt = obscuredPt + obscured_bbox(1:2);
 
 epiLine = epipolarLine(F, visiblePt);
-overlapMask = lineMaskOverlap(paw_mask, epiLine,'distThresh',lineMaskDistThresh);
+overlapMask = lineMaskOverlap(paw_mask, epiLines(iPoint,:),'distThresh',lineMaskDistThresh);
 [y,x] = find(overlapMask);
 [~,nnidx] = findNearestNeighbor(obscuredPt,[x,y]);
 predicted_point = [x(nnidx),y(nnidx)];
@@ -284,6 +280,6 @@ predicted_point = [x(nnidx),y(nnidx)];
 %     predicted_point = [x(nnidx),y(nnidx)];
 % end
 
-newTrack.currentDigitMarkers(:,iPoint,iView) = (predicted_point - obscured_bbox(1:2))';
+newTrack.digitMarkers(:,iPoint,iView) = (predicted_point - obscured_bbox(1:2))';
 
 end % function

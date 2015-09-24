@@ -9,7 +9,7 @@ end
 imshow(digitMasks);
 hold on
 for ii = 2 : 5
-    scatter(tracks(ii).digitMarkers(1,:,1), tracks(ii).digitMarkers(2,:,1));
+    scatter(tracks(ii).currentDigitMarkers(1,:,1), tracks(ii).currentDigitMarkers(2,:,1));
 end    
 
 
@@ -22,18 +22,18 @@ end
 imshow(digitMasks);
 hold on
 for ii = 2 : 5
-    scatter(tracks(ii).digitMarkers(1,:,2), tracks(ii).digitMarkers(2,:,2));
+    scatter(tracks(ii).currentDigitMarkers(1,:,2), tracks(ii).currentDigitMarkers(2,:,2));
 end   
 
 figure(3);
 imshow(image_ud);
 hold on
 for ii = 2 : 5
-    temp_x = tracks(ii).digitMarkers(1,:,1) + mask_bbox(1,1);
-    temp_y = tracks(ii).digitMarkers(2,:,1) + mask_bbox(1,2);
+    temp_x = tracks(ii).currentDigitMarkers(1,:,1) + mask_bbox(1,1);
+    temp_y = tracks(ii).currentDigitMarkers(2,:,1) + mask_bbox(1,2);
     scatter(temp_x, temp_y);
     
-    temp_x = tracks(ii).digitMarkers(1,:,2) + mask_bbox(2,1);
-    temp_y = tracks(ii).digitMarkers(2,:,2) + mask_bbox(2,2);
+    temp_x = tracks(ii).currentDigitMarkers(1,:,2) + mask_bbox(2,1);
+    temp_y = tracks(ii).currentDigitMarkers(2,:,2) + mask_bbox(2,2);
     scatter(temp_x, temp_y);
 end   

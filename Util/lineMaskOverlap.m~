@@ -1,0 +1,12 @@
+function overlapMask = lineMaskOverlap(mask, lineCoeff)
+%
+% INPUTS:
+%   mask - bw mask of an image in which to find overlap with a line
+%   lineCoeff - [A,B,C] where Ax + By + C = 0
+
+[y,x] = find(mask);
+overlapMask = false(size(mask));
+
+for ii = 1 : 
+
+calcDist
