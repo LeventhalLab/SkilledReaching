@@ -165,7 +165,7 @@ for iPoint = 1 : size(predicted_points,1)
     predicted_points(iPoint,:) = predicted_points(iPoint,:) - bboxes(obscuredView,1:2);
 end
 
-obscuredTrack.currentDigitMarkers(:,:,obscuredView) = predicted_points;
+obscuredTrack.currentDigitMarkers(:,:,obscuredView) = predicted_points';
 obscuredTrack.markersCalculated(1:2) = true;
 
 end    % end function predictCompletelyObscuredPoints
