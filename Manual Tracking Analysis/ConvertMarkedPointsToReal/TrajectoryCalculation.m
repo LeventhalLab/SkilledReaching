@@ -10,7 +10,7 @@
 
 
 
-function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd,Velocity, Acceleration, Jerk]= TrajectoryCalculation(all3dPoints,score,RatID,day,fig_num_avg,fig_num_all,sucessRate,totalNumReaches)
+function  [allCentroids,averagedCentroids, euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd]= TrajectoryCalculation(all3dPoints,score,RatID,day,fig_num_avg,fig_num_all,sucessRate,totalNumReaches)
 
 
     for i = 1:length(all3dPoints(:,1))
@@ -45,14 +45,13 @@ function  [allCentroids,euclidianDistDiff,  euclidianDistDiffMean, euclidianDist
 
     [averagedCentroidsDisp] = calculatePositionChange3D(averagedCentroids)
     
-    [Velocity, Acceleration, Jerk] = KinematicCalc (averagedCentroidsDisp)
+   % [Velocity, Acceleration, Jerk] = KinematicCalc (averagedCentroidsDisp)
     
     plotCentroidTrajectories(allCentroids,score,day,fig_num_all,sucessRate,RatID,totalNumReaches);
     
     
 
 end
-
 
 function  [allCentroid] = calculateCentroid(filteredAll3dPoints)
 
@@ -118,15 +117,19 @@ z_std = [];
 %                [x,y,z] = calculate3DcirclePoints(x_avg(k),y_avg(k),z_avg(k),x_std(k), y_std(k),z_std(k), averagedCentroids(k), averagedCentroids(k+1));
 %            end
            
-           
+         TF = exist('x_avg');
+         
+         if TF == 1
+         
            if score == 1 
             plot3(x_avg,z_avg,y_avg,'r')
            elseif score ==7
             plot3(x_avg,z_avg,y_avg,'b')
            end
-%            
-%            xlim([0, 20]);
-%            zlim([0, 20]);
+         end
+                 
+%            xlim([-5 25]);
+%            zlim([-2, 10]);
 %            ylim([170, 190]);
            
             xlabel('x');
@@ -158,8 +161,9 @@ function [euclidianDistDiff,  euclidianDistDiffMean, euclidianDistDiffStd] = cal
     end
     
     for i=1:length(euclidianDistDiff(1,:))
-        euclidianDistDiffMean(:,i) = mean(cell2mat(euclidianDistDiff(:,i)));
-        euclidianDistDiffStd(:,i) = std(cell2mat(euclidianDistDiff(:,i)));
+       i 
+        euclidianDistDiffMean(:,i) = nanmean(cell2mat(euclidianDistDiff(:,i)));
+        euclidianDistDiffStd(:,i) = std(cell2mat(euclidianDistDiff(:,i)))/sqrt(length(euclidianDistDiff(:,i)));
         
     end
 end
@@ -208,9 +212,9 @@ check = 0 ; %This is a check to stop plotting if NaN exisit
            elseif score ==7
             plot3(x,z,y,'b')
            end
-%            
-%            xlim([0, 20]);
-%            zlim([0, 20]);
+           
+%            xlim([-5 25]);
+%            zlim([-2, 10]);
 %            ylim([170, 190]);
 %            
             xlabel('x');
@@ -236,10 +240,10 @@ averagedCentroidsDisp= [];
                 currentFrame = cell2mat(averagedCentroids(1,k));
                 nextFrame = cell2mat(averagedCentroids(1,k+1));
                 
-                tf1 = sum(currentFrame) == 0 ;
-                tf2 = sum(nextFrame) == 0;
+                tf1 = sum( size(currentFrame) == [1,3]) ;
+                tf2 = sum(size(nextFrame) == [1,3]);
                 
-                if (tf1 == 0 && tf2 ==0)
+                if (tf1 == 2 && tf2 == 2)
                     currentDispIndex = sqrt((currentFrame(1)-nextFrame(1))^2+(currentFrame(2)-nextFrame(2))^2+(currentFrame(3)-nextFrame(3))^2) ;
                     averagedCentroidsDisp(1,k) = currentDispIndex;
                 end
@@ -269,10 +273,14 @@ function [Velocity, Acceleration, Jerk] = KinematicCalc (averagedCentroidsDisp)
         end
     end
     
+    TF = sum(size(Acceleration))
+    
+  if TF ==4 
      for j = 1:length(Acceleration(:,1))
         for i = 1:length(Acceleration(1,:))-1%Number of colums remains constant
                 Jerk(j,i) = (Acceleration(j,i+1)-Acceleration(j,i))/ts;   
         end
-    end
+     end
+  end
 
 end

@@ -159,7 +159,7 @@ for iVideo = iVideo:length(RatData(SessNum).VideoFiles);
     
     % Currently script is set to load only videos where the rat made a
     % successful reach the first time (score = 1).
-    if RatData(SessNum).VideoFiles(iVideo).Score == 1  || RatData(SessNum).VideoFiles(iVideo).Score == 7
+    if RatData(SessNum).VideoFiles(iVideo).Score == 4%||RatData(SessNum).VideoFiles(iVideo).Score == 1  
         VideoCount = VideoCount+1;
         
         % The trial/video number being marked is displayed in the command

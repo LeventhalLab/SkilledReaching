@@ -8,13 +8,18 @@
 function [all3dPoints] = RatDatatoReal3Dpoints(RatData,score)
    load rubiksX1
    load rubiksX2
+   load rubiksX3
+   
    
    r1 = rubiksX1;
-   r2 = rubiksX2;
+   r2 = rubiksX3;
    
-   pel1 = [1053 626];
-   pel2 = [154 595];
-  
+%    
+%    pel1 = [1053 626];
+%    pel2 = [154 595];
+
+pel1 = [932 735];
+pel2 = [1917 660];
    
    all3dPoints=[];
     
