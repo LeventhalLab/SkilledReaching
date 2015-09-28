@@ -1,4 +1,11 @@
-function tracks = reconstructCompletelyHiddenObjects(tracks, bboxes, fundMat, imSize, BG_mask, varargin)
+function tracks = reconstructCompletelyHiddenObjects(tracks, ...
+                                                     bboxes, ...
+                                                     prev_bboxes, ...
+                                                     fundMat, ...
+                                                     imSize, ...
+                                                     BG_mask, ...
+                                                     trackingBoxParams, ...
+                                                     varargin)
 %
 % INPUTS:
 %   tracks - the full list of tracks objects
@@ -19,7 +26,7 @@ function tracks = reconstructCompletelyHiddenObjects(tracks, bboxes, fundMat, im
 
 lineMaskDistThresh = 3;
 
-for iarg = 1 : 2 : nargin - 5
+for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
         case 'linemaskdistthresh',
             lineMaskDistThresh = varargin{iarg + 1};
@@ -55,9 +62,11 @@ while ~allSingleViewsUpdated
                 % MIGHT BE ABLE TO SIMPLIFY THIS IF WE ALWAYS USE THE
                 % PREVIOUS DIGIT LOCATIONS TO FIND THE CLOSEST POINT FOR
                 % THE NEW LOCATIONS
-                tracks(iDigit+1) = predictCompletelyObscuredPoints(tracks(iDigit + 1), ...
+                tracks(iDigit+1) = predictCompletelyObscuredPoints(tracks, ...
+                                                                   iDigit + 1, ...
                                                                    F, ...
                                                                    bboxes, ...
+                                                                   prev_bboxes, ...
                                                                    imSize, ...
                                                                    BG_mask, ...
                                                                    lineMaskDistThresh);
@@ -108,23 +117,53 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function obscuredTrack = predictCompletelyObscuredPoints(obscuredTrack, ...
+function obscuredTrack = predictCompletelyObscuredPoints(tracks, ...
+                                                         obscuredTrackIdx, ...
                                                          F, ...
                                                          bboxes, ...
+                                                         prev_bboxes, ...
                                                          imSize, ...
                                                          BG_mask, ...
                                                          lineMaskDistThresh)
 
-                                                     
+
+obscuredTrack = tracks(obscuredTrackIdx);
 obscuredView = find(~obscuredTrack.isvisible(1:2));
 visibleView = 3 - obscuredView;
+
 visible_pts_from_obscured_track = obscuredTrack.currentDigitMarkers(:,:,visibleView)';   % points identified in the view that is visible from the same track
+
+pointsPerDigit = size(visible_pts_from_obscured_track,1);
+
 % pts_from_visible_neighbor = visibleTrack.currentDigitMarkers(:,:,obscuredView)';         % points in the obscured view from the neighboring digit
-prev_pts = obscuredTrack.previousDigitMarkers(:,:,obscuredView)';
-for iPoint = 1 : size(visible_pts_from_obscured_track, 1)
+prev_obscured_pts = obscuredTrack.previousDigitMarkers(:,:,obscuredView)';
+markersDiff = NaN(pointsPerDigit * 4,2);
+
+% calculate the mean movement of points that are visible
+for iDigit = 2 : length(tracks) - 1
+    if iDigit == obscuredTrackIdx; continue; end
+    if tracks(iDigit).markersCalculated(obscuredView)    % we have markers for the current digit
+        currentPoints  = tracks(iDigit).currentDigitMarkers(:,:,obscuredView)';
+        previousPoints = tracks(iDigit).previousDigitMarkers(:,:,obscuredView)';
+        for iPoint = 1 : pointsPerDigit
+            currentPoints(iPoint,:)  = currentPoints(iPoint,:) + bboxes(obscuredView,1:2) - 1;
+            previousPoints(iPoint,:) = previousPoints(iPoint,:) + prev_bboxes(obscuredView,1:2) -1 ;
+        end
+        startPt = (iDigit-2) * pointsPerDigit + 1;
+        endPt = startPt + 2;
+        markersDiff(startPt:endPt,:) = currentPoints - previousPoints;
+    end
+end
+meanMovement = nanmean(markersDiff,1);
+
+anticipatedPoints = zeros(pointsPerDigit, 2);
+for iPoint = 1 : pointsPerDigit
     visible_pts_from_obscured_track(iPoint,:) = ...
         visible_pts_from_obscured_track(iPoint,:) + ...
-        bboxes(visibleView,1:2);
+        bboxes(visibleView,1:2) - 1;
+    prev_obscured_pts(iPoint,:) = prev_obscured_pts(iPoint,:) + prev_bboxes(obscuredView,1:2) - 1;
+    anticipatedPoints(iPoint,:) = prev_obscured_pts(iPoint,:) + ...
+                                  meanMovement;
 %     pts_from_visible_neighbor(iPoint,:) = ...
 %         pts_from_visible_neighbor(iPoint,:) + ...
 %         bboxes(obscuredView,1:2);
@@ -139,30 +178,32 @@ predicted_points = zeros(size(visible_pts_from_obscured_track,1),2);
 paw_mask = false(imSize);
 paw_mask(bboxes(obscuredView,2) : bboxes(obscuredView,2) + bboxes(obscuredView,4),...
          bboxes(obscuredView,1) : bboxes(obscuredView,1) + bboxes(obscuredView,3)) = BG_mask{obscuredView};
-     
+paw_mask = imdilate(paw_mask,strel('disk',3));
+
 for iPoint = 1 : size(predicted_points,1)
     overlapMask = lineMaskOverlap(paw_mask, epiLines(iPoint,:),'distThresh',lineMaskDistThresh);
     
     [y,x] = find(overlapMask);
-    [~,nnidx] = findNearestNeighbor(prev_pts(iPoint,:),[x,y]);
+%     [~,nnidx] = findNearestNeighbor(prev_pts(iPoint,:),[x,y]);
+    [~,nnidx] = findNearestNeighbor(anticipatedPoints(iPoint,:),[x,y]);
     predicted_points(iPoint,:) = [x(nnidx),y(nnidx)];
 %     predicted_points(iPoint,:) = findNearestPointOnLine(epiPts(iPoint,1:2),...
 %                                                         epiPts(iPoint,3:4),...
 %                                                         pts_from_visible_neighbor(iPoint,:));
                                                     
     % check that the predicted point is within the paw mask
-	ptMask = false(imSize);
-    ptMask(round(predicted_points(iPoint,2)),round(predicted_points(iPoint,1))) = true;
-    overlap = ptMask & paw_mask;
+% 	ptMask = false(imSize);
+%     ptMask(round(predicted_points(iPoint,2)),round(predicted_points(iPoint,1))) = true;
+%     overlap = ptMask & paw_mask;
+%     
+%     if ~any(overlap(:))    % predicted point is not within the paw mask
+%         paw_edge = bwmorph(paw_mask,'remove');
+%         [y, x] = find(paw_edge);
+%         [~,nnidx] = findNearestNeighbor(predicted_points(iPoint,:),[x,y]);
+%         predicted_points(iPoint,:) = [x(nnidx),y(nnidx)];
+%     end
     
-    if ~any(overlap(:))    % predicted point is not within the paw mask
-        paw_edge = bwmorph(paw_mask,'remove');
-        [y, x] = find(paw_edge);
-        [~,nnidx] = findNearestNeighbor(predicted_points(iPoint,:),[x,y]);
-        predicted_points(iPoint,:) = [x(nnidx),y(nnidx)];
-    end
-    
-    predicted_points(iPoint,:) = predicted_points(iPoint,:) - bboxes(obscuredView,1:2);
+    predicted_points(iPoint,:) = predicted_points(iPoint,:) - bboxes(obscuredView,1:2) + 1;
 end
 
 obscuredTrack.currentDigitMarkers(:,:,obscuredView) = predicted_points';
