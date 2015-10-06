@@ -54,10 +54,12 @@ while ~allSingleViewsUpdated
             if validNeighbor
                 obscuredViewIdx = find(obscuredView(iDigit,:));
                 visibleViewIdx = 3 - obscuredViewIdx;
-%                 visible_bbox = bboxes(visibleViewIdx,:);
-%                 obscured_bbox = bboxes(obscuredViewIdx,:);
                 
-                F = fundMat(:,:,visibleViewIdx);
+                if visibleViewIdx == 1
+                    F = fundMat(:,:,1);
+                else
+                    F = fundMat(:,:,1)';
+                end
                 
                 % MIGHT BE ABLE TO SIMPLIFY THIS IF WE ALWAYS USE THE
                 % PREVIOUS DIGIT LOCATIONS TO FIND THE CLOSEST POINT FOR

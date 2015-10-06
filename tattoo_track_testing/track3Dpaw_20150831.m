@@ -198,6 +198,7 @@ pdBlob{2}.MaximumBlobArea = 30000;
 trackCheck.maxDistPerFrame = 5;    % in mm
 trackCheck.maxReprojError = 0.1;   % not sure what this needs to be, will need some trial and error
 trackCheck.maxPixelsPerFrame = 20;  % not sure what this needs to be, will need some trial and error
+trackCheck.maxEpiLineDist = 15;     % how far a point in the mirror view can be from the epipolar line passing through the corresponding point in the direct view
 % =======
 % >>>>>>> origin/master
 for iarg = 1 : 2 : nargin - 10
@@ -220,6 +221,8 @@ for iarg = 1 : 2 : nargin - 10
             trackCheck.maxDistPerFrame = varargin{iarg + 1};
         case 'maxreprojerror',
             trackCheck.maxReprojError = varargin{iarg + 1};
+        case 'maxEpiLineDist',
+            trackCheck.maxEpiLineDist = varargin{iarg + 1};
     end
 end
 
@@ -416,7 +419,9 @@ for iView = 1 : 2
 end
 
 while video.CurrentTime < video.Duration
-    numFrames = numFrames + 1
+    numFrames = numFrames + 1;
+    fprintf('frame number: %d\n', numFrames)
+    
     currentFrame = currentFrame + 1;
     image = readFrame(video);
     image_ud = undistortImage(image, boxCalibration.cameraParams);
@@ -540,6 +545,8 @@ while video.CurrentTime < video.Duration
                 beadMask{iView} = false(size(hsv{iView},1),size(hsv{iView},2));
             end
         end
+        % NEED TO MAKE SURE NO MORE THAN NUMSAMECOLOROBJECTS BLOBS ARE
+        % FOUND HERE
         tempMask = thresholdDigits(tracks(ii).meanHSV, ...
                                    tracks(ii).stdHSV, ...
                                    HSVthresh_parameters, ...
@@ -572,8 +579,10 @@ while video.CurrentTime < video.Duration
                 prelimMask{iDigit,iView} = prelim_digitMask{sameColIdx(iDigit)}{iView};
             end
         end
-            
-newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
+
+% WORKING HERE, SEE ERROR FROM YESTERDAY FOR WHERE TO STEP INTO FOR
+% DEBUGGING
+        newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                   prelimMask, ...
                                                   mask_bbox, ...
                                                   prev_mask_bbox, ...
@@ -1108,6 +1117,49 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+function newTrack = selectValidView(prevTrack, ...
+                                    new_centroids, ...
+                                    prev_bbox, ...
+                                    prelimMask, ...
+                                    trackCheck)
+
+newTrack = prevTrack;
+
+validViews = true(1,2);
+
+prev_centroids = zeros(2,2);
+for iView = 1 : 2
+    prev_centroids(iView,:) = prevTrack.currentDigitMarkers(:,2,iView)' +...
+                              prev_bbox(iView,1:2) - 1;
+end
+
+temp = prev_centroids - new_centroids;
+for iView = 1 : 2
+    centroid_diffs_across_frames = norm(temp(iView,:));
+    maskLabel = sprintf('digitmask%d',iView);
+    if centroid_diffs_across_frames > trackCheck.maxPixelsPerFrame
+        validViews(iView) = false;
+        newTrack.(maskLabel) = false(size(prelimMask{iView}));
+    end
+    newTrack.(maskLabel) = prelimMask{iView};
+end
+
+validViewIdx = find(validViews);
+invalidViewIdx = find(~validViews);
+
+newTrack.isvisible(1:2) = validViews;
+newTrack.consecutiveInvisibleCount(validViewIdx) = 0;
+newTrack.consecutiveInvisibleCount(invalidViewIdx) = ...
+    newTrack.consecutiveInvisibleCount(invalidViewIdx) + 1;
+
+newTrack.totalVisibleCount(validViewIdx) = ...
+    newTrack.totalVisibleCount(validViewIdx) + 1;
+
+end    % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 function newTrack = checkSingleTrack(prevTrack, ...
                                      prelimMask, ...
                                      mask_bbox, ...
@@ -1124,11 +1176,25 @@ function newTrack = checkSingleTrack(prevTrack, ...
         
         new_centroids = zeros(2,2);
         % triangulate the centroids of the direct and mirror view blobs
-        s_direct = regionprops(prelimMask{1},'Centroid');
-        s_mirror = regionprops(prelimMask{2},'Centroid');
+        s_direct = regionprops(prelimMask{1,1},'Centroid');
+        s_mirror = regionprops(prelimMask{1,2},'Centroid');
 
         new_centroids(1,:) = s_direct.Centroid + mask_bbox(1,1:2) - 1;
         new_centroids(2,:) = s_mirror.Centroid + mask_bbox(2,1:2) - 1;
+        
+        % do these centroids lie on the same epipolar line?
+        epiLine = epipolarLine(trackingBoxParams.F(:,:,1), new_centroids(1,:));
+        epiPts  = lineToBorderPoints(epiLine, trackingBoxParams.imSize);
+        distanceToEpiLine = distanceToLine(epiPts(1:2),epiPts(3:4),new_centroids(2,:));
+        
+        if distanceToEpiLine > trackCheck.maxEpiLineDist
+            newTrack = selectValidView(newTrack, ...
+                                       new_centroids, ...
+                                       prev_bbox, ...
+                                       prelimMask, ...
+                                       trackCheck);
+            return;
+        end
 
         new_centroids_norm = normalize_points(new_centroids, trackingBoxParams.K);
         [points3d,~,reprojErrors] = triangulate_DL(new_centroids_norm(1,:), ...
@@ -1152,22 +1218,12 @@ function newTrack = checkSingleTrack(prevTrack, ...
             % POINT TO ACCEPT IT. IF SO, UPDATE NEW TRACK WITH THE NEW MASK. IF
             % NOT, DECIDE THAT THIS DIGIT IS NOT VISIBLE IN AT LEAST ONE OF THE
             % VIEWS; THEN NEED TO DECIDE IF ONE OF THE VIEWS IS VALID. 
-            prev_centroids = zeros(2,2);
-            for iView = 1 : 2
-                prev_centroids(iView,:) = prevTrack.currentDigitMarkers(2,:,iView)' +...
-                                          prev_bbox(iView,1:2) - 1;
-            end
-            temp = prev_centroids - new_centroids;
-            centroid_diffs_across_frames = zeros(1,2);
-            for iView = 1 : 2
-                centroid_diffs_across_frames(iView) = norm(temp(iView,:));
-                if centroid_diffs_across_frames > trackCheck.maxPixelsPerFrame
-                    prelimMask{1,iView} = false(size(prelimMask{1,iView}));
-                    newTrack.isvisible(iView) = false;
-                    newTrack.consecutiveInvisibleCount(iView) = newTrack.consecutiveInvisibleCount(iView) + 1;
-                end
-            end
-            
+            newTrack = selectValidView(newTrack, ...
+                                       new_centroids, ...
+                                       prev_bbox, ...
+                                       prelimMask, ...
+                                       trackCheck);
+            return;
         else
             newTrack.markers3D(2,:) = points3d;
             newTrack.isvisible = [true,true,false];
@@ -1187,8 +1243,8 @@ function newTrack = checkSingleTrack(prevTrack, ...
         end
     end
     
-    newTrack.digitmask1 = prelimMask{1};
-    newTrack.digitmask2 = prelimMask{2};
+    newTrack.digitmask1 = prelimMask{1,1};
+    newTrack.digitmask2 = prelimMask{1,2};
 
 end
 
@@ -1302,24 +1358,43 @@ end
 % for blobs that are correctly paired, they should interect at
 % the epipole because of the planar mirror geometry
 test_epipoles = zeros(2,2);
-epi_error = zeros(1,2);
+epi_error = zeros(2,2);
 m = zeros(2,2);
 b = zeros(2,2);
 
-for ii = 1 : 2    % ii is the index of the blob in the front view
-    % calculate slopes and y-intercepts
-    m(1,ii) = (new_centroids(1,ii,2) - new_centroids(2,ii,2)) / ...
-              (new_centroids(1,ii,1) - new_centroids(2,ii,1));
-    m(2,ii) = (new_centroids(1,ii,2) - new_centroids(2,3-ii,2)) / ...
-              (new_centroids(1,ii,1) - new_centroids(2,3-ii,1));
-    b(1,ii) = new_centroids(1,ii,2) - m(1,ii) * new_centroids(1,ii,1);
-    b(2,ii) = new_centroids(1,ii,2) - m(2,ii) * new_centroids(1,ii,1);
+for iBlob = 1 : 2
+    % match blob 1 in direct view with blob 1 in the mirror view
+    Q(1,:) = new_centroids(1,iBlob,:);
+    Q(2,:) = new_centroids(2,iBlob,:);
+    
+    [epi_error(1,iBlob),~] = findNearestPointToLine(Q, trackingBoxParams.epipole(1,:));
+    
+    % match blob 1 in direct view with blob 2 in the mirror view (and
+    % vice-versa)
+    Q(1,:) = new_centroids(1,iBlob,:);
+    Q(2,:) = new_centroids(2,3-iBlob,:);
+    
+    [epi_error(2,iBlob),~] = findNearestPointToLine(Q, trackingBoxParams.epipole(1,:));
 end
-for jj = 1 : 2    % jj is the index of the combination
-    test_epipoles(jj,1) = (b(jj,2) - b(jj,1)) / (m(jj,1)-m(jj,2));
-    test_epipoles(jj,2) = m(jj,1)*test_epipoles(jj,1) + b(jj,1);
-    epi_error(jj) = norm(test_epipoles(jj,:) - trackingBoxParams.epipole(1,:));
-end
+epi_error = mean(epi_error,2);
+% for ii = 1 : 2    % ii is the index of the blob in the front view
+%     % calculate slopes and y-intercepts
+%     for jj = 1 : 2
+%         m(jj,ii) = (new_centroids(1,ii,2) - new_centroids(2,jj,2)) / ...
+%                   (new_centroids(1,ii,1) - new_centroids(2,jj,1));
+% %         m(2,ii) = (new_centroids(1,ii,2) - new_centroids(2,3-ii,2)) / ...
+% %                   (new_centroids(1,ii,1) - new_centroids(2,3-ii,1));
+%         b(jj,ii) = new_centroids(1,ii,2) - m(jj,ii) * new_centroids(1,ii,1);
+% %         b(2,ii) = new_centroids(1,ii,2) - m(2,ii) * new_centroids(1,ii,1);
+%     end                                                   
+% end
+% test_epipoles(1,1) = (b(2,2)-b(1,1)) / (m(1,1)-m(2,2));
+% test_epipoles(1,2) = m(1,1) * test_epipoles(1,1) + b(1,1);
+% test_epipoles(2,1) = (b(1,2)-b(2,1)) / (m(2,1)-m(1,2));
+% test_epipoles(2,2) = m(2,1) * test_epipoles(2,1) + b(2,1);
+% for jj = 1 : 2    % jj is the index of the combination
+%     epi_error(jj) = norm(test_epipoles(jj,:) - trackingBoxParams.epipole(1,:));
+% end
 % figure out which "test" epipole is closest to the real
 % epipole
 direct_view_pts = squeeze(new_centroids(1,:,:));
@@ -1655,7 +1730,7 @@ for iView = 2 : -1 : 1
                               BG_mask{iView};
 %     dorsumRegionMask{iView} = dorsumRegionMask{iView} & BG_mask{iView};
     if iView == 1
-        dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;
+        dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;    % WORKING HERE - PROBLEM WITH THE PROJECTION MASK!!!!!
     end
     % now enhance the color image of just the dorsum region
     dorsum_enh = enhanceColorImage(paw_img{iView}, ...
@@ -1669,7 +1744,7 @@ for iView = 2 : -1 : 1
     dorsum_mask = imopen(dorsum_mask, SE);
     dorsum_mask = imclose(dorsum_mask,SE);
     dorsum_mask = imfill(dorsum_mask,'holes');
-    [A,~,~,~,labMat] = step(pdBlob{iView}, dorsum_mask);
+    [~,~,~,~,labMat] = step(pdBlob{iView}, dorsum_mask);
     dorsum_mask = (labMat > 0);
     
     % find the blob closest to the digits blob
@@ -1904,16 +1979,16 @@ switch lower(pawPref)
     case 'right',
         fixed_pts(:,:,1) = [ 2.0   0.0    % most radial digit
                              0.0   0.0    % most ulnar digit
-                             1.0  -1.0];  % palm region
+                             1.0  -2.0];  % palm region
         fixed_pts(:,:,2) = [0.0  0.0
                             0.0  2.0
-                            1.0  1.0];
+                            2.0  1.0];
     case 'left',
         fixed_pts(:,:,1) = [0.0  0.0    % most radial digit
                             2.0  0.0    % most ulnar digit
-                            1.0  -1.0];  % palm region
-        fixed_pts(:,:,2) = [1.0  0.0
-                            1.0  2.0
+                            1.0  -2.0];  % palm region
+        fixed_pts(:,:,2) = [2.0  0.0
+                            2.0  2.0
                             0.0  1.0];
 end
 

@@ -10,8 +10,7 @@ end
 imshow(digitMasks);
 hold on
 for ii = 2 : 5
-    plot(tracks(ii).currentDigitMarkers(1,:,1), tracks(ii).currentDigitMarkers(2,:,1),...
-         'linestyle','none','marker','o','color',colList{ii-1});
+    scatter(tracks(ii).currentDigitMarkers(1,:,1), tracks(ii).currentDigitMarkers(2,:,1),'color',colList{ii-1});
 end    
 hold off
 
@@ -24,8 +23,7 @@ end
 imshow(digitMasks);
 hold on
 for ii = 2 : 5
-    plot(tracks(ii).currentDigitMarkers(1,:,2), tracks(ii).currentDigitMarkers(2,:,2),...
-        'linestyle','none','marker','o','color',colList{ii-1});
+    scatter(tracks(ii).currentDigitMarkers(1,:,2), tracks(ii).currentDigitMarkers(2,:,2),'color',colList{ii-1});
 end   
 hold off
 
@@ -35,12 +33,10 @@ hold on
 for ii = 2 : 5
     temp_x = tracks(ii).currentDigitMarkers(1,:,1) + mask_bbox(1,1);
     temp_y = tracks(ii).currentDigitMarkers(2,:,1) + mask_bbox(1,2);
-    plot(temp_x, temp_y,...
-        'linestyle','none','marker','o','color',colList{ii-1});
+    scatter(temp_x, temp_y);
     
     temp_x = tracks(ii).currentDigitMarkers(1,:,2) + mask_bbox(2,1);
     temp_y = tracks(ii).currentDigitMarkers(2,:,2) + mask_bbox(2,2);
-    plot(temp_x, temp_y,...
-        'linestyle','none','marker','o','color',colList{ii-1});
+    scatter(temp_x, temp_y);
 end   
 hold off
