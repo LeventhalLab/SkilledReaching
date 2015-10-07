@@ -25,11 +25,11 @@ end
 if size(x,2) ~= size(y,2)
     error('x and y must have the same number of columns');
 end
-
 dist = zeros(size(y,1),1);
 for ii = 1 : length(dist)
     dist(ii) = norm(y(ii,:) - x);
 end
+
 
 [distsort, sortidx] = sort(dist);
 nndist = distsort(1:numNeighbors);

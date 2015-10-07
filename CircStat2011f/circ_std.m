@@ -50,6 +50,10 @@ end
 % compute mean resultant vector length
 r = circ_r(alpha,w,d,dim);
 
+if r > 1    % added by DL 20151007: rarely, r may come out slightly greater than one, which makes s imaginary
+    r = 1;
+end
+
 s = sqrt(2*(1-r));      % 26.20
 s0 = sqrt(-2*log(r));    % 26.21
 

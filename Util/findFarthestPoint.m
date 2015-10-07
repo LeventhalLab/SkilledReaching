@@ -1,4 +1,4 @@
-function [nndist, nnidx] = findFarthestPoint(x, y, varargin)
+function [fpdist, fpidx] = findFarthestPoint(x, y, varargin)
 %
 % usage: 
 %
@@ -14,8 +14,8 @@ function [nndist, nnidx] = findFarthestPoint(x, y, varargin)
 %       one
 %
 % OUTPUTS:
-%    nndist - the distance(s) from the point "x" to its farthest neighbors
-%    nnidx  - the row indices in "y" of the points farthest from "x"
+%    fpdist - the distance(s) from the point "x" to its farthest neighbors
+%    fpidx  - the row indices in "y" of the points farthest from "x"
 
 numNeighbors = 1;
 if nargin == 3
@@ -26,14 +26,20 @@ if size(x,2) ~= size(y,2)
     error('x and y must have the same number of columns');
 end
 
-diffMatrix = zeros(size(y));
-for ii = 1 : size(x, 2)
-    diffMatrix(:,ii) = x(ii) - y(:,ii);
+dist = zeros(size(y,1),1);
+for ii = 1 : length(dist)
+    dist(ii) = norm(y(ii,:) - x);
 end
 
-dist = sum(diffMatrix.^2, 2);
+% diffMatrix = zeros(size(y));
+% for ii = 1 : size(x, 2)
+%     diffMatrix(:,ii) = x(ii) - y(:,ii);
+% end
+
+% dist = sum(diffMatrix.^2, 2);
+
 [distsort, sortidx] = sort(dist,'descend');
-nndist = distsort(1:numNeighbors);
-nnidx  = sortidx(1:numNeighbors);
+fpdist = distsort(1:numNeighbors);
+fpidx  = sortidx(1:numNeighbors);
 
 end

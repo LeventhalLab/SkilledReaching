@@ -198,7 +198,7 @@ pdBlob{2}.MaximumBlobArea = 30000;
 trackCheck.maxDistPerFrame = 5;    % in mm
 trackCheck.maxReprojError = 0.1;   % not sure what this needs to be, will need some trial and error
 trackCheck.maxPixelsPerFrame = 20;  % not sure what this needs to be, will need some trial and error
-trackCheck.maxEpiLineDist = 15;     % how far a point in the mirror view can be from the epipolar line passing through the corresponding point in the direct view
+trackCheck.maxEpiLineDist = 10;     % how far a point in the mirror view can be from the epipolar line passing through the corresponding point in the direct view
 % =======
 % >>>>>>> origin/master
 for iarg = 1 : 2 : nargin - 10
@@ -545,6 +545,7 @@ while video.CurrentTime < video.Duration
                 beadMask{iView} = false(size(hsv{iView},1),size(hsv{iView},2));
             end
         end
+
         tempMask = thresholdDigits(tracks(ii).meanHSV, ...
                                    tracks(ii).stdHSV, ...
                                    HSVthresh_parameters, ...
@@ -553,13 +554,17 @@ while video.CurrentTime < video.Duration
                                    digitBlob, ...
                                    beadMask);
         for iView = 1 : 2
-%             if strcmpi(colorList{ii},'blue')
-%                 bbox_blueBeadMask = blueBeadMask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
-%                                                  mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
-%                 % eliminate any identified blue regions that overlap with blue
-%                 % beads
-%                 tempMask{iView} = tempMask{iView} & ~bbox_blueBeadMask;% squeeze(boxMarkers.beadMasks(:,:,3));
-%             end
+            s = regionprops(tempMask{iView},'centroid');
+            if length(s) > numSameColorObjects    % found too many blobs
+                labMat = bwlabel(tempMask{iView});
+                % find the blob closest to the previous blob
+                new_centroids = [s.Centroid];
+                new_centroids = reshape(new_centroids,2,[])';
+                prev_centroid = tracks(ii).currentDigitMarkers(:,2,iView)';
+                [~, nnidx] = findNearestNeighbor(prev_centroid, new_centroids);
+                
+                tempMask{iView} = (labMat == nnidx);
+            end
             prelim_digitMask{ii}{iView} = tempMask{iView};
         end
         
@@ -578,8 +583,6 @@ while video.CurrentTime < video.Duration
             end
         end
 
-% WORKING HERE, SEE ERROR FROM YESTERDAY FOR WHERE TO STEP INTO FOR
-% DEBUGGING
         newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                   prelimMask, ...
                                                   mask_bbox, ...
@@ -677,11 +680,6 @@ while video.CurrentTime < video.Duration
     % the views...
     
     tracks = updateHSVparams(tracks, paw_hsv);
-
-
-        
-        
-    
     
 	% now establish all 3d points that are available from visible points in
 	% both views
@@ -692,7 +690,7 @@ while video.CurrentTime < video.Duration
         tracks(iTrack).previousDigitMarkers = tracks(iTrack).currentDigitMarkers;
     end
 
-    plotTracks(tracks, image_ud, mask_bbox)
+%     plotTracks(tracks, image_ud, mask_bbox)
     
 end
 
@@ -1628,6 +1626,199 @@ newTracks(iTrack).digitmask2 = mirrorMask;
 end    % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function newTracks = matchSingleBlobs(prevTracks, ...
+                                      prelimMask, ...
+                                      mask_bbox, ...
+                                      prev_bbox, ...
+                                      trackingBoxParams, ...
+                                      trackCheck, ...
+                                      iTrack)
+newTracks = prevTracks;
+prev_3dpoints = zeros(2,3);
+prev_3dpoints(1,:) = prevTracks(1).markers3D(2,:);
+prev_3dpoints(2,:) = prevTracks(2).markers3D(2,:);
+            
+% figure out how many blobs in each view
+numBlobs = zeros(2,2);
+s = cell(2,2);
+digLabelMask = cell(2,2);
+numPossTracks = length(prevTracks);
+
+for iView = 1 : 2
+    s{iTrack,iView} = regionprops(prelimMask{iTrack,iView},'area','centroid');
+    numBlobs(iTrack,iView) = length(s{iTrack,iView});
+%     digLabelMask{iTrack,iView} = bwlabel(prelimMask{iTrack,iView});
+end
+        
+new_centroids = zeros(2,2);
+prev_centroids = zeros(numPossTracks,2,2);
+
+for iView = 1 : 2
+    new_centroids(iView,:) = s{iTrack,iView}.Centroid + mask_bbox(iView,1:2) - 1;
+    for iTrack = 1 : numPossTracks
+        prev_centroids(iTrack,iView,:) = prevTracks(iTrack).previousDigitMarkers(:,2,iView)' + ...
+                                         prev_bbox(iView,1:2) - 1;
+    end
+end
+
+% need to figure out if the two blobs correspond to each other
+% this will be true if the epipolar line passes very close to both points
+
+% calculate distance between the centroid in the mirror view and the
+% epipolar line of the centroid in the direct view
+epiDist = distanceToLine(new_centroids(1,:),trackingBoxParams.epipole(1,:),new_centroids(2,:));
+if epiDist < trackCheck.maxEpiLineDist
+    % the epipolar line matches between the two points
+    % now, need to check if these points are likely to correspond to the
+    % current track or the "other" track
+    distFromTracks = zeros(2,numPossTracks);
+    for iTrack = 1 : numPossTracks
+        for iView = 1 : 2
+            trackDiff = new_centroids(iView,:) - prev_centroids(iTrack,iView,:);
+            distFromTracks(iView,iTrack) = sqrt(sum(trackDiff
+        end
+    end
+    % average distances for each track
+    distFromTracks = 
+else
+    % the two blobs probably don't correspond to each other; which one (if
+    % any) corresponds to the current track?
+    
+end
+    
+    
+% find intersections of lines connecting centroids of the blobs
+% in the direct and mirror views
+% for blobs that are correctly paired, they should interect at
+% the epipole because of the planar mirror geometry
+
+% figure out which line connecting the mirror and center (blob(s)) passes
+% closest to the epipole
+epi_error = zeros(1,2);
+Q = zeros(2,2);
+for iBlob = 1 : 2
+    if numBlobs(iTrack,1) == 1    % one blob in the center view
+        Q(1,:) = new_centroids(1,1,:);
+        Q(2,:) = new_centroids(2,iBlob,:);
+    else    % one blob in the mirror view
+        Q(1,:) = new_centroids(2,1,:);
+        Q(2,:) = new_centroids(1,iBlob,:);
+    end
+    
+    [epi_error(iBlob),~] = findNearestPointToLine(Q, trackingBoxParams.epipole(1,:));
+end
+
+minErrorIdx = find(epi_error == min(epi_error));
+% figure out which blob in the 2-blob image matches with the one blob in
+% the other image
+if numBlobs(iTrack,1) == 1
+    direct_view_pts = squeeze(new_centroids(1,1,:))';
+    mirror_view_pts = squeeze(new_centroids(2,minErrorIdx,:))';
+    other_track_pts = squeeze(new_centroids(2,3-minErrorIdx,:))';
+else
+    direct_view_pts = squeeze(new_centroids(1,minErrorIdx,:))';
+    mirror_view_pts = squeeze(new_centroids(2,1,:))';
+    other_track_pts = squeeze(new_centroids(1,3-minErrorIdx,:))';
+end
+            
+direct_view_pts_norm = normalize_points(direct_view_pts, trackingBoxParams.K);
+mirror_view_pts_norm = normalize_points(mirror_view_pts, trackingBoxParams.K);
+[points3d,~,reprojErrors] = triangulate_DL(direct_view_pts_norm, ...
+                                           mirror_view_pts_norm, ...
+                                           trackingBoxParams.P1, ...
+                                           trackingBoxParams.P2);
+points3d = points3d * trackingBoxParams.scale;
+
+meanReprojError = mean(sqrt(sum(reprojErrors.^2,2)));
+d3d = norm(points3d - prev_3dpoints(iTrack,:));
+
+% now need to assign this point to either the current digit or the other
+% digit of the same color.
+% To do this, find the distance between both 3d points and each
+% of the previous digit 3d locations. Then pick the assignments
+% that minimize the maximum distance between the current points
+% and the previous points.
+% does direct view centroid 1 correspond to previous 3d
+% centroid from first or second track?
+poss_3d_diffs = zeros(2,3);
+for iDigit = 1 : 2
+    poss_3d_diffs(iDigit,:) = prev_3dpoints(iDigit,:) - points3d;
+end
+poss_distances = sqrt(sum(poss_3d_diffs.^2,2));
+min_dist_idx = find(poss_distances == min(poss_distances));
+% poss_distances is a 2 x 1 vector. Is the triangulated point closer to the
+% current digit or the other digit of the same color?
+
+centerMarker = false(size(prelimMask{iTrack,1}));
+mirrorMarker = false(size(prelimMask{iTrack,2}));
+if min_dist_idx == iTrack
+    % the matched points correspond to the current track
+    mirrorTruePt = round(mirror_view_pts) - mask_bbox(2,1:2) + 1;
+    centerTruePt = round(direct_view_pts) - mask_bbox(1,1:2) + 1;
+    centerMarker(centerTruePt(2),centerTruePt(1)) = true;
+    mirrorMarker(mirrorTruePt(2),mirrorTruePt(1)) = true;
+    
+    centerMask = imreconstruct(centerMarker, prelimMask{iTrack,1});
+    mirrorMask = imreconstruct(mirrorMarker, prelimMask{iTrack,2});
+    
+    newTracks(iTrack).markers3D(2,:) = points3d;    % centroid 3d point
+    newTracks(iTrack).isvisible = [true,true,false];
+    newTracks(iTrack).totalVisibleCount(1:2) = newTracks(iTrack).totalVisibleCount(1:2) + 1;
+    newTracks(iTrack).consecutiveInvisibleCount = [0 0];
+    
+    if d3d > trackCheck.maxDistPerFrame || ...
+       meanReprojError > trackCheck.maxReprojError
+
+    end
+%     if numBlobs(iTrack,1) == 1
+%         centerMask = (digLabelMask{iTrack,1} == 1);
+%         
+%         tempMirrorMask(truePt(2),truePt(1)) = true;
+%         mirrorMask = imreconstruct(truePt,prelimMask{iTrack,2});
+%     else    % only one blob in the mirror view
+%         mirrorMask = (digLabelMask{iTrack,2} == 1);
+%         centerMask = (digLabelMask{iTrack,1} == iTrack);
+%     end
+else
+    % the matched points correspond to the "other" track
+    if numBlobs(iTrack,1) == 1
+        centerMask = centerMarker;
+        mirrorTruePt = round(other_track_pts) - mask_bbox(2,1:2) + 1;
+        mirrorMarker(mirrorTruePt(2),mirrorTruePt(1)) = true;
+        mirrorMask = imreconstruct(mirrorMarker, prelimMask{iTrack,2});
+        newTracks(iTrack).isvisible = [false,true,false];
+        newTracks(iTrack).totalVisibleCount(2) = newTracks(iTrack).totalVisibleCount(2) + 1;
+        newTracks(iTrack).consecutiveInvisibleCount(1) = ...
+            newTracks(iTrack).consecutiveInvisibleCount(1) + 1;
+        newTracks(iTrack).consecutiveInvisibleCount(2) = 0;
+    else
+        mirrorMask = mirrorMarker;
+        centerTruePt = round(other_track_pts) - mask_bbox(1,1:2) + 1;
+        centerMarker(centerTruePt(2),centerTruePt(1)) = true;
+        centerMask = imreconstruct(centerMarker, prelimMask{iTrack,1});
+        newTracks(iTrack).isvisible = [true,false,false];
+        newTracks(iTrack).totalVisibleCount(1) = newTracks(iTrack).totalVisibleCount(1) + 1;
+        newTracks(iTrack).consecutiveInvisibleCount(2) = ...
+            newTracks(iTrack).consecutiveInvisibleCount(2) + 1;
+        newTracks(iTrack).consecutiveInvisibleCount(1) = 0;
+    end
+    newTracks(iTrack).markers3D(2,:) = zeros(1,3);    % centroid 3d point
+end
+
+
+
+
+
+newTracks(iTrack).digitmask1 = centerMask;
+newTracks(iTrack).digitmask2 = mirrorMask;
+
+
+
+end    % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                   
                                           
 function testPoint = selectDorsumTestPoint(pawPref, iView, currentMask)
@@ -1827,6 +2018,8 @@ function [currentDigitMarkers, pts_transformed, digitsHull] = ...
 %   pts_transformed - 
 %   digitsHull - 
 
+expandedImSize = [1000, 1000];    % to make sure that pts_transformed are positive further down
+
 fixed_pts = getFixedPoints(pawPref);
 digitsHull = cell(1,2);
 
@@ -1867,8 +2060,16 @@ H = zeros(3,3,2);
 linepts = zeros(2,2);
 
 pts_transformed = zeros(3,2,2);
+bbox = zeros(1,4);
 for iView = 1 : 2
+    regionSize = size(digitMasks{iView});
+    bbox(1) = round(expandedImSize(2)/2 - regionSize(2)/2);
+    bbox(2) = round(expandedImSize(1)/2 - regionSize(1)/2);
+    bbox(3:4) = regionSize(2:-1:1) - 1;
+    
     movingPoints = squeeze(digCentroids(:,:,iView));
+    movingPoints = bsxfun(@plus,movingPoints, bbox(1:2));
+
     tform = fitgeotrans(squeeze(fixed_pts(1:2,:,iView)), movingPoints, 'nonreflectivesimilarity');
     H(:,:,iView) = tform.T';
     fixed_pts_hom = [squeeze(fixed_pts(:,:,iView)), ones(3,1)];
@@ -1880,18 +2081,16 @@ for iView = 1 : 2
     [A,B,C] = constructParallelLine(pts_transformed(1,:,iView), ...
                                     pts_transformed(2,:,iView), ...
                                     pts_transformed(3,:,iView));
-    borderPts = lineToBorderPoints([A,B,C], size(digitMasks{iView}));
+    borderPts = lineToBorderPoints([A,B,C], expandedImSize);
     
     linepts(1,:) = borderPts(1:2);
     linepts(2,:) = borderPts(3:4);
-
-%     firstValidIdx = 0;lastValidIdx = 0;
+    
+    % find midpoint between movingPoints
+    digit_middle = mean(movingPoints,1);
+    dorsum_est = findNearestPointOnLine(linepts(1,:),linepts(2,:),digit_middle);
     for ii = 2 : length(tracks) - 1
-%         if ~tracks(ii).isvisible(iView)
-%             continue;
-%         end
-%         if firstValidIdx == 0; firstValidIdx = ii-1; end
-%         lastValidIdx = ii-1;
+
         if ~tracks(ii).isvisible(iView); continue; end    % if digit not visible in one of the views, skip finding markers
         
         if iView == 1
@@ -1900,25 +2099,21 @@ for iView = 1 : 2
             currentMask{iView} = tracks(ii).digitmask2;
         end
         
-        edge_I = bwmorph(currentMask{iView},'remove');
+        tempMask = false(expandedImSize);
+        tempMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = currentMask{iView};
+        edge_I = bwmorph(tempMask,'remove');
+        
         [y,x] = find(edge_I);
-        [~,nnidx] = findNearestPointToLine(linepts, [x,y]);
-%         [~,nnidx] = findNearestNeighbor(pts_transformed(3,:), [x,y]);
-        currentDigitMarkers(ii-1,:,1,iView) = [x(nnidx),y(nnidx)];
-        [~,nnidx] = findFarthestPointFromLine(linepts, [x,y]);
-%         [~,nnidx] = findFarthestPoint(pts_transformed(3,:), [x,y]);
-        currentDigitMarkers(ii-1,:,3,iView) = [x(nnidx),y(nnidx)];
+%         [~,nnidx] = findNearestPointToLine(linepts, [x,y]);
+        [~, nnidx] = findNearestNeighbor(dorsum_est, [x,y]);
+        currentDigitMarkers(ii-1,:,1,iView) = [x(nnidx),y(nnidx)] - bbox(1:2);
+        
+%         [~,nnidx] = findFarthestPointFromLine(linepts, [x,y]);
+        [~, fpidx] = findFarthestPoint(dorsum_est, [x,y]);
+        currentDigitMarkers(ii-1,:,3,iView) = [x(fpidx),y(fpidx)] - bbox(1:2);
     end
-%     validImageBorderPts(1,:) = squeeze(currentDigitMarkers(firstValidIdx,:,1,iView));
-%     validImageBorderPts(2,:) = squeeze(currentDigitMarkers(lastValidIdx,:,1,iView));
-%     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
-%                                              pts_transformed(3,:), size(digitMasks{iView}));
-%     dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:), ...
-%                                              pts_transformed(3,:), size(digitMasks{iView}));
-    
-%     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~whiteFurMask{iView};
+
     [digitsHull{iView},~] = multiRegionConvexHullMask(digitMasks{iView});
-%     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull;
     
 end
         
@@ -1985,7 +2180,7 @@ switch lower(pawPref)
         fixed_pts(:,:,1) = [0.0  0.0    % most radial digit
                             2.0  0.0    % most ulnar digit
                             1.0  -2.0];  % palm region
-        fixed_pts(:,:,2) = [1.0  0.0
+        fixed_pts(:,:,2) = [2.0  0.0
                             2.0  2.0
                             0.0  1.0];
 end
