@@ -690,7 +690,7 @@ while video.CurrentTime < video.Duration
         tracks(iTrack).previousDigitMarkers = tracks(iTrack).currentDigitMarkers;
     end
 
-%     plotTracks(tracks, image_ud, mask_bbox)
+    plotTracks(tracks, image_ud, mask_bbox)
     
 end
 
@@ -1577,17 +1577,7 @@ if min_dist_idx == iTrack
     
     if d3d > trackCheck.maxDistPerFrame || ...
        meanReprojError > trackCheck.maxReprojError
-
     end
-%     if numBlobs(iTrack,1) == 1
-%         centerMask = (digLabelMask{iTrack,1} == 1);
-%         
-%         tempMirrorMask(truePt(2),truePt(1)) = true;
-%         mirrorMask = imreconstruct(truePt,prelimMask{iTrack,2});
-%     else    % only one blob in the mirror view
-%         mirrorMask = (digLabelMask{iTrack,2} == 1);
-%         centerMask = (digLabelMask{iTrack,1} == iTrack);
-%     end
 else
     % the matched points correspond to the "other" track
     if numBlobs(iTrack,1) == 1
@@ -1642,8 +1632,7 @@ prev_3dpoints(2,:) = prevTracks(2).markers3D(2,:);
             
 % figure out how many blobs in each view
 numBlobs = zeros(2,2);
-s = cell(2,2);
-digLabelMask = cell(2,2);
+s = cell(1,2);
 numPossTracks = length(prevTracks);
 
 for iView = 1 : 2
@@ -1657,8 +1646,8 @@ prev_centroids = zeros(numPossTracks,2,2);
 
 for iView = 1 : 2
     new_centroids(iView,:) = s{iTrack,iView}.Centroid + mask_bbox(iView,1:2) - 1;
-    for iTrack = 1 : numPossTracks
-        prev_centroids(iTrack,iView,:) = prevTracks(iTrack).previousDigitMarkers(:,2,iView)' + ...
+    for iDigit = 1 : numPossTracks
+        prev_centroids(iDigit,iView,:) = prevTracks(iDigit).previousDigitMarkers(:,2,iView)' + ...
                                          prev_bbox(iView,1:2) - 1;
     end
 end
@@ -1673,147 +1662,75 @@ if epiDist < trackCheck.maxEpiLineDist
     % the epipolar line matches between the two points
     % now, need to check if these points are likely to correspond to the
     % current track or the "other" track
-    distFromTracks = zeros(2,numPossTracks);
-    for iTrack = 1 : numPossTracks
+    distFromTracks = zeros(1,numPossTracks);
+    for iDigit = 1 : numPossTracks
         for iView = 1 : 2
-            trackDiff = new_centroids(iView,:) - prev_centroids(iTrack,iView,:);
-            distFromTracks(iView,iTrack) = sqrt(sum(trackDiff.^2));
+            trackDiff = new_centroids(iView,:) - squeeze(prev_centroids(iDigit,iView,:))';
+            distFromTracks(iDigit) = sqrt(sum(trackDiff.^2));
         end
     end
+    
+    if iTrack == find(distFromTracks == min(distFromTracks))
+        % the blobs correspond to the current track
+        newTracks(iTrack).digitmask1 = prelimMask{iTrack,1};
+        newTracks(iTrack).digitmask2 = prelimMask{iTrack,2};
+        
+        newTracks(iTrack).isvisible = [true,true,false];
+        newTracks(iTrack).totalVisibleCount(1:2) = newTracks(iTrack).totalVisibleCount(1:2) + 1;
+        newTracks(iTrack).consecutiveInvisibleCount(1:2) = zeros(1,2);
+        
+        direct_view_pts = squeeze(new_centroids(1,:));
+        mirror_view_pts = squeeze(new_centroids(2,:));
 
+        direct_view_pts_norm = normalize_points(direct_view_pts, trackingBoxParams.K);
+        mirror_view_pts_norm = normalize_points(mirror_view_pts, trackingBoxParams.K);
+        [points3d,~,~] = triangulate_DL(direct_view_pts_norm, ...
+                                        mirror_view_pts_norm, ...
+                                        trackingBoxParams.P1, ...
+                                        trackingBoxParams.P2);
+        points3d = points3d * trackingBoxParams.scale;
+        
+        newTracks(iTrack).markers3D(2,:) = points3d;    % centroid 3d point
+    else
+        % the blobs do not correspond to the current track
+        newTracks(iTrack).digitmask1 = false(size(prelimMask{iTrack,1}));
+        newTracks(iTrack).digitmask2 = false(size(prelimMask{iTrack,2}));
+        
+        newTracks(iTrack).isvisible = [false,false,false];
+        newTracks(iTrack).consecutiveInvisibleCount(1:2) = ...
+            newTracks(iTrack).consecutiveInvisibleCount(1:2) + 1;
+        
+        newTracks(iTrack).markers3D(2,:) = zeros(1,3);
+    end
 else
     % the two blobs probably don't correspond to each other; which one (if
     % any) corresponds to the current track?
     
-end
-    
-    
-% find intersections of lines connecting centroids of the blobs
-% in the direct and mirror views
-% for blobs that are correctly paired, they should interect at
-% the epipole because of the planar mirror geometry
-
-% figure out which line connecting the mirror and center (blob(s)) passes
-% closest to the epipole
-epi_error = zeros(1,2);
-Q = zeros(2,2);
-for iBlob = 1 : 2
-    if numBlobs(iTrack,1) == 1    % one blob in the center view
-        Q(1,:) = new_centroids(1,1,:);
-        Q(2,:) = new_centroids(2,iBlob,:);
-    else    % one blob in the mirror view
-        Q(1,:) = new_centroids(2,1,:);
-        Q(2,:) = new_centroids(1,iBlob,:);
+    % calculate distance from previous tracks to the current centroids in
+    % each view
+    distFromTracks = zeros(1,2);
+    for iView = 1 : 2
+        for iDigit = 1 : numPossTracks
+            trackDiff = new_centroids(iView,:) - squeeze(prev_centroids(iDigit,iView,:))';
+            distFromTracks(iDigit) = sqrt(sum(trackDiff.^2));
+        end
+        digMaskString = sprintf('digitmask%d',iView);
+        if find(distFromTracks == min(distFromTracks)) == iTrack && ...
+                min(distFromTracks) < trackCheck.maxPixelsPerFrame
+            newTracks(iTrack).(digMaskString) = prelimMask{iTrack,iView};
+            newTracks(iTrack).isvisible(iView) = true;
+            newTracks(iTrack).consecutiveInvisibleCount(iView) = 0;
+            newTracks(iTrack).totalVisibleCount(iView) = ...
+                newTracks(iTrack).totalVisibleCount(iView) + 1;
+        else
+            newTracks(iTrack).(digMaskString) = false(size(prelimMask{iTrack,iView}));
+            newTracks(iTrack).isvisible(iView) = false;
+            newTracks(iTrack).consecutiveInvisibleCount(iView) = ...
+                newTracks(iTrack).consecutiveInvisibleCount(iView) + 1;
+        end
     end
-    
-    [epi_error(iBlob),~] = findNearestPointToLine(Q, trackingBoxParams.epipole(1,:));
+
 end
-
-minErrorIdx = find(epi_error == min(epi_error));
-% figure out which blob in the 2-blob image matches with the one blob in
-% the other image
-if numBlobs(iTrack,1) == 1
-    direct_view_pts = squeeze(new_centroids(1,1,:))';
-    mirror_view_pts = squeeze(new_centroids(2,minErrorIdx,:))';
-    other_track_pts = squeeze(new_centroids(2,3-minErrorIdx,:))';
-else
-    direct_view_pts = squeeze(new_centroids(1,minErrorIdx,:))';
-    mirror_view_pts = squeeze(new_centroids(2,1,:))';
-    other_track_pts = squeeze(new_centroids(1,3-minErrorIdx,:))';
-end
-            
-direct_view_pts_norm = normalize_points(direct_view_pts, trackingBoxParams.K);
-mirror_view_pts_norm = normalize_points(mirror_view_pts, trackingBoxParams.K);
-[points3d,~,reprojErrors] = triangulate_DL(direct_view_pts_norm, ...
-                                           mirror_view_pts_norm, ...
-                                           trackingBoxParams.P1, ...
-                                           trackingBoxParams.P2);
-points3d = points3d * trackingBoxParams.scale;
-
-meanReprojError = mean(sqrt(sum(reprojErrors.^2,2)));
-d3d = norm(points3d - prev_3dpoints(iTrack,:));
-
-% now need to assign this point to either the current digit or the other
-% digit of the same color.
-% To do this, find the distance between both 3d points and each
-% of the previous digit 3d locations. Then pick the assignments
-% that minimize the maximum distance between the current points
-% and the previous points.
-% does direct view centroid 1 correspond to previous 3d
-% centroid from first or second track?
-poss_3d_diffs = zeros(2,3);
-for iDigit = 1 : 2
-    poss_3d_diffs(iDigit,:) = prev_3dpoints(iDigit,:) - points3d;
-end
-poss_distances = sqrt(sum(poss_3d_diffs.^2,2));
-min_dist_idx = find(poss_distances == min(poss_distances));
-% poss_distances is a 2 x 1 vector. Is the triangulated point closer to the
-% current digit or the other digit of the same color?
-
-centerMarker = false(size(prelimMask{iTrack,1}));
-mirrorMarker = false(size(prelimMask{iTrack,2}));
-if min_dist_idx == iTrack
-    % the matched points correspond to the current track
-    mirrorTruePt = round(mirror_view_pts) - mask_bbox(2,1:2) + 1;
-    centerTruePt = round(direct_view_pts) - mask_bbox(1,1:2) + 1;
-    centerMarker(centerTruePt(2),centerTruePt(1)) = true;
-    mirrorMarker(mirrorTruePt(2),mirrorTruePt(1)) = true;
-    
-    centerMask = imreconstruct(centerMarker, prelimMask{iTrack,1});
-    mirrorMask = imreconstruct(mirrorMarker, prelimMask{iTrack,2});
-    
-    newTracks(iTrack).markers3D(2,:) = points3d;    % centroid 3d point
-    newTracks(iTrack).isvisible = [true,true,false];
-    newTracks(iTrack).totalVisibleCount(1:2) = newTracks(iTrack).totalVisibleCount(1:2) + 1;
-    newTracks(iTrack).consecutiveInvisibleCount = [0 0];
-    
-    if d3d > trackCheck.maxDistPerFrame || ...
-       meanReprojError > trackCheck.maxReprojError
-
-    end
-%     if numBlobs(iTrack,1) == 1
-%         centerMask = (digLabelMask{iTrack,1} == 1);
-%         
-%         tempMirrorMask(truePt(2),truePt(1)) = true;
-%         mirrorMask = imreconstruct(truePt,prelimMask{iTrack,2});
-%     else    % only one blob in the mirror view
-%         mirrorMask = (digLabelMask{iTrack,2} == 1);
-%         centerMask = (digLabelMask{iTrack,1} == iTrack);
-%     end
-else
-    % the matched points correspond to the "other" track
-    if numBlobs(iTrack,1) == 1
-        centerMask = centerMarker;
-        mirrorTruePt = round(other_track_pts) - mask_bbox(2,1:2) + 1;
-        mirrorMarker(mirrorTruePt(2),mirrorTruePt(1)) = true;
-        mirrorMask = imreconstruct(mirrorMarker, prelimMask{iTrack,2});
-        newTracks(iTrack).isvisible = [false,true,false];
-        newTracks(iTrack).totalVisibleCount(2) = newTracks(iTrack).totalVisibleCount(2) + 1;
-        newTracks(iTrack).consecutiveInvisibleCount(1) = ...
-            newTracks(iTrack).consecutiveInvisibleCount(1) + 1;
-        newTracks(iTrack).consecutiveInvisibleCount(2) = 0;
-    else
-        mirrorMask = mirrorMarker;
-        centerTruePt = round(other_track_pts) - mask_bbox(1,1:2) + 1;
-        centerMarker(centerTruePt(2),centerTruePt(1)) = true;
-        centerMask = imreconstruct(centerMarker, prelimMask{iTrack,1});
-        newTracks(iTrack).isvisible = [true,false,false];
-        newTracks(iTrack).totalVisibleCount(1) = newTracks(iTrack).totalVisibleCount(1) + 1;
-        newTracks(iTrack).consecutiveInvisibleCount(2) = ...
-            newTracks(iTrack).consecutiveInvisibleCount(2) + 1;
-        newTracks(iTrack).consecutiveInvisibleCount(1) = 0;
-    end
-    newTracks(iTrack).markers3D(2,:) = zeros(1,3);    % centroid 3d point
-end
-
-
-
-
-
-newTracks(iTrack).digitmask1 = centerMask;
-newTracks(iTrack).digitmask2 = mirrorMask;
-
-
 
 end    % function
 

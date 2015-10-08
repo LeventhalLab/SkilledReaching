@@ -161,3 +161,5 @@ boxCalibration.scale = scale;
 boxCalibration.F = F;
 boxCalibration.P.left = P1;
 boxCalibration.P.right = P2;
+
+boxCalibration.boxMarkers.pelletMasks = findPellet(BGimg_ud, boxCalibration);

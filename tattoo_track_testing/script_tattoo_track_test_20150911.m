@@ -58,6 +58,9 @@ boxCalibration = calibrate_sr_box(BGimg, 'cb_path',cb_path,...
                                          'pointsperrow',pointsPerRow);
 
 BGimg_ud = undistortImage(BGimg, boxCalibration.cameraParams);
+
+% find the pellet, if there
+
 triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCalibration, ...
                                    'pawgraylevels',gray_paw_limits);
 
