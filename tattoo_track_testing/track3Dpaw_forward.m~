@@ -1,4 +1,4 @@
-function pawTrajectory = track3Dpaw_20150831(video, ...
+function pawTrajectory = track3Dpaw_forward(video, ...
                                          BGimg_ud, ...
                                          refImageTime, ...
                                          initDigitMasks, ...
@@ -414,6 +414,7 @@ pelletTrack = struct(...
     'meanHSV', mean_pelletHSV, ...
     'stdHSV', std_pelletHSV, ...
     'markers3D', points3d, ...
+    'prev_markers3D', points3d, ...
     'currentDigitMarkers', fullPelletMarkers, ...
     'previousDigitMarkers', fullPelletMarkers, ...
     'age', 1, ...
@@ -753,6 +754,7 @@ while video.CurrentTime < video.Duration
         pawTrajectory(currentFrame,iTrack,:,:) = tracks(iTrack).markers3D;
         tracks(iTrack).markersCalculated = false(1,2);
         tracks(iTrack).previousDigitMarkers = tracks(iTrack).currentDigitMarkers;
+        tracks(iTrack).prev_markers3D = tracks(iTrack).markers3D;
     end
 
     plotTracks(tracks, image_ud, mask_bbox)
@@ -774,6 +776,7 @@ function tracks = initializeTracks()
         'meanHSV', {}, ...
         'stdHSV', {}, ...
         'markers3D', {}, ...
+        'prev_markers3D', {}, ...
         'currentDigitMarkers', {}, ...
         'previousDigitMarkers', {}, ...
         'age', {}, ...
@@ -1201,8 +1204,9 @@ for iView = 1 : 2
     if centroid_diffs_across_frames > trackCheck.maxPixelsPerFrame
         validViews(iView) = false;
         newTrack.(maskLabel) = false(size(prelimMask{iView}));
+    else
+        newTrack.(maskLabel) = prelimMask{iView};
     end
-    newTrack.(maskLabel) = prelimMask{iView};
 end
 
 validViewIdx = find(validViews);
@@ -1545,7 +1549,6 @@ prev_3dpoints(2,:) = prevTracks(2).markers3D(2,:);
 % figure out how many blobs in each view
 numBlobs = zeros(2,2);
 s = cell(2,2);
-digLabelMask = cell(2,2);
 
 for iView = 1 : 2
     s{iTrack,iView} = regionprops(prelimMask{iTrack,iView},'area','centroid');
@@ -1900,7 +1903,9 @@ for iView = 2 : -1 : 1
                               BG_mask{iView};
 %     dorsumRegionMask{iView} = dorsumRegionMask{iView} & BG_mask{iView};
     if iView == 1
-        dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;    % WORKING HERE - PROBLEM WITH THE PROJECTION MASK!!!!!
+        if exist('projMask','var')
+            dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;    % WORKING HERE - PROBLEM WITH THE PROJECTION MASK!!!!!
+        end
     end
     % now enhance the color image of just the dorsum region
     dorsum_enh = enhanceColorImage(paw_img{iView}, ...
@@ -1916,6 +1921,14 @@ for iView = 2 : -1 : 1
     dorsum_mask = imfill(dorsum_mask,'holes');
     [~,~,~,~,labMat] = step(pdBlob{iView}, dorsum_mask);
     dorsum_mask = (labMat > 0);
+    
+    % NEED TO CONTINUE TO WORK HERE IF WE REALLY WANT TO GET THE PAW DORSUM
+    % STUFF WORKING - WILL NEED TO FIGURE OUT HOW TO DEAL WITH PAW DORSUM
+    % WHEN IT DISAPPEARS IN ONE VIEW...
+    if ~any(dorsum_mask(:))
+        dorsumRegionMask{iView} = dorsum_mask;
+        continue;
+    end
     
     % find the blob closest to the digits blob
     s_digits = regionprops(digitsHull{iView}, 'centroid');
@@ -2095,6 +2108,8 @@ for iView = 1 : 2
     end
 
     [digitsHull{iView},~] = multiRegionConvexHullMask(digitMasks{iView});
+    
+    pts_transformed(:,:,iView) = bsxfun(@minus,pts_transformed(:,:,iView),bbox(1:2));
     
 end
         

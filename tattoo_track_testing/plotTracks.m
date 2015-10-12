@@ -2,6 +2,7 @@ function plotTracks(tracks, image_ud, mask_bbox)
 
 colList = {'r','g','b','y'};
 figure(1)
+hold off
 set(gcf,'name','direct view mask')
 digitMasks = false(size(tracks(2).digitmask1));
 for ii = 2 : 5
@@ -16,6 +17,7 @@ end
 hold off
 
 figure(2)
+hold off
 set(gcf,'name','mirror view mask')
 digitMasks = false(size(tracks(2).digitmask2));
 for ii = 2 : 5
@@ -30,6 +32,7 @@ end
 hold off
 
 figure(3);
+hold off
 imshow(image_ud);
 hold on
 for ii = 2 : 5

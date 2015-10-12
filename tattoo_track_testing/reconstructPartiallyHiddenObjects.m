@@ -52,9 +52,9 @@ function obscuredPoints = identifyObscuredPoints(tracks, bboxes, F, imSize, maxD
 %   obscuredPoints - 4 x 3 x 2 boolean array (digit ID x prox vs centroid
 %       vs distal point x 2 views)
 
-obscuredPoints = false(length(tracks)-2, 3, 2);    % number of digits x 3 points per view x 2 views
+obscuredPoints = false(length(tracks)-3, 3, 2);    % number of digits x 3 points per view x 2 views
 
-for iTrack = 2 : length(tracks)-1    % start with the digits
+for iTrack = 2 : length(tracks)-2    % start with the digits
     
     skipDigit = false;
     for iView = 1 : 2

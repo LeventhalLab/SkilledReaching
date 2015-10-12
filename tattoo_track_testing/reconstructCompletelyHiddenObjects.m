@@ -25,6 +25,7 @@ function tracks = reconstructCompletelyHiddenObjects(tracks, ...
 %   tracks - 
 
 lineMaskDistThresh = 3;
+maxIterations = 6;
 
 for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
@@ -33,7 +34,7 @@ for iarg = 1 : 2 : nargin - 7
     end
 end
 
-numDigits = length(tracks)-2;
+numDigits = length(tracks)-3;
 obscuredView = false(numDigits, 2);
 markersCalculated = false(numDigits, 2);
 for iDigit = 1 : numDigits
@@ -46,13 +47,15 @@ bothViewsObscured = (sum(obscuredView,2)==2);
 bothMarkersCalculated = (sum(markersCalculated,2)==2);
 
 allSingleViewsUpdated = all(bothMarkersCalculated);
+numIterations = 0;
 while ~allSingleViewsUpdated
+    numIterations = numIterations + 1;
     
     for iDigit = 1 : numDigits
         if singleViewObscured(iDigit)
             % is there a neighboring digit with all markers calculated?
             validNeighbor = hasNeighborBeenCalculated(iDigit, bothMarkersCalculated);
-            if validNeighbor
+            if validNeighbor || numIterations == maxIterations
                 obscuredViewIdx = find(obscuredView(iDigit,:));
                 visibleViewIdx = 3 - obscuredViewIdx;
                 
@@ -83,10 +86,15 @@ while ~allSingleViewsUpdated
         elseif bothViewsObscured(iDigit)
             % guess where this digit moved based on how everything else
             % moved
-            anticipatedPoints = predictDigitMovement(tracks, ...
-                                                     iDigit + 1, ...
-                                                     bboxes, ...
-                                                     prev_bboxes);
+            validNeighbor = hasNeighborBeenCalculated(iDigit, bothMarkersCalculated);
+            
+            if validNeighbor || numIterations == maxIterations
+                
+                anticipatedPoints = predict_3DDigitMovement(tracks, ...
+                                                            iDigit + 1, ...
+                                                            trackingBoxParams, ...
+                                                            bothMarkersCalculated);
+            end
             for iView = 1 : 2
                 anticipatedPoints(:,:,iView) = bsxfun(@minus,...
                                                        squeeze(anticipatedPoints(:,:,iView)), ...
@@ -266,3 +274,39 @@ for iView = 1 : length(obscuredView)
 end
 
 end    % function predictDigitMovement
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function anticipatedPoints = predict_3DDigitMovement(tracks, ...
+                                                     obscuredTrackIdx, ...
+                                                     trackingBoxParams, ...
+                                                     bothMarkersCalculated)
+                                                
+obscuredTrack = tracks(obscuredTrackIdx);
+obscuredView = find(~obscuredTrack.isvisible(1:2));
+
+pointsPerDigit = size(obscuredTrack.currentDigitMarkers,2);
+anticipatedPoints = zeros(pointsPerDigit, 2, 2);
+anticipated_3Dloc = NaN(4,pointsPerDigit,3);   % digit ID by location (prox,centroid,distal) x (x,y,z) predicted location
+% Where was the obscured digit in 3-D space compared to the neighboring
+% digits?
+for iTrack = 2 : 5
+    if iTrack == obscuredTrackIdx; continue; end
+    if ~bothMarkersCalculated(iTrack - 1); continue; end
+    
+    dig3Ddisplacement = tracks(obscuredTrackIdx).prev_markers3D - ...
+                        tracks(iTrack).prev_markers3D;
+	anticipated_3Dloc(iTrack-1,:,:) = tracks(iTrack).markers3D + dig3Ddisplacement;
+end
+
+mean_3Dloc = squeeze(nanmean(anticipated_3Dloc,1));
+mean_3Dloc = mean_3Dloc / trackingBoxParams.scale;
+
+% now project back into direct and mirror views
+mean_3Dloc_hom = [mean_3Dloc, ones(size(mean_3Dloc,1),1)];
+
+% WORKING HERE, FIGURE OUT NORMALIZATION/DENORMALIZATIN
+direct_view_pts_hom = mean_3Dloc_hom * trackingBoxParams.P1;
+direct_view_pts = bsxfun(@rdivide,direct_view_pts_hom(:,1:2),direct_view_pts_hom(:,3));
+
+end    % function predict_3DDigitMovement
