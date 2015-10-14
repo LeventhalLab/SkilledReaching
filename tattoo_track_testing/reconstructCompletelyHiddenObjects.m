@@ -237,13 +237,13 @@ function anticipatedPoints = predictDigitMovement(tracks, ...
                                                   prev_bboxes)
 
 obscuredTrack = tracks(obscuredTrackIdx);
-obscuredView = find(~obscuredTrack.isvisible(1:2));
+obscuredView = ~obscuredTrack.isvisible(1:2);
 
 pointsPerDigit = size(obscuredTrack.currentDigitMarkers,2);
 
 anticipatedPoints = zeros(pointsPerDigit, 2, 2);
 
-for iView = 1 : length(obscuredView)
+for iView = 1 : 2
     prev_obscured_pts = obscuredTrack.previousDigitMarkers(:,:,iView)';
     markersDiff = NaN(pointsPerDigit * 4,2);
     
@@ -251,6 +251,7 @@ for iView = 1 : length(obscuredView)
     % view
     for iDigit = 2 : length(tracks) - 1
         if iDigit == obscuredTrackIdx; continue; end
+        if ~obscuredView(iView); continue; end
         if tracks(iDigit).markersCalculated(iView)    % we have markers for the current digit
             currentPoints  = tracks(iDigit).currentDigitMarkers(:,:,iView)';
             previousPoints = tracks(iDigit).previousDigitMarkers(:,:,iView)';
@@ -283,7 +284,7 @@ function anticipatedPoints = predict_3DDigitMovement(tracks, ...
                                                      bothMarkersCalculated)
                                                 
 obscuredTrack = tracks(obscuredTrackIdx);
-obscuredView = find(~obscuredTrack.isvisible(1:2));
+obscurnuedView = find(~obscuredTrack.isvisible(1:2));
 
 pointsPerDigit = size(obscuredTrack.currentDigitMarkers,2);
 anticipatedPoints = zeros(pointsPerDigit, 2, 2);
@@ -305,8 +306,12 @@ mean_3Dloc = mean_3Dloc / trackingBoxParams.scale;
 % now project back into direct and mirror views
 mean_3Dloc_hom = [mean_3Dloc, ones(size(mean_3Dloc,1),1)];
 
-% WORKING HERE, FIGURE OUT NORMALIZATION/DENORMALIZATIN
-direct_view_pts_hom = mean_3Dloc_hom * trackingBoxParams.P1;
-direct_view_pts = bsxfun(@rdivide,direct_view_pts_hom(:,1:2),direct_view_pts_hom(:,3));
+direct_view_pts_norm = mean_3Dloc_hom * trackingBoxParams.P1;
+direct_view_pts_hom = (trackingBoxParams.K' * direct_view_pts_norm')';
+anticipatedPoints(:,:,1) = bsxfun(@rdivide,direct_view_pts_hom(:,1:2),direct_view_pts_hom(:,3));
+
+mirror_view_pts_norm = mean_3Dloc_hom * trackingBoxParams.P2;
+mirror_view_pts_hom = (trackingBoxParams.K' * mirror_view_pts_norm')';
+anticipatedPoints(:,:,2) = bsxfun(@rdivide,mirror_view_pts_hom(:,1:2),mirror_view_pts_hom(:,3));
 
 end    % function predict_3DDigitMovement

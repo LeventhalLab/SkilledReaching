@@ -5,7 +5,7 @@ figure(1)
 hold off
 set(gcf,'name','direct view mask')
 digitMasks = false(size(tracks(2).digitmask1));
-for ii = 2 : 5
+for ii = 1 : 5
     digitMasks = digitMasks | tracks(ii).digitmask1;
 end
 imshow(digitMasks);
@@ -20,7 +20,7 @@ figure(2)
 hold off
 set(gcf,'name','mirror view mask')
 digitMasks = false(size(tracks(2).digitmask2));
-for ii = 2 : 5
+for ii = 1 : 5
     digitMasks = digitMasks | tracks(ii).digitmask2;
 end
 imshow(digitMasks);

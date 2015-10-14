@@ -305,7 +305,11 @@ mean_3Dloc = mean_3Dloc / trackingBoxParams.scale;
 % now project back into direct and mirror views
 mean_3Dloc_hom = [mean_3Dloc, ones(size(mean_3Dloc,1),1)];
 
-direct_view_pts_hom = mean_3Dloc_hom * trackingBoxParams.P1;
+direct_view_pts_norm = mean_3Dloc_hom * trackingBoxParams.P1;
+direct_view_pts_hom = (trackingBoxParams.K' * direct_view_pts_norm')';
 direct_view_pts = bsxfun(@rdivide,direct_view_pts_hom(:,1:2),direct_view_pts_hom(:,3));
 
+mirror_view_pts_norm = mean_3Dloc_hom * trackingBoxParams.P2;
+mirror_view_pts_hom = (trackingBoxParams.K' * mirror_view_pts_norm')';
+mirror_view_pts = bsxfun(@rdivide,mirror_view_pts_hom(:,1:2),mirror_view_pts_hom(:,3));
 end    % function predict_3DDigitMovement
