@@ -216,9 +216,15 @@ paw_mask = imdilate(paw_mask,strel('disk',3));
 for iPoint = 1 : size(predicted_points,1)
     overlapMask = lineMaskOverlap(paw_mask, epiLines(iPoint,:),'distThresh',lineMaskDistThresh);
     
-    [y,x] = find(overlapMask);
-    [~,nnidx] = findNearestNeighbor(anticipatedPoints(iPoint,:),[x,y]);
-    predicted_points(iPoint,:) = [x(nnidx),y(nnidx)];
+    if any(overlapMask(:))
+        [y,x] = find(overlapMask);
+        [~,nnidx] = findNearestNeighbor(anticipatedPoints(iPoint,:),[x,y]);
+        predicted_points(iPoint,:) = [x(nnidx),y(nnidx)];
+    else
+        %********************************
+        % what to do if the paw mask goes behind the checkerboard, so the
+        % predicted point is not inside the background subtracted mask
+    end
     
     predicted_points(iPoint,:) = predicted_points(iPoint,:) - bboxes(obscuredView,1:2) + 1;
 end
@@ -284,7 +290,7 @@ function anticipatedPoints = predict_3DDigitMovement(tracks, ...
                                                      bothMarkersCalculated)
                                                 
 obscuredTrack = tracks(obscuredTrackIdx);
-obscurnuedView = find(~obscuredTrack.isvisible(1:2));
+obscuredView = find(~obscuredTrack.isvisible(1:2));
 
 pointsPerDigit = size(obscuredTrack.currentDigitMarkers,2);
 anticipatedPoints = zeros(pointsPerDigit, 2, 2);

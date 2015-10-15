@@ -1,4 +1,4 @@
-function pawTrajectory = track3Dpaw_forward(video, ...
+function digitTrajectories = track3Dpaw_forward(video, ...
                                          BGimg_ud, ...
                                          refImageTime, ...
                                          initDigitMasks, ...
@@ -201,12 +201,15 @@ pdBlob{2}.LabelMatrixOutputPort = true;
 pdBlob{2}.MinimumBlobArea = 100;
 pdBlob{2}.MaximumBlobArea = 30000;
 
-trackCheck.maxDistPerFrame = 5;    % in mm
+trackCheck.maxDistPerFrame = 10;    % in mm
 trackCheck.maxReprojError = 0.1;   % not sure what this needs to be, will need some trial and error
 trackCheck.maxPixelsPerFrame = 20;  % not sure what this needs to be, will need some trial and error
 trackCheck.maxEpiLineDist = 10;     % how far a point in the mirror view can be from the epipolar line passing through the corresponding point in the direct view
+trackCheck.frameHistoryLength = 5;    % number of frames to look back in estimating next frame
 % =======
 % >>>>>>> origin/master
+
+
 for iarg = 1 : 2 : nargin - 10
     switch lower(varargin{iarg})
         case 'graypawlimits',
@@ -316,9 +319,11 @@ image = readFrame(video);
 image_ud = undistortImage(image, boxCalibration.cameraParams);
 image_ud = double(image_ud) / 255;
 numFrames = video.Duration * video.FrameRate;
-
-pawTrajectory = zeros(numFrames, 5, 3, 3);    % numFrames by numPawParts by 3 pointsPerDigit by (x,y,z)
 currentFrame = video.FrameRate * refImageTime;
+
+digitTrajectories = zeros(numFrames - currentFrame + 1, 5, 3, 3);    % numFrames by numPawParts by 3 pointsPerDigit by (x,y,z)
+pawTrajectory = zeros(numFrames - currentFrame + 1, 3);
+
 % initialize one track each for the dorsum of the paw and each digit in the
 % mirror and center views
 
@@ -427,6 +432,17 @@ pelletTrack = struct(...
 tracks = initializeTracks();
 markers3D = zeros(num_elements_to_track-1,3,3);
 markers3D(2:5,:,:) = currentDigitMarkersTo3D(currentDigitMarkers, trackingBoxParams, mask_bbox);
+
+pawMarkers = zeros(1,2,1,2);
+pawMask = cell(1,2);
+for iView = 1 : 2
+    pawMask{iView} = multiRegionConvexHullMask(digitMasks{iView}(:,:,6));
+    s_paw = regionprops(pawMask{iView});
+    pawMarkers(1,:,1,iView) = s_paw.Centroid;
+end
+pawTrajectory(1,:) = squeeze(currentDigitMarkersTo3D(pawMarkers, trackingBoxParams, mask_bbox))';
+digitTrajectories(1,:,:,:) = markers3D(1:5,:,:);
+
 fullDigMarkers = zeros(6,2,3,2);
 fullDigMarkers(2:5,:,:,:) = currentDigitMarkers;
 for ii = 1 : num_elements_to_track - 1
@@ -439,8 +455,11 @@ for ii = 1 : num_elements_to_track - 1
 
     if ii < 6
         curColor = colorList{ii};
+        current3D = squeeze(markers3D(ii,:,:));
     else
         curColor = 'multi';
+        current3D = zeros(3,3);
+        current3D(2,:) = pawTrajectory(1,:);
     end
     newTrack = struct(...
         'id', ii, ...
@@ -451,8 +470,8 @@ for ii = 1 : num_elements_to_track - 1
         'digitmask3', squeeze(digitMasks{3}(:,:,ii)), ...
         'meanHSV', squeeze(meanHSV(:,ii,:)), ...
         'stdHSV', squeeze(stdHSV(:,ii,:)), ...
-        'markers3D', squeeze(markers3D(ii,:,:)), ...
-        'prev_markers3D',  squeeze(markers3D(ii,:,:)), ...
+        'markers3D', current3D, ...
+        'prev_markers3D', current3D, ...
         'currentDigitMarkers', squeeze(fullDigMarkers(ii,:,:,:)), ...
         'previousDigitMarkers', squeeze(fullDigMarkers(ii,:,:,:)), ...
         'age', 1, ...
@@ -468,7 +487,7 @@ tracks(num_elements_to_track) = pelletTrack;
 paw_hsv = cell(1,2);
 paw_img = cell(1,2);
 HSVlimits = zeros(num_elements_to_track-1, 6, 2);
-numFrames = 0;
+numFrames = 1;
 current_BG_mask = cell(1,3);
 current_paw_mask = cell(1,3);
 
@@ -591,6 +610,19 @@ while video.CurrentTime < video.Duration
     hsv = cell(1,2);
     beadMask = cell(1,2);
     prelim_digitMask = cell(1,num_elements_to_track-2);
+    
+    startFrameIdx = max(numFrames - trackCheck.frameHistoryLength, 1);
+    endFrameIdx   = numFrames - 1;
+
+    recentDigitHistory = digitTrajectories(startFrameIdx:endFrameIdx,:,:,:);
+    recentPawHistory = pawTrajectory(startFrameIdx:endFrameIdx,:);
+
+    nextPoints = predictNext3Dpoints(recentDigitHistory, ...
+                                     recentPawHistory, ...
+                                     current_paw_mask, ...
+                                     mask_bbox, ...
+                                     trackingBoxParams);
+                                     
     for ii = 2 : num_elements_to_track - 2    % do the digits first
         prelim_digitMask{ii} = cell(1,2);
         
@@ -607,13 +639,16 @@ while video.CurrentTime < video.Duration
             end
         end
 
-        tempMask = thresholdDigits(tracks(ii).meanHSV, ...
-                                   tracks(ii).stdHSV, ...
+                                    
+        tempMask = thresholdDigits(tracks(ii), ...
+                                   squeeze(nextPoints(ii,2,:))', ...
                                    HSVthresh_parameters, ...
                                    hsv, ...
                                    numSameColorObjects, ...
-                                   digitBlob, ...
-                                   beadMask);
+                                   beadMask, ...
+                                   mask_bbox, ...
+                                   trackingBoxParams, ...
+                                   trackCheck);
         for iView = 1 : 2
             s = regionprops(tempMask{iView},'centroid');
             if length(s) > numSameColorObjects    % found too many blobs
@@ -649,6 +684,7 @@ while video.CurrentTime < video.Duration
                                                   mask_bbox, ...
                                                   prev_mask_bbox, ...
                                                   trackingBoxParams, ...
+                                                  mask_bbox, ...
                                                   trackCheck);
             
         for iDigit = 1 : numSameColorObjects
@@ -759,7 +795,7 @@ while video.CurrentTime < video.Duration
 	% both views
     % for now, only calculating the centroid of the dorsum of the paw
     for iTrack = 1 : 5
-        pawTrajectory(currentFrame,iTrack,:,:) = tracks(iTrack).markers3D;
+        digitTrajectories(numFrames,iTrack,:,:) = tracks(iTrack).markers3D;
         tracks(iTrack).markersCalculated = false(1,2);
         tracks(iTrack).previousDigitMarkers = tracks(iTrack).currentDigitMarkers;
         tracks(iTrack).prev_markers3D = tracks(iTrack).markers3D;
@@ -921,105 +957,6 @@ function blobID = selectBlobForTrack(blobMask, ...
 
 %     prev_bbox = track.bbox(iView,:);
 %     prev_bbox(1:2) = prev_bbox(1:2) - mask_bbox(iView,1:2) + 1;
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [mp1, mp2] = points3d_to_images(points3d, P1, P2, K)
-
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function digitMask = thresholdDigits(meanHSV, ...
-                                     stdHSV, ...
-                                     HSVthresh_parameters, ...
-                                     hsv, ...
-                                     numSameColorObjects, ...
-                                     digitBlob,...
-                                     beadMask)
-%
-% INPUTS:
-%   meanHSV - 3 element vector with mean hue, saturation, and value values,
-%       respectively for the target region
-%   stdHSV - 3 element vector with standard deviation of the hue, 
-%       saturation, and value values, respectively for the target region
-%   HSVthresh_parameters - structure with the following fields:
-%       .min_thresh - 3 element vector containing mininum distance h/s/v
-%           thresholds must be from their respective means
-%       .num_stds - 3 element vector containing number of standard
-%           deviations away from the mean h/s/v values to set threshold.
-%           The threshold is set as whichever is further from the mean -
-%           min_thresh or num_stds * std
-%   hsv - 2-element cell array containing the enhanced hsv image of the paw
-%       within the bounding box for the direct view (index 1) and mirror
-%       view (index 2)
-%   paw_img - 2-element cell array containing the original rgb image of the
-%       paw within the bounding box for the direct view (index 1) and 
-%       mirror view (index 2)
-%   numSameColorObjects - scalar, number of digits that have the same color
-%       tattoo as the current digit
-%   digitBlob - cell array of blob objects containing blob parameters for
-%       the direct view (index 1) and mirror view (index 2)
-%   beadMask - 
-%
-% OUTPUTS:
-%   digitMask - 1 x 2 cell array containing the mask for the direct
-%       (center) and mirror views, respectively
-
-
-% consider adjusting this algorithm to include knowledge from the previous
-% frame
-
-    min_thresh = HSVthresh_parameters.min_thresh;
-    max_thresh = HSVthresh_parameters.max_thresh;
-    num_stds   = HSVthresh_parameters.num_stds;
-    
-    HSVlimits = zeros(2,6);
-    digitMask = cell(1,2);
-    for iView = 1 : 2
-        % construct HSV limits vector from track, HSVthresh_parameters
-        HSVlimits(iView,1) = meanHSV(iView,1);            % hue mean
-        HSVlimits(iView,2) = max(min_thresh(1), stdHSV(iView,1) * num_stds(1));  % hue range
-        HSVlimits(iView,2) = min(max_thresh(1), HSVlimits(iView,2));  % hue range
-
-        s_range = max(min_thresh(2), stdHSV(iView,2) * num_stds(2));
-        s_range = min(max_thresh(2), s_range);
-        HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
-        HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
-
-        v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
-        v_range = min(max_thresh(3), v_range);
-        HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % saturation lower bound
-        HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % saturation upper bound    
-        
-        % threshold the image
-        tempMask = HSVthreshold(hsv{iView}, ...
-                                HSVlimits(iView,:));
-
-        tempMask = tempMask & ~beadMask{iView};
-
-        if ~any(tempMask(:)); continue; end
-
-        SE = strel('disk',2);
-        tempMask = imopen(tempMask, SE);
-        tempMask = imclose(tempMask, SE);
-        tempMask = imfill(tempMask, 'holes');
-
-        [A,~,~,~,labMat] = step(digitBlob{iView}, tempMask);
-        % take at most the numSameColorObjects largest blobs
-        [~,idx] = sort(A, 'descend');
-        if ~isempty(A)
-            tempMask = false(size(tempMask));
-            for kk = 1 : min(numSameColorObjects, length(idx))
-                tempMask = tempMask | (labMat == idx(kk));
-            end
-        end
-        
-        digitMask{iView} = tempMask;
-    end
 
 end
 
@@ -1950,7 +1887,7 @@ for iView = 2 : -1 : 1
     
     numCentroids = length(s_pd);
     pd_centroids = [s_pd.Centroid];
-    pd_centroids = reshape(pd_centroids,[2,numCentroids])';
+    pd_centroids = reshape(pd_centroids,2,[])';
     
     [~, nnidx] = findNearestNeighbor(s_digits.Centroid, pd_centroids);
     dorsum_mask = (labMat == nnidx);
