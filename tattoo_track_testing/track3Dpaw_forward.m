@@ -587,9 +587,17 @@ while video.CurrentTime < video.Duration
     % parts. A model of the paw might solve this problem, but would like to 
     % get away with doing this without one...
     
-    tracks(num_elements_to_track-1).digitmask1 = current_paw_mask{1};
-    tracks(num_elements_to_track-1).digitmask2 = current_paw_mask{2};
-    tracks(num_elements_to_track-1).digitmask3 = current_paw_mask{3};
+    tracks(num_elements_to_track-1).previousDigitMarkers = ...
+        tracks(num_elements_to_track-1).currentDigitMarkers;
+    for iView =1 : 3
+        digitMaskStr = sprintf('digitmask%d',iView);
+        tracks(num_elements_to_track-1).(digitMaskStr) = current_paw_mask{iView};
+        
+        if iView < 3
+            s_paw = regionprops(current_paw_mask{iView},'centroid');
+            tracks(num_elements_to_track-1).currentDigitMarkers(:,2,iView) = s_paw.Centroid';
+        end
+    end
     
     for ii = 1 : num_elements_to_track - 1
         
@@ -678,13 +686,12 @@ while video.CurrentTime < video.Duration
                 prelimMask{iDigit,iView} = prelim_digitMask{sameColIdx(iDigit)}{iView};
             end
         end
-       
+
         newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                   prelimMask, ...
                                                   mask_bbox, ...
                                                   prev_mask_bbox, ...
                                                   trackingBoxParams, ...
-                                                  mask_bbox, ...
                                                   trackCheck);
             
         for iDigit = 1 : numSameColorObjects
@@ -748,8 +755,7 @@ while video.CurrentTime < video.Duration
     tracks = reconstructPartiallyHiddenObjects(tracks, mask_bbox, fundMat, [h,w], current_BG_mask);
 
     % triangulate all available digit markers
-    tracks(2:5) = digit3Dpoints(trackingBoxParams, tracks(2:5), mask_bbox);
-% 	tracks(2:5) = digit3Dpoints(currentDigitMarkers, trackingBoxParams, tracks(2:5), mask_bbox);
+    tracks(2:6) = digit3Dpoints(trackingBoxParams, tracks(2:6), mask_bbox);
     
     % now have to deal with completely hidden digits
     tracks = reconstructCompletelyHiddenObjects(tracks, ...
@@ -800,7 +806,8 @@ while video.CurrentTime < video.Duration
         tracks(iTrack).previousDigitMarkers = tracks(iTrack).currentDigitMarkers;
         tracks(iTrack).prev_markers3D = tracks(iTrack).markers3D;
     end
-
+    pawTrajectory(numFrames,:) = tracks(6).markers3D(2,:);
+    
     plotTracks(tracks, image_ud, mask_bbox)
     
 end
@@ -1322,6 +1329,14 @@ function newTracks = checkTwoTracks(prevTracks, ...
                                               trackingBoxParams, ...
                                               trackCheck, ...
                                               iTrack);
+        elseif sum(numBlobs(iTrack,:)) == 1    % only one of 4 possible blobs is visible
+            newTracks = assignSingleBlob(newTracks, ...     % WORKING HERE...
+                                         prelimMask, ...
+                                         mask_bbox, ...
+                                         prev_bbox, ...
+                                         trackingBoxParams, ...
+                                         trackCheck, ...
+                                         iTrack);
             
         end
 
