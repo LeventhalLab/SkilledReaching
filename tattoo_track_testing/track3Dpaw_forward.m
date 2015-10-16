@@ -692,7 +692,8 @@ while video.CurrentTime < video.Duration
                                                   mask_bbox, ...
                                                   prev_mask_bbox, ...
                                                   trackingBoxParams, ...
-                                                  trackCheck);
+                                                  trackCheck, ...
+                                                  nextPoints(sameColIdx,:,:));
             
         for iDigit = 1 : numSameColorObjects
             tracks(sameColIdx(iDigit)) = newTracks(iDigit);
@@ -1093,7 +1094,8 @@ function newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                    mask_bbox, ...
                                                    prev_bbox, ...
                                                    trackingBoxParams, ...
-                                                   trackCheck)
+                                                   trackCheck, ...
+                                                   nextPoints)
 %
 % INPUTS:
 %   colorTracks - cell array containing 
@@ -1127,7 +1129,8 @@ else
                                mask_bbox, ...
                                prev_bbox, ...
                                trackingBoxParams, ...
-                               trackCheck);
+                               trackCheck, ...
+                               nextPoints);
 end
 
 end
@@ -1274,7 +1277,8 @@ function newTracks = checkTwoTracks(prevTracks, ...
                                     mask_bbox, ...
                                     prev_bbox, ...
                                     trackingBoxParams, ...
-                                    trackCheck)
+                                    trackCheck, ...
+                                    nextPoints)
 
 % INPUTS:
 %   prevTracks - track structures for the two tracks that are the same
@@ -1285,9 +1289,6 @@ function newTracks = checkTwoTracks(prevTracks, ...
 %   mask_bbox - 
 %	trackingBoxParams - 
 	newTracks = prevTracks;
-    prev_3dpoints = zeros(2,3);
-    prev_3dpoints(1,:) = prevTracks(1).markers3D(2,:);
-    prev_3dpoints(2,:) = prevTracks(2).markers3D(2,:);
     
     % several possibilities: two blobs visible in both views; one blob
     % visible in one view, two blobs in the other; none in one view, two in
@@ -1296,7 +1297,6 @@ function newTracks = checkTwoTracks(prevTracks, ...
     % figure out how many blobs in each view
     numBlobs = zeros(2,2);
     s = cell(2,2);
-    digLabelMask = cell(2,2);
     for iTrack = 1 : 2
         for iView = 1 : 2
             s{iTrack,iView} = regionprops(prelimMask{iTrack,iView},'area','centroid');
@@ -1307,7 +1307,6 @@ function newTracks = checkTwoTracks(prevTracks, ...
             newTracks = matchTwoBlobs(newTracks, ...
                                       prelimMask, ...
                                       mask_bbox, ...
-                                      prev_bbox, ...
                                       trackingBoxParams, ...
                                       trackCheck, ...
                                       iTrack);
@@ -1325,18 +1324,18 @@ function newTracks = checkTwoTracks(prevTracks, ...
             newTracks = matchSingleToTwoBlobs(newTracks, ...
                                               prelimMask, ...
                                               mask_bbox, ...
-                                              prev_bbox, ...
                                               trackingBoxParams, ...
                                               trackCheck, ...
-                                              iTrack);
+                                              iTrack, ...
+                                              nextPoints);
         elseif sum(numBlobs(iTrack,:)) == 1    % only one of 4 possible blobs is visible
             newTracks = assignSingleBlob(newTracks, ...     % WORKING HERE...
                                          prelimMask, ...
                                          mask_bbox, ...
-                                         prev_bbox, ...
                                          trackingBoxParams, ...
                                          trackCheck, ...
-                                         iTrack);
+                                         iTrack, ...
+                                         nextPoints);
             
         end
 
@@ -1350,7 +1349,6 @@ end
 function newTracks = matchTwoBlobs(prevTracks, ...
                                    prelimMask, ...
                                    mask_bbox, ...
-                                   prev_bbox, ...
                                    trackingBoxParams, ...
                                    trackCheck, ...
                                    iTrack)
@@ -1403,24 +1401,7 @@ for iBlob = 1 : 2
     [epi_error(2,iBlob),~] = findNearestPointToLine(Q, trackingBoxParams.epipole(1,:));
 end
 epi_error = mean(epi_error,2);
-% for ii = 1 : 2    % ii is the index of the blob in the front view
-%     % calculate slopes and y-intercepts
-%     for jj = 1 : 2
-%         m(jj,ii) = (new_centroids(1,ii,2) - new_centroids(2,jj,2)) / ...
-%                   (new_centroids(1,ii,1) - new_centroids(2,jj,1));
-% %         m(2,ii) = (new_centroids(1,ii,2) - new_centroids(2,3-ii,2)) / ...
-% %                   (new_centroids(1,ii,1) - new_centroids(2,3-ii,1));
-%         b(jj,ii) = new_centroids(1,ii,2) - m(jj,ii) * new_centroids(1,ii,1);
-% %         b(2,ii) = new_centroids(1,ii,2) - m(2,ii) * new_centroids(1,ii,1);
-%     end                                                   
-% end
-% test_epipoles(1,1) = (b(2,2)-b(1,1)) / (m(1,1)-m(2,2));
-% test_epipoles(1,2) = m(1,1) * test_epipoles(1,1) + b(1,1);
-% test_epipoles(2,1) = (b(1,2)-b(2,1)) / (m(2,1)-m(1,2));
-% test_epipoles(2,2) = m(2,1) * test_epipoles(2,1) + b(2,1);
-% for jj = 1 : 2    % jj is the index of the combination
-%     epi_error(jj) = norm(test_epipoles(jj,:) - trackingBoxParams.epipole(1,:));
-% end
+
 % figure out which "test" epipole is closest to the real
 % epipole
 direct_view_pts = squeeze(new_centroids(1,:,:));
@@ -1464,7 +1445,6 @@ if maxDist(1) < maxDist(2)
         mirrorMask = (digLabelMask{iTrack,2} == (3-iTrack));
     end
     curr_3dpoint = points3d(iTrack,:);
-%     curr_reproj_error = reprojErrors(iTrack,:);
 else
     centerMask = (digLabelMask{iTrack,1} == (3-iTrack));
     if epi_error(1) < epi_error(2)
@@ -1498,14 +1478,11 @@ end
 function newTracks = matchSingleToTwoBlobs(prevTracks, ...
                                            prelimMask, ...
                                            mask_bbox, ...
-                                           prev_bbox, ...
                                            trackingBoxParams, ...
                                            trackCheck, ...
-                                           iTrack)
+                                           iTrack, ...
+                                           nextPoints)
 newTracks = prevTracks;
-prev_3dpoints = zeros(2,3);
-prev_3dpoints(1,:) = prevTracks(1).markers3D(2,:);
-prev_3dpoints(2,:) = prevTracks(2).markers3D(2,:);
             
 % figure out how many blobs in each view
 numBlobs = zeros(2,2);
@@ -1568,7 +1545,7 @@ mirror_view_pts_norm = normalize_points(mirror_view_pts, trackingBoxParams.K);
 points3d = points3d * trackingBoxParams.scale;
 
 meanReprojError = mean(sqrt(sum(reprojErrors.^2,2)));
-d3d = norm(points3d - prev_3dpoints(iTrack,:));
+d3d = norm(points3d - squeeze(nextPoints(iTrack,2,:))');
 
 % now need to assign this point to either the current digit or the other
 % digit of the same color.
@@ -1580,7 +1557,7 @@ d3d = norm(points3d - prev_3dpoints(iTrack,:));
 % centroid from first or second track?
 poss_3d_diffs = zeros(2,3);
 for iDigit = 1 : 2
-    poss_3d_diffs(iDigit,:) = prev_3dpoints(iDigit,:) - points3d;
+    poss_3d_diffs(iDigit,:) = squeeze(nextPoints(iDigit,2,:))' - points3d;
 end
 poss_distances = sqrt(sum(poss_3d_diffs.^2,2));
 min_dist_idx = find(poss_distances == min(poss_distances));
@@ -1633,14 +1610,8 @@ else
     newTracks(iTrack).markers3D(2,:) = zeros(1,3);    % centroid 3d point
 end
 
-
-
-
-
 newTracks(iTrack).digitmask1 = centerMask;
 newTracks(iTrack).digitmask2 = mirrorMask;
-
-
 
 end    % function
 
@@ -1655,9 +1626,6 @@ function newTracks = matchSingleBlobs(prevTracks, ...
                                       trackCheck, ...
                                       iTrack)
 newTracks = prevTracks;
-prev_3dpoints = zeros(2,3);
-prev_3dpoints(1,:) = prevTracks(1).markers3D(2,:);
-prev_3dpoints(2,:) = prevTracks(2).markers3D(2,:);
             
 % figure out how many blobs in each view
 numBlobs = zeros(2,2);
@@ -1765,7 +1733,62 @@ end    % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                   
-                                          
+function newTracks = assignSingleBlob(prevTracks, ...       % WORKING HERE...
+                                      prelimMask, ...
+                                      mask_bbox, ...
+                                      trackingBoxParams, ...
+                                      trackCheck, ...
+                                      iTrack, ...
+                                      nextPoints)
+newTracks = prevTracks;
+numPossTracks = length(prevTracks);
+
+for iView = 1 : 2
+    s = regionprops(prelimMask{iTrack,iView},'area','centroid');
+
+    if ~isempty(s)    % the blob is present in this view for this track
+
+        viewMaskString = sprintf('digitmask%d',iView);
+        notViewMaskString = sprintf('digitmask%d',3-iView);
+
+        % project nextPoints into the current view
+        cameraMatrixString = sprintf('P%d',iView);
+        nextPoints_hom = [squeeze(nextPoints(:,2,:)), ones(numPossTracks,1)];
+        projected_pts_norm = nextPoints_hom * trackingBoxParams.(cameraMatrixString);
+        projected_pts_hom  = (trackingBoxParams.K' * projected_pts_norm')';
+        projected_pts      = bsxfun(@rdivide,projected_pts_hom(:,1:2),projected_pts_hom(:,3));
+        projected_pts      = bsxfun(@minus,projected_pts,mask_bbox(iView,1:2));
+
+        blob_to_projected = bsxfun(@minus,projected_pts, s.Centroid);
+        dist_to_blobs = sqrt(sum(blob_to_projected.^2,2));
+
+        nearTrackIdx = find(dist_to_blobs == min(dist_to_blobs));
+
+        if nearTrackIdx == iTrack && dist_to_blobs(nearTrackIdx) < trackCheck.maxPixelsPerFrame
+            newTracks(iTrack).(viewMaskString) = prelimMask{iTrack,iView};
+            newTracks(iTrack).(notViewMaskString) = false(size(prelimMask{iTrack,3-iView}));
+            newTracks(iTrack).isvisible = false(1,3);
+            newTracks(iTrack).isvisible(iView) = true;
+            newTracks(iTrack).totalVisibleCount(iView) = ...
+                newTracks(iTrack).totalVisibleCount(iView) + 1;
+            newTracks(iTrack).consecutiveInvisibleCount(iView) = 0;
+            newTracks(iTrack).consecutiveInvisibleCount(3-iView) = ...
+                newTracks(iTrack).consecutiveInvisibleCount(3-iView) + 1;
+        else
+            newTracks(iTrack).digitmask1 = false(size(prelimMask{iTrack,1}));
+            newTracks(iTrack).digitmask2 = false(size(prelimMask{iTrack,2}));
+            newTracks(iTrack).isvisible = false(1,3);
+            newTracks(iTrack).consecutiveInvisibleCount(1:2) = ...
+                newTracks(iTrack).consecutiveInvisibleCount(1:2) + 1;
+        end
+    end
+end
+
+end    % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  
+
 function testPoint = selectDorsumTestPoint(pawPref, iView, currentMask)
 
 % function to find a test point to determine where the dorsum of the paw
