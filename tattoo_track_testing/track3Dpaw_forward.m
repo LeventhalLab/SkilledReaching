@@ -323,7 +323,7 @@ currentFrame = video.FrameRate * refImageTime;
 
 digitTrajectories = zeros(numFrames - currentFrame + 1, 5, 3, 3);    % numFrames by numPawParts by 3 pointsPerDigit by (x,y,z)
 pawTrajectory = zeros(numFrames - currentFrame + 1, 3);
-
+meanDigitTrajectory = zeros(numFrames - currentFrame + 1, 3);
 % initialize one track each for the dorsum of the paw and each digit in the
 % mirror and center views
 
@@ -435,12 +435,21 @@ markers3D(2:5,:,:) = currentDigitMarkersTo3D(currentDigitMarkers, trackingBoxPar
 
 pawMarkers = zeros(1,2,1,2);
 pawMask = cell(1,2);
+meanDigitMarkers = zeros(1,2,1,2);
 for iView = 1 : 2
     pawMask{iView} = multiRegionConvexHullMask(digitMasks{iView}(:,:,6));
     s_paw = regionprops(pawMask{iView});
     pawMarkers(1,:,1,iView) = s_paw.Centroid;
+    fullDigitMask = false(h,w);
+    for ii = 2 : 5
+        fullDigitMask = fullDigitMask | digitMasks{iView}(:,:,ii);
+    end
+    fullDigitMask = multiRegionConvexHullMask(fullDigitMask);
+    s_meanDigit = regionprops(fullDigitMask,'centroid');
+    meanDigitMarkers(1,:,1,iView) = s_meanDigit.Centroid;
 end
 pawTrajectory(1,:) = squeeze(currentDigitMarkersTo3D(pawMarkers, trackingBoxParams, mask_bbox))';
+meanDigitTrajectory(1,:) = squeeze(currentDigitMarkersTo3D(meanDigitMarkers, trackingBoxParams, mask_bbox))';
 digitTrajectories(1,:,:,:) = markers3D(1:5,:,:);
 
 fullDigMarkers = zeros(6,2,3,2);
@@ -524,12 +533,22 @@ while video.CurrentTime < video.Duration
     prev_mask_bbox = mask_bbox;
     prev_paw_mask = false(h,w);
     
+    prev_digitMask = cell(1,2);
     for iView = 1 : 3
+        if iView < 3
+            prev_digitMask{iView} = false(h,w);
+            for ii = 2 : 5
+                digitMask = eval(sprintf('tracks(ii).digitmask%d', iView));
+                prev_digitMask{iView} = prev_digitMask{iView} | digitMask;
+            end
+            prev_digitMask{iView} = multiRegionConvexHullMask(prev_digitMask{iView});
+        end
         pawMask = eval(sprintf('tracks(num_elements_to_track-1).digitmask%d', iView));
         prev_paw_mask(prev_mask_bbox(iView,2) : prev_mask_bbox(iView,2) + prev_mask_bbox(iView,4),...
                       prev_mask_bbox(iView,1) : prev_mask_bbox(iView,1) + prev_mask_bbox(iView,3)) = pawMask;
-    end
 
+    end
+    full_prev_digMask = prev_digitMask{1} | prev_digitMask{2};
     % exclude anything too dark to be the paw (e.g., nose, etc.)
     grayMask = false(h,w);
     for iColor = 1 : 3
@@ -540,7 +559,8 @@ while video.CurrentTime < video.Duration
     % parts of the background mask that overlapped with the previous mask
     overlapMask = prev_paw_mask & BG_mask;
     BG_mask = imreconstruct(overlapMask, BG_mask);
-%     BG_mask = imdilate(BG_mask,strel('disk',10));
+    BG_mask = BG_mask & ...
+        imdilate(full_prev_digMask,strel('disk',trackCheck.maxPixelsPerFrame));
 
     % will eventually need code here to deal with partial occlusions of the
     % full paw mask
@@ -624,9 +644,10 @@ while video.CurrentTime < video.Duration
 
     recentDigitHistory = digitTrajectories(startFrameIdx:endFrameIdx,:,:,:);
     recentPawHistory = pawTrajectory(startFrameIdx:endFrameIdx,:);
+    recentMeanDigitHistory = meanDigitTrajectory(startFrameIdx:endFrameIdx,:);
 
     nextPoints = predictNext3Dpoints(recentDigitHistory, ...
-                                     recentPawHistory, ...
+                                     recentMeanDigitHistory, ...
                                      current_paw_mask, ...
                                      mask_bbox, ...
                                      trackingBoxParams);
@@ -808,8 +829,21 @@ while video.CurrentTime < video.Duration
         tracks(iTrack).prev_markers3D = tracks(iTrack).markers3D;
     end
     pawTrajectory(numFrames,:) = tracks(6).markers3D(2,:);
-    
-    plotTracks(tracks, image_ud, mask_bbox)
+    currentDigitMask = cell(1,2);
+    for iView = 1 : 2
+
+        currentDigitMask{iView} = false(h,w);
+        for ii = 2 : 5
+            digitMask = eval(sprintf('tracks(ii).digitmask%d', iView));
+            currentDigitMask{iView} = currentDigitMask{iView} | digitMask;
+        end
+        currentDigitMask{iView} = multiRegionConvexHullMask(currentDigitMask{iView});
+        s_meanDigits(iView) = regionprops(currentDigitMask{iView},'centroid');
+    end
+    % WORKING HERE ON USING THE CENTROID OF THE FULL DIGIT BLOB AS A
+    % REFERENCE FOR FIGURING OUT WHERE THE NEXT DIGIT LOCATIONS WILL BE...
+    meanDigitTrajectory(numFrames,:) = 
+%     plotTracks(tracks, image_ud, mask_bbox)
     
 end
 
