@@ -441,8 +441,11 @@ for iView = 1 : 2
     s_paw = regionprops(pawMask{iView});
     pawMarkers(1,:,1,iView) = s_paw.Centroid;
     fullDigitMask = false(h,w);
+    tempMask = false(h,w);
     for ii = 2 : 5
-        fullDigitMask = fullDigitMask | digitMasks{iView}(:,:,ii);
+        tempMask(mask_bbox(iView,2):mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                 mask_bbox(iView,1):mask_bbox(iView,1) + mask_bbox(iView,3)) = digitMasks{iView}(:,:,ii);
+        fullDigitMask = fullDigitMask | tempMask;
     end
     fullDigitMask = multiRegionConvexHullMask(fullDigitMask);
     s_meanDigit = regionprops(fullDigitMask,'centroid');
@@ -535,20 +538,27 @@ while video.CurrentTime < video.Duration
     
     prev_digitMask = cell(1,2);
     for iView = 1 : 3
-        if iView < 3
-            prev_digitMask{iView} = false(h,w);
-            for ii = 2 : 5
-                digitMask = eval(sprintf('tracks(ii).digitmask%d', iView));
-                prev_digitMask{iView} = prev_digitMask{iView} | digitMask;
-            end
-            prev_digitMask{iView} = multiRegionConvexHullMask(prev_digitMask{iView});
-        end
         pawMask = eval(sprintf('tracks(num_elements_to_track-1).digitmask%d', iView));
         prev_paw_mask(prev_mask_bbox(iView,2) : prev_mask_bbox(iView,2) + prev_mask_bbox(iView,4),...
                       prev_mask_bbox(iView,1) : prev_mask_bbox(iView,1) + prev_mask_bbox(iView,3)) = pawMask;
-
+        if iView < 3
+            prev_digitMask{iView} = false(h,w);
+            tempMask = false(h,w);
+            for ii = 2 : 5
+                digitMask = eval(sprintf('tracks(ii).digitmask%d', iView));
+                tempMask(mask_bbox(iView,2):mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                         mask_bbox(iView,1):mask_bbox(iView,1) + mask_bbox(iView,3)) = digitMask;
+                prev_digitMask{iView} = prev_digitMask{iView} | tempMask;
+            end
+            prev_digitMask{iView} = multiRegionConvexHullMask(prev_digitMask{iView});
+        else
+            prev_digitMask{iView} = false(h,w);
+            prev_digitMask{iView}(prev_mask_bbox(iView,2) : prev_mask_bbox(iView,2) + prev_mask_bbox(iView,4),...
+                                  prev_mask_bbox(iView,1) : prev_mask_bbox(iView,1) + prev_mask_bbox(iView,3)) = ...
+                                  pawMask;
+        end
     end
-    full_prev_digMask = prev_digitMask{1} | prev_digitMask{2};
+    full_prev_digMask = prev_digitMask{1} | prev_digitMask{2} | prev_digitMask{3};
     % exclude anything too dark to be the paw (e.g., nose, etc.)
     grayMask = false(h,w);
     for iColor = 1 : 3
@@ -830,6 +840,7 @@ while video.CurrentTime < video.Duration
     end
     pawTrajectory(numFrames,:) = tracks(6).markers3D(2,:);
     currentDigitMask = cell(1,2);
+    digitBlobCentroids = zeros(1,2,1,2);
     for iView = 1 : 2
 
         currentDigitMask{iView} = false(h,w);
@@ -838,11 +849,11 @@ while video.CurrentTime < video.Duration
             currentDigitMask{iView} = currentDigitMask{iView} | digitMask;
         end
         currentDigitMask{iView} = multiRegionConvexHullMask(currentDigitMask{iView});
-        s_meanDigits(iView) = regionprops(currentDigitMask{iView},'centroid');
+        s_meanDigits = regionprops(currentDigitMask{iView},'centroid');
+        digitBlobCentroids(1,:,1,iView) = s_meanDigits.Centroid;
     end
-    % WORKING HERE ON USING THE CENTROID OF THE FULL DIGIT BLOB AS A
-    % REFERENCE FOR FIGURING OUT WHERE THE NEXT DIGIT LOCATIONS WILL BE...
-    meanDigitTrajectory(numFrames,:) = 
+
+    meanDigitTrajectory(numFrames,:) = currentDigitMarkersTo3D(digitBlobCentroids, trackingBoxParams, mask_bbox);
 %     plotTracks(tracks, image_ud, mask_bbox)
     
 end
