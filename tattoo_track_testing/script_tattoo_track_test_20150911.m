@@ -35,12 +35,12 @@ minBeadArea = 0300;
 maxBeadArea = 2000;
 pointsPerRow = 4;    % for the checkerboard detection
 maxBeadEcc = 0.8;
-BG_diff_threshold = 35;
+BG_diff_threshold = 20;
 
 test_ratID = 44;
 rat_metadata = create_sr_ratMetadata(sr_summary, test_ratID);
 
-for iVid = 1 : length(vidList)
+for iVid = 7 : 36%length(vidList)
     if vidList(iVid).bytes < 10000; continue; end
     
     currentVidName = vidList(iVid).name;

@@ -57,5 +57,10 @@ BW = imdilate(BW,SE);   % make sure the polygon is fat enough to not skip any po
 
 new_mask = BW | old_mask;    % polygon containing centroids of vertices combined
                        % with the original masking image
-
+      
+s = regionprops(new_mask,'Centroid');
+SE = strel('disk',1);
+while length(s) > 1    % if the old regions are too colinear, might not combine to one blob, so dilate until they meet
+    new_mask = imdilate(new_mask,SE);
+    s = regionprops(new_mask,'Centroid');
 end

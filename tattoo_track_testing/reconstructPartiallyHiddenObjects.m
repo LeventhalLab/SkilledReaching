@@ -259,6 +259,11 @@ obscuredPt = track.currentDigitMarkers(:,iPoint,iView)';
 visiblePt = visiblePt + visible_bbox(1:2);
 obscuredPt = obscuredPt + obscured_bbox(1:2);
 
+paw_mask(round(obscuredPt(2)),round(obscuredPt(1))) = true;
+paw_mask = connectBlobs(paw_mask);
+
+paw_mask = imdilate(paw_mask,strel('disk',3));
+
 epiLine = epipolarLine(F, visiblePt);
 overlapMask = lineMaskOverlap(paw_mask, epiLine,'distThresh',lineMaskDistThresh);
 [y,x] = find(overlapMask);

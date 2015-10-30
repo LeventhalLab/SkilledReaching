@@ -113,10 +113,10 @@ function digitMask = thresholdDigits(track, ...
             for iPoint = 1 : 3
                 x = round(track.currentDigitMarkers(1,iPoint,iView)) + prev_bbox(iView,1);
                 y = round(track.currentDigitMarkers(2,iPoint,iView)) + prev_bbox(iView,2);
-                fullPrevMask(y,x) = true;
+                fullPrevMask(x,y) = true;
             end
             fullPrevMask = connectBlobs(fullPrevMask);
-            fullPrevMask = imdilate(fullPrevMask,strel('disk',2));
+            fullPrevMask = imdilate(fullPrevMask,3);
         else
             prevMaskStr = sprintf('digitmask%d',iView);
             % move the previous digit mask into the current bounding box
@@ -125,7 +125,7 @@ function digitMask = thresholdDigits(track, ...
         end
         
         s_prev = regionprops(fullPrevMask,'centroid');
-        projected_shift = round(projected_nextPoint(iView,:) - s_prev.Centroid);
+        projected_shift = round(projected_nextPoint(iView,:) - s.Centroid);
 
         shifted_bbox_corner = mask_bbox(iView,1:2) - projected_shift;
         prevMask = fullPrevMask(shifted_bbox_corner(2):shifted_bbox_corner(2) + mask_bbox(iView,4), ...
@@ -154,11 +154,10 @@ function digitMask = thresholdDigits(track, ...
             
             L = bwlabel(tempMask{iView});
             digitMask{iView} = false(size(tempMask{iView}));
-            for ii = 1 : length(s_new)
-                if dist(ii) < trackCheck.maxPixelsPerFrame    % how far the current blob can be from previous ones and still be considered
-                        digitMask{iView} = digitMask{iView} | (L == ii);
-                end
-            end
+            if dist(ii) < trackCheck.maxPixelsPerFrame    % how far the current blob can be from previous ones and still be considered
+                    digitMask{iView} = digitMask{iView} | (L == ii);
+%                 end
+%             end
         end
         digitMask{iView} = connectBlobs(digitMask{iView});
             

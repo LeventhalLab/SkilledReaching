@@ -113,9 +113,9 @@ HSVthresh_parameters.min_thresh(3) = 0.02;    % minimum distance value threshold
 HSVthresh_parameters.max_thresh(1) = 0.16;    % maximum distance hue threshold can be from mean. Note hue is circular (hue = 1 is the same as hue = 0)
 HSVthresh_parameters.max_thresh(2) = 0.15;    % maximum distance saturation threshold can be from mean 
 HSVthresh_parameters.max_thresh(3) = 0.30;    % maximum distance value threshold can be from mean 
-HSVthresh_parameters.num_stds(1) = 1;         % number of standard deviations hue can deviate from mean (unless less than min_thresh or greater than max_thresh)
-HSVthresh_parameters.num_stds(2) = 1;         % number of standard deviations saturation can deviate from mean (unless less than min_thresh or greater than max_thresh)
-HSVthresh_parameters.num_stds(3) = 1;         % number of standard deviations value can deviate from mean (unless less than min_thresh or greater than max_thresh)
+HSVthresh_parameters.num_stds(1) = 2;         % number of standard deviations hue can deviate from mean (unless less than min_thresh or greater than max_thresh)
+HSVthresh_parameters.num_stds(2) = 2;         % number of standard deviations saturation can deviate from mean (unless less than min_thresh or greater than max_thresh)
+HSVthresh_parameters.num_stds(3) = 2;         % number of standard deviations value can deviate from mean (unless less than min_thresh or greater than max_thresh)
 
 diff_threshold = 35;
 raw_threshold = 0.2;
@@ -203,14 +203,19 @@ pdBlob{2}.MaximumBlobArea = 30000;
 
 trackCheck.maxDistPerFrame = 10;    % in mm
 trackCheck.maxReprojError = 0.1;   % not sure what this needs to be, will need some trial and error
-trackCheck.maxPixelsPerFrame = 20;  % not sure what this needs to be, will need some trial and error
+trackCheck.maxPixelsPerFrame = 30;  % not sure what this needs to be, will need some trial and error
 trackCheck.maxEpiLineDist = 10;     % how far a point in the mirror view can be from the epipolar line passing through the corresponding point in the direct view
 trackCheck.frameHistoryLength = 5;    % number of frames to look back in estimating next frame
+
+projectionDilation = 10;
+
+HSVupdateRate = 0.1;    % rate at which to update mean and std HSV values
+
 % =======
 % >>>>>>> origin/master
 
 
-for iarg = 1 : 2 : nargin - 10
+for iarg = 1 : 2 : nargin - 8
     switch lower(varargin{iarg})
         case 'graypawlimits',
             gray_paw_limits = varargin{iarg + 1};
@@ -417,6 +422,9 @@ pelletTrack = struct(...
     'digitmask1', pelletMasks{1}, ...
     'digitmask2', pelletMasks{2}, ...
     'digitmask3', pelletMasks{3}, ...
+    'prevmask1', pelletMasks{1}, ...
+    'prevmask2', pelletMasks{2}, ...
+    'prevmask3', pelletMasks{3}, ...
     'meanHSV', mean_pelletHSV, ...
     'stdHSV', std_pelletHSV, ...
     'markers3D', points3d, ...
@@ -428,7 +436,7 @@ pelletTrack = struct(...
     'markersCalculated', false(1,3), ...
     'totalVisibleCount', double(isPelletVisible), ...
     'consecutiveInvisibleCount', double(~isPelletVisible));
-   
+
 tracks = initializeTracks();
 markers3D = zeros(num_elements_to_track-1,3,3);
 markers3D(2:5,:,:) = currentDigitMarkersTo3D(currentDigitMarkers, trackingBoxParams, mask_bbox);
@@ -449,7 +457,7 @@ for iView = 1 : 2
     end
     fullDigitMask = multiRegionConvexHullMask(fullDigitMask);
     s_meanDigit = regionprops(fullDigitMask,'centroid');
-    meanDigitMarkers(1,:,1,iView) = s_meanDigit.Centroid;
+    meanDigitMarkers(1,:,1,iView) = s_meanDigit.Centroid - mask_bbox(iView,1:2);
 end
 pawTrajectory(1,:) = squeeze(currentDigitMarkersTo3D(pawMarkers, trackingBoxParams, mask_bbox))';
 meanDigitTrajectory(1,:) = squeeze(currentDigitMarkersTo3D(meanDigitMarkers, trackingBoxParams, mask_bbox))';
@@ -480,6 +488,9 @@ for ii = 1 : num_elements_to_track - 1
         'digitmask1', squeeze(digitMasks{1}(:,:,ii)), ...
         'digitmask2', squeeze(digitMasks{2}(:,:,ii)), ...
         'digitmask3', squeeze(digitMasks{3}(:,:,ii)), ...
+        'prevmask1', squeeze(digitMasks{1}(:,:,ii)), ...
+        'prevmask2', squeeze(digitMasks{2}(:,:,ii)), ...
+        'prevmask3', squeeze(digitMasks{3}(:,:,ii)), ...
         'meanHSV', squeeze(meanHSV(:,ii,:)), ...
         'stdHSV', squeeze(stdHSV(:,ii,:)), ...
         'markers3D', current3D, ...
@@ -586,6 +597,9 @@ while video.CurrentTime < video.Duration
     end
     projMask1 = pawProjectionMask(current_paw_mask{2}, fundMat(:,:,1)', [h,w]);
     projMask2 = pawProjectionMask(current_paw_mask{3}, fundMat(:,:,2)', [h,w]);
+    projMask1 = imdilate(projMask1,strel('disk',projectionDilation));
+    projMask2 = imdilate(projMask2,strel('disk',projectionDilation));
+    
     current_paw_mask{1} = current_paw_mask{1} & projMask1 & projMask2;
     
     projMask1 = pawProjectionMask(current_BG_mask{2}, fundMat(:,:,1)', [h,w]);
@@ -657,7 +671,7 @@ while video.CurrentTime < video.Duration
     recentMeanDigitHistory = meanDigitTrajectory(startFrameIdx:endFrameIdx,:);
 
     nextPoints = predictNext3Dpoints(recentDigitHistory, ...
-                                     recentMeanDigitHistory, ...
+                                     recentPawHistory, ...
                                      current_paw_mask, ...
                                      mask_bbox, ...
                                      trackingBoxParams);
@@ -677,15 +691,16 @@ while video.CurrentTime < video.Duration
                 beadMask{iView} = false(size(hsv{iView},1),size(hsv{iView},2));
             end
         end
-
-                                    
+    
+        NP = squeeze(nextPoints(ii,2,:))';
         tempMask = thresholdDigits(tracks(ii), ...
-                                   squeeze(nextPoints(ii,2,:))', ...
+                                   NP, ...
                                    HSVthresh_parameters, ...
                                    hsv, ...
                                    numSameColorObjects, ...
                                    beadMask, ...
                                    mask_bbox, ...
+                                   prev_mask_bbox, ...
                                    trackingBoxParams, ...
                                    trackCheck);
         for iView = 1 : 2
@@ -718,6 +733,8 @@ while video.CurrentTime < video.Duration
             end
         end
 
+        % this is where the digitmasks are updated within the tracks; need
+        % to update the previous masks in the tracks here as well
         newTracks = assign_prelim_blobs_to_tracks(colorTracks, ...
                                                   prelimMask, ...
                                                   mask_bbox, ...
@@ -746,8 +763,7 @@ while video.CurrentTime < video.Duration
         end
         currentPelletMask = pelletMasks{iView}(mask_bbox(iView,2):mask_bbox(iView,2)+mask_bbox(iView,4),...
                                                mask_bbox(iView,1):mask_bbox(iView,1)+mask_bbox(iView,3));
-        current_BG_mask{iView} = (current_BG_mask{iView} & ~currentPelletMask) | ...
-                                  fullDigitMask{iView};
+        current_BG_mask{iView} = current_BG_mask{iView} & ~currentPelletMask;
         % keep only the largest blob
         s = regionprops(current_BG_mask{iView},'area');
         bg_label = bwlabel(current_BG_mask{iView});
@@ -756,6 +772,8 @@ while video.CurrentTime < video.Duration
             current_BG_mask{iView} = (bg_label == max_A_idx);
         end
         
+        current_BG_mask{iView} = current_BG_mask{iView} | fullDigitMask{iView};
+        current_BG_mask{iView} = connectBlobs(current_BG_mask{iView});
     end
     
     % now should have the digits - need to identify the dorsal aspect of
@@ -764,25 +782,14 @@ while video.CurrentTime < video.Duration
     % dorsum region. Make sure that if we connect the base of the first and
     % last digits, no other digit masks cross that line (for example,
     % misidentifying part of the green paw dorsum as part of a green digit)
-%     [currentDigitMarkers, ~, ~] = findDigitMarkers(tracks, pawPref);
-%     tracks = truncateDigits(tracks, currentDigitMarkers);
 
     % find the 3d points of all digits visible in both views, and the
     % general region in which the dorsum of the paw must appear
-    
-    [tracks, pdMask] = findDorsumRegion(tracks, ...
-                                        pawPref, ...
-                                        paw_img, ...
-                                        current_BG_mask, ...
-                                        dorsum_decorrStretchMean, ...
-                                        dorsum_decorrStretchSigma, ...
-                                        dorsum_gray_thresh, ...
-                                        pdBlob, ...
-                                        trackingBoxParams, ...
-                                        mask_bbox, ...
-                                        [h,w]);
+    [currentDigitMarkers, pts_transformed, digitsHull] = findDigitMarkers(tracks, pawPref);
+    for iTrack = 2 : 5
+        tracks(iTrack).currentDigitMarkers = squeeze(currentDigitMarkers(iTrack-1,:,:,:));
+    end
 
-                                          
     % now have to deal with partially hidden objects
     tracks = reconstructPartiallyHiddenObjects(tracks, mask_bbox, fundMat, [h,w], current_BG_mask);
 
@@ -798,6 +805,19 @@ while video.CurrentTime < video.Duration
         current_BG_mask, ...
         trackingBoxParams);
     
+    [tracks, pdMask] = findDorsumRegion(tracks, ...
+                                        paw_img, ...
+                                        current_BG_mask, ...
+                                        dorsum_decorrStretchMean, ...
+                                        dorsum_decorrStretchSigma, ...
+                                        dorsum_gray_thresh, ...
+                                        pdBlob, ...
+                                        trackingBoxParams, ...
+                                        mask_bbox, ...
+                                        [h,w], ...
+                                        pts_transformed, ...
+                                        digitsHull);
+                                    
 	tracks(1).digitmask1 = pdMask{1};
     tracks(1).digitmask2 = pdMask{2};
     for iView = 1 : 2
@@ -827,7 +847,7 @@ while video.CurrentTime < video.Duration
     % now have to do something about objects that aren't visible in one of
     % the views...
     
-    tracks = updateHSVparams(tracks, paw_hsv);
+    tracks = updateHSVparams(tracks, paw_hsv, HSVupdateRate);
     
 	% now establish all 3d points that are available from visible points in
 	% both views
@@ -846,7 +866,10 @@ while video.CurrentTime < video.Duration
         currentDigitMask{iView} = false(h,w);
         for ii = 2 : 5
             digitMask = eval(sprintf('tracks(ii).digitmask%d', iView));
-            currentDigitMask{iView} = currentDigitMask{iView} | digitMask;
+            tempMask = false(h,w);
+            tempMask(mask_bbox(iView,2):mask_bbox(iView,2) + mask_bbox(iView,4), ...
+                     mask_bbox(iView,1):mask_bbox(iView,1) + mask_bbox(iView,3)) = digitMask;
+            currentDigitMask{iView} = currentDigitMask{iView} | tempMask;
         end
         currentDigitMask{iView} = multiRegionConvexHullMask(currentDigitMask{iView});
         s_meanDigits = regionprops(currentDigitMask{iView},'centroid');
@@ -854,34 +877,10 @@ while video.CurrentTime < video.Duration
     end
 
     meanDigitTrajectory(numFrames,:) = currentDigitMarkersTo3D(digitBlobCentroids, trackingBoxParams, mask_bbox);
-%     plotTracks(tracks, image_ud, mask_bbox)
+    plotTracks(tracks, image_ud, mask_bbox)
     
 end
 
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tracks = initializeTracks()
-    % create an empty array of tracks
-    tracks = struct(...
-        'id', {}, ...
-        'bbox', {}, ...
-        'color', {}, ...
-        'digitmask1', {}, ...
-        'digitmask2', {}, ...
-        'digitmask3', {}, ...
-        'meanHSV', {}, ...
-        'stdHSV', {}, ...
-        'markers3D', {}, ...
-        'prev_markers3D', {}, ...
-        'currentDigitMarkers', {}, ...
-        'previousDigitMarkers', {}, ...
-        'age', {}, ...
-        'isvisible', {}, ...
-        'markersCalculated', {}, ...
-        'totalVisibleCount', {}, ...
-        'consecutiveInvisibleCount', {});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -918,99 +917,6 @@ function obj = setupSystemObjects()
         obj.blobAnalyser = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
             'AreaOutputPort', true, 'CentroidOutputPort', true, ...
             'MinimumBlobArea', 400);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [meanHSV, stdHSV] = calcHSVstats(paw_hsv, digitMask)
-%
-% INPUTS:
-%   paw_hsv - m x n x 3 array containing an hsv image
-%   digitMask - binary mask of the digit (or other object)
-%
-% OUTPUTS:
-%
-%
-    meanHSV = zeros(1,3);
-    stdHSV  = zeros(1,3);
-    idx = squeeze(digitMask);
-    idx = idx(:);
-    for jj = 1 : 3
-        colPlane = squeeze(paw_hsv(:,:,jj));
-        colPlane = colPlane(:);
-        if jj == 1
-            meanAngle = wrapTo2Pi(circ_mean(colPlane(idx)*2*pi));
-            stdAngle = wrapTo2Pi(circ_std(colPlane(idx)*2*pi));
-            meanHSV(jj) = meanAngle / (2*pi);
-            stdHSV(jj) = stdAngle / (2*pi);
-        else
-            meanHSV(jj) = mean(colPlane(idx));
-            stdHSV(jj) = std(colPlane(idx));
-        end
-    end
-    
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function blobID = selectBlobForTrack(blobMask, ...
-                                     paw_hsv, ...
-                                     currentTrack, ...
-                                     otherTrack, ...
-                                     iView, ...
-                                     prev_mask_bbox, ...
-                                     mask_bbox)
-% INPUTS:
-%   blobMask - mask of the currently detected blobs    
-    % figure out where the previous mask for this digit is in the
-    % current bounding box
-    switch iView
-        case 1,
-            prev_digit_mask = currentTrack.digitmask1;
-            other_digit_mask = otherTrack.digitmask1;
-        case 2,
-            prev_digit_mask = currentTrack.digitmask2;
-            other_digit_mask = other_digit_mask.digitmask2;
-    end
-    temp = false(h,w);
-    temp(prev_mask_bbox(2) : prev_mask_bbox(2) + prev_mask_bbox(4), ...
-         prev_mask_bbox(1) : prev_mask_bbox(1) + prev_mask_bbox(3)) = ...
-             prev_digit_mask;
-    prev_digit_mask = temp(mask_bbox(2) : mask_bbox(2) + mask_bbox(4), ...
-                           mask_bbox(1) : mask_bbox(1) + mask_bbox(3));
-                       
-    temp = false(h,w);
-    temp(prev_mask_bbox(2) : prev_mask_bbox(2) + prev_mask_bbox(4), ...
-         prev_mask_bbox(1) : prev_mask_bbox(1) + prev_mask_bbox(3)) = ...
-             other_digit_mask;
-    other_digit_mask = temp(mask_bbox(2) : mask_bbox(2) + mask_bbox(4), ...
-                            mask_bbox(1) : mask_bbox(1) + mask_bbox(3));
-                           
-    % a few possibilities
-    % first, both digits could have been visible in the previous frame. In
-    % that case, we can compare the blobs in blobMask to each of the digit
-    % blobs from the previous frame, and see which fits better to the
-    % current digit. 
-    s = regionprops(blobMask,'Centroid','Area');
-    L = bwlabel(blobMask);
-    % calculate mean hsv values in each blob
-    meanHSV = zeros(length(s),3);
-    for ii = 1 : length(s)
-        [meanHSV(ii,:), stdHSV] = calcHSVstats(paw_hsv, (L == ii));   % not sure if stdHSV will be useful or not
-    end
-        
-    if currentTrack.isvisible(iView) && otherTrack.isvisible(iView)
-
-        % calculate Euclidean distances between the centroids of the blobs
-        % in blobMask and the previous digit blobs
-        
-    end
-
-%     prev_bbox = track.bbox(iView,:);
-%     prev_bbox(1:2) = prev_bbox(1:2) - mask_bbox(iView,1:2) + 1;
-
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1309,6 +1215,8 @@ function newTrack = checkSingleTrack(prevTrack, ...
         end
     end
     
+    newTrack.prevmask1 = newTrack.digitmask1;
+    newTrack.prevmask2 = newTrack.digitmask2;
     newTrack.digitmask1 = prelimMask{1,1};
     newTrack.digitmask2 = prelimMask{1,2};
 
@@ -1374,14 +1282,19 @@ function newTracks = checkTwoTracks(prevTracks, ...
                                               iTrack, ...
                                               nextPoints);
         elseif sum(numBlobs(iTrack,:)) == 1    % only one of 4 possible blobs is visible
-            newTracks = assignSingleBlob(newTracks, ...     % WORKING HERE...
+            newTracks = assignSingleBlob(newTracks, ...     
                                          prelimMask, ...
                                          mask_bbox, ...
                                          trackingBoxParams, ...
                                          trackCheck, ...
                                          iTrack, ...
                                          nextPoints);
-            
+        else   % no blobs are visible
+            newTracks(iTrack).digitmask1 = false(mask_bbox(1,4:-1:3) + 1);
+            newTracks(iTrack).digitmask2 = false(mask_bbox(2,4:-1:3) + 1);
+            newTracks(iTrack).isvisible = false(1,3);
+            newTracks(iTrack).consecutiveInvisibleCount(1:2) = ...
+                newTracks(iTrack).consecutiveInvisibleCount(1:2) + 1;
         end
 
     end
@@ -1507,6 +1420,9 @@ if d3d > trackCheck.maxDistPerFrame || ...
    meanReprojError > trackCheck.maxReprojError
 
 end
+
+newTrack.prevmask1 = newTrack.digitmask1;
+newTrack.prevmask2 = newTrack.digitmask2;
 
 newTracks(iTrack).digitmask1 = centerMask;
 newTracks(iTrack).digitmask2 = mirrorMask;
@@ -1655,6 +1571,9 @@ else
     newTracks(iTrack).markers3D(2,:) = zeros(1,3);    % centroid 3d point
 end
 
+newTracks(iTrack).prevmask1 = newTracks(iTrack).digitmask1;
+newTracks(iTrack).prevmask2 = newTracks(iTrack).digitmask2;
+
 newTracks(iTrack).digitmask1 = centerMask;
 newTracks(iTrack).digitmask2 = mirrorMask;
 
@@ -1757,6 +1676,8 @@ else
             distFromTracks(iDigit) = sqrt(sum(trackDiff.^2));
         end
         digMaskString = sprintf('digitmask%d',iView);
+        prevMaskString = sprintf('prevmask%d',iView);
+        newTracks(iTrack).(prevMaskString) = newTracks(iTrack).(digMaskString);
         if find(distFromTracks == min(distFromTracks)) == iTrack && ...
                 min(distFromTracks) < trackCheck.maxPixelsPerFrame
             newTracks(iTrack).(digMaskString) = prelimMask{iTrack,iView};
@@ -1808,7 +1729,9 @@ for iView = 1 : 2
         dist_to_blobs = sqrt(sum(blob_to_projected.^2,2));
 
         nearTrackIdx = find(dist_to_blobs == min(dist_to_blobs));
-
+        newTracks(iTrack).prevmask1 = newTracks(iTrack).digitmask1;
+        newTracks(iTrack).prevmask2 = newTracks(iTrack).digitmask2;
+        
         if nearTrackIdx == iTrack && dist_to_blobs(nearTrackIdx) < trackCheck.maxPixelsPerFrame
             newTracks(iTrack).(viewMaskString) = prelimMask{iTrack,iView};
             newTracks(iTrack).(notViewMaskString) = false(size(prelimMask{iTrack,3-iView}));
@@ -1860,7 +1783,6 @@ end
 
 function [tracks, dorsumRegionMask] = ...
     findDorsumRegion(tracks, ...
-                     pawPref, ...
                      paw_img, ...
                      BG_mask, ...
                      decorrStretchMean, ...
@@ -1869,7 +1791,9 @@ function [tracks, dorsumRegionMask] = ...
                      pdBlob, ...
                      trackingBoxParams, ...
                      mask_bbox, ...
-                     imSize)
+                     imSize, ...
+                     pts_transformed, ...
+                     digitsHull)
 %
 % INPUTS:
 %   tracks - the full set of digit tracks, after the digits have been
@@ -1889,59 +1813,67 @@ function [tracks, dorsumRegionMask] = ...
 %       can be with respect to the digits (index 1 id direct view, index 2
 %       is mirror view)
 
-% whiteFurMask = cell(1,2);
 dorsumRegionMask = cell(1,2);
-% for iView = 1 : 2
-%     % mask out any points that look like white fur
-%     for iColor = 1 : 3
-%         whiteFurMask{iView} = (paw_img{iView}(:,:,iColor) > whiteFurThresh);
-%     end
-% end
-
-
-[currentDigitMarkers, pts_transformed, digitsHull] = findDigitMarkers(tracks, pawPref);
-for iTrack = 2 : 5
-%     if strcmpi(tracks(ii).color,'green')    % only because paw dorsum is also green; will eventually probably get rid of this
-%         
-%     else
-        tracks(iTrack).currentDigitMarkers = squeeze(currentDigitMarkers(iTrack-1,:,:,:));
-%     end
-        
-end
 
 validImageBorderPts = zeros(2,2);
 
 SE = strel('disk',2);
+currentDigitMarkers = zeros(5,2,3,2);
+for iTrack = 1 : 5
+    currentDigitMarkers(iTrack,:,:,:) = tracks(iTrack + 1).currentDigitMarkers;
+end
+
 for iView = 2 : -1 : 1
     dMaskString = sprintf('digitmask%d',iView);
     
-    firstValidIdx = 0;
-    for ii = 2 : length(tracks) - 2
-        if ~tracks(ii).isvisible(iView)
-            continue;
-        end
-        if firstValidIdx == 0; firstValidIdx = ii-1; end
-        lastValidIdx = ii-1;
-    end
+%     firstValidIdx = 0;
+%     for ii = 2 : length(tracks) - 2
+%         if ~tracks(ii).isvisible(iView)
+%             continue;
+%         end
+%         if firstValidIdx == 0; firstValidIdx = ii-1; end
+%         lastValidIdx = ii-1;
+%     end
+
+    firstValidIdx = 1;
+    lastValidIdx = 4;
 
     validImageBorderPts(1,:) = squeeze(currentDigitMarkers(firstValidIdx,:,1,iView));
     validImageBorderPts(2,:) = squeeze(currentDigitMarkers(lastValidIdx,:,1,iView));
+    testPt = mean(validImageBorderPts,1);
+    lineCoeff = lineCoeffFromPoints(validImageBorderPts);
+    perpLine1 = perpendicularLine(lineCoeff, validImageBorderPts(1,:));
+    perpLine2 = perpendicularLine(lineCoeff, validImageBorderPts(2,:));
+    
+    perpPts1 = lineToBorderPoints(perpLine1, mask_bbox(iView,4:-1:3)+1);
+    perpPts2 = lineToBorderPoints(perpLine2, mask_bbox(iView,4:-1:3)+1);
+    
+    perpPts1 = reshape(perpPts1,[2 2])';
+    perpPts2 = reshape(perpPts2,[2 2])';
+    
+    perpRegion1 = segregateImage(perpPts1, testPt, mask_bbox(iView,4:-1:3)+1);
+    perpRegion2 = segregateImage(perpPts2, testPt, mask_bbox(iView,4:-1:3)+1);
+    
+    perpRegion = perpRegion1 & perpRegion2;
+    
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
-                                             pts_transformed(3,:,iView), size(tracks(ii).(dMaskString)));
-%     dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:,iView), ...
-%                                              pts_transformed(3,:,iView), size(tracks(ii).(dMaskString)));
-
-%     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~whiteFurMask{iView};
+                                             pts_transformed(3,:,iView), mask_bbox(iView,4:-1:3)+1);
     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ...
                               ~digitsHull{iView} & ...
-                              BG_mask{iView};
-%     dorsumRegionMask{iView} = dorsumRegionMask{iView} & BG_mask{iView};
+                              BG_mask{iView} & ...
+                              perpRegion;
     if iView == 1
         if exist('projMask','var')
             dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;    % WORKING HERE - PROBLEM WITH THE PROJECTION MASK!!!!!
         end
     end
+    % WORKING HERE - CAN BE MUCH MORE LIBERAL WITH THE THRESHOLDING NOW
+    % THAT WE HAVE A MUCH BETTER ESTIMATE OF WHERE HE DORSUM SHOULD BE
+    
     % now enhance the color image of just the dorsum region
+    if ~any(dorsumRegionMask{iView}(:))
+       % NEED SOME WAY TO ESTIMATE WHERE THE DORSUM SHOULD BE HERE 
+    end
     dorsum_enh = enhanceColorImage(paw_img{iView}, ...
                                    decorrStretchMean{iView}, ...
                                    dorsum_decorrStretchSigma{iView}, ...
@@ -1991,36 +1923,6 @@ for iView = 2 : -1 : 1
                             mask_bbox(1,1) : mask_bbox(1,1) + mask_bbox(1,3));
     end
 
-end
-    
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function tracks = updateHSVparams(tracks, paw_hsv)
-%
-% INPUTS:
-%   tracks - array of tracks structures
-%   paw_hsv - 1 x 2 cell structure containing 4-dimensional arrays of hsv
-%       images (4th dimension is digit ID)
-
-for iTrack = 1 : length(tracks) - 1
-    for iView = 1 : 3
-        if tracks(iTrack).isvisible(iView)
-            current_hsv = squeeze(paw_hsv{iView}(:,:,:,iTrack));
-            if iView == 1
-                digitMask = tracks(iTrack).digitmask1;
-            elseif iView == 2
-                digitMask = tracks(iTrack).digitmask2;
-            else
-                digitMask = tracks(iTrack).digitmask3;
-            end
-            [meanHSV, stdHSV] = calcHSVstats(current_hsv, digitMask);
-            tracks(iTrack).meanHSV(iView,:) = meanHSV;
-            tracks(iTrack).stdHSV(iView,:) = stdHSV;
-        end
-    end
 end
     
 end
@@ -2147,7 +2049,6 @@ for iView = 1 : 2
     
 end
         
-            
 
 end
 
