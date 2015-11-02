@@ -149,12 +149,12 @@ end
 
 % list of tattooed colors - first is paw dorsum, then index to pinky finger
 colorList = {'darkgreen','blue','red','green','red'};
-satLimits = [0.80000    1.00
+satLimits = [0.20000    1.00
              0.90000    1.00
              0.90000    1.00
              0.90000    1.00
              0.90000    1.00];
-valLimits = [0.00001    0.70
+valLimits = [0.00001    1.00
              0.95000    1.00
              0.95000    1.00
              0.95000    1.00
@@ -162,7 +162,7 @@ valLimits = [0.00001    0.70
 hueLimits = [0.00, 0.16;    % red
              0.33, 0.16;    % green
              0.66, 0.05;    % blue
-             0.33, 0.16];   % dark green
+             0.50, 0.25];   % dark green
          
 digitBlob = cell(1,2);
 digitBlob{1} = vision.BlobAnalysis;
@@ -210,6 +210,10 @@ trackCheck.frameHistoryLength = 5;    % number of frames to look back in estimat
 projectionDilation = 10;
 
 HSVupdateRate = 0.1;    % rate at which to update mean and std HSV values
+dorsumAngle = -3*pi/8;
+% further down, will draw a line between the base of the 1st and 4th
+% digits. The paw dorsum is assumed to lie on one side of this line,
+% constrained by the geometry of the reach.
 
 % =======
 % >>>>>>> origin/master
@@ -279,6 +283,7 @@ switch pawPref
         scale = boxCalibration.scale(2);
         sideRegion{1} = rightRegion;
         sideRegion{2} = leftRegion;
+        dorsumAngle = -dorsumAngle;
     case 'right',
         dMirrorIdx = 1;   % index of mirror with dorsal view of paw
         pMirrorIdx = 3;   % index of mirror with palmar view of paw
@@ -814,9 +819,9 @@ while video.CurrentTime < video.Duration
                                         pdBlob, ...
                                         trackingBoxParams, ...
                                         mask_bbox, ...
-                                        [h,w], ...
                                         pts_transformed, ...
-                                        digitsHull);
+                                        digitsHull, ...
+                                        dorsumAngle);
                                     
 	tracks(1).digitmask1 = pdMask{1};
     tracks(1).digitmask2 = pdMask{2};
@@ -1791,9 +1796,9 @@ function [tracks, dorsumRegionMask] = ...
                      pdBlob, ...
                      trackingBoxParams, ...
                      mask_bbox, ...
-                     imSize, ...
                      pts_transformed, ...
-                     digitsHull)
+                     digitsHull,...
+                     dorsumAngle)
 %
 % INPUTS:
 %   tracks - the full set of digit tracks, after the digits have been
@@ -1812,6 +1817,8 @@ function [tracks, dorsumRegionMask] = ...
 %   dorsumRegionMask - cell array containing masks for where the paw dorsum
 %       can be with respect to the digits (index 1 id direct view, index 2
 %       is mirror view)
+
+imSize = trackingBoxParams.imSize;
 
 dorsumRegionMask = cell(1,2);
 
@@ -1842,26 +1849,47 @@ for iView = 2 : -1 : 1
     validImageBorderPts(2,:) = squeeze(currentDigitMarkers(lastValidIdx,:,1,iView));
     testPt = mean(validImageBorderPts,1);
     lineCoeff = lineCoeffFromPoints(validImageBorderPts);
-    perpLine1 = perpendicularLine(lineCoeff, validImageBorderPts(1,:));
-    perpLine2 = perpendicularLine(lineCoeff, validImageBorderPts(2,:));
     
-    perpPts1 = lineToBorderPoints(perpLine1, mask_bbox(iView,4:-1:3)+1);
-    perpPts2 = lineToBorderPoints(perpLine2, mask_bbox(iView,4:-1:3)+1);
+    if iView == 2
+        rotationAngle = -dorsumAngle;
+    else
+        rotationAngle = dorsumAngle;
+    end
+    angledLine1 = angledLine(lineCoeff, validImageBorderPts(1,:), rotationAngle);
+    angledLine2 = angledLine(lineCoeff, validImageBorderPts(2,:), -rotationAngle);
     
-    perpPts1 = reshape(perpPts1,[2 2])';
-    perpPts2 = reshape(perpPts2,[2 2])';
+    angledPts1 = lineToBorderPoints(angledLine1, size(currentMask{iView}));
+    angledPts2 = lineToBorderPoints(angledLine2, size(currentMask{iView}));
     
-    perpRegion1 = segregateImage(perpPts1, testPt, mask_bbox(iView,4:-1:3)+1);
-    perpRegion2 = segregateImage(perpPts2, testPt, mask_bbox(iView,4:-1:3)+1);
+    angledPts1 = reshape(angledPts1,[2 2])';
+    angledPts2 = reshape(angledPts2,[2 2])';
     
-    perpRegion = perpRegion1 & perpRegion2;
+    angledRegion1 = segregateImage(angledPts1, testPt, size(currentMask{iView}));
+    angledRegion2 = segregateImage(angledPts2, testPt, size(currentMask{iView}));
+    
+    angledRegion = angledRegion1 & angledRegion2;
+    
+    
+%     perpLine1 = perpendicularLine(lineCoeff, validImageBorderPts(1,:));
+%     perpLine2 = perpendicularLine(lineCoeff, validImageBorderPts(2,:));
+%     
+%     perpPts1 = lineToBorderPoints(perpLine1, mask_bbox(iView,4:-1:3)+1);
+%     perpPts2 = lineToBorderPoints(perpLine2, mask_bbox(iView,4:-1:3)+1);
+%     
+%     perpPts1 = reshape(perpPts1,[2 2])';
+%     perpPts2 = reshape(perpPts2,[2 2])';
+%     
+%     perpRegion1 = segregateImage(perpPts1, testPt, mask_bbox(iView,4:-1:3)+1);
+%     perpRegion2 = segregateImage(perpPts2, testPt, mask_bbox(iView,4:-1:3)+1);
+%     
+%     perpRegion = perpRegion1 & perpRegion2;
     
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
                                              pts_transformed(3,:,iView), mask_bbox(iView,4:-1:3)+1);
     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ...
                               ~digitsHull{iView} & ...
                               BG_mask{iView} & ...
-                              perpRegion;
+                              angledRegion;
     if iView == 1
         if exist('projMask','var')
             dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;    % WORKING HERE - PROBLEM WITH THE PROJECTION MASK!!!!!
@@ -1872,12 +1900,39 @@ for iView = 2 : -1 : 1
     
     % now enhance the color image of just the dorsum region
     if ~any(dorsumRegionMask{iView}(:))
+        % if the front panel is where the dorsum should be, keep the
+        % overlap between the front panel and predicted dorsum region mask
+        % and showing the dorsum
        % NEED SOME WAY TO ESTIMATE WHERE THE DORSUM SHOULD BE HERE 
     end
+    
+    HSVlimits(iView,1) = meanHSV(iView,1);            % hue mean
+    HSVlimits(iView,2) = max(min_thresh(1), stdHSV(iView,1) * num_stds(1));  % hue range
+    HSVlimits(iView,2) = min(max_thresh(1), HSVlimits(iView,2));  % hue range
+
+    s_range = max(min_thresh(2), stdHSV(iView,2) * num_stds(2));
+    s_range = min(max_thresh(2), s_range);
+    HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
+    HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
+
+%         v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
+%         v_range = min(max_thresh(3), v_range);
+%         HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % value lower bound
+%         HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % value upper bound  
+    HSVlimits(iView,5:6) = [0.001 1.00];   % don't theshold on value for the paw dorsum
+
+
+    % threshold the image
+    tempMask = HSVthreshold(squeeze(hsv{iView}), ...
+                            HSVlimits(iView,:));
+                            
+                            
     dorsum_enh = enhanceColorImage(paw_img{iView}, ...
                                    decorrStretchMean{iView}, ...
                                    dorsum_decorrStretchSigma{iView}, ...
                                    'mask', dorsumRegionMask{iView});
+	dorsum_hsv = rgb2hsv(dorsum_enh);
+    dorsum_mask = HSVthreshold
                                
     dorsum_gray = mean(dorsum_enh,3);            
 	dorsum_mask = (dorsum_gray > 0.00001) & (dorsum_gray < dorsum_gray_thresh);

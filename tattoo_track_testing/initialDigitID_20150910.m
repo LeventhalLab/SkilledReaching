@@ -148,12 +148,12 @@ pdBlob{2}.MinimumBlobArea = 50;
 pdBlob{2}.MaximumBlobArea = 30000;
 
 colorList = {'darkgreen','blue','red','green','red'};
-satLimits = [0.80000    1.00
+satLimits = [0.20000    1.00
              0.90000    1.00
              0.90000    1.00
              0.90000    1.00
              0.90000    1.00];
-valLimits = [0.00001    0.70
+valLimits = [0.00001    1.00
              0.95000    1.00
              0.95000    1.00
              0.95000    1.00
@@ -161,9 +161,14 @@ valLimits = [0.00001    0.70
 hueLimits = [0.00, 0.16;    % red
              0.33, 0.16;    % green
              0.66, 0.05;    % blue
-             0.33, 0.16];   % dark green
+             0.50, 0.25];   % dark green
 h = video.Height;
 w = video.Width;
+
+dorsumAngle = -3*pi/8;
+% further down, will draw a line between the base of the 1st and 4th
+% digits. The paw dorsum is assumed to lie on one side of this line,
+% constrained by the geometry of the reach.
 
 boxMarkers = boxCalibration.boxMarkers;
 F = boxCalibration.F;
@@ -175,7 +180,7 @@ if iscell(pawPref)
     pawPref = pawPref{1};
 end
 
-minSideOverlap = 0.4;   % mirror image projection into the direct view must
+minSideOverlap = 0.25;   % mirror image projection into the direct view must
                         % overlap by this much to be counted
                         
 numViews = 3;
@@ -222,6 +227,7 @@ switch pawPref
         dMirrorIdx = 3;   % index of mirror with dorsal view of paw
         pMirrorIdx = 1;   % index of mirror with palmar view of paw
         F_side = F.right;
+        dorsumAngle = -dorsumAngle;
     case 'right',
         dMirrorIdx = 1;   % index of mirror with dorsal view of paw
         pMirrorIdx = 3;   % index of mirror with palmar view of paw
@@ -574,7 +580,7 @@ while digitMissing
     if any(~isDigitVisible(:)); continue; end
     
     [digitMarkers, dorsumRegionMask] = ...
-        findInitDorsumRegion(viewMask, pawPref);
+        findInitDorsumRegion(viewMask, pawPref, dorsumAngle);
     switch lower(colorList{1}),
         case 'red',
             colorIdx = 1;
@@ -659,7 +665,7 @@ end
 %- GOAL IS TO FIND THE REGION WHERE THE PAW DORSUM CAN BE GIVEN DIGIT
 %LOCATIONS, AS WELL AS FIND THE EXTREME POINTS ON THE DIGITS
 function [digitMarkers, dorsumRegionMask] = ...
-    findInitDorsumRegion(viewMask, pawPref)
+    findInitDorsumRegion(viewMask, pawPref, dorsumAngle)
 %
 % INPUTS:
 %   viewMask - cell array. viewMask{1} for the left mirror, viewMask{2} is
@@ -780,17 +786,56 @@ for iView = 1 : 2
     end
     validImageBorderPts(1,:) = squeeze(digitMarkers(firstValidIdx,:,1,iView));
     validImageBorderPts(2,:) = squeeze(digitMarkers(lastValidIdx,:,1,iView));
+    
+    testPt = mean(validImageBorderPts, 1);
+    lineCoeff = lineCoeffFromPoints(validImageBorderPts);
+    
+    if iView == 2
+        rotationAngle = -dorsumAngle;
+    else
+        rotationAngle = dorsumAngle;
+    end
+    angledLine1 = angledLine(lineCoeff, validImageBorderPts(1,:), rotationAngle);
+    angledLine2 = angledLine(lineCoeff, validImageBorderPts(2,:), -rotationAngle);
+    
+    angledPts1 = lineToBorderPoints(angledLine1, size(currentMask{iView}));
+    angledPts2 = lineToBorderPoints(angledLine2, size(currentMask{iView}));
+    
+    angledPts1 = reshape(angledPts1,[2 2])';
+    angledPts2 = reshape(angledPts2,[2 2])';
+    
+    angledRegion1 = segregateImage(angledPts1, testPt, size(currentMask{iView}));
+    angledRegion2 = segregateImage(angledPts2, testPt, size(currentMask{iView}));
+    
+    angledRegion = angledRegion1 & angledRegion2;
+    
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
                                              pts_transformed(3,:), size(digitMasks{iView}));
-%     dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:), ...
-%                                              pts_transformed(3,:), size(digitMasks{iView}));
-    
+                                         
     [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
-    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull;
+    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull & angledRegion;
+    
+    
+%     perpLine1 = perpendicularLine(lineCoeff, validImageBorderPts(1,:));
+%     perpLine2 = perpendicularLine(lineCoeff, validImageBorderPts(2,:));
+%     
+%     perpPts1 = lineToBorderPoints(perpLine1, size(currentMask{iView}));
+%     perpPts2 = lineToBorderPoints(perpLine2, size(currentMask{iView}));
+%     
+%     perpPts1 = reshape(perpPts1,[2 2])';
+%     perpPts2 = reshape(perpPts2,[2 2])';
+%     
+%     perpRegion1 = segregateImage(perpPts1, testPt, size(currentMask{iView}));
+%     perpRegion2 = segregateImage(perpPts2, testPt, size(currentMask{iView}));
+%     
+%     perpRegion = perpRegion1 & perpRegion2;
+%     
+%     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
+%                                              pts_transformed(3,:), size(digitMasks{iView}));
+%     
+%     [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+%     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull & perpRegion;
 end
-        
-            
-            
 
 end
 

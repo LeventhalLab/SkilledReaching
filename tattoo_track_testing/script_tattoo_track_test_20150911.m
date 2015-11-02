@@ -36,6 +36,7 @@ maxBeadArea = 2000;
 pointsPerRow = 4;    % for the checkerboard detection
 maxBeadEcc = 0.8;
 BG_diff_threshold = 20;
+minSideOverlap = 0.25;
 
 test_ratID = 44;
 rat_metadata = create_sr_ratMetadata(sr_summary, test_ratID);
@@ -77,7 +78,8 @@ for iVid = 7 : 36%length(vidList)
 
     [initDigitMasks, init_mask_bbox, digitMarkers, refImageTime] = ...
         initialDigitID_20150910(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, ...
-        'diffthreshold', BG_diff_threshold);
+        'diffthreshold', BG_diff_threshold, ...
+        'minsideoverlap',minSideOverlap);
 
     pawTrajectory_f = track3Dpaw_forward(video, BGimg_ud, refImageTime, initDigitMasks, init_mask_bbox, digitMarkers, rat_metadata, boxCalibration, ...
         'diffthreshold', BG_diff_threshold);
