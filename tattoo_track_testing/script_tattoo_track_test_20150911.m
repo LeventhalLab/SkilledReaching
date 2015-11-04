@@ -41,7 +41,7 @@ minSideOverlap = 0.25;
 test_ratID = 44;
 rat_metadata = create_sr_ratMetadata(sr_summary, test_ratID);
 
-for iVid = 7 : 36%length(vidList)
+for iVid = 4 : 36%length(vidList)
     if vidList(iVid).bytes < 10000; continue; end
     
     currentVidName = vidList(iVid).name;

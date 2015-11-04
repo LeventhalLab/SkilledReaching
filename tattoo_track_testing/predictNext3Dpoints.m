@@ -1,21 +1,22 @@
 function nextPoints = predictNext3Dpoints(recentDigitHistory, ...
-                                         recentPawHistory, ...
-                                         current_paw_mask, ...
-                                         mask_bbox, ...
-                                         trackingBoxParams)
+                                          recentPawHistory, ...
+                                          current_paw_mask, ...
+                                          mask_bbox, ...
+                                          trackingBoxParams)
 %
 % INPUTS:
 %   recentDigitHistory - m x n x p x q array, where m is the number of
 %       frames to look back, n is 5 (hand + 4 digits), p is site on the
 %       digit (proximal, centroid, distal), q contains (x,y,z)
+%   recentPawHistory - 
 %
 % OUTPUTS:
+%   nextPoints - 
 %
-%
+
 numFrames = size(recentDigitHistory,1);
 
-% calculate the trajectory of the center of mass of the digits (exclude paw
-% dorsum for now because it's so erratic)
+% calculate the trajectory of the paw's center of mass
 
 % find the centroid of the paw in each view
 directMask = connectBlobs(current_paw_mask{1});

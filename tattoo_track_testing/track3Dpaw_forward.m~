@@ -615,17 +615,8 @@ while video.CurrentTime < video.Duration
     current_BG_mask{3} = sideRegion{2} & BG_mask;
     predictedMask = false(h,w,3);
     
-    
-    
-    
-    
-    % 11/4/15
     % NEED TO THINK MORE ABOUT WHY THIS ISN'T WORKING - HOW TO SMOOTHLY LET
-    % THE PAW MOVE BEHIND THE FRONT PANEL EDGE SO THERE AREN'T BIG JUMPS
-    % THAT MESS UP THE PREDICTIONS OF WHERE THE DIGITS SHOULD BE?
-
-    
-    
+    % THE PAW MOVE BEHIND THE FRONT PANEL EDGE
     
     
     for iView = 2 : 3

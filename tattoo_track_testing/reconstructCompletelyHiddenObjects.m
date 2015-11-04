@@ -239,6 +239,8 @@ function anticipatedPoints = predictDigitMovement(tracks, ...
                                                   bboxes, ...
                                                   prev_bboxes)
 
+                                              % WHY ARE NANS COMING OUT OF
+                                              % THIS ON THE 11TH FRAME?
 obscuredTrack = tracks(obscuredTrackIdx);
 obscuredView = ~obscuredTrack.isvisible(1:2);
 

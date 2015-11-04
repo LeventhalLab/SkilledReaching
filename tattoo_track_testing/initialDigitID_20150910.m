@@ -26,13 +26,17 @@ function [viewMask, mask_bbox, digitMarkers, refImageTime] = initialDigitID_2015
 %       each viewMask. Format of each row is [x,y,w,h], where x,y is the
 %       upper left corner of the bounding box, and w and h are the width
 %       and height, respectively
-%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%   digitMarkers - 5x2x3x2 array. First dimension is the digit ID, second
 %       dimension is (x,y), third dimension is proximal,centroid,tip of
 %       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
 %   refImageTime - the time in the video at which the reference image was
 %       taken
 
-% TO DO - ADD IN MASKING OUT THE FRONT PANEL MASK IF NOT ALREADY THERE
+% TO DO - MODIFY DIGITMARKERS TO INCLUDE THE PAW DORSUM
+
+
+
+
 
 
 % NEED TO ADJUST THE VALUES TO ENHANCE THE DESIRED PAW BITS
@@ -601,7 +605,6 @@ while digitMissing
 
     pdMask = initThresholdDorsum(HSVlimits, ...
                                  hsv, ...
-                                 digitMarkers, ...
                                  dorsumRegionMask, ...
                                  pdBlob);
     for iView = 1 : 2    % this is confusing. Here, iView = 1 for direct view, 2 for the mirror view with the paw dorsum
@@ -618,6 +621,8 @@ while digitMissing
         end
             
         viewMask{viewIdx}(:,:,1) = pdMask{iView};
+        s_dorsum = regionprops(pdMask{iView},'centroid');
+        digitMarkers(1,:,2,iView) = s_dorsum.Centroid;
         
     end    % for iView...
     
@@ -708,7 +713,7 @@ switch lower(pawPref)
 end
 processingMask{1} = viewMask{2};
 
-numDigits = size(processingMask{1},3) - 2;
+numDigits = size(processingMask{1},3) - 1;
 digitMarkers = zeros(numDigits, 2, 3, 2);    % number of digits by (x,y) by base/centroid/tip by view number
 
 firstVisibleDigitFound = false(1,2);
@@ -720,7 +725,7 @@ for iView = 1 : 2
 end
 firstMask = cell(1,2);
 lastMask = cell(1,2);
-for ii = 2 : numDigits+1
+for ii = 2 : numDigits
     for iView = 1 : 2
         currentMask{iView} = processingMask{iView}(:,:,ii);
         digitMasks{iView} = digitMasks{iView} | currentMask{iView};
@@ -730,12 +735,12 @@ for ii = 2 : numDigits+1
             if ~firstVisibleDigitFound(iView)
                 firstVisibleDigitFound(iView) = true;
                 digCentroids(1,:,iView) = s.Centroid;
-                digitMarkers(ii-1,:,2,iView) = s.Centroid;
+                digitMarkers(ii,:,2,iView) = s.Centroid;
                 firstMask{iView} = currentMask{iView};
             else
                 digCentroids(2,:,iView) = s.Centroid;
                 lastMask{iView} = currentMask{iView};
-                digitMarkers(ii-1,:,2,iView) = s.Centroid;
+                digitMarkers(ii,:,2,iView) = s.Centroid;
             end
         end
     end
@@ -770,8 +775,8 @@ for iView = 1 : 2
         if ~any(currentMask{iView}(:))
             continue;
         end
-        if firstValidIdx == 0; firstValidIdx = ii-1; end
-        lastValidIdx = ii-1;
+        if firstValidIdx == 0; firstValidIdx = ii; end
+        lastValidIdx = ii;
         
         currentMask{iView} = processingMask{iView}(:,:,ii);
         
@@ -779,10 +784,10 @@ for iView = 1 : 2
         [y,x] = find(edge_I);
         [~,nnidx] = findNearestPointToLine(linepts, [x,y]);
 %         [~,nnidx] = findNearestNeighbor(pts_transformed(3,:), [x,y]);
-        digitMarkers(ii-1,:,1,iView) = [x(nnidx),y(nnidx)];
+        digitMarkers(ii,:,1,iView) = [x(nnidx),y(nnidx)];
         [~,nnidx] = findFarthestPointFromLine(linepts, [x,y]);
 %         [~,nnidx] = findFarthestPoint(pts_transformed(3,:), [x,y]);
-        digitMarkers(ii-1,:,3,iView) = [x(nnidx),y(nnidx)];
+        digitMarkers(ii,:,3,iView) = [x(nnidx),y(nnidx)];
     end
     validImageBorderPts(1,:) = squeeze(digitMarkers(firstValidIdx,:,1,iView));
     validImageBorderPts(2,:) = squeeze(digitMarkers(lastValidIdx,:,1,iView));
@@ -844,7 +849,6 @@ end
 
 function pdMask = initThresholdDorsum(HSVlimits, ...
                                       hsv, ...
-                                      digitMarkers, ...
                                       dorsumRegionMask, ...
                                       pdBlob)
 %
@@ -854,7 +858,7 @@ function pdMask = initThresholdDorsum(HSVlimits, ...
 %   hsv - 2-element cell array containing the enhanced hsv image of the paw
 %       within the bounding box for the direct view (index 1) and mirror
 %       view (index 2)
-%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%   digitMarkers - 5x2x3x2 array. First dimension is the digit ID, second
 %       dimension is (x,y), third dimension is proximal,centroid,tip of
 %       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
 %   dorsumRegionMask - cell array containing masks for where the paw dorsum
