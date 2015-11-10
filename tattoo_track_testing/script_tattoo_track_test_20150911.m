@@ -24,7 +24,7 @@
 sampleSession = fullfile('/Volumes/RecordingsLeventhal3/SkilledReaching/R0044/R0044-rawdata/R0044_20150416a');
 cd(sampleSession);
 vidList = dir('*.avi');
-% sampleVid  = fullfile(sampleSession, 'R0044_20150416_12-11-45_034.avi');
+sampleVid  = fullfile(sampleSession, 'R0044_20150416_12-11-45_034.avi');
 sr_summary = sr_ratList();
 
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
@@ -36,12 +36,27 @@ maxBeadArea = 2000;
 pointsPerRow = 4;    % for the checkerboard detection
 maxBeadEcc = 0.8;
 BG_diff_threshold = 20;
-minSideOverlap = 0.25;
+minSideOverlap = 0.4;
+numBGframes = 20;
 
 test_ratID = 44;
 rat_metadata = create_sr_ratMetadata(sr_summary, test_ratID);
 
-for iVid = 4 : 36%length(vidList)
+video = VideoReader(sampleVid);
+BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
+boxCalibration = calibrate_sr_box(BGimg, 'cb_path',cb_path,...
+                                         'numradialdistortioncoefficients',num_rad_coeff,...
+                                         'estimatetangentialdistortion',est_tan_distortion,...
+                                         'estimateskew',estimateSkew,...
+                                         'minbeadarea',minBeadArea,...
+                                         'maxbeadarea',maxBeadArea,...
+                                         'hsvbounds',hsvBounds_beads,...
+                                         'maxeccentricity',maxBeadEcc,...
+                                         'pointsperrow',pointsPerRow);
+BGimg_ud = undistortImage(BGimg, boxCalibration.cameraParams);
+
+startVid = 4;
+for iVid = startVid : 36%length(vidList)
     if vidList(iVid).bytes < 10000; continue; end
     
     currentVidName = vidList(iVid).name;
@@ -51,14 +66,13 @@ for iVid = 4 : 36%length(vidList)
     video = VideoReader(currentVidName);
     h = video.Height;
     w = video.Width;
-    numBGframes = 50;
 
     gray_paw_limits = [60 125] / 255;
     hsvBounds_beads = [0.00    0.16    0.50    1.00    0.00    1.00
                        0.33    0.16    0.00    0.50    0.00    0.50
                        0.66    0.16    0.50    1.00    0.00    1.00];
 
-    BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
+%     BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
     boxCalibration = calibrate_sr_box(BGimg, 'cb_path',cb_path,...
                                              'numradialdistortioncoefficients',num_rad_coeff,...
                                              'estimatetangentialdistortion',est_tan_distortion,...
@@ -68,9 +82,6 @@ for iVid = 4 : 36%length(vidList)
                                              'hsvbounds',hsvBounds_beads,...
                                              'maxeccentricity',maxBeadEcc,...
                                              'pointsperrow',pointsPerRow);
-
-    BGimg_ud = undistortImage(BGimg, boxCalibration.cameraParams);
-
     % find the pellet, if there
 
     triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCalibration, ...

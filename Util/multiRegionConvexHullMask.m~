@@ -107,23 +107,14 @@ BW = BW | old_mask;    % polygon containing centroids of vertices combined
 % now find convex image of the single connected region in the mask BW
 % because regionprops returns a mask only inside the bounding box, need to
 % translate that mask into an image the size of old_mask
-numRegions = 2;
-numDilations = 2;
-while numRegions > 1
-    s = regionprops(BW, 'BoundingBox', 'ConvexImage', 'ConvexHull');
-    numRegions = length(s);
-    if numRegions == 1;continue;end
-    
-    BW = imdilate(BW,strel('disk',1));
-    numDilations = numDilations + 1;
-end
+s = regionprops(BW, 'BoundingBox', 'ConvexImage', 'ConvexHull');
+if length(s) > 1
 new_mask = false(size(old_mask));
 hullLeft  = round(s(1).BoundingBox(1));
 hullRight = hullLeft + s(1).BoundingBox(3) - 1;
 hullTop   = round(s(1).BoundingBox(2));
 hullBot   = hullTop + s(1).BoundingBox(4) - 1;
 new_mask(hullTop:hullBot, hullLeft:hullRight) = s.ConvexImage;
-new_mask = imerode(new_mask,strel('disk',numDilations));
 
 hullPoints = s(1).ConvexHull;
 end

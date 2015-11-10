@@ -116,12 +116,12 @@ HSVthresh_parameters.max_thresh(3) = 0.30;    % maximum distance value threshold
 HSVthresh_parameters.num_stds(1) = 2;         % number of standard deviations hue can deviate from mean (unless less than min_thresh or greater than max_thresh)
 HSVthresh_parameters.num_stds(2) = 2;         % number of standard deviations saturation can deviate from mean (unless less than min_thresh or greater than max_thresh)
 HSVthresh_parameters.num_stds(3) = 2;         % number of standard deviations value can deviate from mean (unless less than min_thresh or greater than max_thresh)
-HSVthresh_parameters.dorsum_min_thresh(1) = 0.25;
-HSVthresh_parameters.dorsum_min_thresh(2) = 0.25;
-HSVthresh_parameters.dorsum_min_thresh(3) = 0.25;
+HSVthresh_parameters.dorsum_min_thresh(1) = 0.05;
+HSVthresh_parameters.dorsum_min_thresh(2) = 0.15;
+HSVthresh_parameters.dorsum_min_thresh(3) = 0.15;
 HSVthresh_parameters.dorsum_max_thresh(1) = 0.16;
-HSVthresh_parameters.dorsum_max_thresh(2) = 0.30;
-HSVthresh_parameters.dorsum_max_thresh(3) = 0.30;
+HSVthresh_parameters.dorsum_max_thresh(2) = 0.25;
+HSVthresh_parameters.dorsum_max_thresh(3) = 0.25;
 HSVthresh_parameters.dorsum_num_stds(1) = 3;
 HSVthresh_parameters.dorsum_num_stds(2) = 3;
 HSVthresh_parameters.dorsum_num_stds(3) = 3;
@@ -158,20 +158,66 @@ end
 
 % list of tattooed colors - first is paw dorsum, then index to pinky finger
 colorList = {'darkgreen','blue','red','green','red'};
-satLimits = [0.20000    1.00
+
+satLimits{1} = [0.20000    1.00
              0.90000    1.00
              0.90000    1.00
              0.90000    1.00
              0.90000    1.00];
-valLimits = [0.00001    1.00
+valLimits{1} = [0.20000    1.00
              0.95000    1.00
              0.95000    1.00
              0.95000    1.00
              0.95000    1.00];
-hueLimits = [0.00, 0.16;    % red
+hueLimits{1} = [0.00, 0.16;    % red
              0.33, 0.16;    % green
              0.66, 0.05;    % blue
              0.33, 0.16];   % dark green
+         
+satLimits{2} = [0.20000    1.00
+             0.90000    1.00
+             0.90000    1.00
+             0.90000    1.00
+             0.90000    1.00];
+valLimits{2} = [0.20000    1.00
+             0.95000    1.00
+             0.95000    1.00
+             0.95000    1.00
+             0.95000    1.00];
+hueLimits{2} = [0.00, 0.16;    % red
+             0.33, 0.16;    % green
+             0.66, 0.05;    % blue
+             0.50, 0.16];   % dark green
+         
+satLimits{3} = [0.20000    1.00
+             0.90000    1.00
+             0.90000    1.00
+             0.90000    1.00
+             0.90000    1.00];
+valLimits{3} = [0.20000    1.00
+             0.95000    1.00
+             0.95000    1.00
+             0.95000    1.00
+             0.95000    1.00];
+hueLimits{3} = [0.00, 0.16;    % red
+             0.33, 0.16;    % green
+             0.66, 0.05;    % blue
+             0.50, 0.16];   % dark green
+         
+% satLimits = [0.20000    1.00
+%              0.90000    1.00
+%              0.90000    1.00
+%              0.90000    1.00
+%              0.90000    1.00];
+% valLimits = [0.00001    1.00
+%              0.95000    1.00
+%              0.95000    1.00
+%              0.95000    1.00
+%              0.95000    1.00];
+% hueLimits = [0.00, 0.16;    % red
+%              0.33, 0.16;    % green
+%              0.66, 0.05;    % blue
+%              0.33, 0.16];   % dark green
          
 digitBlob = cell(1,2);
 digitBlob{1} = vision.BlobAnalysis;
@@ -219,7 +265,7 @@ trackCheck.frameHistoryLength = 5;    % number of frames to look back in estimat
 projectionDilation = 10;
 
 HSVupdateRate = 0.1;    % rate at which to update mean and std HSV values
-dorsumAngle = -7*pi/16;
+dorsumAngle = -6*pi/16;
 % further down, will draw a line between the base of the 1st and 4th
 % digits. The paw dorsum is assumed to lie on one side of this line,
 % constrained by the geometry of the reach.
@@ -396,12 +442,12 @@ for ii = 1 : num_elements_to_track - 1
                 case 'darkgreen',
                     colorIdx = 4;
             end
-            meanHSV(iView,ii,1) = hueLimits(colorIdx,1);
-            stdHSV(iView,ii,1) = hueLimits(colorIdx,2) / HSVthresh_parameters.num_stds(1);
-            meanHSV(iView,ii,2) = mean(satLimits(ii,:),2);
-            stdHSV(iView,ii,2) = range(satLimits(ii,:)) / HSVthresh_parameters.num_stds(2);
-            meanHSV(iView,ii,3) = mean(valLimits(ii,:),2);
-            stdHSV(iView,ii,3) = range(valLimits(ii,:)) / HSVthresh_parameters.num_stds(3);
+            meanHSV(iView,ii,1) = hueLimits{iView}(colorIdx,1);
+            stdHSV(iView,ii,1) = hueLimits{iView}(colorIdx,2) / HSVthresh_parameters.num_stds(1);
+            meanHSV(iView,ii,2) = mean(satLimits{iView}(ii,:),2);
+            stdHSV(iView,ii,2) = range(satLimits{iView}(ii,:)) / HSVthresh_parameters.num_stds(2);
+            meanHSV(iView,ii,3) = mean(valLimits{iView}(ii,:),2);
+            stdHSV(iView,ii,3) = range(valLimits{iView}(ii,:)) / HSVthresh_parameters.num_stds(3);
             s(iView,ii).BoundingBox = zeros(1,4);
         end
     end
@@ -540,6 +586,7 @@ for iView = 1 : 2
     dorsum_decorrStretchSigma{iView} = decorrStretchSigma{iView}(1,:);
 end
 
+dorsum_past_frontPanel = false;
 while video.CurrentTime < video.Duration
     numFrames = numFrames + 1;
     fprintf('frame number: %d\n', numFrames)
@@ -910,9 +957,12 @@ while video.CurrentTime < video.Duration
                               prev_mask_bbox, ...
                               pts_transformed, ...
                               digitsHull, ...
-                              frontPanelMask, ...
-                              dorsumAngle);
-%                               raw_threshold);
+                              d_frontPanel_x, ...
+                              d_frontPanel_y, ...
+                              dorsumAngle, ...
+                              dorsum_past_frontPanel, ...
+                              raw_threshold);
+        
                                     
             %   currentDigitMarkers - nx2xmx2 array. First dimension is the digit ID, second
 %       dimension is (x,y), third dimension is the site along each digit
@@ -1918,9 +1968,11 @@ function tracks = findDorsumRegion(tracks, ...
                                    prev_bbox, ...
                                    pts_transformed, ...
                                    digitsHull, ...
-                                   frontPanelMask, ...
-                                   dorsumAngle);
-%                                    raw_threshold)
+                                   d_frontPanel_x, ...
+                                   d_frontPanel_y, ...
+                                   dorsumAngle, ...
+                                   dorsum_past_frontPanel, ...
+                                   raw_threshold)
 %
 % INPUTS:
 %   tracks - the full set of digit tracks, after the digits have been
@@ -1942,6 +1994,7 @@ function tracks = findDorsumRegion(tracks, ...
 
 imSize = trackingBoxParams.imSize;
 
+frontPanelMask = poly2mask(d_frontPanel_x, d_frontPanel_y, imSize(1), imSize(2));
 frontMask = frontPanelMask(mask_bbox(2,2):mask_bbox(2,2) + mask_bbox(2,4), ...
                            mask_bbox(2,1):mask_bbox(2,1) + mask_bbox(2,3));
 
@@ -2052,6 +2105,8 @@ for iView = 2 : -1 : 1
 	candidateRegion{iView} = dorsumRegionMask{iView} & ...
                              ~digitsHull{iView} & ...
                              angledRegion{iView};
+                         
+
 % 	grayMask = false(mask_bbox(iView,4:-1:3)+1);
 %     for iColor = 1 : 3
 %         grayMask = grayMask | paw_
@@ -2097,9 +2152,54 @@ for iView = 2 : -1 : 1
                                        decorrStretchMean{iView}, ...
                                        dorsum_decorrStretchSigma{iView}, ...
                                        'mask', testMask);
+
         dorsum_hsv = rgb2hsv(dorsum_enh);
         dorsum_mask = HSVthreshold(dorsum_hsv, ...
                                    HSVlimits(iView,:));
+                               
+        if ~dorsum_past_frontPanel && iView == 2
+            % check on the other side of the front panel to see if the paw
+            % dorsum has appeared yet
+            grayMask = false(mask_bbox(iView,4:-1:3)+1);
+            for iColor = 1 : 3
+                grayMask = grayMask | (paw_img{iView}(:,:,iColor) > raw_threshold);
+            end
+            candidate_enh_region = candidateRegion{iView} & ~frontMask & grayMask;
+            candidate_enh = enhanceColorImage(paw_img{iView}, ...
+                                              decorrStretchMean{iView}, ...
+                                              dorsum_decorrStretchSigma{iView}, ...
+                                              'mask', candidate_enh_region);
+            candidate_hsv = rgb2hsv(candidate_enh);
+            candidate_mask = HSVthreshold(candidate_hsv, ...
+                                          HSVlimits(iView,:));
+                                      
+            % mask out only the part behind the front panel mask
+            % find the horizontal middle of the front panel mask
+            frontPanelPoints = zeros(2,2);
+            frontPanelPoints(1,1) = round(mean(d_frontPanel_x(1:2)));
+            frontPanelPoints(2,1) = round(mean(d_frontPanel_x(3:4)));
+            frontPanelPoints(1,2) = d_frontPanel_y(1);
+            frontPanelPoints(2,2) = d_frontPanel_y(3);
+            frontPanelPoints(:,1) = frontPanelPoints(:,1) - mask_bbox(iView,1);
+            frontPanelPoints(:,2) = frontPanelPoints(:,2) - mask_bbox(iView,2);
+            
+            % figure out which side the test point should be on
+            testPoint = zeros(1,2);
+            testPoint(2) = frontPanelPoints(1,2);
+            if d_frontPanel_x(1) < imSize(2)/2
+                % left side
+                testPoint(1) = max(d_frontPanel_x) - mask_bbox(iView,1);
+            else
+                testPoint(1) = min(d_frontPanel_x) - mask_bbox(iView,1);
+
+            end
+            behindFrontPanelMask = segregateImage(frontPanelPoints, testPoint, mask_bbox(iView,4:-1:3)+1); 
+            if any(candidate_mask & behindFrontPanelMask)
+
+            end
+        end
+                               
+
 %         if iView == 2
 %             dorsum_mask = dorsum_mask & ~frontMask;
 %         end
@@ -2110,8 +2210,11 @@ for iView = 2 : -1 : 1
         dorsum_mask = imopen(dorsum_mask, SE);
         dorsum_mask = imclose(dorsum_mask,SE);
         dorsum_mask = imfill(dorsum_mask,'holes');
-        [~,~,~,~,labMat] = step(pdBlob{iView}, dorsum_mask);
-        dorsum_mask = (labMat > 0);
+        tempMask = dorsum_mask & prevMask{iView};
+        dorsum_mask = imreconstruct(tempMask, dorsum_mask);
+        
+%         [~,~,~,~,labMat] = step(pdBlob{iView}, dorsum_mask);
+%         dorsum_mask = (labMat > 0);
 
         dorsum_mask = multiRegionConvexHullMask(dorsum_mask);
 
@@ -2164,8 +2267,12 @@ for iView = 1 : 2
     end
     
     s_dorsum = regionprops(tracks(1).(digitMaskStr),'Centroid','boundingbox');
-    tracks(1).currentDigitMarkers(:,2,iView) = s_dorsum.Centroid;
-    tracks(1).bbox(iView,:) = s_dorsum.BoundingBox;
+    if isempty(s_dorsum)
+        tracks(1).currentDigitMarkers(:,2,iView) = projected_nextPoint(iView,:);
+    else
+        tracks(1).currentDigitMarkers(:,2,iView) = s_dorsum.Centroid;
+        tracks(1).bbox(iView,:) = s_dorsum.BoundingBox;
+    end
     
 end
 

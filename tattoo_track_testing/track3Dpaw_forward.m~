@@ -119,9 +119,9 @@ HSVthresh_parameters.num_stds(3) = 2;         % number of standard deviations va
 HSVthresh_parameters.dorsum_min_thresh(1) = 0.25;
 HSVthresh_parameters.dorsum_min_thresh(2) = 0.25;
 HSVthresh_parameters.dorsum_min_thresh(3) = 0.25;
-HSVthresh_parameters.dorsum_max_thresh(1) = 0.40;
-HSVthresh_parameters.dorsum_max_thresh(2) = 0.50;
-HSVthresh_parameters.dorsum_max_thresh(3) = 0.50;
+HSVthresh_parameters.dorsum_max_thresh(1) = 0.16;
+HSVthresh_parameters.dorsum_max_thresh(2) = 0.30;
+HSVthresh_parameters.dorsum_max_thresh(3) = 0.30;
 HSVthresh_parameters.dorsum_num_stds(1) = 3;
 HSVthresh_parameters.dorsum_num_stds(2) = 3;
 HSVthresh_parameters.dorsum_num_stds(3) = 3;
@@ -171,7 +171,7 @@ valLimits = [0.00001    1.00
 hueLimits = [0.00, 0.16;    % red
              0.33, 0.16;    % green
              0.66, 0.05;    % blue
-             0.50, 0.25];   % dark green
+             0.33, 0.16];   % dark green
          
 digitBlob = cell(1,2);
 digitBlob{1} = vision.BlobAnalysis;
@@ -210,7 +210,7 @@ pdBlob{2}.LabelMatrixOutputPort = true;
 pdBlob{2}.MinimumBlobArea = 100;
 pdBlob{2}.MaximumBlobArea = 30000;
 
-trackCheck.maxDistPerFrame = 10;    % in mm
+trackCheck.maxDistPerFrame = 1.5;    % in mm
 trackCheck.maxReprojError = 0.1;   % not sure what this needs to be, will need some trial and error
 trackCheck.maxPixelsPerFrame = 30;  % not sure what this needs to be, will need some trial and error
 trackCheck.maxEpiLineDist = 10;     % how far a point in the mirror view can be from the epipolar line passing through the corresponding point in the direct view
@@ -293,6 +293,8 @@ switch pawPref
         sideRegion{1} = rightRegion;
         sideRegion{2} = leftRegion;
         dorsumAngle = -dorsumAngle;
+        d_frontPanel_x = boxMarkers.frontPanel_x(2,:);
+        d_frontPanel_y = boxMarkers.frontPanel_y(2,:);
     case 'right',
         dMirrorIdx = 1;   % index of mirror with dorsal view of paw
         pMirrorIdx = 3;   % index of mirror with palmar view of paw
@@ -302,6 +304,8 @@ switch pawPref
         scale = boxCalibration.scale(1);
         sideRegion{1} = leftRegion;
         sideRegion{2} = rightRegion;
+        d_frontPanel_x = boxMarkers.frontPanel_x(1,:);
+        d_frontPanel_y = boxMarkers.frontPanel_y(1,:);
 end
 pelletMasks = cell(1,3);
 SE = strel('disk',2);
@@ -556,9 +560,10 @@ while video.CurrentTime < video.Duration
     BG_mask = bwdist(BG_mask) < 2;
     BG_mask = imopen(BG_mask, SE);
     BG_mask = imclose(BG_mask,SE);
+    BG_mask = BG_mask & ~frontPanelMask;    % semi-opaque front panels sometimes pop out in the difference image as rats pass behind them
     BG_mask = imfill(BG_mask,'holes');
     BG_mask = BG_mask & ~frontPanelMask;
-    
+
     prev_mask_bbox = mask_bbox;
 %     prev_paw_mask = false(h,w);
     
@@ -574,9 +579,12 @@ while video.CurrentTime < video.Duration
 %             pawMask = imdilate(pawMask, strel('disk',2));
         end
         
+        % HAVE TO FIGURE OUT WHAT TO DO WITH THE NON-PAW DORSUM VIEW HERE;
+        % NEED TO DECIDE WHETHER TO GENERATE A MASK FOR IT AT THE END OR
+        % JUST IGNORE TRYING TO FIGURE OUT WHEN IT PASSES BEHIND THE BOX
+        % FRONT
         prev_paw_mask(prev_mask_bbox(iView,2) : prev_mask_bbox(iView,2) + prev_mask_bbox(iView,4),...
-                      prev_mask_bbox(iView,1) : prev_mask_bbox(iView,1) + prev_mask_bbox(iView,3),...
-                      iView) = pawMask;
+                      prev_mask_bbox(iView,1) : prev_mask_bbox(iView,1) + prev_mask_bbox(iView,3),iView) = pawMask;
 
 %         if iView < 3
 %             prev_digitMask{iView} = false(h,w);
@@ -595,7 +603,9 @@ while video.CurrentTime < video.Duration
 %                                   pawMask;
 %         end
     end
+    
     full_prev_paw_mask = prev_paw_mask(:,:,1) | prev_paw_mask(:,:,2) | prev_paw_mask(:,:,3);
+    
 %     full_prev_digMask = prev_digitMask{1} | prev_digitMask{2} | prev_digitMask{3};
     % exclude anything too dark to be the paw (e.g., nose, etc.)
     grayMask = false(h,w);
@@ -607,33 +617,35 @@ while video.CurrentTime < video.Duration
     % parts of the background mask that overlapped with the previous mask
     overlapMask = full_prev_paw_mask & BG_mask;
     BG_mask = imreconstruct(overlapMask, BG_mask);
+    BG_mask = BG_mask | (full_prev_paw_mask & frontPanelMask);
+%         (imdilate(full_prev_paw_mask,strel('disk',trackCheck.maxPixelsPerFrame)) & frontPanelMask);
     
     % for the side views, let the paw start to drift behind the edge of the
     % front panel
     current_BG_mask{1} = center_region_mask & BG_mask;
     current_BG_mask{2} = sideRegion{1} & BG_mask;
     current_BG_mask{3} = sideRegion{2} & BG_mask;
-    predictedMask = false(h,w,3);
+%     predictedMask = false(h,w,3);
     
-    % NEED TO THINK MORE ABOUT WHY THIS ISN'T WORKING - HOW TO SMOOTHLY LET
-    % THE PAW MOVE BEHIND THE FRONT PANEL EDGE
-    
-    
-    for iView = 2 : 3
-        hullMask = multiRegionConvexHullMask(current_BG_mask{iView});
-        s_BGmask = regionprops(hullMask,'centroid','BoundingBox');
-        s_prevMask = regionprops(prev_paw_mask(:,:,iView),'Centroid','BoundingBox');
-        
-        maskShift = s_BGmask.Centroid - s_prevMask.Centroid;
-        old_bbox = round(s_prevMask.BoundingBox);
-        new_bbox = round(s_prevMask.BoundingBox);
-        new_bbox(1:2) = round(new_bbox(1:2) + maskShift);
-        predictedMask(new_bbox(2) : new_bbox(2) + new_bbox(4), ...
-                      new_bbox(1) : new_bbox(1) + new_bbox(3), iView) = ...
-             prev_paw_mask(old_bbox(2) : old_bbox(2) + old_bbox(4), ...
-                           old_bbox(1) : old_bbox(1) + old_bbox(3), iView);
-        predictedMask(:,:,iView) = predictedMask(:,:,iView) & frontPanelMask;
+    for iView = 1 : 3
+        current_BG_mask{iView} = current_BG_mask{iView} & imdilate(full_prev_paw_mask,strel('disk',trackCheck.maxPixelsPerFrame));
     end
+%         current_BG_mask{2} = current_BG_mask{2} & imdilate(full_prev_paw_mask,strel('disk',trackCheck.maxPixelsPerFrame));
+%     for iView = 2 : 3
+%         hullMask = multiRegionConvexHullMask(current_BG_mask{iView});
+%         s_BGmask = regionprops(hullMask,'centroid','BoundingBox');
+%         s_prevMask = regionprops(prev_paw_mask(:,:,iView),'Centroid','BoundingBox');
+%         
+%         maskShift = s_BGmask.Centroid - s_prevMask.Centroid;
+%         old_bbox = round(s_prevMask.BoundingBox);
+%         new_bbox = round(s_prevMask.BoundingBox);
+%         new_bbox(1:2) = round(new_bbox(1:2) + maskShift);
+%         predictedMask(new_bbox(2) : new_bbox(2) + new_bbox(4), ...
+%                       new_bbox(1) : new_bbox(1) + new_bbox(3), iView) = ...
+%              prev_paw_mask(old_bbox(2) : old_bbox(2) + old_bbox(4), ...
+%                            old_bbox(1) : old_bbox(1) + old_bbox(3), iView);
+%         predictedMask(:,:,iView) = predictedMask(:,:,iView) & frontPanelMask;
+%     end
     
     
 %     BG_mask = BG_mask & ...
@@ -662,15 +674,15 @@ while video.CurrentTime < video.Duration
     current_BG_mask{1} = current_BG_mask{1} & projMask1 & projMask2;
     
     for iView = 1 : 3
-        current_paw_mask{iView} = current_paw_mask{iView} | predictedMask(:,:,iView);
+%         current_paw_mask{iView} = current_paw_mask{iView} | predictedMask(:,:,iView);
         current_paw_mask{iView} = multiRegionConvexHullMask(current_paw_mask{iView});
         current_paw_mask{iView} = current_paw_mask{iView} & ...
             imdilate(full_prev_paw_mask,strel('disk',trackCheck.maxPixelsPerFrame));    % don't let the mask grow too quickly - messes up prediction of digit marker locations
         
-        if iView == 2
-            figure(5);
-            imshow(current_paw_mask{2});
-        end
+%         if iView == 2
+%             figure(5);
+%             imshow(current_paw_mask{2});
+%         end
         % above line is in case there are multiple parts of the mask (for
         % example, if there is partial occlusion of the paw behind the box
         % front
@@ -710,17 +722,17 @@ while video.CurrentTime < video.Duration
     % parts. A model of the paw might solve this problem, but would like to 
     % get away with doing this without one...
     
-    tracks(num_elements_to_track-1).previousDigitMarkers = ...
-        tracks(num_elements_to_track-1).currentDigitMarkers;
-    for iView =1 : 3
-        digitMaskStr = sprintf('digitmask%d',iView);
-        tracks(num_elements_to_track-1).(digitMaskStr) = current_paw_mask{iView};
-        
-        if iView < 3
-            s_paw = regionprops(current_paw_mask{iView},'centroid');
-            tracks(num_elements_to_track-1).currentDigitMarkers(:,2,iView) = s_paw.Centroid';
-        end
-    end
+%     tracks(num_elements_to_track-1).previousDigitMarkers = ...
+%         tracks(num_elements_to_track-1).currentDigitMarkers;
+%     for iView =1 : 3
+%         digitMaskStr = sprintf('digitmask%d',iView);
+%         tracks(num_elements_to_track-1).(digitMaskStr) = current_paw_mask{iView};
+%         
+%         if iView < 3
+%             s_paw = regionprops(current_paw_mask{iView},'centroid');
+%             tracks(num_elements_to_track-1).currentDigitMarkers(:,2,iView) = s_paw.Centroid';
+%         end
+%     end
     
     for ii = 1 : num_elements_to_track - 1
         
@@ -753,7 +765,8 @@ while video.CurrentTime < video.Duration
                                      recentPawHistory, ...
                                      current_paw_mask, ...
                                      mask_bbox, ...
-                                     trackingBoxParams);
+                                     trackingBoxParams,...
+                                     trackCheck);
                                      
     for ii = 2 : num_elements_to_track - 2    % do the digits first
         prelim_digitMask{ii} = cell(1,2);
@@ -863,7 +876,8 @@ while video.CurrentTime < video.Duration
 
     % find the 3d points of all digits visible in both views, and the
     % general region in which the dorsum of the paw must appear
-    [currentDigitMarkers, pts_transformed, digitsHull] = findDigitMarkers(tracks, pawPref);
+    [currentDigitMarkers, pts_transformed, digitsHull] = ...
+        findDigitMarkers(tracks, pawPref, mask_bbox, prev_mask_bbox);
     for iTrack = 2 : 5
         tracks(iTrack).currentDigitMarkers = squeeze(currentDigitMarkers(iTrack-1,:,:,:));
     end
@@ -872,7 +886,7 @@ while video.CurrentTime < video.Duration
     tracks = reconstructPartiallyHiddenObjects(tracks, mask_bbox, fundMat, [h,w], current_BG_mask);
 
     % triangulate all available digit markers
-    tracks(2:6) = digit3Dpoints(trackingBoxParams, tracks(2:6), mask_bbox);
+    tracks(2:5) = digit3Dpoints(trackingBoxParams, tracks(2:5), mask_bbox);
     
     % now have to deal with completely hidden digits
     tracks = reconstructCompletelyHiddenObjects(tracks, ...
@@ -897,7 +911,8 @@ while video.CurrentTime < video.Duration
                               pts_transformed, ...
                               digitsHull, ...
                               frontPanelMask, ...
-                              dorsumAngle);
+                              dorsumAngle, ...
+                              raw_threshold);
                                     
             %   currentDigitMarkers - nx2xmx2 array. First dimension is the digit ID, second
 %       dimension is (x,y), third dimension is the site along each digit
@@ -908,14 +923,64 @@ while video.CurrentTime < video.Duration
     
     tracks = updateHSVparams(tracks, paw_hsv, HSVupdateRate);
     
+    tracks(num_elements_to_track-1).previousDigitMarkers = ...
+        tracks(num_elements_to_track-1).currentDigitMarkers;
+    for iView = 1 : 2
+        digitMaskStr = sprintf('digitmask%d',iView);
+        fullPawMask = false(size(tracks(1).(digitMaskStr)));
+        for iDigit = 1 : 5
+            fullPawMask = fullPawMask | tracks(iDigit).(digitMaskStr);
+            
+            for iPoint = 1 : 3
+                if iDigit > 1 || iPoint == 2
+                    ptCoord = round(tracks(iDigit).currentDigitMarkers(:,iPoint,iView));
+                    fullPawMask(ptCoord(2),ptCoord(1)) = true;
+                end
+            end
+        end
+        fullPawMask = multiRegionConvexHullMask(fullPawMask);
+        tracks(num_elements_to_track-1).(digitMaskStr) = fullPawMask;
+        
+        if iView < 3
+            s_paw = regionprops(fullPawMask,'centroid');
+            tracks(num_elements_to_track-1).currentDigitMarkers(:,2,iView) = s_paw.Centroid';
+        end
+    end
+    tracks(6).prev_markers3D = tracks(6).markers3D;
+    tracks(6) = digit3Dpoints(trackingBoxParams, tracks(6), mask_bbox);
+    
+    % now figure out where the palmar view of the paw was, so that can be
+    % used in the next loop iteration.
+    fullCenterMask = false(h,w);fullMirrorMask = false(h,w);
+    fullCenterMask(mask_bbox(1,2) : mask_bbox(1,2) + mask_bbox(1,4),...
+                   mask_bbox(1,1) : mask_bbox(1,1) + mask_bbox(1,3)) = tracks(num_elements_to_track-1).digitmask1;
+    fullMirrorMask(mask_bbox(3,2) : mask_bbox(3,2) + mask_bbox(3,4),...
+                   mask_bbox(3,1) : mask_bbox(3,1) + mask_bbox(3,3)) = current_BG_mask{3};
+	projMask = pawProjectionMask(fullCenterMask, fundMat(:,:,2), [h,w]);
+    fullMirrorMask = fullMirrorMask & projMask;
+    tracks(num_elements_to_track-1).digitmask3 = ...
+        fullMirrorMask(mask_bbox(3,2) : mask_bbox(3,2) + mask_bbox(3,4),...
+                       mask_bbox(3,1) : mask_bbox(3,1) + mask_bbox(3,3));
+                   
+	% do the same for the paw dorsum view
+    fullMirrorMask(mask_bbox(2,2) : mask_bbox(2,2) + mask_bbox(2,4),...
+                   mask_bbox(2,1) : mask_bbox(2,1) + mask_bbox(2,3)) = tracks(num_elements_to_track-1).digitmask2;
+	projMask = pawProjectionMask(fullCenterMask, fundMat(:,:,1), [h,w]);
+    fullMirrorMask = fullMirrorMask & projMask;
+    tracks(num_elements_to_track-1).digitmask2 = ...
+        fullMirrorMask(mask_bbox(2,2) : mask_bbox(2,2) + mask_bbox(2,4),...
+                       mask_bbox(2,1) : mask_bbox(2,1) + mask_bbox(2,3));
+    
 	% now establish all 3d points that are available from visible points in
 	% both views
-    % for now, only calculating the centroid of the dorsum of the paw
-    for iTrack = 1 : 5
-        digitTrajectories(numFrames,iTrack,:,:) = tracks(iTrack).markers3D;
-        tracks(iTrack).markersCalculated = false(1,2);
-        tracks(iTrack).previousDigitMarkers = tracks(iTrack).currentDigitMarkers;
-        tracks(iTrack).prev_markers3D = tracks(iTrack).markers3D;
+    for iTrack = 1 : length(tracks)
+        if iTrack < 6
+            digitTrajectories(numFrames,iTrack,:,:) = tracks(iTrack).markers3D;
+            tracks(iTrack).markersCalculated = false(1,2);
+            tracks(iTrack).previousDigitMarkers = tracks(iTrack).currentDigitMarkers;
+            tracks(iTrack).prev_markers3D = tracks(iTrack).markers3D;
+        end
+        tracks(iTrack).age = tracks(iTrack).age + 1;
     end
     pawTrajectory(numFrames,:) = tracks(6).markers3D(2,:);
     currentDigitMask = cell(1,2);
@@ -936,7 +1001,7 @@ while video.CurrentTime < video.Duration
     end
 
     meanDigitTrajectory(numFrames,:) = currentDigitMarkersTo3D(digitBlobCentroids, trackingBoxParams, mask_bbox);
-    plotTracks(tracks, image_ud, mask_bbox)
+    plotTracks(tracks, image_ud, mask_bbox,[d_frontPanel_x;d_frontPanel_y])
     
 end
 
@@ -1854,7 +1919,8 @@ function tracks = findDorsumRegion(tracks, ...
                                    pts_transformed, ...
                                    digitsHull, ...
                                    frontPanelMask, ...
-                                   dorsumAngle)
+                                   dorsumAngle, ...
+                                   raw_threshold)
 %
 % INPUTS:
 %   tracks - the full set of digit tracks, after the digits have been
@@ -1889,6 +1955,7 @@ num_stds   = HSVthresh_parameters.dorsum_num_stds;
 HSVlimits = zeros(2,6);
 
 dorsumRegionMask = cell(1,2);
+candidateRegion = cell(1,2);
 
 validImageBorderPts = zeros(2,2);
 
@@ -1977,50 +2044,66 @@ for iView = 2 : -1 : 1
 %     
 %     perpRegion = perpRegion1 & perpRegion2;
     
+%     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
+%                                              pts_transformed(3,:,iView), mask_bbox(iView,4:-1:3)+1);
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
-                                             pts_transformed(3,:,iView), mask_bbox(iView,4:-1:3)+1);
-    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ...
-                              ~digitsHull{iView} & ...
-                              BG_mask{iView} & ...
-                              angledRegion{iView};
-    if iView == 1
-        if exist('projMask','var')
-            dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;
-        end
-    end
+                                             projected_nextPoint(iView,:), mask_bbox(iView,4:-1:3)+1);
+                                         
+	candidateRegion{iView} = dorsumRegionMask{iView} & ...
+                             ~digitsHull{iView} & ...
+                             angledRegion{iView};
+	grayMask = false(mask_bbox(iView,4:-1:3)+1);
+    for iColor = 1 : 3
+        grayMask = grayMask | paw_
+    dorsumRegionMask{iView} = candidateRegion{iView} & ...
+                              BG_mask{iView};
+%     if iView == 1
+%         if exist('projMask','var')
+%             dorsumRegionMask{iView} = dorsumRegionMask{iView} & projMask;
+%         end
+%     end
 
     if ~any(dorsumRegionMask{iView}(:))
         tracks(1).isvisible(iView) = false;
         
         tracks(1).(prevMaskStr) = tracks(1).(digMaskStr);
         tracks(1).(digMaskStr) = prevMask{iView} & ~digitsHull{iView};
-    end
+    else
 
-    HSVlimits(iView,1) = meanHSV(iView,1);            % hue mean
-    HSVlimits(iView,2) = max(min_thresh(1), stdHSV(iView,1) * num_stds(1));  % hue range
-    HSVlimits(iView,2) = min(max_thresh(1), HSVlimits(iView,2));  % hue range
+        HSVlimits(iView,1) = meanHSV(iView,1);            % hue mean
+        HSVlimits(iView,2) = max(min_thresh(1), stdHSV(iView,1) * num_stds(1));  % hue range
+        HSVlimits(iView,2) = min(max_thresh(1), HSVlimits(iView,2));  % hue range
 
-    s_range = max(min_thresh(2), stdHSV(iView,2) * num_stds(2));
-    s_range = min(max_thresh(2), s_range);
-    HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
-    HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
+        s_range = max(min_thresh(2), stdHSV(iView,2) * num_stds(2));
+        s_range = min(max_thresh(2), s_range);
+        HSVlimits(iView,3) = max(0.001, meanHSV(iView,2) - s_range);    % saturation lower bound
+        HSVlimits(iView,4) = min(1.000, meanHSV(iView,2) + s_range);    % saturation upper bound
 
-    v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
-    v_range = min(max_thresh(3), v_range);
-    HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % value lower bound
-    HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % value upper bound  
-                    
-    if any(dorsumRegionMask{iView}(:))
+        v_range = max(min_thresh(3), stdHSV(iView,3) * num_stds(3));
+        v_range = min(max_thresh(3), v_range);
+        HSVlimits(iView,5) = max(0.001, meanHSV(iView,3) - v_range);    % value lower bound
+        HSVlimits(iView,6) = min(1.000, meanHSV(iView,3) + v_range);    % value upper bound  
+
+%     if any(dorsumRegionMask{iView}(:))
         % if nothing shows up in dorsumRegionMask, skip the thresholding
         % based on color
+        switch iView
+            case 1,
+                testMask = dorsumRegionMask{iView};
+            case 2,
+                testMask = dorsumRegionMask{iView} & ~frontMask;
+        end
         dorsum_enh = enhanceColorImage(paw_img{iView}, ...
                                        decorrStretchMean{iView}, ...
                                        dorsum_decorrStretchSigma{iView}, ...
-                                       'mask', dorsumRegionMask{iView});
+                                       'mask', testMask);
         dorsum_hsv = rgb2hsv(dorsum_enh);
         dorsum_mask = HSVthreshold(dorsum_hsv, ...
                                    HSVlimits(iView,:));
-
+%         if iView == 2
+%             dorsum_mask = dorsum_mask & ~frontMask;
+%         end
+        
     %     dorsum_gray = mean(dorsum_enh,3);            
     % 	dorsum_mask = (dorsum_gray > 0.00001) & (dorsum_gray < dorsum_gray_thresh);
         dorsum_mask = bwdist(dorsum_mask) < 2;
@@ -2044,10 +2127,18 @@ for iView = 2 : -1 : 1
         tracks(1).(digMaskStr) = prevMask{iView} & ~digitsHull{iView};
     end
 
+    % if any of the predicted paw dorsum location overlaps with the front
+    % panel mask, incorporate that here
     if iView == 2
+        tracks(1).prevmask2  = tracks(1).digitmask2;
+        frontOverlap = prevMask{iView} & frontMask & angledRegion{iView};
+        tracks(1).digitmask2 = dorsumRegionMask{iView} | frontOverlap;
+        tracks(1).digitmask2 = multiRegionConvexHullMask(tracks(1).digitmask2);
+        tracks(1).digitmask2 = tracks(1).digitmask2 & candidateRegion{iView};
+
         % calculate projection into center view
         if any(dorsumRegionMask{iView}(:))
-            projMask = calcProjMask(dorsum_mask, ...
+            projMask = calcProjMask(tracks(1).digitmask2, ...
                                     trackingBoxParams.F(:,:,1)', ...
                                     mask_bbox(iView,:), ...
                                     imSize);
@@ -2057,14 +2148,12 @@ for iView = 2 : -1 : 1
             projMask = true(mask_bbox(1,4:-1:3)+1);
         end
     end
-
 end
+
     
 for iView = 1 : 2
-    prevMaskStr = sprintf('prevmask%d',iView);
+%     prevMaskStr = sprintf('prevmask%d',iView);
     digitMaskStr = sprintf('digitmask%d',iView);
-    
-    tracks(1).(prevMaskStr)  = tracks(1).(digitMaskStr);
     
     if tracks(1).isvisible(iView)
         tracks(1).totalVisibleCount(iView) = tracks(1).totalVisibleCount(iView) + 1;
@@ -2074,13 +2163,6 @@ for iView = 1 : 2
                 tracks(1).consecutiveInvisibleCount(iView) + 1;
     end
     
-    % if any of the predicted paw dorsum location overlaps with the front
-    % panel mask, incorporate that here
-    if iView == 2
-        frontOverlap = prevMask{iView} & frontMask & angledRegion{iView};
-        tracks(1).(digitMaskStr) = tracks(1).(digitMaskStr) | frontOverlap;
-        tracks(1).(digitMaskStr) = multiRegionConvexHullMask(tracks(1).(digitMaskStr));
-    end
     s_dorsum = regionprops(tracks(1).(digitMaskStr),'Centroid','boundingbox');
     tracks(1).currentDigitMarkers(:,2,iView) = s_dorsum.Centroid;
     tracks(1).bbox(iView,:) = s_dorsum.BoundingBox;
@@ -2095,7 +2177,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [currentDigitMarkers, pts_transformed, digitsHull] = ...
-    findDigitMarkers(tracks, pawPref)
+    findDigitMarkers(tracks, pawPref, mask_bbox, prev_mask_bbox)
 %
 % INPUTS:
 %   tracks - the full set of digit tracks, after the digits have been
@@ -2120,6 +2202,7 @@ digitsHull = cell(1,2);
 currentDigitMarkers = zeros(length(tracks)-2, 2, 3, 2);    % number of digits by (x,y) by base/centroid/tip by view number
 
 firstVisibleDigitFound = false(1,2);
+lastVisibleDigitFound = false(1,2);
 digCentroids = zeros(2,2,2);
 currentMask = cell(1,2);
 digitMasks = cell(1,2);
@@ -2142,6 +2225,7 @@ for ii = 2 : length(tracks)-2
                 currentDigitMarkers(ii-1,:,2,iView) = s.Centroid;
                 firstMask{iView} = currentMask{iView};
             else
+                lastVisibleDigitFound(iView) = true;
                 digCentroids(2,:,iView) = s.Centroid;
                 lastMask{iView} = currentMask{iView};
                 currentDigitMarkers(ii-1,:,2,iView) = s.Centroid;
@@ -2161,44 +2245,47 @@ for iView = 1 : 2
                                                          % behind the front
                                                          % panel, skip
                                                          % this)
+
+	digitMaskStr = sprintf('digitmask%d',iView);
     
     regionSize = size(digitMasks{iView});
     bbox(1) = round(expandedImSize(2)/2 - regionSize(2)/2);
     bbox(2) = round(expandedImSize(1)/2 - regionSize(1)/2);
     bbox(3:4) = regionSize(2:-1:1) - 1;
-    
-    movingPoints = squeeze(digCentroids(:,:,iView));
-    movingPoints = bsxfun(@plus,movingPoints, bbox(1:2));
+	if ~lastVisibleDigitFound(iView)    % didn't find at least two visible digits, so need to do something else to figure out where to put the "nearest neighbor" point
+        % let's try using the centroid of the last dorsum mask
+        s = regionprops(tracks(1).(digitMaskStr),'centroid');
+        dorsum_est = s.Centroid + (mask_bbox(iView,1:2) - prev_mask_bbox(iView,1:2)) + bbox(1:2);
+    else
+        movingPoints = squeeze(digCentroids(:,:,iView));
+        movingPoints = bsxfun(@plus,movingPoints, bbox(1:2));
 
-    tform = fitgeotrans(squeeze(fixed_pts(1:2,:,iView)), movingPoints, 'nonreflectivesimilarity');
-    H(:,:,iView) = tform.T';
-    fixed_pts_hom = [squeeze(fixed_pts(:,:,iView)), ones(3,1)];
-    pts_transformed_hom = (H(:,:,iView) * fixed_pts_hom')';
-    pts_transformed(:,:,iView) = bsxfun(@rdivide,...
-                                 squeeze(pts_transformed_hom(:,1:2)), ...
-                                 squeeze(pts_transformed_hom(:,3)));
-    
-    [A,B,C] = constructParallelLine(pts_transformed(1,:,iView), ...
-                                    pts_transformed(2,:,iView), ...
-                                    pts_transformed(3,:,iView));
-    borderPts = lineToBorderPoints([A,B,C], expandedImSize);
-    
-    linepts(1,:) = borderPts(1:2);
-    linepts(2,:) = borderPts(3:4);
-    
-    % find midpoint between movingPoints
-    digit_middle = mean(movingPoints,1);
-    dorsum_est = findNearestPointOnLine(linepts(1,:),linepts(2,:),digit_middle);
-    for ii = 2 : length(tracks) - 1
+        tform = fitgeotrans(squeeze(fixed_pts(1:2,:,iView)), movingPoints, 'nonreflectivesimilarity');
+        H(:,:,iView) = tform.T';
+        fixed_pts_hom = [squeeze(fixed_pts(:,:,iView)), ones(3,1)];
+        pts_transformed_hom = (H(:,:,iView) * fixed_pts_hom')';
+        pts_transformed(:,:,iView) = bsxfun(@rdivide,...
+                                     squeeze(pts_transformed_hom(:,1:2)), ...
+                                     squeeze(pts_transformed_hom(:,3)));
+
+        [A,B,C] = constructParallelLine(pts_transformed(1,:,iView), ...
+                                        pts_transformed(2,:,iView), ...
+                                        pts_transformed(3,:,iView));
+        borderPts = lineToBorderPoints([A,B,C], expandedImSize);
+
+        linepts(1,:) = borderPts(1:2);
+        linepts(2,:) = borderPts(3:4);
+
+        % find midpoint between movingPoints
+        digit_middle = mean(movingPoints,1);
+        dorsum_est = findNearestPointOnLine(linepts(1,:),linepts(2,:),digit_middle);
+    end
+    for ii = 2 : length(tracks) - 2
 
         if ~tracks(ii).isvisible(iView); continue; end    % if digit not visible in one of the views, skip finding markers
-        
-        if iView == 1
-            currentMask{iView} = tracks(ii).digitmask1;
-        else
-            currentMask{iView} = tracks(ii).digitmask2;
-        end
-        
+
+        currentMask{iView} = tracks(ii).(digitMaskStr);
+
         tempMask = false(expandedImSize);
         tempMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = currentMask{iView};
         edge_I = bwmorph(tempMask,'remove');

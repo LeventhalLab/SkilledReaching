@@ -642,8 +642,8 @@ while digitMissing
     end
         
     HSVlimits = zeros(2,6);
-    HSVlimits(1,:) = [hueLimits{2}(colorIdx,:), satLimits{2}(1,:), valLimits{2}(1,:)];
-    HSVlimits(2,:) = [hueLimits{1}(colorIdx,:), satLimits{1}(1,:), valLimits{1}(1,:)];
+    HSVlimits(1,:) = [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)];
+    HSVlimits(2,:) = [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)];
     
     hsv{1} = squeeze(masked_hsv_enh{2}(:,:,:,1));
     hsv{2} = squeeze(masked_hsv_enh{dMirrorIdx}(:,:,:,1));

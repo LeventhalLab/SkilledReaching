@@ -62,20 +62,9 @@ for jj = 1 : size(recentDigitHistory,2)
                                 centroids3D);
 end
 
-end    % function
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function new_centroids3D = estimatePawDisplacement(centroids3D, last3Dpoint, maxDistPerFrame)
-
-pt_diff = centroids3D - last3Dpoint;
-pt_diff_norm = pt_diff / norm(pt_diff);   % now a unit vector
-new_pt_diff = pt_diff_norm * maxDistPerFrame;
-
-new_centroids3D = last3Dpoint + new_pt_diff;
-
-end
-
+function new_centroids3D = estimatePawDisplacement(centroids3D, recentPawHistory(end,:), maxDistPerFrame)
 
 
