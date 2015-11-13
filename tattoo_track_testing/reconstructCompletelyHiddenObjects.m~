@@ -276,16 +276,12 @@ for iView = 1 : 2
                                              meanMovement;
     end
     
-    temp = squeeze(anticipatedPoints(:,:,iView));
-    if all(isnan(temp(:)))    % no digits were visible in this view, may be passing behind front panel
-        for iPoint = 1 : 3
-            anticipatedPoints(iPoint,:,iView) = prev_obscured_pts(iPoint,:) - prev_bboxes(iView,1:2) + bboxes(iView,1:2);
-        end
-    end    
-    
 end
 
-end % function predictDigitMovement
+
+if all(isnan(anticipatedPoints(:)))    % no digits were visible in this view, may be passing behind front panel
+    anticipatedPoints(:,:,obscured = tracks(obscuredTrackIdx)
+end    % function predictDigitMovement
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

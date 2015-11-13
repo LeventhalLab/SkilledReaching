@@ -55,7 +55,7 @@ function digitTrajectories = track3Dpaw_forward(video, ...
 
 decorrStretchMean  = cell(1,3);
 decorrStretchSigma = cell(1,3);
-decorrStretchMean{1}  = [127.5 127.5 127.5     % to isolate dorsum of paw
+decorrStretchMean{1}  = [075.0 127.5 075.0     % to isolate dorsum of paw
                          127.5 127.5 100.0     % to isolate blue digits
                          100.0 127.5 127.5     % to isolate red digits
                          100.0 025.0 100.0     % to isolate green digits
@@ -63,7 +63,7 @@ decorrStretchMean{1}  = [127.5 127.5 127.5     % to isolate dorsum of paw
                          127.5 127.5 127.5
                          127.5 127.5 127.5];
 
-decorrStretchSigma{1} = [075 075 075       % to isolate dorsum of paw
+decorrStretchSigma{1} = [050 075 050       % to isolate dorsum of paw
                          075 075 075       % to isolate blue digits
                          075 075 075       % to isolate red digits
                          075 075 075       % to isolate green digits
@@ -71,7 +71,7 @@ decorrStretchSigma{1} = [075 075 075       % to isolate dorsum of paw
                          075 075 075
                          075 075 075];
                      
-decorrStretchMean{2}  = [127.5 127.5 127.5     % to isolate dorsum of paw
+decorrStretchMean{2}  = [075.0 127.5 075.0     % to isolate dorsum of paw
                          127.5 127.5 100.0     % to isolate blue digits
                          100.0 127.5 127.5     % to isolate red digits
                          127.5 100.0 127.5     % to isolate green digits
@@ -79,7 +79,7 @@ decorrStretchMean{2}  = [127.5 127.5 127.5     % to isolate dorsum of paw
                          127.5 127.5 127.5
                          127.5 127.5 127.5];
                      
-decorrStretchSigma{2} = [075 075 075       % to isolate dorsum of paw
+decorrStretchSigma{2} = [050 075 050       % to isolate dorsum of paw
                          075 075 075       % to isolate blue digits
                          075 075 075       % to isolate red digits
                          075 075 075       % to isolate green digits
@@ -87,7 +87,7 @@ decorrStretchSigma{2} = [075 075 075       % to isolate dorsum of paw
                          075 075 075
                          075 075 075];
                      
-decorrStretchMean{3}  = [127.5 127.5 127.5     % to isolate dorsum of paw
+decorrStretchMean{3}  = [075.0 127.5 075.0     % to isolate dorsum of paw
                          127.5 127.5 100.0     % to isolate blue digits
                          100.0 127.5 127.5     % to isolate red digits
                          127.5 100.0 127.5     % to isolate green digits
@@ -95,7 +95,7 @@ decorrStretchMean{3}  = [127.5 127.5 127.5     % to isolate dorsum of paw
                          127.5 127.5 127.5
                          127.5 127.5 127.5];
                      
-decorrStretchSigma{3} = [075 075 075       % to isolate dorsum of paw
+decorrStretchSigma{3} = [050 075 050       % to isolate dorsum of paw
                          075 075 075       % to isolate blue digits
                          075 075 075       % to isolate red digits
                          075 075 075       % to isolate green digits
@@ -587,6 +587,9 @@ for iView = 1 : 2
 end
 
 dorsum_past_frontPanel = false;
+
+plotTracks(tracks, image_ud, mask_bbox,[d_frontPanel_x;d_frontPanel_y])
+
 while video.CurrentTime < video.Duration
     numFrames = numFrames + 1;
     fprintf('frame number: %d\n', numFrames)
@@ -2040,6 +2043,12 @@ for iView = 1 : 2
     fullPrevMask(prev_bbox(iView,2):prev_bbox(iView,2) + prev_bbox(iView,4), ...
                  prev_bbox(iView,1):prev_bbox(iView,1) + prev_bbox(iView,3)) = tracks(1).(prevMaskStr);
     
+             % THINK ABOUT SETTING UP 4 POINTS IN 3-D SPACE THAT WHEN
+             % PROJECTED ONTO EACH VIEW WILL GIVE THE CORNERS OF THE PAW
+             % DORSUM. COULD USE THE PROXIMAL POINTS OF THE 1ST AND 4TH
+             % DIGITS AS TWO OF THE POINTS, AND FIX THE OTHER TWO POINTS A
+             % FIXED DISTANCE BACK?
+             
     s_prev = regionprops(fullPrevMask,'centroid');
 	projected_shift = round(projected_nextPoint(iView,:) - s_prev.Centroid);
     shifted_bbox_corner = mask_bbox(iView,1:2) - projected_shift;
@@ -2097,11 +2106,29 @@ for iView = 2 : -1 : 1
 %     
 %     perpRegion = perpRegion1 & perpRegion2;
     
-%     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
-%                                              pts_transformed(3,:,iView), mask_bbox(iView,4:-1:3)+1);
+
+
+
+
+% NEED TO REDO THIS PART - USE PTS_TRANSFORMED AGAIN, MAKE SURE THE POINT
+% IS WELL-DEFINED
+
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
-                                             projected_nextPoint(iView,:), mask_bbox(iView,4:-1:3)+1);
+                                             pts_transformed(3,:,iView), mask_bbox(iView,4:-1:3)+1);
+%     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
+%                                              projected_nextPoint(iView,:), mask_bbox(iView,4:-1:3)+1);
                                          
+                                         
+                                         
+                                         
+                                         
+                                         
+                                         
+                                         
+    if isempty(digitsHull{iView})
+        digitsHull{iView} = false(size(dorsumRegionMask{iView}));
+    end
+        
 	candidateRegion{iView} = dorsumRegionMask{iView} & ...
                              ~digitsHull{iView} & ...
                              angledRegion{iView};
@@ -2251,6 +2278,13 @@ for iView = 2 : -1 : 1
             projMask = true(mask_bbox(1,4:-1:3)+1);
         end
     end
+    
+    if ~any(dorsumRegionMask{iView}(:))
+        tracks(1).isvisible(iView) = false;
+        
+        tracks(1).(prevMaskStr) = tracks(1).(digMaskStr);
+        tracks(1).(digMaskStr) = prevMask{iView} & ~digitsHull{iView};
+    end
 end
 
     
@@ -2267,8 +2301,12 @@ for iView = 1 : 2
     end
     
     s_dorsum = regionprops(tracks(1).(digitMaskStr),'Centroid','boundingbox');
-    tracks(1).currentDigitMarkers(:,2,iView) = s_dorsum.Centroid;
-    tracks(1).bbox(iView,:) = s_dorsum.BoundingBox;
+    if isempty(s_dorsum)
+        tracks(1).currentDigitMarkers(:,2,iView) = projected_nextPoint(iView,:);
+    else
+        tracks(1).currentDigitMarkers(:,2,iView) = s_dorsum.Centroid;
+        tracks(1).bbox(iView,:) = s_dorsum.BoundingBox;
+    end
     
 end
 

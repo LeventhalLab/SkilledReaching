@@ -1,0 +1,8 @@
+function idx = detectZeroCrossings(x)
+
+test_sig = x .* circshift(x,1);
+
+idx = find(test_sig < 0);
+zero_idx = find(detectZeroCrossings==0);
+
+idx = [zero_idx;idx
