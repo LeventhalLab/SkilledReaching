@@ -39,9 +39,4 @@ while tangentPointsFound > 2
     % find the ones that are redundant and get rid of them
     
     linesDiff = diff(tangentLines,1);
-    linesDist = sqrt(sum(linesDiff.^2,2));
-    
-    minDistIdx = find(linesDist == min(linesDist));
-    
-    if min
 end
