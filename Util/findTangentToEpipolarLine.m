@@ -43,5 +43,8 @@ while tangentPointsFound > 2
     
     minDistIdx = find(linesDist == min(linesDist));
     
-    if min
+    tangentLines = removeRow(tangentLines, minDistIdx);
+    tangentPoints = removeRow(tangentPoints, minDistIdx);
+    
+    tangentPointsFound = tangentPointsFound - 1;
 end
