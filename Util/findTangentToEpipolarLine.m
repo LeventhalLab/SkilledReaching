@@ -1,6 +1,9 @@
 function [tangentPoints, tangentLines] = findTangentToEpipolarLine(mask, fundmat, bbox)
 %
 % INPUTS:
+%   mask -
+%   fundmat - 
+%   bbox - 
 %
 % OUTPUTS:
 
