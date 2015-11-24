@@ -703,10 +703,55 @@ end    % while digitMissing
 % match the paw dorsum blob points
 pdMask{1} = viewMask{2}(:,:,1);
 pdMask{2} = viewMask{dMirrorIdx}(:,:,1);
-pd_bboxes = zeros(2,4);
-pd_bboxes(1,:) = mask_bbox(2,:);
-pd_bboxes(2,:) = mask_bbox(dMirrorIdx,:);
-[matchedMasks, tangentPoints] = matchSilhouettes(pdMask, F_side, pd_bboxes, [h,w]);
+bboxes = zeros(2,4);
+bboxes(1,:) = mask_bbox(2,:);
+bboxes(2,:) = mask_bbox(dMirrorIdx,:);
+
+% find average location of digits in direct and mirror views
+dig_edge3D = cell(1,4);
+fullPawMasks = false(h,w,2);
+fullPawMasks(:,:,1) = centerMask;
+digitMasks = cell(1,2);
+if dMirrorIdx == 1
+    fullPawMasks(:,:,2) = leftMirrorPawMask;
+else
+    fullPawMasks(:,:,2) = rightMirrorPawMask;
+end
+for iView = 1 : 2
+    digitMasks{iView} = false(bboxes(iView,2),bboxes(iView,1),5);
+    
+    
+    % NOW, GET MASKS OF EACH DIGIT INDIVIDUALLY
+    
+    
+    
+    
+    
+    tempMask = false(h,w);
+    for iDigit = 1 : 5
+        if iView == 1
+            tempDigMask = viewMask{2}(:,:,iDigit);
+        else
+            tempDigMask = viewMask{dMirrorIdx}(:,:,iDigit);
+        end
+
+        tempMask(bboxes(iView,2):bboxes(iView,2) + bboxes(iView,4), ...
+                 bboxes(iView,1):bboxes(iView,1) + bboxes(iView,3)) = tempDigMask;
+        fullPawMasks{iView} = fullPawMasks{iView} & ~tempMask;
+    end
+    
+end
+
+[matchedMasks, tangentPoints] = matchSilhouettes(pdMask, F_side, bboxes, [h,w], fullPawMasks);
+pd_edge3D = silhouetteTo3D(matchedMasks, boxCalibration, bboxes, tangentPoints, [h,w], fullPawMasks);
+
+for iDigit = 1 : 4
+    digitMask{1} = viewMask{2}(:,:,iDigit+1);
+    digitMask{2} = viewMask{dMirrorIdx}(:,:,iDigit+1);
+    
+    [matchedMasks, tangentPoints] = matchSilhouettes(digitMask, F_side, bboxes, [h,w], fullPawMasks);
+    dig_edge3D{iDigit} = silhouetteTo3D(matchedMasks, boxCalibration, bboxes, tangentPoints, [h,w], fullPawMasks);
+end
 
 viewMask{dMirrorIdx}(:,:,1) = matchedMasks{2};
 viewMask{2}(:,:,1) = matchedMasks{1};
@@ -874,7 +919,8 @@ for iView = 1 : 2
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
                                              pts_transformed(3,:), size(digitMasks{iView}));
                                          
-    [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+%     [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+    digitsHull = bwconvhull(digitMasks{iView},'union');
     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull & angledRegion;
     
     
@@ -964,7 +1010,8 @@ function pdMask = initThresholdDorsum(HSVlimits, ...
         
         if ~any(tempMask(:)); continue; end
         
-        [tempMask,~] = multiRegionConvexHullMask(tempMask);
+        tempMask = bwconvhull(tempMask,'union');
+%         [tempMask,~] = multiRegionConvexHullMask(tempMask);
         tempMask = tempMask & dorsumRegionMask{iView};
         pdMask{iView} = tempMask;
     end

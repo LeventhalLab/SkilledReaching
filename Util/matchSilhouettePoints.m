@@ -97,11 +97,11 @@ for ii = 1 : numDirectEdgePoints
     
 end
 
-for ii = 1 : numMirrorEdgePoints
-    % MATCH POINTS GOING IN BOTH DIRECTIONS THEN SOMEHOW MELD
-    % THE TWO TOGETHER
-    
-end
+% for ii = 1 : numMirrorEdgePoints
+%     % MATCH POINTS GOING IN BOTH DIRECTIONS THEN SOMEHOW MELD
+%     % THE TWO TOGETHER
+%     
+% end
 direct_pts_norm = normalize_points(squeeze(matchedPoints(:,:,1)), K);
 mirror_pts_norm = normalize_points(squeeze(matchedPoints(:,:,2)), K);
 

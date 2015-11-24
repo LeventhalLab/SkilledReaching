@@ -510,7 +510,8 @@ pawMarkers = zeros(1,2,1,2);
 pawMask = cell(1,2);
 meanDigitMarkers = zeros(1,2,1,2);
 for iView = 1 : 2
-    pawMask{iView} = multiRegionConvexHullMask(digitMasks{iView}(:,:,6));
+%     pawMask{iView} = multiRegionConvexHullMask(digitMasks{iView}(:,:,6));
+    pawMask{iView} = bwconvhull(digitMasks{iView}(:,:,6),'union');
     s_paw = regionprops(pawMask{iView});
     pawMarkers(1,:,1,iView) = s_paw.Centroid;
     fullDigitMask = false(h,w);
@@ -520,7 +521,8 @@ for iView = 1 : 2
                  mask_bbox(iView,1):mask_bbox(iView,1) + mask_bbox(iView,3)) = digitMasks{iView}(:,:,ii);
         fullDigitMask = fullDigitMask | tempMask;
     end
-    fullDigitMask = multiRegionConvexHullMask(fullDigitMask);
+%     fullDigitMask = multiRegionConvexHullMask(fullDigitMask);
+    fullDigitMask = bwconvhull(fullDigitMask,'union');
     s_meanDigit = regionprops(fullDigitMask,'centroid');
     meanDigitMarkers(1,:,1,iView) = s_meanDigit.Centroid - mask_bbox(iView,1:2);
 end
@@ -625,7 +627,8 @@ while video.CurrentTime < video.Duration
         
         if iView == 2
             pawMask = pawMask | tracks(1).(digitMaskStr);    % makes sure paw dorsum behind the front panel edge gets counted
-            pawMask = multiRegionConvexHullMask(pawMask);
+%             pawMask = multiRegionConvexHullMask(pawMask);
+            pawMask = bwconvhull(pawMask,'union');
 %             pawMask = imdilate(pawMask, strel('disk',2));
         end
         
@@ -725,7 +728,8 @@ while video.CurrentTime < video.Duration
     
     for iView = 1 : 3
 %         current_paw_mask{iView} = current_paw_mask{iView} | predictedMask(:,:,iView);
-        current_paw_mask{iView} = multiRegionConvexHullMask(current_paw_mask{iView});
+%         current_paw_mask{iView} = multiRegionConvexHullMask(current_paw_mask{iView});
+        current_paw_mask{iView} = bwconvhull(current_paw_mask{iView},'union');
         current_paw_mask{iView} = current_paw_mask{iView} & ...
             imdilate(full_prev_paw_mask,strel('disk',trackCheck.maxPixelsPerFrame));    % don't let the mask grow too quickly - messes up prediction of digit marker locations
         
@@ -747,7 +751,8 @@ while video.CurrentTime < video.Duration
             end
             frontMask = frontPanelMask & hemiMask;
             current_paw_mask_plus_front = current_paw_mask{iView} | frontMask;
-            current_paw_mask_plus_front = multiRegionConvexHullMask(current_paw_mask_plus_front);
+%             current_paw_mask_plus_front = multiRegionConvexHullMask(current_paw_mask_plus_front);
+            current_paw_mask_plus_front = bwconvhull(current_paw_mask_plus_front,'union');
         end
         % make sure to include the front panel edge in the bounding box so
         % that we can use it later as the paw passes behind the edge of the
@@ -991,7 +996,8 @@ while video.CurrentTime < video.Duration
                 end
             end
         end
-        fullPawMask = multiRegionConvexHullMask(fullPawMask);
+%         fullPawMask = multiRegionConvexHullMask(fullPawMask);
+        fullPawMask = bwconvhull(fullPawMask,'union');
         tracks(num_elements_to_track-1).(digitMaskStr) = fullPawMask;
         
         if iView < 3
@@ -1048,7 +1054,8 @@ while video.CurrentTime < video.Duration
                      mask_bbox(iView,1):mask_bbox(iView,1) + mask_bbox(iView,3)) = digitMask;
             currentDigitMask{iView} = currentDigitMask{iView} | tempMask;
         end
-        currentDigitMask{iView} = multiRegionConvexHullMask(currentDigitMask{iView});
+%         currentDigitMask{iView} = multiRegionConvexHullMask(currentDigitMask{iView});
+        currentDigitMask{iView} = bwconvhull(currentDigitMask{iView},'union');
         s_meanDigits = regionprops(currentDigitMask{iView},'centroid');
         digitBlobCentroids(1,:,1,iView) = s_meanDigits.Centroid;
     end
@@ -1196,7 +1203,8 @@ function pdMask = thresholdDorsum(meanHSV, ...
         % use the convex hull of the current mask, but make sure it doesn't
         % overlap with the digits
         tempMask = tempMask & dorsumRegionMask{iView};
-        [tempMask,~] = multiRegionConvexHullMask(tempMask);
+%         [tempMask,~] = multiRegionConvexHullMask(tempMask);
+        tempMask = bwconvhull(tempMask,'union');
         
         if iView == 2
             % calculate projection into the direct view
@@ -2243,7 +2251,8 @@ for iView = 2 : -1 : 1
 %         [~,~,~,~,labMat] = step(pdBlob{iView}, dorsum_mask);
 %         dorsum_mask = (labMat > 0);
 
-        dorsum_mask = multiRegionConvexHullMask(dorsum_mask);
+%         dorsum_mask = multiRegionConvexHullMask(dorsum_mask);
+        dorsum_mask = bwconvhull(dorsum_mask,'union');
 
         % NEED TO CONTINUE TO WORK HERE IF WE REALLY WANT TO GET THE PAW DORSUM
         % STUFF WORKING - WILL NEED TO FIGURE OUT HOW TO DEAL WITH PAW DORSUM
@@ -2263,7 +2272,8 @@ for iView = 2 : -1 : 1
         tracks(1).prevmask2  = tracks(1).digitmask2;
         frontOverlap = prevMask{iView} & frontMask & angledRegion{iView};
         tracks(1).digitmask2 = dorsumRegionMask{iView} | frontOverlap;
-        tracks(1).digitmask2 = multiRegionConvexHullMask(tracks(1).digitmask2);
+%         tracks(1).digitmask2 = multiRegionConvexHullMask(tracks(1).digitmask2);
+        tracks(1).digitmask2 = bwconvhull(tracks(1).digitmask2,'union');
         tracks(1).digitmask2 = tracks(1).digitmask2 & candidateRegion{iView};
 
         % calculate projection into center view
@@ -2441,7 +2451,8 @@ for iView = 1 : 2
         currentDigitMarkers(ii-1,:,3,iView) = [x(fpidx),y(fpidx)] - bbox(1:2);
     end
 
-    [digitsHull{iView},~] = multiRegionConvexHullMask(digitMasks{iView});
+%     [digitsHull{iView},~] = multiRegionConvexHullMask(digitMasks{iView});
+    digitsHull{iView} = bwconvhull(digitMasks{iView},'union');
     
     pts_transformed(:,:,iView) = bsxfun(@minus,pts_transformed(:,:,iView),bbox(1:2));
     
