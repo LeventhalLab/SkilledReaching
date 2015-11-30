@@ -1,11 +1,10 @@
 function [nndist, nnidx] = findNearestPointToLine(Q, Q0, varargin)
 %
-% from a collection of points, find the one that is closest to the line
-% specified by Q
+% from a collection of points, find the ones that are closest to the line
+% specified by Q. Default is find one point.
 %
 % usage: [nndist, nnidx] = findNearestPointToLine(Q, Q0, varargin)
 %
-% function to find the point(s) in y closest to a single point "x"
 %
 % INPUTS:
 %    Q - 2 x 2 or 2 x 3 matrix containing points defining the line, where

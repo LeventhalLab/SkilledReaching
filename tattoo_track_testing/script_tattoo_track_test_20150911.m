@@ -61,7 +61,8 @@ boxCalibration = calibrate_sr_box(BGimg, 'cb_path',cb_path,...
 BGimg_ud = undistortImage(BGimg, boxCalibration.cameraParams);
 
 startVid = 4;
-for iVid = startVid : 36%length(vidList)
+isValidVideo = false(length(vidList),1);
+for iVid = startVid : length(vidList)
     if vidList(iVid).bytes < 10000; continue; end
     
     currentVidName = vidList(iVid).name;
@@ -86,30 +87,38 @@ for iVid = startVid : 36%length(vidList)
 
     triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCalibration, ...
                                        'pawgraylevels',gray_paw_limits);
+                                   
+	if triggerTime == video.Duration    % no trigger frame was found
+        continue;
+    end
+    isValidVideo(iVid) = true;
 
-    [initDigitMasks, init_mask_bbox, digitMarkers, refImageTime] = ...
+    [initDigitMasks, init_mask_bbox, digitMarkers, refImageTime, dig_edge3D] = ...
         initialDigitID_20150910(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, ...
         'diffthreshold', BG_diff_threshold, ...
         'minsideoverlap',minSideOverlap);
-
-    pawTrajectory_f = track3Dpaw_forward_20151110(video, BGimg_ud, refImageTime, initDigitMasks, init_mask_bbox, digitMarkers, rat_metadata, boxCalibration, ...
-        'diffthreshold', BG_diff_threshold);
-%     pawTrajectory_b = track3Dpaw_backward(video, BGimg_ud, refImageTime, initDigitMasks, init_mask_bbox, digitMarkers, rat_metadata, boxCalibration);
-    
-    pawTrajectory_b = zeros(size(pawTrajectory_f));   % until the backwards routine fully works
-    pawTrajectory = pawTrajectory_f + pawTrajectory_b;
-    
-    matName = strrep(currentVidName,'.avi','.mat');
-    vid_metadata.FrameRate = video.FrameRate;
-    vid_metadata.Duration = video.Duration;
-    vid_metadata.width = video.Width;
-    vid_metadata.height = video.Height;
-    vid_metadata.triggerTime = triggerTime;
-    
-    save(matName,'pawTrajectory','vid_metadata');
-    
 end
 
-                                     
-                                     
+
+
+%     pawTrajectory_f = track3Dpaw_forward_20151110(video, BGimg_ud, refImageTime, initDigitMasks, init_mask_bbox, digitMarkers, rat_metadata, boxCalibration, ...
+%         'diffthreshold', BG_diff_threshold);
+% %     pawTrajectory_b = track3Dpaw_backward(video, BGimg_ud, refImageTime, initDigitMasks, init_mask_bbox, digitMarkers, rat_metadata, boxCalibration);
+%     
+%     pawTrajectory_b = zeros(size(pawTrajectory_f));   % until the backwards routine fully works
+%     pawTrajectory = pawTrajectory_f + pawTrajectory_b;
+%     
+%     matName = strrep(currentVidName,'.avi','.mat');
+%     vid_metadata.FrameRate = video.FrameRate;
+%     vid_metadata.Duration = video.Duration;
+%     vid_metadata.width = video.Width;
+%     vid_metadata.height = video.Height;
+%     vid_metadata.triggerTime = triggerTime;
+%     
+%     save(matName,'pawTrajectory','vid_metadata');
+%     
+% end
+% 
+%                                      
+%                                      
      

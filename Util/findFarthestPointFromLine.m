@@ -2,7 +2,8 @@ function [nndist, nnidx] = findFarthestPointFromLine(Q, Q0, varargin)
 %
 % usage: 
 %
-% function to find the point(s) in y closest to a single point "x"
+% from a collection of points, find the ones that are farthest from the
+% line specified by Q. Default is find one point.
 %
 % INPUTS:
 %    Q - 2 x 2 or 2 x 3 matrix containing points defining the line, where

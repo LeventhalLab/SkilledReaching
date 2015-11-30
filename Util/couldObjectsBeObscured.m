@@ -1,13 +1,22 @@
-function possObscured = couldObjectsBeObscured(masks, fundmat, bbox, imSize)
+function possObscured = couldObjectsBeObscured(masks, fundmat, bbox, imSize, isDirectView)
 %
 % function to determine if the blob in mask1 might be partially obscured by
 % mask2 in the mirror (or direct) view, and vice-versa
 %
 % INPUTS:
-%   mask1 - 
-%   mask2
-% OUTPUTS:
+%   masks - mxnx2 boolean array, where m is the number of rows, n is the
+%       number of columns in each masking image
+%   fundmat
+%   bbox
+%   imSize
+%   isDirectView - boolean indicating whether the masks come from the
+%       direct view (true) or mirror view (false)
 %
+% OUTPUTS:
+%   possObscured - 1x2 vector of booleans where each element indicates
+%       whether the mask with the same index COULD BE obscured by the
+%       object represented by the other mask in the other (mirror vs
+%       direct) view
 
 possObscured = false(1,2);
 
@@ -20,13 +29,7 @@ maskProjection = zeros(imSize(1),imSize(2),2);
 
 [~,epipole] = isEpipoleInImage(fundmat, imSize);
 
-
-
-
-% NEED TO FIGURE OUT HOW TO MAKE THIS WORK WHETHER WE'RE USING THE MIRROR
-% OR THE DIRECT VIEW - WILL CHANGE THE DIRECTION OF THE PROJECTION MASKS
-
-if epipole(1) < 0    % mirror is on the left
+if epipole(1) < 0 % && isDirectView  % mirror is on the left
 	edge_x = 1; 
 else
     edge_x = imSize(2);
@@ -34,7 +37,9 @@ end
 
 for iMask = 1 : 2
     fullMasks(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),iMask) = masks(:,:,iMask);
-        
+end
+
+for iMask = 1 : 2
     [tangentPoints(:,:,iMask), tangentLines(:,:,iMask)] = findTangentToEpipolarLine(masks(:,:,iMask), fundmat, bbox);
 
     for iLine = 1 : 2

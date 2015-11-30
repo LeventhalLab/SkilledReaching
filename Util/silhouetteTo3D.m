@@ -151,9 +151,9 @@ for ii = 1 : numDirectEdgePoints
             
             % the candidate point farthest from the line connecting the
             % tangent points should be the true "edge" point
-            epiPts = lineToBorderPoints(epiLines(ii,:), imSize);
-            epiPts = reshape(epiPts,[2 2])';
-            [~,farthestPt_idx] = findNearestPointToLine(epiPts, candidate_pts(validIdx,:));
+%             epiPts = lineToBorderPoints(epiLines(ii,:), imSize);
+%             epiPts = reshape(epiPts,[2 2])';
+            [~,farthestPt_idx] = findFarthestPointFromLine(squeeze(full_tanPts(:,:,2)), candidate_pts(validIdx,:));
             matchedPoints(ii,:,2) = candidate_pts(farthestPt_idx,:);
     end
     

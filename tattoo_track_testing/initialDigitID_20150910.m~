@@ -708,38 +708,70 @@ bboxes(1,:) = mask_bbox(2,:);
 bboxes(2,:) = mask_bbox(dMirrorIdx,:);
 
 % find average location of digits in direct and mirror views
-dig_edge3D = cell(1,4);
-fullPawMasks = cell(1,2);
-fullPawMasks{1} = centerMask;
+dig_edge3D = cell(1,5);
+fullPawMasks = false(h,w,2);
+fullPawMasks(:,:,1) = centerMask;
+digitMasks = cell(1,2);
+current_digitMasks = cell(1,2);
+possObscuredMatrix = false(5,5,2);
 if dMirrorIdx == 1
-    fullPawMasks{2} = leftMirrorPawMask;
+    fullPawMasks(:,:,2) = leftMirrorPawMask;
 else
-    fullPawMasks{2} = rightMirrorPawMask;
+    fullPawMasks(:,:,2) = rightMirrorPawMask;
 end
 for iView = 1 : 2
-    tempMask = false(h,w);
+    digitMasks{iView} = false(bboxes(iView,4)+1,bboxes(iView,3)+1,5);
+%     current_digitMasks{iView} = false(bboxes(iView,2),bboxes(iView,1),4);   % for all digit masks except the one for which we're currently trying to match silhouettes
+
     for iDigit = 1 : 5
         if iView == 1
-            tempDigMask = viewMask{2}(:,:,iDigit);
+            digitMasks{iView}(:,:,iDigit) = viewMask{2}(:,:,iDigit);
+%             tempDigMask = viewMask{2}(:,:,iDigit);
         else
-            tempDigMask = viewMask{dMirrorIdx}(:,:,iDigit);
+%             tempDigMask = viewMask{dMirrorIdx}(:,:,iDigit);
+            digitMasks{iView}(:,:,iDigit) = viewMask{dMirrorIdx}(:,:,iDigit);
         end
 
-        tempMask(bboxes(iView,2):bboxes(iView,2) + bboxes(iView,4), ...
-                 bboxes(iView,1):bboxes(iView,1) + bboxes(iView,3)) = tempDigMask;
-        fullPawMasks{iView} = fullPawMasks{iView} & ~tempMask;
+%         tempMask(bboxes(iView,2):bboxes(iView,2) + bboxes(iView,4), ...
+%                  bboxes(iView,1):bboxes(iView,1) + bboxes(iView,3)) = tempDigMask;
+%         fullPawMasks{iView} = fullPawMasks{iView} & ~tempMask;
     end
-    
+    if iView == 1
+        F = F_side;
+    else
+        F = F_side';
+    end
+    possObscuredMatrix(:,:,iView) = findPotentialObscurations(digitMasks{iView}, ...
+                                                              F, ...
+                                                              bboxes(iView,:), ...
+                                                              [h,w], ...
+                                                              2-iView);    % true for direct view, false for mirror view
+%     current_digitMasks{iView} = digitMasks{iView}(:,:,2:5);
 end
 
-[matchedMasks, tangentPoints] = matchSilhouettes(pdMask, F_side, bboxes, [h,w], fullPawMasks);
-pd_edge3D = silhouetteTo3D(matchedMasks, boxCalibration, bboxes, tangentPoints, [h,w], fullPawMasks);
+% [matchedMasks, tangentPoints] = matchSilhouettes(pdMask, F_side, bboxes, [h,w], fullPawMasks, current_digitMasks);
+% pd_edge3D = silhouetteTo3D(matchedMasks, boxCalibration, bboxes, tangentPoints, [h,w], fullPawMasks, digitMasks);
 
-for iDigit = 1 : 4
-    digitMask{1} = viewMask{2}(:,:,iDigit+1);
-    digitMask{2} = viewMask{dMirrorIdx}(:,:,iDigit+1);
+% start with objects for which there is nothing to obscure it in one of the
+% views
+
+
+
+for iDigit = 1 : 5
+    digitMask{1} = viewMask{2}(:,:,iDigit);
+    digitMask{2} = viewMask{dMirrorIdx}(:,:,iDigit);
     
-    [matchedMasks, tangentPoints] = matchSilhouettes(digitMask, F_side, bboxes, [h,w], fullPawMasks);
+%     otherDigitIdx = setdiff(1:5, iDigit+1);
+%     current_digitMasks{1} = digitMasks{1}(:,:,otherDigitIdx);
+%     current_digitMasks{2} = digitMasks{2}(:,:,otherDigitIdx);
+    [matchedMasks, tangentPoints] = matchSilhouettes(digitMask, ...
+                                                     F_side, ...
+                                                     bboxes, ...
+                                                     [h,w], ...
+                                                     fullPawMasks, ...
+                                                     digitMasks, ...
+                                                     possObscuredMatrix, ...
+                                                     iDigit);
     dig_edge3D{iDigit} = silhouetteTo3D(matchedMasks, boxCalibration, bboxes, tangentPoints, [h,w], fullPawMasks);
 end
 
@@ -909,7 +941,8 @@ for iView = 1 : 2
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
                                              pts_transformed(3,:), size(digitMasks{iView}));
                                          
-    [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+%     [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+    digitsHull = bwconvhull(digitMasks{iView},'union');
     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull & angledRegion;
     
     
@@ -999,7 +1032,8 @@ function pdMask = initThresholdDorsum(HSVlimits, ...
         
         if ~any(tempMask(:)); continue; end
         
-        [tempMask,~] = multiRegionConvexHullMask(tempMask);
+        tempMask = bwconvhull(tempMask,'union');
+%         [tempMask,~] = multiRegionConvexHullMask(tempMask);
         tempMask = tempMask & dorsumRegionMask{iView};
         pdMask{iView} = tempMask;
     end

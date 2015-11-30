@@ -14,7 +14,7 @@ s = regionprops(mask,'Centroid');
 num_pts = length(x);
 
 ext_pts = sortClockWise(s.Centroid,[x,y]);
-ext_pts = bsxfun(@plus,ext_pts, bbox(1:2));
+ext_pts = bsxfun(@plus,ext_pts, bbox(1:2)-1);
 
 tangentPoints = zeros(2,2);
 tangentLines  = zeros(2,3);

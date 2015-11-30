@@ -1,11 +1,15 @@
-function possObscured = couldObjectsBeObscured(masks, fundmat, bbox, imSize)
+function possObscured = couldObjectsBeObscured(masks, fundmat, bbox, imSize, isDirectView)
 %
 % function to determine if the blob in mask1 might be partially obscured by
 % mask2 in the mirror (or direct) view, and vice-versa
 %
 % INPUTS:
-%   mask1 - 
-%   mask2
+%   masks
+%   fundmat
+%   bbox
+%   imSize
+%   isDirectView - boolean indicating whether the masks come from the
+%       direct view (true) or mirror view (false)
 % OUTPUTS:
 %
 
@@ -20,7 +24,7 @@ maskProjection = zeros(imSize(1),imSize(2),2);
 
 [~,epipole] = isEpipoleInImage(fundmat, imSize);
 
-if epipole(1) < 0    % mirror is on the left
+if epipole(1) < 0 && isDirectView  % mirror is on the left
 	edge_x = 1; 
 else
     edge_x = imSize(2);

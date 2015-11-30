@@ -65,9 +65,11 @@ BGimg_ud = BGimg_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
               reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
 % identify the frames where the paw is visible over the shelf
 pawPixelCount = 0;
-
-while pawPixelCount < pixCountThresh
+frameNum = 0;
+while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     image = readFrame(video);
+    frameNum = frameNum + 1;
+%     fprintf('frame number: %d\n', frameNum)
     
     % undistort image
     image_ud = undistortImage(image, boxCalibration.cameraParams);
@@ -76,8 +78,10 @@ while pawPixelCount < pixCountThresh
                   reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
     image_ud = double(image_ud) / 255;
     
+%     figure(1);imshow(image_ud);
     BGdiff = imabsdiff(image_ud, BGimg_ud);
     
+%     figure(2);imshow(BGdiff);
     BGdiff_gray = mean(BGdiff, 3);
     BG_masked = (BGdiff_gray > foregroundThresh);
     
