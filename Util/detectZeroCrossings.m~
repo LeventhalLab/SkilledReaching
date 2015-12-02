@@ -1,10 +1,20 @@
-function idx = detectZeroCrossings(x)
+function [idx, isLocalExtremum] = detectZeroCrossings(x)
 
 zerotol = 1e-10;
 
 test_sig = x .* circshift(x,1);
 
 idx = find(test_sig < 0 | abs(x) < zerotol);   % find points where the signal changes sign
+
+idx_diff = diff(idx);
+
+% find distinct groupings of consecutive zero crossings
+if length(idx) > 0
+for ii = 1 : length(idx)
+    if idx(ii)
+
+
+
 
 if diff(idx) == 1   % if identify adjacent points, this means it's really a tangent point
     idx = idx(1);

@@ -27,9 +27,10 @@ for ii = 1 : num_pts
 	lineValue = epiLines(ii,1) * ext_pts(:,1) + ...
                 epiLines(ii,2) * ext_pts(:,2) + epiLines(ii,3);
             
-	intersect_idx = detectZeroCrossings(lineValue);
+	[intersect_idx, isLocalExtremum] = detectCircularZeroCrossings(lineValue);
     
-    if length(intersect_idx) == 1
+%     if length(intersect_idx) == 1
+    if all(isLocalExtremum(intersect_idx))
         tangentPointsFound = tangentPointsFound + 1;
         
         tangentPoints(tangentPointsFound,:) = ext_pts(ii,:);

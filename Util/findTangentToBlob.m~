@@ -19,10 +19,9 @@ for ii = 1 : num_pts
 	lineValue = lineCoeff(1) * ext_pts(:,1) + ...
                 lineCoeff(2) * ext_pts(:,2) + lineCoeff(3);
             
-    [intersect_idx, isLocalExtremum] = detectCircularZeroCrossings(lineValue);
+    intersect_idx = detectZeroCrossings(lineValue);
     
-%     if length(intersect_idx) == 1
-    if all(isLocalExtremum(intersect_idx))
+    if length(intersect_idx) == 1
         tangentPointsFound = tangentPointsFound + 1;
         
         tanPts(tangentPointsFound,:) = ext_pts(ii,:);
