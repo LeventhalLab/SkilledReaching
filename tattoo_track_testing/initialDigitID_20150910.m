@@ -769,10 +769,15 @@ for iDigit = 1 : 5
                                                      possObscuredMatrix, ...
                                                      iDigit);
     dig_edge3D{iDigit} = silhouetteTo3D(matchedMasks, boxCalibration, bboxes, tangentPoints, [h,w], fullPawMasks);
+    viewMask{dMirrorIdx}(:,:,iDigit) = matchedMasks{2};
+    viewMask{2}(:,:,iDigit) = matchedMasks{1};
 end
+% PROBABLY NEED SOMETHING HERE TO CHECK THAT WE HAVE THE OPTIMUM MATCHES
+% BEFORE LEAVING THIS ROUTINE (NOT JUST ALL DIGITS/PAW DORSUM VISIBLE IN
+% ALL VIEWS)
 
-viewMask{dMirrorIdx}(:,:,1) = matchedMasks{2};
-viewMask{2}(:,:,1) = matchedMasks{1};
+% viewMask{dMirrorIdx}(:,:,1) = matchedMasks{2};
+% viewMask{2}(:,:,1) = matchedMasks{1};
 
 refImageTime = video.CurrentTime - 1/video.FrameRate;
 

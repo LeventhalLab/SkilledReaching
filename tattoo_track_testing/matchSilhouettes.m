@@ -17,7 +17,8 @@ function [endMasks, tangentPoints] = matchSilhouettes(initMasks, ...
 %   digitMasks - 
 %
 % OUTPUTS:
-%
+%   endMasks - 
+%   tangentPoints - 
 
 tangentPoints = zeros(2,2,2);    % mxnxp where m is number of points, n is (x,y), p is the view index (1 for direct, 2 for mirror)
 tangentLines = zeros(2,3,2);     % mxnxp where m is number of points, n is (A,B,C), p is the view index (1 for direct, 2 for mirror)
@@ -80,14 +81,17 @@ iView = 1;
                     tangentLines(ii,2,iView) * ext_pts{otherViewIdx}(:,2) + ...
                     tangentLines(ii,3,iView);
 
-        intersect_idx = detectZeroCrossings(lineValue);
+        [intersect_idx, isLocalExtremum] = detectCircularZeroCrossings(lineValue);
         switch length(intersect_idx)
             case 0,    % this tangent line from one view does not intersect the blob in the other view
                 interiorMask(ii) = otherViewIdx;
-            case 1,    % this tangent line from one view is also a tangent line in the other view
-                interiorMask(ii) = 0;
-            case 2,    % this tangent line from one view cuts through the blob in the other view
-                interiorMask(ii) = iView;
+            otherwise,
+                if all(isLocalExtremum(intersect_idx))
+                    % this tangent line from one view is also a tangent line in the other view
+                    interiorMask(ii) = 0;
+                else    % this tangent line from one view cuts through the blob in the other view
+                    interiorMask(ii) = iView;
+                end
         end
 
         if interiorMask(ii)   % figure out where to extend the "interior mask" to

@@ -6,7 +6,8 @@ x_length = length(x);
 
 isLocalExtremum = false(x_length, 1);
 idx = false(x_length, 1);
-if all(abs(x) < zerotol)    % all zeros
+x(abs(x)<zerotol) = 0;
+if all(~x)    % all zeros
     return;
 end
 
@@ -23,8 +24,8 @@ if length(idx_zeroCross) == size(idx_zeroCross,2)
     idx_zeroCross = idx_zeroCross';
 end
 idx_zeroCross = idx_zeroCross(idx_zeroCross <= x_length);
-idx_zeros = find(abs(z) < zerotol);
-idx_nonzero = find(abs(z) > zerotol);
+idx_zeros = find(z==0);
+idx_nonzero = find(z~=0);
 
 % condense consecutive indices where the function is equal to zero
 idx_zeros_diff = diff(idx_zeros);
@@ -35,7 +36,7 @@ for ii = 1 : length(zeros_separate_end_idx)
         zeros_separate_end_idx(ii) = ...
             min(idx_nonzero(idx_nonzero > zeros_separate_start_idx(ii)));
     else
-        zeros_separate_end_idx(ii) = 0;
+        zeros_separate_end_idx(ii) = 1;
     end
 end
 zeros_separate_end_idx = zeros_separate_end_idx - 1;
@@ -48,14 +49,19 @@ zeros_separate_end_idx = zeros_separate_end_idx(1:length(zeros_separate_start_id
 
 % figure out if zero crossings that don't directly hit zero are local
 % extrema or just zero crossings
-for ii = 1 : length(idx_zeroCross)-1
+for ii = 1 : length(idx_zeroCross)
     if idx_zeroCross(ii) == x_length
         temp_idx = [1,x_length];
     else
         temp_idx = idx_zeroCross(ii):idx_zeroCross(ii)+1;
     end
-    if idx_zeroCross(ii + 1) - idx_zeroCross(ii) == 1
-        isLocalExtremum(temp_idx) = true;
+    if ii < length(idx_zeroCross)
+        if idx_zeroCross(ii + 1) - idx_zeroCross(ii) == 1
+            isLocalExtremum(temp_idx) = true;
+        end
+    elseif (idx_zeroCross(1) == 1) && ...
+           (idx_zeroCross(end) == x_length)
+               isLocalExtremum(temp_idx) = true;
     end
     idx(temp_idx) = true;
 end
