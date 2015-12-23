@@ -1,0 +1,183 @@
+% script_greenPaw_track_20151223
+% testing identification of tattooed paw and digits
+
+% algorithm outline:
+% first issue: correctly identify colored paw regions
+
+% 1) calibrate based on rubiks image to get fundamental matrix
+%       - mark matching points either manually or automatically. manually
+%       is probably going to be more accurate until we put clearer markers
+%       in.
+%       - create matrices of matching points coordinates and calculate F
+%       for left to center and right to center
+% 2) 
+
+
+% criteria we can use to identify the paw:
+%   1 - the paw is moving
+%   2 - dorsum of the paw is (mostly) green
+%   3 - palmar aspect is (mostly) pink
+%   4 - it's different from the background image  
+
+%%
+numBGframes = 20;
+gray_paw_limits = [60 125] / 255;
+
+cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
+num_rad_coeff = 2;
+est_tan_distortion = false;
+estimateSkew = false;
+
+% [cameraParams, ~, ~] = cb_calibration(...
+%                        'cb_path', cb_path, ...
+%                        'num_rad_coeff', num_rad_coeff, ...
+%                        'est_tan_distortion', est_tan_distortion, ...
+%                        'estimateskew', estimateSkew);
+                   
+sr_ratInfo = get_sr_RatList();     
+for i_rat = 1 : length(sr_ratInfo)
+    
+    ratID = sr_ratInfo(i_rat).ID;
+    rawdata_dir = sr_ratInfo(i_rat).directory.rawdata;
+    
+    startDateNum = datenum(sr_ratInfo(i_rat).date.start, 'yyyymmdd');
+    endDateNum = datenum(sr_ratInfo(i_rat).date.end, 'yyyymmdd');
+    
+    for i_dateNum = startDateNum : endDateNum
+        
+        curDateStr = datestr(i_dateNum, 'yyyymmdd');
+        vidFolderNames = appendLetters2String([ratID '_' curDateStr]);
+        
+        for iFolder = 1 : size(vidFolderNames, 1)
+            curFolder = fullfile(rawdata_dir, vidFolderNames(iFolder,:));
+            if ~exist(curFolder,'dir'); continue; end
+            
+            cd(curFolder)
+            
+            vidList = dir('*.avi');
+            
+            BGcalculated = false;
+            for iVid = 1 : length(vidList)
+                if vidList(iVid).bytes < 10000; continue; end
+
+                currentVidName = vidList(iVid).name;
+                disp(currentVidName)
+
+                video = VideoReader(currentVidName);
+                h = video.Height;
+                w = video.Width;
+                
+                if ~BGcalculated
+                    BGcalculated = true;
+                    BGimg = extractBGimg( video, 'numbgframes', numBGframes);
+                    BGimg_ud = undistortImage(BGimg, cameraParams);
+                end
+                triggerTime = identifyTriggerTime( video, BGimg_ud, sr_ratInfo(i_rat), boxCalibration, ...
+                                                   'pawgraylevels',gray_paw_limits);
+                                               
+            end    % for iVid
+        end    % for iFolder
+
+    
+    end
+    
+end
+
+sampleSession = fullfile('/Volumes/RecordingsLeventhal3/SkilledReaching/R0044/R0044-rawdata/R0044_20150416a');
+cd(sampleSession);
+vidList = dir('*.avi');
+sampleVid  = fullfile(sampleSession, 'R0044_20150416_12-11-45_034.avi');
+sr_summary = sr_ratList();
+
+
+
+minBeadArea = 0300;
+maxBeadArea = 2000;
+pointsPerRow = 4;    % for the checkerboard detection
+maxBeadEcc = 0.8;
+BG_diff_threshold = 20;
+minSideOverlap = 0.4;
+
+
+test_ratID = 44;
+rat_metadata = create_sr_ratMetadata(sr_summary, test_ratID);
+
+video = VideoReader(sampleVid);
+BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
+
+hsvBounds_beads = [0.00    0.16    0.50    1.00    0.00    1.00
+                   0.33    0.16    0.00    0.50    0.00    0.50
+                   0.66    0.16    0.50    1.00    0.00    1.00];
+boxCalibration = calibrate_sr_box(BGimg, 'cb_path',cb_path,...
+                                         'numradialdistortioncoefficients',num_rad_coeff,...
+                                         'estimatetangentialdistortion',est_tan_distortion,...
+                                         'estimateskew',estimateSkew,...
+                                         'minbeadarea',minBeadArea,...
+                                         'maxbeadarea',maxBeadArea,...
+                                         'hsvbounds',hsvBounds_beads,...
+                                         'maxeccentricity',maxBeadEcc,...
+                                         'pointsperrow',pointsPerRow);
+BGimg_ud = undistortImage(BGimg, boxCalibration.cameraParams);
+
+startVid = 4;
+isValidVideo = false(length(vidList),1);
+for iVid = startVid : length(vidList)
+    if vidList(iVid).bytes < 10000; continue; end
+    
+    currentVidName = vidList(iVid).name;
+    disp(currentVidName)
+    currentVidName = fullfile(sampleSession,currentVidName);
+    
+    video = VideoReader(currentVidName);
+    h = video.Height;
+    w = video.Width;
+
+%     BGimg = extractBGimg( video, 'numbgframes', numBGframes);   % can comment out once calculated the first time during debugging
+%     boxCalibration = calibrate_sr_box(BGimg, 'cb_path',cb_path,...
+%                                              'numradialdistortioncoefficients',num_rad_coeff,...
+%                                              'estimatetangentialdistortion',est_tan_distortion,...
+%                                              'estimateskew',estimateSkew,...
+%                                              'minbeadarea',minBeadArea,...
+%                                              'maxbeadarea',maxBeadArea,...
+%                                              'hsvbounds',hsvBounds_beads,...
+%                                              'maxeccentricity',maxBeadEcc,...
+%                                              'pointsperrow',pointsPerRow);
+    % find the pellet, if there
+
+    triggerTime = identifyTriggerTime( video, BGimg_ud, rat_metadata, boxCalibration, ...
+                                       'pawgraylevels',gray_paw_limits);
+                                   
+	if triggerTime == video.Duration    % no trigger frame was found
+        continue;
+    end
+    isValidVideo(iVid) = true;
+
+    [initDigitMasks, init_mask_bbox, digitMarkers, refImageTime, dig_edge3D] = ...
+        initialDigitID_20150910(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, ...
+        'diffthreshold', BG_diff_threshold, ...
+        'minsideoverlap',minSideOverlap);
+end
+
+
+
+%     pawTrajectory_f = track3Dpaw_forward_20151110(video, BGimg_ud, refImageTime, initDigitMasks, init_mask_bbox, digitMarkers, rat_metadata, boxCalibration, ...
+%         'diffthreshold', BG_diff_threshold);
+% %     pawTrajectory_b = track3Dpaw_backward(video, BGimg_ud, refImageTime, initDigitMasks, init_mask_bbox, digitMarkers, rat_metadata, boxCalibration);
+%     
+%     pawTrajectory_b = zeros(size(pawTrajectory_f));   % until the backwards routine fully works
+%     pawTrajectory = pawTrajectory_f + pawTrajectory_b;
+%     
+%     matName = strrep(currentVidName,'.avi','.mat');
+%     vid_metadata.FrameRate = video.FrameRate;
+%     vid_metadata.Duration = video.Duration;
+%     vid_metadata.width = video.Width;
+%     vid_metadata.height = video.Height;
+%     vid_metadata.triggerTime = triggerTime;
+%     
+%     save(matName,'pawTrajectory','vid_metadata');
+%     
+% end
+% 
+%                                      
+%                                      
+     

@@ -1,5 +1,10 @@
 function [sucessRate, failureRate,RatID,totalNumReaches] = getRatInfo(RatData)
-
+%
+% INPUTS:
+%   RatData - 
+%
+% OUTPUTS:
+%   
 
 RatName = [RatData.VideoFiles.name];
 RatID = strcat(RatName(4),RatName(5));

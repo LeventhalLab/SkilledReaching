@@ -1,0 +1,20 @@
+function aligned_trajectories = alignTrajectoriesToFrame(x,y,z,vid_alignFrame)
+
+numVirtualFrames = 1000; 
+alignToFrame = 500;
+% % find max trajectory length
+% max_traj_length = 0;
+% for i_traj = 1 : length(z)
+%     if length(z{i_traj}) > max_traj_length
+%         max_traj_length = length(z);
+%     end
+% end
+
+aligned_trajectories = zeros(numVirtualFrames,3,length(z));
+
+for i_traj = 1 : length(z)
+    
+    if vid_alignFrame(i_traj) == 0; continue; end
+    
+    pre_pad = alignToFrame - vid_alignFrame(i_traj);
+    x_pad = padarray(x{i_traj},alignToFrame-,0,'pre');

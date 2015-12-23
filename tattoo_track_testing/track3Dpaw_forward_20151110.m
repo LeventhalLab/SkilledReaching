@@ -396,8 +396,6 @@ meanDigitTrajectory = zeros(numFrames - currentFrame + 1, 3);
 % initialize one track each for the dorsum of the paw and each digit in the
 % mirror and center views
 
-tracks = initializeTracks();
-
 s = struct('Centroid', {}, ...
            'BoundingBox', {});
 num_elements_to_track = size(digitMasks{2}, 3) + 1;   % tracks(6) is the whole paw mask, tracks(7) is the pellet 
