@@ -1,5 +1,7 @@
 function plot3Dtrajectories(x,y,z,varargin)
 
+slot_z = 175;
+
 h_axes = 0;
 plotCol = 'k';
 fadeColor = false;
@@ -9,6 +11,9 @@ meanWeight = 2;
 indTrajWeight = 0.5;
 onlyValidFrames = true;
 
+xLimits = 
+yLimits = [-10 30];
+zLimits = [160 200];
 for iarg = 1 : 2 : nargin - 3
     
     switch lower(varargin{iarg})
@@ -26,6 +31,11 @@ for iarg = 1 : 2 : nargin - 3
             meanWeight = varargin{iarg + 1};
         case 'onlyvalidframes',
             onlyValidFrames = varargin{iarg + 1};
+        case 'slot_z',
+            slot_z = varargin{iarg + 1};
+        case 'xlim',
+        case 'ylim',
+        case 'zlim',
     end
       
 end   % for iarg...
@@ -38,8 +48,12 @@ else
 end
 
 [meanTrajectory,varTrajectory,numValidTraj] = calcAverageTrajectory(x,y,z,...
-                                                );
-validFrames = (numValidTraj == max(numValidTraj));
+                                                                    'slot_z',slot_z);
+if onlyValidFrames
+    validFrames = (numValidTraj == max(numValidTraj));   % only use frames where every trajectory is represented
+else
+    validFrames = 1:size(meanTrajectory,3);
+end
 
 if showIndTraj
     for i_plot = 1 : length(x)
@@ -56,7 +70,9 @@ end
 
 if showMean
     
-    plot3(meanTrajectory(:,1),meanTrajectory(:,2),meanTrajectory(:,3),...
+    plot3(meanTrajectory(validFrames,1),...
+          meanTrajectory(validFrames,2),...
+          meanTrajectory(validFrames,3),...
           'color',plotCol, ...
           'linewidth',meanWeight);
 end
