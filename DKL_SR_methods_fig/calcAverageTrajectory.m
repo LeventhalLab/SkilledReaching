@@ -1,6 +1,8 @@
 function [meanTrajectory, varTrajectory, numValidTraj] = calcAverageTrajectory(x,y,z,varargin)
 
 slot_z = 175;
+numVirtualFrames = 1200;
+alignToFrame = 600;
 
 for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
@@ -10,7 +12,9 @@ for iarg = 1 : 2 : nargin - 3
 end
 
 slotCrossFrames = DKL_slotCrossFrames(z, 'slot_z', slot_z);
-aligned_trajectories = alignTrajectoriesToFrame(x,y,z,slotCrossFrames);
+aligned_trajectories = alignTrajectoriesToFrame(x,y,z,slotCrossFrames,...
+                                                'numvirtframes',numVirtualFrames,...
+                                                'aligntoframe',alignToFrame);
 % now align x,y,z to the cross frame for each trajectory. If no cross frame
 % identified, skip
 

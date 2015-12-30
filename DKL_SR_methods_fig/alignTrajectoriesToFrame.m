@@ -29,7 +29,7 @@ end
 aligned_trajectories = zeros(numVirtualFrames,3,length(z));
 
 for i_traj = 1 : length(z)
-    
+%     i_traj
     if vid_alignFrame(i_traj) == 0; continue; end
     
     pre_pad = alignToFrame - vid_alignFrame(i_traj);
