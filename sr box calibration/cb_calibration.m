@@ -14,6 +14,8 @@ function [cameraParams, imUsed, estimationErrors] = cb_calibration(varargin)
 %       general, this should be very close to zero and not necessary
 %   'estimateskew' - should also be very close to zero and probably isn't
 %       necessary
+%   'squaresize' - size of checkerboard squares (in whatever units you're
+%       using, generally mm)
 %
 % OUTPUTS:
 %   cameraParams - camera parameters object from the calibration
@@ -25,6 +27,8 @@ num_rad_coeff = 2;
 est_tan_distortion = false;
 estimateSkew = false;
 
+cb_squareSize = 20;    % in mm
+
 for iarg = 1 : 2 : nargin
     switch lower(varargin{iarg})
         case 'cb_path',
@@ -35,6 +39,8 @@ for iarg = 1 : 2 : nargin
             est_tan_distortion = varargin{iarg + 1};
         case 'estimateskew',
             estimateSkew = varargin{iarg + 1};
+        case 'squaresize',
+            cb_squareSize = varargin{iarg + 1};
     end
 end
 
@@ -53,7 +59,7 @@ end
 
 %%
 [impts,bs] = detectCheckerboardPoints(im);
-worldPoints = generateCheckerboardPoints(bs,20);
+worldPoints = generateCheckerboardPoints(bs,cb_squareSize);
 %%
 [cameraParams,imUsed,estimationErrors] = estimateCameraParameters(impts,worldPoints,...
                                                                   'numradialdistortioncoefficients',num_rad_coeff, ...

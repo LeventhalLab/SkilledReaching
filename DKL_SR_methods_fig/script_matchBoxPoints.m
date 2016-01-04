@@ -19,7 +19,7 @@ kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Pr
 imFileType = 'bmp';
 sr_ratInfo = get_sr_RatList();
 
-for i_rat = 1 : 1%length(sr_ratInfo)
+for i_rat = 1 : length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir{i_rat} = fullfile(kinematics_rootDir,ratID);
