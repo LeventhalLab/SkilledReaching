@@ -58,7 +58,7 @@ for iSession = 1 : numSessions
     numValidPoints = 0;
     x1_right{iSession} = zeros(1,2);
     x2_right{iSession} = zeros(1,2);
-    for ii = 1 : length(leftPointNames)
+    for ii = 1 : length(rightPointNames)
         pointMatch = strcmp(rightPointNames{ii}, excludePoints);
         if any(pointMatch(:)); continue; end
         
