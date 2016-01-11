@@ -31,7 +31,7 @@ ratDir = cell(1,length(sr_ratInfo));
 triDir = cell(1,length(sr_ratInfo));
 scoreDir = cell(1,length(sr_ratInfo));
 
-for i_rat = 1 : 1%length(sr_ratInfo)
+for i_rat = 4 : 4%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir{i_rat} = fullfile(kinematics_rootDir,ratID);
@@ -78,7 +78,13 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         if ~exist(BGname_ud,'file');continue;end
         
         BGimg_ud = imread(BGname_ud, 'bmp');
-        rbkImg_ud = imread(rbkFile.name, 'png');
+        
+        for ii = 1 : length(rbkFile)
+            if ~strcmp(rbkFile(ii).name,'._')
+                rbkName = rbkFile(ii).name;
+            end
+        end
+        rbkImg_ud = imread(rbkName, 'png');
         
         P1 = eye(4,3);
         if numSessions == 1
@@ -105,6 +111,23 @@ for i_rat = 1 : 1%length(sr_ratInfo)
             right_reprojPoints(:,:,iView) = unnormalize_points(squeeze(right_norm_reprojPoints(:,:,iView)),K);
         end
         
+        sf = sr_estimateScale(matchedPoints.(mp_metadata.sessionNames{iSession}), ...
+                              squeeze(srCal.P(:,:,:,iSession)), ...
+                              K);
+                          
+                          
+        scaled_left_points3d = left_points3d * mean(sf(:,1));
+        scaled_right_points3d = right_points3d * mean(sf(:,2));
+%         left_3dreproj_direct = projectPoints_DL(scaled_left_points3d, P1);
+%         left_3dreproj_mirror = projectPoints_DL(scaled_left_points3d, left_P2);
+%         left_3dreproj_direct = unnormalize_points(left_3dreproj_direct, K);
+%         left_3dreproj_mirror = unnormalize_points(left_3dreproj_mirror, K);
+%                                             
+%         right_3dreproj_direct = projectPoints_DL(scaled_right_points3d, P1);
+%         right_3dreproj_mirror = projectPoints_DL(scaled_right_points3d, right_P2);
+%         right_3dreproj_direct = unnormalize_points(right_3dreproj_direct, K);
+%         right_3dreproj_mirror = unnormalize_points(right_3dreproj_mirror, K);
+        
         figure(1)
         imshow(BGimg_ud);
         figName = sprintf('undistorted background image %s', BGname_ud);
@@ -120,6 +143,11 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         plot(right_reprojPoints(:,1,1),right_reprojPoints(:,2,1),'marker','*','color','r','linestyle','none');
         plot(right_reprojPoints(:,1,2),right_reprojPoints(:,2,2),'marker','*','color','r','linestyle','none');
 
+%         plot(left_3dreproj_direct(:,1),left_3dreproj_direct(:,2),'marker','+','color','g','linestyle','none');
+%         plot(left_3dreproj_mirror(:,1),left_3dreproj_mirror(:,2),'marker','+','color','g','linestyle','none');
+%         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
+%         plot(right_3dreproj_mirror(:,1),right_3dreproj_mirror(:,2),'marker','+','color','y','linestyle','none');
+        
         figure(2)
         imshow(rbkImg_ud);
         figName = sprintf('undistorted calibration image %s', rbkFile.name);
@@ -134,6 +162,15 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         plot(left_reprojPoints(:,1,2),left_reprojPoints(:,2,2),'marker','*','color','b','linestyle','none');
         plot(right_reprojPoints(:,1,1),right_reprojPoints(:,2,1),'marker','*','color','r','linestyle','none');
         plot(right_reprojPoints(:,1,2),right_reprojPoints(:,2,2),'marker','*','color','r','linestyle','none');
+        
+%         plot(left_3dreproj_direct(:,1),left_3dreproj_direct(:,2),'marker','+','color','g','linestyle','none');
+%         plot(left_3dreproj_mirror(:,1),left_3dreproj_mirror(:,2),'marker','+','color','g','linestyle','none');
+%         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
+%         plot(right_3dreproj_mirror(:,1),right_3dreproj_mirror(:,2),'marker','+','color','y','linestyle','none');
+
+    
+        keyboard
+    
         
     end
 end

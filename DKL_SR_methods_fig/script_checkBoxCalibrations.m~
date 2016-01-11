@@ -10,6 +10,8 @@ pdfDir  = '/Users/dleventh/Documents/SR_plots';
 xl_directory = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
 
+rubikSpacing = 17.5;    % in mm
+
 if computeCamParams
     [cameraParams, ~, ~] = cb_calibration(...
                            'cb_path', cb_path, ...
@@ -29,7 +31,7 @@ ratDir = cell(1,length(sr_ratInfo));
 triDir = cell(1,length(sr_ratInfo));
 scoreDir = cell(1,length(sr_ratInfo));
 
-for i_rat = 1 : 1%length(sr_ratInfo)
+for i_rat = 4 : 4%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir{i_rat} = fullfile(kinematics_rootDir,ratID);
@@ -76,15 +78,21 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         if ~exist(BGname_ud,'file');continue;end
         
         BGimg_ud = imread(BGname_ud, 'bmp');
-        rbkImg_ud = imread(rbkFile.name, 'png');
+        
+        for ii = 1 : length(rbkFile)
+            if ~strcmp(rbkFile(ii).name,'._')
+                rbkName = rbkFile(ii).name;
+            end
+        end
+        rbkImg_ud = imread(rbkName, 'png');
         
         P1 = eye(4,3);
         if numSessions == 1
-            left_P2 = squeeze(srCal(:,:,1));
-            right_P2 = squeeze(srCal(:,:,2));
+            left_P2 = squeeze(srCal.P(:,:,1));
+            right_P2 = squeeze(srCal.P(:,:,2));
         else
-            left_P2 = squeeze(srCal(:,:,1,iSession));
-            right_P2 = squeeze(srCal(:,:,2,iSession));
+            left_P2 = squeeze(srCal.P(:,:,1,iSession));
+            right_P2 = squeeze(srCal.P(:,:,2,iSession));
         end
         
         x1_left_norm = normalize_points(x1_left{iSession}, K);
@@ -93,9 +101,33 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         x1_right_norm = normalize_points(x1_right{iSession}, K);
         x2_right_norm = normalize_points(x2_right{iSession}, K);
     
-        [left_points3d,left_reprojPoints,left_errors] = triangulate_DL(x1_left_norm,x2_left_norm, eye(4,3), left_P2);
-        [right_points3d,right_reprojPoints,right_errors] = triangulate_DL(x1_right_norm,x2_right_norm, eye(4,3), right_P2);
-    
+        [left_points3d,left_norm_reprojPoints,left_errors] = triangulate_DL(x1_left_norm,x2_left_norm, P1, left_P2);
+        [right_points3d,right_norm_reprojPoints,right_errors] = triangulate_DL(x1_right_norm,x2_right_norm, P1, right_P2);
+        
+        left_reprojPoints = zeros(size(left_norm_reprojPoints));
+        right_reprojPoints = zeros(size(right_norm_reprojPoints));
+        for iView = 1 : 2
+            left_reprojPoints(:,:,iView) = unnormalize_points(squeeze(left_norm_reprojPoints(:,:,iView)),K);
+            right_reprojPoints(:,:,iView) = unnormalize_points(squeeze(right_norm_reprojPoints(:,:,iView)),K);
+        end
+        
+        sf = sr_estimateScale(matchedPoints.(mp_metadata.sessionNames{iSession}), ...
+                              squeeze(srCal.P(:,:,:,iSession)), ...
+                              K);
+                          
+                          
+        scaled_left_points3d = left_points3d * mean(sf(:,1));
+        scaled_right_points3d = right_points3d * mean(sf(:,2));
+%         left_3dreproj_direct = projectPoints_DL(scaled_left_points3d, P1);
+%         left_3dreproj_mirror = projectPoints_DL(scaled_left_points3d, left_P2);
+%         left_3dreproj_direct = unnormalize_points(left_3dreproj_direct, K);
+%         left_3dreproj_mirror = unnormalize_points(left_3dreproj_mirror, K);
+%                                             
+%         right_3dreproj_direct = projectPoints_DL(scaled_right_points3d, P1);
+%         right_3dreproj_mirror = projectPoints_DL(scaled_right_points3d, right_P2);
+%         right_3dreproj_direct = unnormalize_points(right_3dreproj_direct, K);
+%         right_3dreproj_mirror = unnormalize_points(right_3dreproj_mirror, K);
+        
         figure(1)
         imshow(BGimg_ud);
         figName = sprintf('undistorted background image %s', BGname_ud);
@@ -105,6 +137,16 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         plot(x2_left{iSession}(:,1), x2_left{iSession}(:,2), 'marker','o','color','b','linestyle','none');
         plot(x1_right{iSession}(:,1), x1_right{iSession}(:,2), 'marker','o','color','r','linestyle','none');
         plot(x2_right{iSession}(:,1), x2_right{iSession}(:,2), 'marker','o','color','r','linestyle','none');
+        
+        plot(left_reprojPoints(:,1,1),left_reprojPoints(:,2,1),'marker','*','color','b','linestyle','none');
+        plot(left_reprojPoints(:,1,2),left_reprojPoints(:,2,2),'marker','*','color','b','linestyle','none');
+        plot(right_reprojPoints(:,1,1),right_reprojPoints(:,2,1),'marker','*','color','r','linestyle','none');
+        plot(right_reprojPoints(:,1,2),right_reprojPoints(:,2,2),'marker','*','color','r','linestyle','none');
+
+%         plot(left_3dreproj_direct(:,1),left_3dreproj_direct(:,2),'marker','+','color','g','linestyle','none');
+%         plot(left_3dreproj_mirror(:,1),left_3dreproj_mirror(:,2),'marker','+','color','g','linestyle','none');
+%         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
+%         plot(right_3dreproj_mirror(:,1),right_3dreproj_mirror(:,2),'marker','+','color','y','linestyle','none');
         
         figure(2)
         imshow(rbkImg_ud);
@@ -116,5 +158,19 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         plot(x1_right{iSession}(:,1), x1_right{iSession}(:,2), 'marker','o','color','r','linestyle','none');
         plot(x2_right{iSession}(:,1), x2_right{iSession}(:,2), 'marker','o','color','r','linestyle','none');
 
+        plot(left_reprojPoints(:,1,1),left_reprojPoints(:,2,1),'marker','*','color','b','linestyle','none');
+        plot(left_reprojPoints(:,1,2),left_reprojPoints(:,2,2),'marker','*','color','b','linestyle','none');
+        plot(right_reprojPoints(:,1,1),right_reprojPoints(:,2,1),'marker','*','color','r','linestyle','none');
+        plot(right_reprojPoints(:,1,2),right_reprojPoints(:,2,2),'marker','*','color','r','linestyle','none');
+        
+%         plot(left_3dreproj_direct(:,1),left_3dreproj_direct(:,2),'marker','+','color','g','linestyle','none');
+%         plot(left_3dreproj_mirror(:,1),left_3dreproj_mirror(:,2),'marker','+','color','g','linestyle','none');
+%         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
+%         plot(right_3dreproj_mirror(:,1),right_3dreproj_mirror(:,2),'marker','+','color','y','linestyle','none');
+
+    
+        keyboard
+    
+        
     end
 end

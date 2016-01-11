@@ -1,0 +1,55 @@
+function points3d = triangulateOneRat(sr_ratInfo, srCal, cameraParams)
+
+% NEED THE FRAME RATE FOR EACH SET OF VIDEOS
+
+xl_directory = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
+xlName = 'rubiks_matched_points_DL.xlsx';
+
+kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Matlab Kinematics/PlotGrossTrajectory';
+
+ratID = sr_ratInfo(i_rat).ID;
+kinematics_ratDir = fullfile(kinematics_rootDir,ratID);
+processed_rootDir = sr_ratInfo.directory.processed;
+rawdata_rootDir = sr_ratInfo.directory.rawdata;
+
+triDir = fullfile(kinematics_ratDir,'triData');
+cd(triDir);
+triDirList = dir('*.mat');
+
+numSessions = length(triDirList);
+
+for ii = 1 : length(triDirList)
+    sessionDate{ii} = triDirList(ii).name(7:14);
+end
+
+
+
+for iSession = 1 : numSessions
+    cd(processed_rootDir);
+    
+    rat_rocessedDir = dir([ratID '_' sessionDate{iSession} '*']);
+    if length(processedDir) ~= 1; continue; end
+    
+    processedDir = fullfile(processed_rootDir, rat_processedDir);
+    cd(fullfile(processedDir, 'center', 'trials'));
+    trialFiles = dir('*.mat');
+    numTrials = length(trialFiles);
+    
+    session_srCal.F = ssrCal.F(
+    for iTrial = 1 : numTrials
+    
+        trialNum = str2num(trialFiles(iTrial).name(end-6:end-4));
+        
+        points3d = triangulateOneTrial(sr_ratInfo, processedDir, srCal, cameraParams, trialNum);
+
+    end
+            
+
+end
+
+
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+            

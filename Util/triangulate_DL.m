@@ -6,7 +6,8 @@ function [points3d,reprojectedPoints,errors] = triangulate_DL(mp1, mp2, P1, P2, 
 %
 % INPUTS:
 %   mp1 and mp2 are the matched points in the two views. m x 2 matrices
-%       where m is the number of points
+%       where m is the number of points. These should be normalized by the
+%       camera intrinsic matrix before triangulating.
 %   P1 - camera matrix for camera 1 (usually eye(4,3))
 %   P2 - camera matrix for camera 2
 %
@@ -109,11 +110,5 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function points2d = projectPoints_DL(points3d, P)
 
-points3dHomog = [points3d, ones(size(points3d, 1), 1, 'like', points3d)];
-points2dHomog = points3dHomog * P;
-points2d = bsxfun(@rdivide, points2dHomog(:, 1:2), points2dHomog(:, 3));
-
-end
 

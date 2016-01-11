@@ -38,9 +38,10 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
                                     %       use the transpose of matlab K)
 
 F = sr_fundMatrix(x1_left,x2_left,x1_right,x2_right);
+Edirect = sr_EssentialMatrix(x1_left,x2_left,x1_right,x2_right,K);
 
 numSessions = size(F,4);
-E = zeros(size(F));
+% E = zeros(size(F));
 P = zeros(4,3,2,numSessions);
 
 for iSession = 1 : numSessions
@@ -55,8 +56,9 @@ for iSession = 1 : numSessions
                 x2 = x2_right{iSession};
         end
         
-        E(:,:,iMirror,iSession) = K * squeeze(F(:,:,iMirror,iSession)) * K';
-        [rot,t] = EssentialMatrixToCameraMatrix(squeeze(E(:,:,iMirror,iSession)));
+%         E(:,:,iMirror,iSession) = K * squeeze(F(:,:,iMirror,iSession)) * K';
+%         [rot,t] = EssentialMatrixToCameraMatrix(squeeze(E(:,:,iMirror,iSession)));
+        [rot,t] = EssentialMatrixToCameraMatrix(squeeze(Edirect(:,:,iMirror,iSession)));
         [cRot,cT,~] = SelectCorrectEssentialCameraMatrix_mirror(rot,t,x1',x2',K');
         Ptrans = [cRot,cT];
         P(:,:,iMirror,iSession) = Ptrans';
@@ -65,4 +67,5 @@ end
 
 srCal.F = F;
 srCal.P = P;
-srCal.E = E;
+% srCal.E = E;
+srCal.E = Edirect;

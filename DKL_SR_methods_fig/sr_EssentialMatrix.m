@@ -1,4 +1,4 @@
-function F = sr_fundMatrix(x1_left,x2_left,x1_right,x2_right)
+function E = sr_EssentialMatrix(x1_left,x2_left,x1_right,x2_right, K)
 %
 % INPUTS:
 %   x1_left,x2_left,x1_right,x2_right - cell vectors where each element is
@@ -32,18 +32,18 @@ F = zeros(3,3,2,numSessions);           % 3x3 x (left/right) x numSessions
 for iSession = 1 : numSessions
     
     % normalize points first?
-%     x1_left_norm = normalize_points(x1_left{iSession}, K);
-%     x2_left_norm = normalize_points(x2_left{iSession}, K);
-%     
-%     x1_right_norm = normalize_points(x1_right{iSession}, K);
-%     x2_right_norm = normalize_points(x2_right{iSession}, K);
-%     
-%     F(:,:,1,iSession) = fundMatrix_mirror(x1_left_norm, x2_left_norm);
-%     F(:,:,2,iSession) = fundMatrix_mirror(x1_right_norm, x2_right_norm);
+    x1_left_norm = normalize_points(x1_left{iSession}, K);
+    x2_left_norm = normalize_points(x2_left{iSession}, K);
+    
+    x1_right_norm = normalize_points(x1_right{iSession}, K);
+    x2_right_norm = normalize_points(x2_right{iSession}, K);
+    
+    E(:,:,1,iSession) = fundMatrix_mirror(x1_left_norm, x2_left_norm);
+    E(:,:,2,iSession) = fundMatrix_mirror(x1_right_norm, x2_right_norm);
 %     
     
-    F(:,:,1,iSession) = fundMatrix_mirror(x1_left{iSession}, x2_left{iSession});
-    F(:,:,2,iSession) = fundMatrix_mirror(x1_right{iSession}, x2_right{iSession});
+%     F(:,:,1,iSession) = fundMatrix_mirror(x1_left{iSession}, x2_left{iSession});
+%     F(:,:,2,iSession) = fundMatrix_mirror(x1_right{iSession}, x2_right{iSession});
     
 %     x1_hom = [x1_left{iSession},ones(size(x1_left{iSession},1),1)]';
 %     x2_hom = [x2_left{iSession},ones(size(x2_left{iSession},1),1)]';
