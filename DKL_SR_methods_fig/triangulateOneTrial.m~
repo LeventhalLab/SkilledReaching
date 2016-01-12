@@ -1,4 +1,4 @@
-function points3d = triangulateOneTrial(sr_ratInfo, session_srCal, cameraParams, pawData)
+function points3d = triangulateOneTrial(sr_ratInfo, , session_srCal, cameraParams, pawData)
 
 switch sr_ratInfo.pawPref
     case 'right',
@@ -11,7 +11,7 @@ end
 
 K = cameraParams.IntrinsicMatrix;
 
-% pawData = load_pawTrackData(processedDir, trialNum);
+pawData = load_pawTrackData(processedDir, trialNum);
 
 points3d = NaN(size(pawData,1),3);
 

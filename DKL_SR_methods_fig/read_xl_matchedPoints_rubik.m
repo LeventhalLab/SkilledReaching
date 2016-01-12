@@ -41,7 +41,7 @@ numSheets = length(sheets);
 for iSheet = 1 : numSheets
     if ~strcmp(sheets{iSheet}(1:5), ratID); continue; end
     
-    fprintf('%s, %s\n', ratID,sheets{iSheet})
+%     fprintf('%s, %s\n', ratID,sheets{iSheet})
     [xldata,xlstrings,~] = xlsread(xlName, sheets{iSheet});
     sessionDate = sheets{iSheet}(7:14);
     sessionName = [ratID '_' sessionDate];

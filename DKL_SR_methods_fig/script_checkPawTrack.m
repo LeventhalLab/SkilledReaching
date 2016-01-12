@@ -25,7 +25,7 @@ kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Pr
 
 markerSize = 10;
 
-for i_rat = 1 : length(sr_ratInfo)
+for i_rat = 3 : length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir = fullfile(kinematics_rootDir,ratID);
