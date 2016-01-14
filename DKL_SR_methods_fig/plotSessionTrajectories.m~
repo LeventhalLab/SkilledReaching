@@ -136,12 +136,8 @@ validTrialIdx = find(ismember(trajectory_metadata.csv_scores,scores));
 validTrialNumbers = find(ismember(trajectory_metadata.trial_numbers, validTrialIdx));
 numValidTrials = length(validTrialIdx);
 
-try
-    [meanTrajectory,varTrajectory,numValidTraj] = calcAverageTrajectory(points3d(:,:,validTrialNumbers),...
+[meanTrajectory,varTrajectory,numValidTraj] = calcAverageTrajectory(points3d(:,:,validTrialNumbers),...
                                                                     'alignmentframes',slotCrossFrames(validTrialNumbers));
-catch
-    keyboard
-end
 
 % plot individual trials
 if h_axes == 0
@@ -154,11 +150,7 @@ hold on
 h_indTrial = zeros(1,numValidTrials);
 if showIndTraj
     for iTrial = 1 : numValidTrials
-        try
-            toPlot = points3d(:,:,validTrialNumbers(iTrial));
-        catch
-            keyboard;
-        end
+        toPlot = points3d(:,:,validTrialNumbers(iTrial));
         
 %         alpha_values = linspace(0,1,10)';
         
@@ -188,8 +180,8 @@ if showMean
 %                        'linewidth',meanWeight, ...
 %                        'edgealpha',meanAlpha);
                    
-    h_meanTraj = plot3(meanTrajectory(:,1),meanTrajectory(:,3),meanTrajectory(:,2),...
-                       'color',meanCol, ...
+    h_meanTraj = patch(meanTrajectory(:,1),meanTrajectory(:,3),meanTrajectory(:,2),
+                       'color',meanCol, ....
                        'linewidth',meanWeight);
 end
 

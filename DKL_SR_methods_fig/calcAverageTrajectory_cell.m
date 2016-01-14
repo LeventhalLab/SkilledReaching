@@ -1,18 +1,18 @@
-function [meanTrajectory, varTrajectory, numValidTraj] = calcAverageTrajectory(points3d,varargin)
+function [meanTrajectory, varTrajectory, numValidTraj] = calcAverageTrajectory_cell(x,y,z,varargin)
 
-alignmentFrames = 175;
+slot_z = 175;
 numVirtualFrames = 1200;
 alignToFrame = 600;
 
-for iarg = 1 : 2 : nargin - 1
+for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
-        case 'alignmentframes',
-            alignmentFrames = varargin{iarg + 1};
+        case 'slot_z',
+            slot_z = varargin{iarg + 1};
     end
 end
 
-
-aligned_trajectories = alignTrajectoriesToFrame(points3d,alignmentFrames,...
+slotCrossFrames = DKL_slotCrossFrames(z, 'slot_z', slot_z);
+aligned_trajectories = alignTrajectoriesToFrame(x,y,z,slotCrossFrames,...
                                                 'numvirtframes',numVirtualFrames,...
                                                 'aligntoframe',alignToFrame);
 % now align x,y,z to the cross frame for each trajectory. If no cross frame

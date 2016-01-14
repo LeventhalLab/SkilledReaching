@@ -12,6 +12,8 @@ xlName = 'rubiks_matched_points_DL.xlsx';
 
 rubikSpacing = 17.5;    % in mm
 
+excludePoints = {'left_bottom_box_corner','right_bottom_box_corner'};
+
 if computeCamParams
     [cameraParams, ~, ~] = cb_calibration(...
                            'cb_path', cb_path, ...
@@ -31,7 +33,7 @@ ratDir = cell(1,length(sr_ratInfo));
 triDir = cell(1,length(sr_ratInfo));
 scoreDir = cell(1,length(sr_ratInfo));
 
-for i_rat = 4 : 4%length(sr_ratInfo)
+for i_rat = 1 : 1%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir{i_rat} = fullfile(kinematics_rootDir,ratID);
@@ -45,7 +47,8 @@ for i_rat = 4 : 4%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
                                              
-	[x1_left,x2_left,x1_right,x2_right,mp_metadata] = generateMatchedPointVectors(matchedPoints);
+	[x1_left,x2_left,x1_right,x2_right,mp_metadata] = generateMatchedPointVectors(matchedPoints, ...
+                                                                                  'excludepoints',excludePoints);
     srCal = sr_calibration(x1_left,x2_left,x1_right,x2_right);
     
     % first, load the background image from a video in this session, and

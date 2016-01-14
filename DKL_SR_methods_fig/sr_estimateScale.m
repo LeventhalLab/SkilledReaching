@@ -10,14 +10,31 @@ function sf = sr_estimateScale(session_mp, P, K, varargin)
 %
 
 rubikSpacing = 17.5;    % in mm
+boxWidth = 150;         % in mm
 
 for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
         case 'rubikspacing',
             rubikSpacing = varargin{iarg + 1};
+        case 'boxwidth',
+            boxWidth = varargin{iarg + 1};
     end
 end
     
+if isfield(session_mp.direct,'left_rbk_a')
+    % this session had a rubiks calibration image
+    sf = estimateScale_rubik(session_mp, P, K, rubikSpacing);
+else
+    
+end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function sf = estimateScale_rubik(session_mp, P, K, rubikSpacing)
+
 P1 = eye(4,3);
 % first, find pairs of points that will be rubiksSpacing apart
 rbk_edge_pairs = zeros(2,2,3, 4);    % 2 x 2 arrays of (x,y) pairs for each corner of a square
@@ -92,3 +109,8 @@ for iView = 1 : 2   % 1 - left view, 2 - right view
     end
     
 end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

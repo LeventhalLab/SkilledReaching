@@ -26,33 +26,46 @@ for ii = 1 : size(ratIDlist,1)
     
     switch lower(ratID)
         case 'r0027',
-            sr_ratInfo(ii).date.start = '20140513';
-            sr_ratInfo(ii).date.end = '20140528';
-            sr_ratInfo(ii).pawPref = 'right';
+            dateLimits.start = '20140513';
+            dateLimits.end = '20140528';
+            pawPref = 'right';
+            sessionList = {'20140513a','20140514a','20140515a','20140516a','20140519a','20140520a','20140521a','20140522a','20140523a'};
         case 'r0028',
-            sr_ratInfo(ii).date.start = '20140423';
-            sr_ratInfo(ii).date.end = '20140509';
-            sr_ratInfo(ii).pawPref = 'left';
+            dateLimits.start = '20140423';
+            dateLimits.end = '20140509';
+            pawPref = 'left';
+            sessionList = {'20140423a','20140424a','20140425a','20140426a','20140427a','20140428a','20140429a','20140430a','20140501a','20140502a','20140505a','20140506a','20140507a','20140508a'};
+            % note, if add 5/9, it's session b
         case 'r0029',
-            sr_ratInfo(ii).date.start = '20140423';
-            sr_ratInfo(ii).date.end = '20140509';
-            sr_ratInfo(ii).pawPref = 'right';
+            dateLimits.start = '20140423';
+            dateLimits.end = '20140509';
+            pawPref = 'right';
+            sessionList = {'20140423a','20140424a','20140426a','20140427a','20140428a','20140429a','20140430a','20140501a','20140502a','20140505a','20140506a','20140507a','20140508a'};
+            % note, if add 5/9, it's session c
         case 'r0030',
-            sr_ratInfo(ii).date.start = '20140423';
-            sr_ratInfo(ii).date.end = '20140509';
-            sr_ratInfo(ii).pawPref = 'right';
+            dateLimits.start = '20140423';
+            dateLimits.end = '20140509';
+            pawPref = 'right';
+            sessionList = {'20140423a','20140425a','20140426a','20140427a','20140428a','20140429a','20140430a','20140502a','20140505a','20140506a','20140507a','20140508a'};
+            % note, if add 5/1, it's session d
         case 'r0041',
-            sr_ratInfo(ii).date.start = '20150113';
-            sr_ratInfo(ii).date.end = '20150127';
-            sr_ratInfo(ii).pawPref = 'right';
+            dateLimits.start = '20150113';
+            dateLimits.end = '20150127';
+            pawPref = 'right';
+            sessionList = {'20150115a','20150116a','20150119a','20150120a','20150122a','20150126a'};
         case 'r0043',
-            sr_ratInfo(ii).date.start = '20150112';
-            sr_ratInfo(ii).date.end = '20150121';
-            sr_ratInfo(ii).pawPref = 'left';
+            dateLimits.start = '20150112';
+            dateLimits.end = '20150121';
+            pawPref = 'left';
+            sessionList = {'20150109a','20150110a','20150111a','20150112a','20150113a','20150114a','20150119a','20150120a','20150122a','20150123a'};
         case 'r0055',
-            sr_ratInfo(ii).date.start = '20150112';
-            sr_ratInfo(ii).date.end = '20150123';
-            sr_ratInfo(ii).pawPref = 'left';
+            dateLimits.start = '20150112';
+            dateLimits.end = '20150123';
+            pawPref = 'left';
+            sessionList = {'20150110a','20150111a','20150112a','20150113a','20150114a','20150116a','20150119a','20150122a','20150123a'};
     end
+    sr_ratInfo(ii).date = dateLimits;
+    sr_ratInfo(ii).pawPref = pawPref;
+    sr_ratInfo(ii).sessionList = sessionList;
 end
 

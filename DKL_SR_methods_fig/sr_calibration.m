@@ -13,6 +13,26 @@ camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/M
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
 % cb_path is to checkerboard patterns for computing the camera parameters
 
+K = [];
+
+if ~iscell(x1_left)
+    temp = x1_left;
+    clear x1_left;
+    x1_left{1} = temp;
+    
+    temp = x2_left;
+    clear x2_left;
+    x2_left{1} = temp;
+    
+    temp = x1_right;
+    clear x1_right;
+    x1_right{1} = temp;
+    
+    temp = x2_right;
+    clear x2_right;
+    x2_right{1} = temp;
+end
+
 for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
         case 'computecamparams',
@@ -21,21 +41,25 @@ for iarg = 1 : 2 : nargin - 4
             camParamFile = varargin{iarg};
         case 'cbpath',
             cb_path = varargin{iarg};
+        case 'intrinsicmatrix',
+            K = varargin{iarg + 1};
     end
 end
 
-if computeCamParams
-    [cameraParams, ~, ~] = cb_calibration(...
-                           'cb_path', cb_path, ...
-                           'num_rad_coeff', num_rad_coeff, ...
-                           'est_tan_distortion', est_tan_distortion, ...
-                           'estimateskew', estimateSkew);
-else
-    load(camParamFile);    % contains a cameraParameters object named cameraParams
+if isempty(K)
+    if computeCamParams
+        [cameraParams, ~, ~] = cb_calibration(...
+                               'cb_path', cb_path, ...
+                               'num_rad_coeff', num_rad_coeff, ...
+                               'est_tan_distortion', est_tan_distortion, ...
+                               'estimateskew', estimateSkew);
+    else
+        load(camParamFile);    % contains a cameraParameters object named cameraParams
+    end
+    K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
+                                        %       version - Hartley and Zisserman and the rest of the world seem to
+                                        %       use the transpose of matlab K)
 end
-K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
-                                    %       version - Hartley and Zisserman and the rest of the world seem to
-                                    %       use the transpose of matlab K)
 
 F = sr_fundMatrix(x1_left,x2_left,x1_right,x2_right);
 Edirect = sr_EssentialMatrix(x1_left,x2_left,x1_right,x2_right,K);
