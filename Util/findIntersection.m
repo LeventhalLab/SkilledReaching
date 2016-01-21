@@ -1,4 +1,12 @@
 function int_pt = findIntersection(line1,line2)
+%
+% function to calculate the intersection of two lines
+%
+% INPUTS:
+%   line1, line2 - vectors [A,B,C] where Ax + By + C = 0
+%
+% OUTPUTS:
+%   int_pt - intersection point [x,y]
 
 int_pt = zeros(1,2);
 

@@ -14,10 +14,21 @@ function E = sr_EssentialMatrix(x1_left,x2_left,x1_right,x2_right, K)
 %       argument is 1-left, 2-right
 
 if ~iscell(x1_left)
-    x1_left{1} = x1_left;
-    x2_left{1} = x2_left;
-    x1_right{1} = x1_right;
-    x2_right{1} = x2_right;
+    temp = x1_left;
+    clear x1_left;
+    x1_left{1} = temp;
+    
+    temp = x2_left;
+    clear x2_left;
+    x2_left{1} = temp;
+    
+    temp = x1_right;
+    clear x1_right;
+    x1_right{1} = temp;
+    
+    temp = x2_right;
+    clear x2_right;
+    x2_right{1} = temp;
 end
 
 numSessions = length(x1_left);

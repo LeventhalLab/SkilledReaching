@@ -19,8 +19,6 @@ for iarg = 1 : 2 : nargin - 3
             rubikSpacing = varargin{iarg + 1};
         case 'boxwidth',
             boxWidth = varargin{iarg + 1};
-        case 'shelfwidth',
-            shelfWidth = varargin{iarg + 1};
     end
 end
     
@@ -29,7 +27,9 @@ if isfield(session_mp.direct,'left_rbk_a')
     sf = estimateScale_rubik(session_mp, P, K, rubikSpacing);
 else
     % THIS IS WHERE TO ADD CODE TO EXTRAPOLATE SHELF EDGES
-    sf = estimateScale_shelfWidth(session_mp, P, K, shelfWidth);
+    sf = estimateScale_shelfWidth(session_mp, P, K, rubikSpacing);
+    [leftShelfEdge, rightShelfEdge] = estimateShelfIntersect(session_mp);
+    sf = zeros(1,2);
 end
 
 end
@@ -121,7 +121,6 @@ end
 
 function sf = estimateScale_shelfWidth(session_mp, P, K, shelfWidth)
 
-sf = zeros(1,2);
 P1 = eye(4,3);
 
 % leftShelfEdge and rightShelfEdge are the estimated locations of the shelf
@@ -134,29 +133,12 @@ direct_shelf_corners = [session_mp.direct.left_top_shelf_corner;...
 direct_norm = normalize_points(direct_shelf_corners, K);
 
 % left mirror first
-P2 = squeeze(P(:,:,1));
 leftMirror_shelf_corners = [leftShelfEdge;...
                             session_mp.leftMirror.right_top_shelf_corner];
 leftMirror_norm = normalize_points(leftMirror_shelf_corners, K);
                         
 [points3d,reprojectedPoints,errors] = triangulate_DL(direct_norm, leftMirror_norm, P1, P2);
 
-% calculate the euclidean distance between the 3d points
-xyz_dist = diff(points3d,1,1);
-euc_dist = sqrt(sum(xyz_dist.^2));
-sf(1) = shelfWidth / euc_dist;
 
-% now right mirror
-P2 = squeeze(P(:,:,2));
-rightMirror_shelf_corners = [rightShelfEdge;...
-                            session_mp.rightMirror.left_top_shelf_corner];
-rightMirror_norm = normalize_points(rightMirror_shelf_corners, K);
-                        
-[points3d,reprojectedPoints,errors] = triangulate_DL(direct_norm, rightMirror_norm, P1, P2);
-
-% calculate the euclidean distance between the 3d points
-xyz_dist = diff(points3d,1,1);
-euc_dist = sqrt(sum(xyz_dist.^2));
-sf(2) = shelfWidth / euc_dist;
 
 end

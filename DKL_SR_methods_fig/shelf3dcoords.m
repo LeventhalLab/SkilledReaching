@@ -1,4 +1,4 @@
-function slotPoints = slot3dcoords(session_mp, varargin)
+function shelfPoints = shelf3dcoords(session_mp, shelfWidth, varargin)
 %
 % function to estimate the 3d coordinates of the lower left and right
 % corners of the reaching slot
@@ -6,7 +6,7 @@ function slotPoints = slot3dcoords(session_mp, varargin)
 % INPUTS:
 %
 % OUTPUTS:
-%   slotPoints
+%   shelfPoints
 
 rubikSpacing = 17.5;    % in mm
 boxWidth = 150;         % in mm
@@ -19,12 +19,10 @@ camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/M
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
 computeCamParams = false;
 
-for iarg = 1 : 2 : nargin - 1
+for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})
         case 'rubikspacing',
             rubikSpacing = varargin{iarg + 1};
-        case 'boxwidth',
-            boxWidth = varargin{iarg + 1};
         case 'excludepoints',
             excludePoints = varargin{iarg + 1};
         case 'intrinsicmatrix',
@@ -34,33 +32,35 @@ for iarg = 1 : 2 : nargin - 1
     end
 end
 
-if isempty(K)
-    if computeCamParams
-        [cameraParams, ~, ~] = cb_calibration(...
-                               'cb_path', cb_path, ...
-                               'num_rad_coeff', num_rad_coeff, ...
-                               'est_tan_distortion', est_tan_distortion, ...
-                               'estimateskew', estimateSkew);
-    else
-        load(camParamFile);    % contains a cameraParameters object named cameraParams
-    end
-    K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
-                                        %       version - Hartley and Zisserman and the rest of the world seem to
-                                        %       use the transpose of matlab K)
-end
+% if isempty(K)
+%     if computeCamParams
+%         [cameraParams, ~, ~] = cb_calibration(...
+%                                'cb_path', cb_path, ...
+%                                'num_rad_coeff', num_rad_coeff, ...
+%                                'est_tan_distortion', est_tan_distortion, ...
+%                                'estimateskew', estimateSkew);
+%     else
+%         load(camParamFile);    % contains a cameraParameters object named cameraParams
+%     end
+%     K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
+%                                         %       version - Hartley and Zisserman and the rest of the world seem to
+%                                         %       use the transpose of matlab K)
+% end
 
 if isempty(srCal)
-    [x1_left,x2_left,x1_right,x2_right,~,~] = ...
-        sr_sessionMatchedPointVector(session_mp, 'excludepoints', excludePoints);
-    srCal = sr_calibration(x1_left,x2_left,x1_right,x2_right, 'intrinsicmatrix', K);
+%     [x1_left,x2_left,x1_right,x2_right,~,~] = ...
+%         sr_sessionMatchedPointVector(session_mp, 'excludepoints', excludePoints);
+%     srCal = sr_calibration(x1_left,x2_left,x1_right,x2_right, 'intrinsicmatrix', K);
+    srCal = sr_calibration_mp(session_mp, 'intrinsicmatrix', K);
 end
 
 P = squeeze(srCal.P(:,:,:,1));
+sf = srCal.sf;
 
-sf = sr_estimateScale(session_mp, P, K, ...              % need to work on an alternative if no rubiks
-                      'rubikspacing', rubikSpacing, ...
-                      'boxwidth', boxWidth);
-                  
+% sf = sr_estimateScale(session_mp, P, K, ...
+%                       'rubikspacing', rubikSpacing, ...
+%                       'boxwidth', boxWidth);
+
 % assume the "left_back_shelf_corner" and "right_back_shelf_corner" will
 % give the z-location of the slot
 shelfBackPts = zeros(4,2);
@@ -84,13 +84,13 @@ slotCorners2d(2,:) = session_mp.direct.left_top_slot_corner;
 slotCorners2d(3,:) = session_mp.direct.right_bottom_slot_corner;
 slotCorners2d(4,:) = session_mp.direct.right_top_slot_corner;
 
-slotPoints = estimateSlotCorners(shelfBack3d, shelfBackPts([1,3],:), slotCorners2d);
+shelfPoints = estimateSlotCorners(shelfBack3d, shelfBackPts([1,3],:), slotCorners2d);
 
 end    % function
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function slotPoints = estimateSlotCorners(shelfBack3d, shelfBack2d, slotCorners2d)
+function shelfPoints = estimateSlotCorners(shelfBack3d, shelfBack2d, slotCorners2d)
 
 % estimate horizontal distance from left back shelf corner to right back
 % shelf corner
@@ -100,10 +100,10 @@ right_xDiff = slotCorners2d(3,1) - shelfBack2d(1,1);
 
 shelfBack3d_diff = diff(shelfBack3d);
 
-slotPoints = zeros(2,3);
-slotPoints(1,:) = shelfBack3d(1,:) + ...
+shelfPoints = zeros(2,3);
+shelfPoints(1,:) = shelfBack3d(1,:) + ...
                   (left_xDiff / shelfLength) * shelfBack3d_diff;
-slotPoints(2,:) = shelfBack3d(1,:) + ...
+shelfPoints(2,:) = shelfBack3d(1,:) + ...
                   (right_xDiff / shelfLength) * shelfBack3d_diff;
               
 end

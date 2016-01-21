@@ -1,6 +1,12 @@
 function [meanTrajectory,varTrajectory,numValidTraj] = plotSessionTrajectories(sr_ratInfo, sessionName, scores, varargin)
 %
 % INPUTS:
+%   sr_ratInfo - single element of the sr_ratInfo structure output by
+%       get_sr_RatList
+%   sessionName - string in 'YYYYMMDDa' format (a can be "a", "b", etc.)
+%   scores - vector containing scores to include in the plot (e.g., [1] for
+%      first reach success, [1,2] for any successful reach, etc.
+%
 %
 % OUTPUTS:
 %
@@ -24,7 +30,7 @@ slotHeight = 50;
 slotColor = 'k';
 slotAlpha = 0.2;
 
-shelfWidth = 20;
+shelfWidth = 100;
 
 K = [];
 computeCamParams = false;
@@ -127,7 +133,13 @@ load(reconstructionName);
 
 session_mp = trajectory_metadata.matchedCalPoints.([ratID '_' sessionName(1:end-1)]);
 
-slotPoints = slot3dcoords(session_mp, 'intrinsicmatrix', K);
+% [x1_left,x2_left,x1_right,x2_right,~,~] = ...
+%     sr_sessionMatchedPointVector(session_mp, 'excludepoints', excludePoints);
+% srCal = sr_calibration(x1_left,x2_left,x1_right,x2_right, 'intrinsicmatrix', K);
+
+srCal = sr_calibration_mp(session_mp, 'intrinsicmatrix', K);
+
+slotPoints = slot3dcoords(session_mp, 'srcal', srCal, 'intrinsicmatrix', K);
 slot_z = mean(slotPoints(:,3));
 z = squeeze(points3d(:,3,:));
 slotCrossFrames = DKL_slotCrossFrames(z, 'slot_z', slot_z);
@@ -199,6 +211,8 @@ if showSlot
     set(h_slot,'facealpha',slotAlpha);
 end
 
+if showShelf
+    shelfCoords = generateShelfCoords(session_mp, srCal, K, shelfWidth);
 set(gca,'xlim',xLimits,'ylim',zLimits,'zlim',yLimits);
 view(camView);
 set(gca,'zdir','reverse')
@@ -224,8 +238,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function slotCoords = generateShelfCoords(session_mp, srCal, K, shelfWidth)
+function shelfCoords = generateShelfCoords(session_mp, srCal, K, shelfWidth)
 
+shelfCoords = zeros(5,3);
 % WORK ON FUNCTION TO FIGURE OUT COORDINATES OF SHELF CORNERS
 
 end

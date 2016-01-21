@@ -37,23 +37,18 @@ srCal = sr_calibration(x1_left,x2_left,x1_right,x2_right);
 sessionList = sr_ratInfo.sessionList;
 numSessions = length(sessionList);
 
-sessionDate = cell(1,numSessions);
-for iSession = 1 : numSessions
+for ii = 1 : length(triDirList)
     sessionDate{ii} = sessionList{ii}(1:8);
-    
+end
+
+for iSession = 1 : numSessions
     cd(processed_rootDir);
     
-    fullSessionName = [ratID '_' sessionDate{iSession}];
     fprintf('working on session %s, %d of %d\n', ...
-             fullSessionName, iSession, numSessions);
+             [ratID '_' sessionDate{iSession}], iSession, numSessions);
     
-    if ~isfield(matchedPoints,fullSessionName)
-        disp('No calibration image for this session');
-        continue;
-    end
-    session_mp = matchedPoints,(fullSessionName);
-    
-    rat_processedDir = dir([fullSessionName '*']);
+    if ~isfield(matchedPoints,[ratID '_' 
+    rat_processedDir = dir([ratID '_' sessionDate{iSession} '*']);
     if length(rat_processedDir) ~= 1; continue; end
     
     processedDir = fullfile(processed_rootDir, rat_processedDir.name);
@@ -93,22 +88,22 @@ for iSession = 1 : numSessions
         trajectory_metadata.csv_scores = readInfo{2};
     end
 
+    
     cd(fullfile(processedDir, 'center', 'trials'));
     trialFiles = dir('*.mat');
     numTrials = length(trialFiles);
     
-    session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
-%     session_srCal.F = squeeze(srCal.F(:,:,:,iSession));
-%     session_srCal.P = squeeze(srCal.P(:,:,:,iSession));
-%     session_srCal.E = squeeze(srCal.E(:,:,:,iSession));
+    session_srCal.F = squeeze(srCal.F(:,:,:,iSession));
+    session_srCal.P = squeeze(srCal.P(:,:,:,iSession));
+    session_srCal.E = squeeze(srCal.E(:,:,:,iSession));
     
-%     session_srCal.scale = sr_estimateScale(matchedPoints.(mp_metadata.sessionNames{iSession}), ...
-%                                                           squeeze(srCal.P(:,:,:,iSession)), ...
-%                                                           K);
+    session_srCal.scale = sr_estimateScale(matchedPoints.(mp_metadata.sessionNames{iSession}), ...
+                                                          squeeze(srCal.P(:,:,:,iSession)), ...
+                                                          K);
 	
     trajectory_metadata.trial_numbers = zeros(1,numTrials);
     trajectory_metadata.session_srCal = session_srCal;
-    trajectory_metadata.matchedCalPoints = session_mp;
+    trajectory_metadata.matchedCalPoints = matchedPoints;
     for iTrial = 1 : numTrials
 %         iTrial
         trialNum = str2num(trialFiles(iTrial).name(end-6:end-4));
