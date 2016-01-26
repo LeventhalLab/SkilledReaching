@@ -28,7 +28,7 @@ matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                              'xldir', xl_directory, ...
                                              'xlname', xlName );
 [x1_left,x2_left,x1_right,x2_right,mp_metadata] = generateMatchedPointVectors(matchedPoints);
-srCal = sr_calibration(x1_left,x2_left,x1_right,x2_right);
+% srCal = sr_calibration(x1_left,x2_left,x1_right,x2_right);
     
 % triDir = fullfile(kinematics_ratDir,'triData');
 % cd(triDir);
@@ -38,8 +38,8 @@ sessionList = sr_ratInfo.sessionList;
 numSessions = length(sessionList);
 
 sessionDate = cell(1,numSessions);
-for iSession = 1 : numSessions
-    sessionDate{ii} = sessionList{ii}(1:8);
+for iSession = 8:8%1 : numSessions
+    sessionDate{iSession} = sessionList{iSession}(1:8);
     
     cd(processed_rootDir);
     
@@ -51,7 +51,7 @@ for iSession = 1 : numSessions
         disp('No calibration image for this session');
         continue;
     end
-    session_mp = matchedPoints,(fullSessionName);
+    session_mp = matchedPoints.(fullSessionName);
     
     rat_processedDir = dir([fullSessionName '*']);
     if length(rat_processedDir) ~= 1; continue; end
@@ -59,11 +59,11 @@ for iSession = 1 : numSessions
     processedDir = fullfile(processed_rootDir, rat_processedDir.name);
     reconstruction_name = [rat_processedDir.name '_trajectories.mat'];
     reconstruction_name = fullfile(processedDir, reconstruction_name);
-    if exist(reconstruction_name,'file')   % if reconstruction file already exists, skip
-        points3d = [];
-        trajectory_metadata = [];
-        continue;
-    end
+%     if exist(reconstruction_name,'file')   % if reconstruction file already exists, skip
+%         points3d = [];
+%         trajectory_metadata = [];
+%         continue;
+%     end
     
     rawdataDir = fullfile(rawdata_rootDir, rat_processedDir.name);
     

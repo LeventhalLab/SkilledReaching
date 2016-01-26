@@ -16,8 +16,8 @@ function aligned_trajectories = alignTrajectoriesToFrame(points3d,vid_alignFrame
 %       alignment), n is 3 (x,y,z), and p is the number of trajectories
 %
 
-numVirtualFrames = 1000; 
-alignToFrame = 500;
+numVirtualFrames = 1500; 
+alignToFrame = 750;
 
 for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})

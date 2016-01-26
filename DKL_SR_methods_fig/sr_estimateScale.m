@@ -12,6 +12,7 @@ function sf = sr_estimateScale(session_mp, P, K, varargin)
 rubikSpacing = 17.5;    % in mm
 boxWidth = 150;         % in mm
 shelfWidth = 100;       % in mm, this seems to be fairly accurate
+useShelfInsteadofRubiks = false;
 
 for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
@@ -21,14 +22,15 @@ for iarg = 1 : 2 : nargin - 3
             boxWidth = varargin{iarg + 1};
         case 'shelfwidth',
             shelfWidth = varargin{iarg + 1};
+        case 'forceshelf',
+            useShelfInsteadofRubiks = varargin{iarg + 1};
     end
 end
     
-if isfield(session_mp.direct,'left_rbk_a')
+if isfield(session_mp.direct,'left_rbk_a') && ~useShelfInsteadofRubiks
     % this session had a rubiks calibration image
     sf = estimateScale_rubik(session_mp, P, K, rubikSpacing);
 else
-    % THIS IS WHERE TO ADD CODE TO EXTRAPOLATE SHELF EDGES
     sf = estimateScale_shelfWidth(session_mp, P, K, shelfWidth);
 end
 

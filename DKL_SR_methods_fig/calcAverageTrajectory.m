@@ -1,13 +1,15 @@
 function [meanTrajectory, varTrajectory, numValidTraj] = calcAverageTrajectory(points3d,varargin)
 
 alignmentFrames = 175;
-numVirtualFrames = 1200;
-alignToFrame = 600;
+numVirtualFrames = 1500;
+alignToFrame = 750;
 
 for iarg = 1 : 2 : nargin - 1
     switch lower(varargin{iarg})
         case 'alignmentframes',
             alignmentFrames = varargin{iarg + 1};
+        case 'numvirtualframes',
+            numVirtualFrames = varargin{iarg + 1};
     end
 end
 

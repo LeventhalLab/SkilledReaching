@@ -88,7 +88,7 @@ for iarg = 1 : 2 : nargin - 3
         case 'showslot',
             showSlot = varargin{iarg + 1};
         case 'showshelf',
-            showShelf = varargin{iarg + 1};
+            showShel = varargin{iarg + 1};
         case 'slotcoords',
             slotCoords = varargin{iarg + 1};
         case 'slotalpha',
@@ -204,7 +204,6 @@ if showIndTraj
 
     end
 end
-
 
 if showMean
 %     h_meanTraj = patch(meanTrajectory(:,1),meanTrajectory(:,3),meanTrajectory(:,2),indTrialCol,...

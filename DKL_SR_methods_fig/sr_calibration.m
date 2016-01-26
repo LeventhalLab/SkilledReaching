@@ -97,5 +97,3 @@ srCal.F = F;
 srCal.P = P;
 % srCal.E = E;
 srCal.E = Edirect;
-
-srCal.sf = sr_estimateScale(
