@@ -21,6 +21,8 @@ kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Pr
 imFileType = 'bmp';
 sr_ratInfo = get_sr_RatList();
 
+extractBGforAllVids = true;
+
 for i_rat = 1 : length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
@@ -28,15 +30,25 @@ for i_rat = 1 : length(sr_ratInfo)
     
     rawData_parentDir = sr_ratInfo(i_rat).directory.rawdata;
     
-    triDir{i_rat} = fullfile(ratDir{i_rat},'triData');
-    cd(triDir{i_rat});
-    triDataFiles = dir('*.mat');
-    numSessions = length(triDataFiles);
+%     triDir{i_rat} = fullfile(ratDir{i_rat},'triData');
+%     cd(triDir{i_rat});
+%     triDataFiles = dir('*.mat');
+%     numSessions = length(triDataFiles);
+    numSessions = length(sr_ratInfo(i_rat).sessionList);
     
     for iSession = 1 : numSessions
         
-        sessionDate = triDataFiles(iSession).name(7:14);
+%         sessionDate = triDataFiles(iSession).name(7:14);
+        sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);
         shortDate = sessionDate(5:end);
+        
+        if ~extractBGforAllVids
+            BGname = [ratID '_' sessionDate '_BG.' imFileType];
+            BGname_ud = [ratID '_' sessionDate '_BG_ud.' imFileType];
+        else
+            BGname = '';
+            BGname_ud = '';
+        end
         
         fprintf('%s, %s\n', ratID, sessionDate);
         
@@ -55,6 +67,8 @@ for i_rat = 1 : length(sr_ratInfo)
         rawDataDir = fullfile(rawData_parentDir, rawDataDir.name);
         cd(rawDataDir);
         
+        if exist(BGname_ud,'file');continue;end
+        
         file_list = dir('*.avi');
         
         for i_file = 1 : length(file_list)
@@ -62,18 +76,26 @@ for i_rat = 1 : length(sr_ratInfo)
             fname = file_list(i_file).name;
             if strcmp(fname(1:2),'._'); continue; end
             
+            numString = fname(end-6:end-4);
+            
+            BGname = [ratID '_' sessionDate '_' numString '_BG.' imFileType];
+            BGname_ud = [ratID '_' sessionDate '_' numString '_BG_ud.' imFileType];
+            
+            if exist(BGname_ud,'file');continue;end
+            
             video = VideoReader(fname);
             
             BGimg = extractBGimg( video, 'numbgframes', 20);
             BGimg_ud = undistortImage(BGimg, cameraParams);
-            break;
+            
+            imwrite(BGimg,BGname,imFileType);
+            imwrite(BGimg_ud,BGname_ud,imFileType);
+
+            if ~extractBGforAllVids
+                break;
+            end
         end
-        
-        BGname = [ratID '_' sessionDate '_BG.' imFileType];
-        BGname_ud = [ratID '_' sessionDate '_BG_ud.' imFileType];
-        
-        imwrite(BGimg,BGname,imFileType);
-        imwrite(BGimg_ud,BGname_ud,imFileType);
+
         
     end
     

@@ -33,7 +33,7 @@ ratDir = cell(1,length(sr_ratInfo));
 triDir = cell(1,length(sr_ratInfo));
 scoreDir = cell(1,length(sr_ratInfo));
 
-for i_rat = 1 : 1%length(sr_ratInfo)
+for i_rat = 2 : 2%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir{i_rat} = fullfile(kinematics_rootDir,ratID);
@@ -77,22 +77,24 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         cd(rawDataDir);
        
         rbkFile = dir('*rubiksCalibration_ud.png');
-        if isempty(rbkFile); continue; end
         
         BGname_ud = [ratID '_' sessionDate '_BG_ud.bmp'];
         if ~exist(BGname_ud,'file');continue;end
         
         session_mp = matchedPoints.(fullSessionName);
+        
         session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
         
         BGimg_ud = imread(BGname_ud, 'bmp');
         
-        for ii = 1 : length(rbkFile)
-            if ~strcmp(rbkFile(ii).name,'._')
-                rbkName = rbkFile(ii).name;
+        if ~isempty(rbkFile)
+            for ii = 1 : length(rbkFile)
+                if ~strcmp(rbkFile(ii).name,'._')
+                    rbkName = rbkFile(ii).name;
+                end
             end
+            rbkImg_ud = imread(rbkName, 'png');
         end
-        rbkImg_ud = imread(rbkName, 'png');
         
         P1 = eye(4,3);
         if numSessions == 1
@@ -119,7 +121,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
             right_reprojPoints(:,:,iView) = unnormalize_points(squeeze(right_norm_reprojPoints(:,:,iView)),K);
         end
         
-        sf = sr_estimateScale(matchedPoints.(mp_metadata.sessionNames{iSession}), ...
+        sf = sr_estimateScale(session_mp, ...
                               squeeze(srCal.P(:,:,:,iSession)), ...
                               K);
                           
@@ -156,29 +158,28 @@ for i_rat = 1 : 1%length(sr_ratInfo)
 %         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
 %         plot(right_3dreproj_mirror(:,1),right_3dreproj_mirror(:,2),'marker','+','color','y','linestyle','none');
         
-        figure(2)
-        imshow(rbkImg_ud);
-        figName = sprintf('undistorted calibration image %s', rbkFile.name);
-        set(gcf,'name',figName);
-        hold on
-        plot(x1_left{iSession}(:,1), x1_left{iSession}(:,2), 'marker','o','color','b','linestyle','none');
-        plot(x2_left{iSession}(:,1), x2_left{iSession}(:,2), 'marker','o','color','b','linestyle','none');
-        plot(x1_right{iSession}(:,1), x1_right{iSession}(:,2), 'marker','o','color','r','linestyle','none');
-        plot(x2_right{iSession}(:,1), x2_right{iSession}(:,2), 'marker','o','color','r','linestyle','none');
+        if ~isempty(rbkFile)
+            figure(2)
+            imshow(rbkImg_ud);
+            figName = sprintf('undistorted calibration image %s', rbkFile.name);
+            set(gcf,'name',figName);
+            hold on
+            plot(x1_left{iSession}(:,1), x1_left{iSession}(:,2), 'marker','o','color','b','linestyle','none');
+            plot(x2_left{iSession}(:,1), x2_left{iSession}(:,2), 'marker','o','color','b','linestyle','none');
+            plot(x1_right{iSession}(:,1), x1_right{iSession}(:,2), 'marker','o','color','r','linestyle','none');
+            plot(x2_right{iSession}(:,1), x2_right{iSession}(:,2), 'marker','o','color','r','linestyle','none');
 
-        plot(left_reprojPoints(:,1,1),left_reprojPoints(:,2,1),'marker','*','color','b','linestyle','none');
-        plot(left_reprojPoints(:,1,2),left_reprojPoints(:,2,2),'marker','*','color','b','linestyle','none');
-        plot(right_reprojPoints(:,1,1),right_reprojPoints(:,2,1),'marker','*','color','r','linestyle','none');
-        plot(right_reprojPoints(:,1,2),right_reprojPoints(:,2,2),'marker','*','color','r','linestyle','none');
-        
-%         plot(left_3dreproj_direct(:,1),left_3dreproj_direct(:,2),'marker','+','color','g','linestyle','none');
-%         plot(left_3dreproj_mirror(:,1),left_3dreproj_mirror(:,2),'marker','+','color','g','linestyle','none');
-%         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
-%         plot(right_3dreproj_mirror(:,1),right_3dreproj_mirror(:,2),'marker','+','color','y','linestyle','none');
+            plot(left_reprojPoints(:,1,1),left_reprojPoints(:,2,1),'marker','*','color','b','linestyle','none');
+            plot(left_reprojPoints(:,1,2),left_reprojPoints(:,2,2),'marker','*','color','b','linestyle','none');
+            plot(right_reprojPoints(:,1,1),right_reprojPoints(:,2,1),'marker','*','color','r','linestyle','none');
+            plot(right_reprojPoints(:,1,2),right_reprojPoints(:,2,2),'marker','*','color','r','linestyle','none');
 
-    
-        keyboard
-    
+    %         plot(left_3dreproj_direct(:,1),left_3dreproj_direct(:,2),'marker','+','color','g','linestyle','none');
+    %         plot(left_3dreproj_mirror(:,1),left_3dreproj_mirror(:,2),'marker','+','color','g','linestyle','none');
+    %         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
+    %         plot(right_3dreproj_mirror(:,1),right_3dreproj_mirror(:,2),'marker','+','color','y','linestyle','none');
+        end
         
+        keyboard        
     end
 end

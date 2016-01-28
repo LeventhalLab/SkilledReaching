@@ -43,6 +43,7 @@ traj3d_figProps.height = 12 * 2.54;
 
 traj3d_figProps.colSpacing = [0,0.5 * ones(1,traj3d_figProps.n - 2)];
 traj3d_figProps.rowSpacing = 0.5 * ones(1,traj3d_figProps.m - 1);
+
 sideMargins = 1;
 traj3d_figProps.topMargin = 2.54;
 botMargin = 1;
@@ -59,6 +60,9 @@ traj3d_figProps.panelHeight = ((traj3d_figProps.height - ...
                                traj3d_figProps.topMargin - botMargin) / ...
                                traj3d_figProps.m) * ones(1,traj3d_figProps.m-1);
 traj3d_figProps.panelHeight = [3,traj3d_figProps.panelHeight];
+
+xyz_figProps = traj3d_figProps;
+comparison_figProps = traj3d_figProps;
 
 % parameters for displaying the reaching slot
 slotAlpha = 0.8;
@@ -118,7 +122,9 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     numSessions = length(sr_ratInfo(i_rat).sessionList);
     numPlots = 0;
     numPages = 0;
-    for iSession = 1 : numSessions
+    
+    
+    for iSession = 12 : numSessions
         
         sessionName = sr_ratInfo(i_rat).sessionList{iSession};
         sessionDate = sessionName(1:end-1);
@@ -141,32 +147,11 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         
         cd(processedDataDir);
         trajFile = dir('*_trajectories.mat');
+        if isempty(trajFile);continue;end
         load(trajFile.name);
         
         Scores = trajectory_metadata.csv_scores(~isnan(trajectory_metadata.csv_scores));
-%         scoreName = [sr_ratInfo(i_rat).shortID, shortDate '.mat'];
-%         scoreName = fullfile(scoreDir{i_rat}, scoreName);
-%         triDataName = fullfile(triDir{i_rat}, triDataFiles(iSession).name);
-        
-%         load(scoreName);
-%         load(triDataName);
-        
-%         if length(Scores) > length(x)    % more scores assigned than there are trajectories
-%                                          % this is probably because videos
-%                                          % that aren't numbered
-%                                          % sequentially, so "skipped"
-%                                          % videos may be counted in the
-%                                          % Scores. Assume (for now) that
-%                                          % skipped videos should just be
-%                                          % eliminated
-%             fileNumbers = getFileNumbers(rawDataDir, '.avi', '_');
-%             Scores = Scores(fileNumbers);
-%         end
-        
-%         if length(Scores) ~= length(x)
-%             fprintf('number of scores and trajectories do not match for %s, %s\n', ratID, sessionDate)
-%             break
-%         end
+
         numPlots = numPlots + 1;
         col_idx = rem(numPlots, traj3d_figProps.n);
         if col_idx == 0
@@ -175,37 +160,15 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         
         if col_idx == 1
             [h_fig, h_axes] = createFigPanels5(traj3d_figProps);
+            [h_xyzFig, h_xyzAxes] = createFigPanels5(xyz_figProps);
+            [h_compFig, h_compAxes] = createFigPanels5(comparison_figProps);
             numPages = numPages + 1;
         end
-            
-            
-        % find the failure reaches
-%         failedReaches  = find(ismember(Scores, failedReachScores));
-%         successReaches = find(ismember(Scores, successReachScores));
-%         
-%         x_fail = cell(1,length(failedReaches));
-%         y_fail = cell(1,length(failedReaches));
-%         z_fail = cell(1,length(failedReaches));
-%         
-%         x_succ = cell(1,length(successReaches));
-%         y_succ = cell(1,length(successReaches));
-%         z_succ = cell(1,length(successReaches));
-%         
-%         for i_fail = 1 : length(failedReaches)
-%             x_fail{i_fail} = x{failedReaches(i_fail)};
-%             y_fail{i_fail} = y{failedReaches(i_fail)};
-%             z_fail{i_fail} = z{failedReaches(i_fail)};
-%         end
-%         for i_succ = 1 : length(successReaches)
-%             x_succ{i_succ} = x{successReaches(i_succ)};
-%             y_succ{i_succ} = y{successReaches(i_succ)};
-%             z_succ{i_succ} = z{successReaches(i_succ)};
-%         end
-        
+
         % all successful reaches in the left column
         numSuccTraj = length(find(ismember(Scores, successReachScores)));
-        successReachCol_ind(4) = indReachTransparency / numSuccTraj;
-        [~,~,~] = plotSessionTrajectories(sr_ratInfo(i_rat), sessionName, successReachScores, ...
+        successReachCol_ind(4) = 0.3;%indReachTransparency / numSuccTraj;
+        [succ_meanTraj,succ_stdTraj,~,succ_alignFrame,slot_z] = plotSessionTrajectories(sr_ratInfo(i_rat), sessionName, successReachScores, ...
                                'axes',h_axes(2,col_idx), ...
                                'indtrialcol',successReachCol_ind, ...
                                'indtrajweight', indTrajWeight, ...
@@ -221,8 +184,8 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                        
         % all failed reaches in the middle column
         numFailTraj = length(find(ismember(Scores, failedReachScores)));
-        failedReachCol_ind(4) = indReachTransparency / numFailTraj;
-        [~,~,~] = plotSessionTrajectories(sr_ratInfo(i_rat), sessionName, failedReachScores, ...
+        failedReachCol_ind(4) = 0.2;%indReachTransparency / numFailTraj;
+        [fail_meanTraj,fail_stdTraj,~,fail_alignFrame,~] = plotSessionTrajectories(sr_ratInfo(i_rat), sessionName, failedReachScores, ...
                                'axes',h_axes(3,col_idx), ...
                                'indtrialcol',failedReachCol_ind, ...
                                'indtrajweight', indTrajWeight, ...
@@ -236,6 +199,13 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                                'camupvector',camUpVector,...
                                'camview',camView);
               
+        plotXYZtraj(succ_meanTraj, succ_stdTraj, succ_alignFrame, trajectory_metadata.frameRate, ...
+                    'color',successReachCol_mean,...
+                    'axes',h_xyzAxes(2:end,col_idx),...
+                    'slot_z',slot_z);
+        plotXYZtraj(fail_meanTraj, fail_stdTraj, fail_alignFrame, trajectory_metadata.frameRate, ...
+                    'color',failedReachCol_mean,...
+                    'axes',h_xyzAxes(2:end,col_idx));
         % overlay of mean failed and successful reaches in the right column
         plotSessionTrajectories(sr_ratInfo(i_rat), sessionName, successReachScores, ...
                            'axes',h_axes(4,col_idx), ...
@@ -256,10 +226,39 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                            'slotcolor', slotColor,...
                            'camupvector',camUpVector,...
                            'camview',camView);
+
+        trajectories{1} = succ_meanTraj;
+        trajectories{2} = fail_meanTraj;
+        alignmentFrames = [succ_alignFrame,fail_alignFrame];
+        [succFailDiff,alignFrame] = compareTrajectories(trajectories, alignmentFrames);
+        
+        plotComptraj(succFailDiff,alignFrame,trajectory_metadata.frameRate,...
+                    'axes',h_compAxes(2:3,col_idx));
+	
 %         set(gca,'cameratarget',[0,0,zdist_from_box],...
 %                 'cameraposition',[0,0,0],...
 %                 'ydir','reverse');
         axes(h_axes(1,col_idx));
+        set(gca,'visible','off');
+        sessionString{1} = sprintf('date: %s',sessionDate);
+        sessionString{2} = sprintf('num success: %d', numSuccTraj);
+        sessionString{3} = sprintf('num failure: %d', numFailTraj);
+        text('units','normalized',...
+             'position',sessionTextPos,...
+             'fontsize',sessionTextFontSize,...
+             'string',sessionString);
+         
+        axes(h_xyzAxes(1,col_idx));
+        set(gca,'visible','off');
+        sessionString{1} = sprintf('date: %s',sessionDate);
+        sessionString{2} = sprintf('num success: %d', numSuccTraj);
+        sessionString{3} = sprintf('num failure: %d', numFailTraj);
+        text('units','normalized',...
+             'position',sessionTextPos,...
+             'fontsize',sessionTextFontSize,...
+             'string',sessionString);
+         
+        axes(h_compAxes(1,col_idx));
         set(gca,'visible','off');
         sessionString{1} = sprintf('date: %s',sessionDate);
         sessionString{2} = sprintf('num success: %d', numSuccTraj);
@@ -282,10 +281,10 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                  'position',headerTextPos,...
                  'fontsize',headerFontSize, ...
                  'string',headerString);
-            pdfName = sprintf('%s_traj_summary_%02d.pdf',ratID,numPages);
-            pdfName = fullfile(pdfDir,pdfName);
+            traj3dName = sprintf('%s_traj_summary_%02d.pdf',ratID,numPages);
+            traj3dName = fullfile(pdfDir,traj3dName);
             tic
-                export_fig(pdfName, '-pdf','-q101','-painters','-append');
+                export_fig(traj3dName, '-pdf','-q101','-painters','-append');
             toc
             numPages = numPages + 1;
             close(h_fig);

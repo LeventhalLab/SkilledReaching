@@ -9,7 +9,7 @@ for iarg = 1 : 2 : nargin - 1
     end
 end
 
-slotFrames = zeros(1, size(z,2));
+slotFrames = NaN(1, size(z,2));
 for i_traj = 1 : size(z,2)
     temp = find(z(:,i_traj) < slot_z, 1);
     if ~isempty(temp)

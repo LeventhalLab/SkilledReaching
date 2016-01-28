@@ -1,4 +1,4 @@
-function [meanTrajectory,varTrajectory,numValidTraj] = plotSessionTrajectories(sr_ratInfo, sessionName, scores, varargin)
+function [meanTrajectory,stdTrajectory,numValidTraj,new_alignmentFrame,slot_z] = plotSessionTrajectories(sr_ratInfo, sessionName, scores, varargin)
 %
 % INPUTS:
 %   sr_ratInfo - single element of the sr_ratInfo structure output by
@@ -32,11 +32,15 @@ slotColor = 'k';
 slotAlpha = 0.2;
 
 shelfWidth = 100;
+minTrajHeight = 15;
 
 K = [];
 computeCamParams = false;
 camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
+
+numVirtualFrames = 1500;
+alignToFrame = 750;
 
 % parameters for adjusting view
 switch sr_ratInfo.pawPref
@@ -101,6 +105,10 @@ for iarg = 1 : 2 : nargin - 3
             camUpVector = varargin{iarg + 1};
         case 'excludepoints',
             excludePoints = varargin{iarg + 1};
+        case 'mintrajectoryheight',
+            minTrajHeight = varargin{iarg + 1};
+        case 'numvirtualframes',
+            numVirtualFrames = varargin{iarg + 1};
     end
       
 end   % for iarg...
@@ -155,16 +163,29 @@ slot_z = mean(slotPoints(:,3));
 z = squeeze(scaled_points3d(:,3,:));
 slotCrossFrames = DKL_slotCrossFrames(z, 'slot_z', slot_z);
 
-validTrialIdx = find(ismember(trajectory_metadata.csv_scores,scores));
-validTrialNumbers = find(ismember(trajectory_metadata.trial_numbers, validTrialIdx));
+csv_scores = trajectory_metadata.csv_scores(~isnan(trajectory_metadata.csv_scores));
+validTrialIdx = ismember(csv_scores,scores)';
+% validTrialIdx = ismember(trajectory_metadata.csv_scores,scores);
+validTrialIdx = find(validTrialIdx & ~isnan(slotCrossFrames));    % get rid of reaches where the paw centroid doesn't reach the slot
+% validTrialNumbers = ismember(trajectory_metadata.trial_numbers, validTrialIdx);
+% validTrialNumbers = find(validTrialNumbers & ~isnan(slotCrossFrames));    % get rid of reaches where the paw centroid doesn't reach the slot
+
 numValidTrials = length(validTrialIdx);
 
-try
-    [meanTrajectory,varTrajectory,numValidTraj] = calcAverageTrajectory(scaled_points3d(:,:,validTrialNumbers),...
-                                                                    'alignmentframes',slotCrossFrames(validTrialNumbers));
-catch
-    keyboard
-end
+aligned_trajectories = alignTrajectoriesToFrame(scaled_points3d(:,:,validTrialIdx),slotCrossFrames(validTrialIdx),...
+                                                'numvirtframes',numVirtualFrames,...
+                                                'aligntoframe',alignToFrame);
+[single_reach_points, new_alignmentFrame] = ...
+    restrictAnalysisToOneReach(aligned_trajectories, alignToFrame, minTrajHeight);
+[meanTrajectory,stdTrajectory,numValidTraj] = calcAverageTrajectory(single_reach_points,...
+                                                                'alignmentframes',ones(numValidTrials,1)*new_alignmentFrame,...
+                                                                'aligntrajectories',false);
+% try
+%     [meanTrajectory,stdTrajectory,numValidTraj] = calcAverageTrajectory(scaled_points3d(:,:,validTrialNumbers),...
+%                                                                     'alignmentframes',slotCrossFrames(validTrialNumbers));
+% catch
+%     keyboard
+% end
 
 % plot individual trials
 if h_axes == 0
@@ -178,7 +199,8 @@ h_indTrial = zeros(1,numValidTrials);
 if showIndTraj
     for iTrial = 1 : numValidTrials
         try
-            toPlot = scaled_points3d(:,:,validTrialNumbers(iTrial));
+%             toPlot = scaled_points3d(:,:,validTrialNumbers(iTrial));
+            toPlot = single_reach_points;
         catch
             keyboard;
         end

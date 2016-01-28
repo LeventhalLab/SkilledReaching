@@ -38,7 +38,7 @@ sessionList = sr_ratInfo.sessionList;
 numSessions = length(sessionList);
 
 sessionDate = cell(1,numSessions);
-for iSession = 8:8%1 : numSessions
+for iSession = 12:14%1 : numSessions
     sessionDate{iSession} = sessionList{iSession}(1:8);
     
     cd(processed_rootDir);

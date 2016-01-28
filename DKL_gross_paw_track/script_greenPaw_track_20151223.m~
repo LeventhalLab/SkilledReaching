@@ -132,8 +132,6 @@ for i_rat = 1 : length(sr_ratInfo)
                                                    'pawgraylevels',gray_paw_limits,...
                                                    'cameraparams',cameraParams);
                                                
-                
-                                               
             end    % for iVid
         end    % for iFolder
 

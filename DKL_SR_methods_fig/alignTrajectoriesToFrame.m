@@ -33,7 +33,7 @@ aligned_trajectories = zeros(numVirtualFrames,3,num_trajectories);
 
 for i_traj = 1 : num_trajectories
 %     i_traj
-    if vid_alignFrame(i_traj) == 0; continue; end
+    if isnan(vid_alignFrame(i_traj)); continue; end
     
     pre_pad = alignToFrame - vid_alignFrame(i_traj);
     post_pad = numVirtualFrames - pre_pad - num_frames;

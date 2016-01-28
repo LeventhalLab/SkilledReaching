@@ -26,8 +26,16 @@ for iarg = 1 : 2 : nargin - 3
             useShelfInsteadofRubiks = varargin{iarg + 1};
     end
 end
-    
-if isfield(session_mp.direct,'left_rbk_a') && ~useShelfInsteadofRubiks
+
+skipRubiks = false;
+if isfield(session_mp.direct,'left_rbk_a')
+    if isnan(session_mp.direct.left_rbk_a)
+        skipRubiks = true;
+    end
+else
+    skipRubiks = true;
+end
+if ~skipRubiks && ~useShelfInsteadofRubiks
     % this session had a rubiks calibration image
     sf = estimateScale_rubik(session_mp, P, K, rubikSpacing);
 else

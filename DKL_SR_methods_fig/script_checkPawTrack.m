@@ -25,7 +25,7 @@ kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Pr
 
 markerSize = 10;
 
-for i_rat = 6 : length(sr_ratInfo)
+for i_rat = 1 : 4%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir = fullfile(kinematics_rootDir,ratID);
@@ -37,11 +37,12 @@ for i_rat = 6 : length(sr_ratInfo)
     
     cd(triDir);
     triDataFiles = dir('*.mat');
-    numSessions = length(triDataFiles);
-    
-    for iSession = 1 : numSessions
+%     numSessions = length(triDataFiles);
+    numSessions = length(sr_ratInfo(i_rat).sessionList);
+    for iSession = 12 : numSessions
         
-        sessionDate = triDataFiles(iSession).name(7:14);
+%         sessionDate = triDataFiles(iSession).name(7:14);
+        sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);
         shortDate = sessionDate(5:end);
         
         cd(rawData_parentDir);
