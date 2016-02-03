@@ -10,7 +10,7 @@ minRGDiff = 0.05;
 decorrStretchMean = [0.5 0.5 0.5];
 decorrStretchStd  = [0.25 0.25 0.25];
 
-pawHSVrange = [0.33, 0.16, 0.6, 1.0, 0.7, 1.0   % pick out anything that's green and bright
+pawHSVrange = [0.33, 0.16, 0.7, 1.0, 0.7, 1.0   % pick out anything that's green and bright
                0.00, 0.16, 0.7, 1.0, 0.6, 1.0     % pick out only red and bright
                0.33, 0.16, 0.6, 1.0, 0.0, 1.0]; % pick out anything green (only to be used just behind the front panel in the mirror view
 

@@ -23,7 +23,7 @@ sr_ratInfo = get_sr_RatList();
 
 extractBGforAllVids = true;
 
-for i_rat = 1 : length(sr_ratInfo)
+for i_rat = 3 : 3%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir{i_rat} = fullfile(kinematics_rootDir,ratID);
@@ -36,7 +36,7 @@ for i_rat = 1 : length(sr_ratInfo)
 %     numSessions = length(triDataFiles);
     numSessions = length(sr_ratInfo(i_rat).sessionList);
     
-    for iSession = 1 : numSessions
+    for iSession = 7 : numSessions
         
 %         sessionDate = triDataFiles(iSession).name(7:14);
         sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);
@@ -73,7 +73,7 @@ for i_rat = 1 : length(sr_ratInfo)
         
         for i_file = 1 : length(file_list)
             
-            fname = file_list(i_file).name;
+            fname = file_list(i_file).name
             if strcmp(fname(1:2),'._'); continue; end
             
             numString = fname(end-6:end-4);

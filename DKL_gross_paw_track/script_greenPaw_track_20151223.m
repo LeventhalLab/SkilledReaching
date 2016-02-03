@@ -44,6 +44,7 @@ cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo
 
 camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 load(camParamFile);
+boxCalibration.cameraParams = cameraParams;
 K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
                                     %       version - Hartley and Zisserman and the rest of the world seem to
                                     %       use the transpose of matlab K)
@@ -78,12 +79,13 @@ for i_rat = 1 : length(sr_ratInfo)
             continue;
         end
         session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
+        boxCalibration.srCal = session_srCal;
         
         vidFolderNames = appendLetters2String([ratID '_' curDateStr]);
         
         for iFolder = 1 : size(vidFolderNames, 1)
             curRawFolder = fullfile(rawdata_dir, vidFolderNames(iFolder,:));
-            if ~exist(curFolder,'dir'); continue; end
+            if ~exist(curRawFolder,'dir'); continue; end
             curProcFolder = fullfile(processed_dir, vidFolderNames(iFolder,:));
             cd(curProcFolder);
             csvInfo = dir('*.csv');
@@ -128,9 +130,12 @@ for i_rat = 1 : length(sr_ratInfo)
 %                     BGimg = extractBGimg( video, 'numbgframes', numBGframes);
 %                     BGimg_ud = undistortImage(BGimg, cameraParams);
 %                 end
-                triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, ...
-                                                   'pawgraylevels',gray_paw_limits,...
-                                                   'cameraparams',cameraParams);
+                triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, cameraParams,...
+                                                   'pawgraylevels',gray_paw_limits);
+                                               
+                initPawMask = find_initPawMask_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, triggerTime );
+                % FIRST, FIND THE PAW IN THE "TRIGGER" FRAME
+                % NOW NEED CODE FOR THE ACTUAL TRACKING
                                                
                 
                                                

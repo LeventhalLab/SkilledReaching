@@ -1,4 +1,4 @@
-function triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, rat_metadata, session_mp, varargin )
+function triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, rat_metadata, session_mp, cameraParams, varargin )
 %
 % INPUTS:
 %   video - a VideoReader object for the relevant video
@@ -27,7 +27,7 @@ ROIwidth = 100;
 numBGframes = 50;    % don't look for the paw too early
 
 pawHSVrange = [0.33, 0.1, 0.8, 1.0, 0.8, 1.0];
-for iarg = 1 : 2 : nargin - 4
+for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
         case 'pawgraylevels',
             pawGrayLevels = varargin{iarg + 1};
@@ -35,8 +35,6 @@ for iarg = 1 : 2 : nargin - 4
             pixCountThresh = varargin{iarg + 1};
         case 'foregroundthresh',
             foregroundThresh = varargin{iarg + 1};
-        case 'cameraparams',
-            cameraParams = varargin{iarg + 1};
     end
 end
 
