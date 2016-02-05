@@ -5,13 +5,13 @@ function projMask = projMaskFromTangentLines(mask, fundMat, bbox, imSize)
 % OUTPUTS:
 %
 
-s = regionprops(mask,'centroid');
-
-if length(s) ~= 1
-    error('image must exactly only one blob')
-end
-
-[~, tlines] = findTangentToEpipolarLine(mask, fundMat, bbox);
+% s = regionprops(mask,'centroid');
+% 
+% if length(s) ~= 1
+%     error('image must exactly only one blob')
+% end
+convMask = bwconvhull(mask,'union');
+[~, tlines] = findTangentToEpipolarLine(convMask, fundMat, bbox);
 
 borderpts = lineToBorderPoints(tlines, imSize);
 polyPts_x = [borderpts(1,1),borderpts(1,3),borderpts(2,3),borderpts(2,1),borderpts(1,1)];

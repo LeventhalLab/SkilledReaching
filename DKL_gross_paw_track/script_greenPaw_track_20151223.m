@@ -109,7 +109,7 @@ for i_rat = 1 : length(sr_ratInfo)
                 if vidList(iVid).bytes < 10000; continue; end
                 if strcmp(vidList(iVid).name(1:2),'._'); continue; end
                 
-                currentVidName = vidList(iVid).name;
+                currentVidName = vidList(iVid).name
                 currentVidNumber = currentVidName(end-6:end-4);
                 scoreIdx = find(csv_trialNums == str2double(currentVidNumber));
                 
@@ -122,6 +122,9 @@ for i_rat = 1 : length(sr_ratInfo)
                 w = video.Width;
                 
                 BGimg_udName = [fullSessionName(1:end-1) '_' currentVidNumber '_BG_ud.bmp'];
+                pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_DLtrack.mat'];
+                pawTrackName = fullfile(curProcFolder,pawTrackName);
+                if exist(pawTrackName,'file');continue;end
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
                 end
@@ -134,11 +137,11 @@ for i_rat = 1 : length(sr_ratInfo)
                                                    'pawgraylevels',gray_paw_limits);
                                                
                 initPawMask = find_initPawMask_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, triggerTime );
-                % FIRST, FIND THE PAW IN THE "TRIGGER" FRAME
-                % NOW NEED CODE FOR THE ACTUAL TRACKING
                                                
-                
-                                               
+                [points3d,points2d] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(1), session_mp, triggerTime, initPawMask, boxCalibration);
+                track_metadata.triggerTime = triggerTime;
+                track_metadata.boxCalibration = boxCalibration;
+                save(pawTrackName,'points3d','points2d','track_metadata');
             end    % for iVid
         end    % for iFolder
 

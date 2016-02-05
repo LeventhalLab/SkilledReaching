@@ -36,8 +36,8 @@ tangentPointsFound = 0;
 for ii = 1 : num_pts
     [idx_pos,idx_neg,idx_zero] = pointsSeparatedByLine(epiLines(ii,:),ext_pts);
     
-	lineValue = epiLines(ii,1) * ext_pts(:,1) + ...
-                epiLines(ii,2) * ext_pts(:,2) + epiLines(ii,3);
+% 	lineValue = epiLines(ii,1) * ext_pts(:,1) + ...
+%                 epiLines(ii,2) * ext_pts(:,2) + epiLines(ii,3);
             
 % 	[intersect_idx, isLocalExtremum] = detectCircularZeroCrossings(lineValue);
     
