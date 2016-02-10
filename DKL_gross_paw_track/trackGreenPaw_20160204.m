@@ -6,13 +6,14 @@ w = video.Width;
 maxFrontPanelSep = 20;
 maxRedGreenDist = 20;
 minRGDiff = 0.0;
+maxDistPerFrame = 20;
 
 % decorrStretchMean = [0.5 0.5 0.5];
 % decorrStretchStd  = [0.25 0.25 0.25];
 
-pawHSVrange = [0.33, 0.16, 0.6, 1.0, 0.6, 1.0   % pick out anything that's green and bright
+pawHSVrange = [0.33, 0.16, 0.8, 1.0, 0.8, 1.0   % pick out anything that's green and bright
                0.00, 0.16, 0.8, 1.0, 0.8, 1.0     % pick out only red and bright
-               0.33, 0.16, 0.6, 1.0, 0.0, 1.0]; % pick out anything green (only to be used just behind the front panel in the mirror view
+               0.33, 0.16, 0.6, 1.0, 0.6, 1.0]; % pick out anything green (only to be used just behind the front panel in the mirror view
 
 foregroundThresh = 25/255;
 
@@ -23,7 +24,7 @@ pawBlob{1}.CentroidOutputPort = true;
 pawBlob{1}.BoundingBoxOutputPort = true;
 pawBlob{1}.LabelMatrixOutputPort = true;
 pawBlob{1}.MinimumBlobArea = 100;
-pawBlob{1}.MaximumBlobArea = 10000;
+pawBlob{1}.MaximumBlobArea = 5000;
 
 % blob parameters for mirror view
 pawBlob{2} = vision.BlobAnalysis;
@@ -32,7 +33,7 @@ pawBlob{2}.CentroidOutputPort = true;
 pawBlob{2}.BoundingBoxOutputPort = true;
 pawBlob{2}.LabelMatrixOutputPort = true;
 pawBlob{2}.MinimumBlobArea = 100;
-pawBlob{2}.MaximumBlobArea = 10000;
+pawBlob{2}.MaximumBlobArea = 5000;
 
 % blob parameters for tight thresholding
 restrictiveBlob = vision.BlobAnalysis;
@@ -41,7 +42,7 @@ restrictiveBlob.CentroidOutputPort = true;
 restrictiveBlob.BoundingBoxOutputPort = true;
 restrictiveBlob.LabelMatrixOutputPort = true;
 restrictiveBlob.MinimumBlobArea = 5;
-restrictiveBlob.MaximumBlobArea = 10000;
+restrictiveBlob.MaximumBlobArea = 5000;
 
 for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
@@ -51,6 +52,8 @@ for iarg = 1 : 2 : nargin - 7
             pixCountThresh = varargin{iarg + 1};
         case 'foregroundthresh',
             foregroundThresh = varargin{iarg + 1};
+        case 'maxdistperframe',
+            maxDistPerFrame = varargin{iarg + 1};
     end
 end
 
@@ -83,18 +86,20 @@ cameraParams = boxCalibration.cameraParams;
 
 boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
 
-[rpoints3d,rpoints2d] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'forward',...
+[rpoints3d,rpoints2d,timeList_f] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'forward',...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
                                      'maxredgreendist',maxRedGreenDist,...
-                                     'minrgdiff',minRGDiff);
+                                     'minrgdiff',minRGDiff,...
+                                     'maxdistperframe',maxDistPerFrame);
 
 video.CurrentTime = triggerTime;
-[fpoints3d,fpoints2d] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'reverse', ...
+[fpoints3d,fpoints2d,timeList_b] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'reverse', ...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
                                      'maxredgreendist',maxRedGreenDist,...
-                                     'minrgdiff',minRGDiff);
+                                     'minrgdiff',minRGDiff,...
+                                     'maxdistperframe',maxDistPerFrame);
 points3d = rpoints3d;
 points2d = rpoints2d;
 trigFrame = length(rpoints3d);
@@ -108,7 +113,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [points3d,points2d] = trackPaw( video, ...
+function [points3d,points2d,timeList] = trackPaw( video, ...
                                              BGimg_ud, ...
                                              fundMat, ...
                                              cameraParams, ...
@@ -200,7 +205,10 @@ if strcmpi(timeDir,'reverse')
 else
     video.CurrentTime = video.CurrentTime + 1/video.FrameRate;
 end
+timeList = [];
 while video.CurrentTime < video.Duration
+%     video.CurrentTime
+    timeList = [timeList,video.CurrentTime];
     if strcmpi(timeDir,'reverse')
         frameCount = frameCount - 1;
     else
@@ -276,6 +284,9 @@ while video.CurrentTime < video.Duration
         
     end
   
+    showTracking(image_ud,fullMask,bbox);
+
+
 %     for iView = 1 : 2
 %         mask_outline = bwmorph(fullMask{iView},'remove');
 %         [y,x] = find(mask_outline);

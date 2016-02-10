@@ -1,5 +1,7 @@
 % script_checkBoxCalibrations
 
+showPanelMarkers = true;
+
 computeCamParams = false;
 camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
@@ -153,6 +155,10 @@ for i_rat = 2 : 2%length(sr_ratInfo)
         plot(right_reprojPoints(:,1,1),right_reprojPoints(:,2,1),'marker','*','color','r','linestyle','none');
         plot(right_reprojPoints(:,1,2),right_reprojPoints(:,2,2),'marker','*','color','r','linestyle','none');
 
+        if showPanelMarkers
+            panelPoints = getPanelPoints(session_mp);
+            plot(panelPoints(:,1),panelPoints(:,2),'marker','o','color','b','linestyle','none');
+        end
 %         plot(left_3dreproj_direct(:,1),left_3dreproj_direct(:,2),'marker','+','color','g','linestyle','none');
 %         plot(left_3dreproj_mirror(:,1),left_3dreproj_mirror(:,2),'marker','+','color','g','linestyle','none');
 %         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
@@ -174,6 +180,10 @@ for i_rat = 2 : 2%length(sr_ratInfo)
             plot(right_reprojPoints(:,1,1),right_reprojPoints(:,2,1),'marker','*','color','r','linestyle','none');
             plot(right_reprojPoints(:,1,2),right_reprojPoints(:,2,2),'marker','*','color','r','linestyle','none');
 
+            if showPanelMarkers
+                panelPoints = getPanelPoints(session_mp);
+                plot(panelPoints(:,1),panelPoints(:,2),'marker','o','color','b','linestyle','none');
+            end
     %         plot(left_3dreproj_direct(:,1),left_3dreproj_direct(:,2),'marker','+','color','g','linestyle','none');
     %         plot(left_3dreproj_mirror(:,1),left_3dreproj_mirror(:,2),'marker','+','color','g','linestyle','none');
     %         plot(right_3dreproj_direct(:,1),right_3dreproj_direct(:,2),'marker','+','color','y','linestyle','none');
