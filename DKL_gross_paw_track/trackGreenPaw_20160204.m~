@@ -1,4 +1,4 @@
-function [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo, session_mp, triggerTime, initPawMask, boxCalibration, varargin)
+function [points3d,points2d] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo, session_mp, triggerTime, initPawMask, boxCalibration, varargin)
 
 h = video.Height;
 w = video.Width;
@@ -86,7 +86,7 @@ cameraParams = boxCalibration.cameraParams;
 
 boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
 
-[rpoints3d,rpoints2d,timeList_f,isPawVisible_f] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'forward',...
+[rpoints3d,rpoints2d,timeList_f,~] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'forward',...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
                                      'maxredgreendist',maxRedGreenDist,...
@@ -106,8 +106,6 @@ trigFrame = length(rpoints3d);
 for iFrame = 2 : length(fpoints3d);
     points3d{trigFrame + iFrame - 1} = fpoints3d{iFrame};
     points2d{trigFrame + iFrame - 1} = fpoints2d{iFrame};
-    timeList = [timeList_b;timeList_f];
-    isPawVisible = [isPawVisible_b;isPawVisible_f];
 end
 
 end
@@ -129,7 +127,6 @@ function [points3d,points2d,timeList,isPawVisible] = trackPaw( video, ...
                                              varargin)
 
 zeroTol = 1e-10;
-fps = video.FrameRate;
 
 K = cameraParams.IntrinsicMatrix;
 
@@ -140,13 +137,13 @@ shelfMask = boxRegions.shelfMask;
 belowShelfMask = boxRegions.belowShelfMask;
 
 if strcmpi(timeDir,'reverse')
-    numFrames = round((video.CurrentTime) * fps);
+    numFrames = round((video.CurrentTime) * video.FrameRate);
     frameCount = numFrames;
     startFrame = numFrames;
 else
-    numFrames = round((video.Duration - video.CurrentTime) * fps);
+    numFrames = round((video.Duration - video.CurrentTime) * video.FrameRate);
     frameCount = 1;
-    startFrame = round((video.CurrentTime) * fps);
+    startFrame = round((video.CurrentTime) * video.FrameRate);
 end
 
 h = video.Height;
@@ -209,47 +206,35 @@ startTime = video.CurrentTime;
 % prev_image_ud = double(prev_image_ud) / 255;
 
 timeList(frameCount) = video.CurrentTime;
-image = readFrame(video);   % just to advance one frame for forward direction
 % if strcmpi(timeDir,'reverse')
-%     video.CurrentTime = video.CurrentTime - 2/fps;
+%     video.CurrentTime = video.CurrentTime - 2/video.FrameRate;
 % else
-%     video.CurrentTime = video.CurrentTime + 1/fps;
+%     video.CurrentTime = video.CurrentTime + 1/video.FrameRate;
 % end
 
 isPawVisible = false(1,2);
-while video.CurrentTime < video.Duration && video.CurrentTime >= 0 && frameCount > 0
+while video.CurrentTime < video.Duration && video.CurrentTime >= 0
 %     video.CurrentTime
 
     prevFrame = frameCount;
     
     if strcmpi(timeDir,'reverse')
         frameCount = frameCount - 1;
-        video.CurrentTime = frameCount / fps;
+        video.CurrentTime = frameCount / video.FrameRate;
     else
         frameCount = frameCount + 1;
-%         video.CurrentTime = (startFrame + frameCount - 1) / fps;
+        video.CurrentTime = (startFrame + frameCount - 1) / video.FrameRate;
     end
     fprintf('frame number %d\n',frameCount);
     
     image = readFrame(video);
-    if strcmpi(timeDir,'reverse')
-        if abs(video.CurrentTime - timeList(prevFrame)) > zeroTol    % a frame was skipped
-            % if going backwards, went one too many frames back, so just
-            % read the next frame
-            image = readFrame(video);
-        end
-    elseif abs(video.CurrentTime - timeList(prevFrame) - 2/fps) > zeroTol
-            % if going forwards, need to go back one frame; trick is
-            % figuring out how to do that. Shouldn't be a problem if just
-            % reading consecutive frames, though.
+    if abs(video.CurrentTime - timeList(prevFrame))
+    timeList(frameCount) = video.CurrentTime - 1/video.FrameRate;
+    if length(timeList > 1)
+        if abs(timeList(prevFrame) - timeList(frameCount)) > 0.01
             keyboard;
+        end
     end
-    timeList(frameCount) = video.CurrentTime - 1/fps;
-%     if length(timeList > 1)
-%         if abs(timeList(prevFrame) - timeList(frameCount)) > 0.01
-%             keyboard;
-%         end
-%     end
     
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
@@ -322,7 +307,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0 && frameCount
         
     end
   
-%     showTracking(image_ud,fullMask,bbox);
+    showTracking(image_ud,fullMask,bbox);
 
 
 %     for iView = 1 : 2
@@ -340,7 +325,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0 && frameCount
 %     plot(edge_pts{frameCount,2}(:,1),edge_pts{frameCount,2}(:,2),'marker','.','linestyle','none')
 %     
 %     if strcmpi(timeDir,'reverse')
-%         video.CurrentTime = video.CurrentTime - 2/fps;
+%         video.CurrentTime = video.CurrentTime - 2/video.FrameRate;
 %     end
 end
 

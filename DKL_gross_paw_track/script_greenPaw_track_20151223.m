@@ -138,10 +138,10 @@ for i_rat = 1 : length(sr_ratInfo)
                                                
                 initPawMask = find_initPawMask_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, triggerTime );
                                                
-                [points3d,points2d] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(1), session_mp, triggerTime, initPawMask, boxCalibration);
+                [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(1), session_mp, triggerTime, initPawMask, boxCalibration);
                 track_metadata.triggerTime = triggerTime;
                 track_metadata.boxCalibration = boxCalibration;
-                save(pawTrackName,'points3d','points2d','track_metadata');
+                save(pawTrackName,'points3d','points2d','timeList','isPawVisible','track_metadata');
             end    % for iVid
         end    % for iFolder
 
