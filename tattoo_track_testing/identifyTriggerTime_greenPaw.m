@@ -100,7 +100,8 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     
     % undistort image
     image_ud = undistortImage(image, cameraParams);
-    
+%     figure(1);
+%     imshow(image_ud);
     image_ud = image_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
                         reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
     image_ud = double(image_ud) / 255;
@@ -114,8 +115,12 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     if ~any(BG_masked(:)); continue; end    % no foreground pixels
 %     [y,x] = find(BG_masked);
     
-    fg_image_ud = repmat(double(BG_masked),1,1,3) .* image_ud;
-    decorr_fg = decorrstretch(fg_image_ud);%, 'samplesubs', {y,x});
+%     fg_image_ud = repmat(double(BG_masked),1,1,3) .* image_ud;
+    im_decorr = decorrstretch(image_ud,'tol',[0 1]);
+    decorr_fg = im_decorr .* repmat(double(BG_masked),1,1,3);
+%     decorr_fg = decorrstretch(fg_image_ud);%, 'samplesubs', {y,x});
+%     figure(2)
+%     imshow(decorr_fg);
     decorr_fg = decorr_fg .* repmat(double(BG_masked),1,1,3);
     
     decorr_hsv = rgb2hsv(decorr_fg);

@@ -81,6 +81,7 @@ if ~any(overlap_mask(:))
     end
 %     prevMask_dilate{2} = prevMask_dilate{2} | frontPanelMask;
 end
+bbox(bbox<=0) = 1;
 
 BGdiff = imabsdiff(image_ud, BGimg_ud);
 % orig_image_ud = image_ud;
@@ -177,6 +178,7 @@ for iView = 2:-1:1
             end
         end
         
+        bbox(bbox<=0) = 1;
         viewMask{iView} = im_masked(bbox(iView,2):bbox(iView,2) + bbox(iView,4),...
                              bbox(iView,1):bbox(iView,1) + bbox(iView,3));
 %         rgViewMask = rgMask(bbox(iView,2):bbox(iView,2) + bbox(iView,4),...   % looking for places in raw image where green and red channels are different (not white/black/grey)
@@ -249,14 +251,19 @@ end
 % get rid of any blobs so far out of range that the projections from
 % either view don't intersect them. But, include parts of the mask that
 % are outside the projection.
-mirror_projMask = projMaskFromTangentLines(fullMask{2}, fundMat, [1 1 w-1 h-1], [h,w]);
-direct_projMask = projMaskFromTangentLines(fullMask{1}, fundMat, [1 1 w-1 h-1], [h,w]);
+proj_overlap = cell(1,2);
+for iView = 1 : 2
+    if any(fullMask{iView})
+        projMask = projMaskFromTangentLines(fullMask{iView}, fundMat, [1 1 w-1 h-1], [h,w]);
+        proj_overlap{iView} = (fullMask{3-iView} & projMask);
+    else
+        proj_overlap{iView} = fullMask{3-iView};
+    end
+end
 
-mirror_proj_overlap = (fullMask{2} & direct_projMask);
-direct_proj_overlap = (fullMask{1} & mirror_projMask);
-
-fullMask{1} = imreconstruct(direct_proj_overlap, fullMask{1});
-fullMask{2} = imreconstruct(mirror_proj_overlap, fullMask{2});
+for iView = 1 : 2
+    fullMask{iView} = imreconstruct(proj_overlap{3-iView},fullMask{iView});
+end
 
 fullMask = estimateHiddenSilhouette(fullMask,full_bbox,fundMat,[h,w]);
 

@@ -86,7 +86,7 @@ cameraParams = boxCalibration.cameraParams;
 
 boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
 
-[rpoints3d,rpoints2d,timeList_f,isPawVisible_f] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'forward',...
+[fpoints3d,fpoints2d,timeList_f,isPawVisible_f] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'forward',...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
                                      'maxredgreendist',maxRedGreenDist,...
@@ -94,7 +94,7 @@ boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
                                      'maxdistperframe',maxDistPerFrame);
 
 video.CurrentTime = triggerTime;
-[fpoints3d,fpoints2d,timeList_b,isPawVisible_b] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'reverse', ...
+[rpoints3d,rpoints2d,timeList_b,isPawVisible_b] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'reverse', ...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
                                      'maxredgreendist',maxRedGreenDist,...
@@ -106,10 +106,9 @@ trigFrame = length(rpoints3d);
 for iFrame = 2 : length(fpoints3d);
     points3d{trigFrame + iFrame - 1} = fpoints3d{iFrame};
     points2d{trigFrame + iFrame - 1} = fpoints2d{iFrame};
-    timeList = [timeList_b;timeList_f];
-    isPawVisible = [isPawVisible_b;isPawVisible_f];
 end
-
+timeList = [timeList_b,timeList_f(2:end)];
+isPawVisible = [isPawVisible_b;isPawVisible_f(2:end,:)];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -133,20 +132,12 @@ fps = video.FrameRate;
 
 K = cameraParams.IntrinsicMatrix;
 
-frontPanelMask = boxRegions.frontPanelMask;
-intMask = boxRegions.intMask;
-extMask = boxRegions.extMask;
-shelfMask = boxRegions.shelfMask;
-belowShelfMask = boxRegions.belowShelfMask;
-
 if strcmpi(timeDir,'reverse')
     numFrames = round((video.CurrentTime) * fps);
     frameCount = numFrames;
-    startFrame = numFrames;
 else
     numFrames = round((video.Duration - video.CurrentTime) * fps);
     frameCount = 1;
-    startFrame = round((video.CurrentTime) * fps);
 end
 
 h = video.Height;
@@ -203,31 +194,23 @@ end
 center3d = zeros(numFrames,3);
 center3d(frameCount,:) = mean(points3d{frameCount},1);
 
-startTime = video.CurrentTime;
-% prev_image = readFrame(video);
-% prev_image_ud = undistortImage(prev_image, cameraParams);
-% prev_image_ud = double(prev_image_ud) / 255;
-
 timeList(frameCount) = video.CurrentTime;
 image = readFrame(video);   % just to advance one frame for forward direction
-% if strcmpi(timeDir,'reverse')
-%     video.CurrentTime = video.CurrentTime - 2/fps;
-% else
-%     video.CurrentTime = video.CurrentTime + 1/fps;
-% end
 
-isPawVisible = false(1,2);
-while video.CurrentTime < video.Duration && video.CurrentTime >= 0 && frameCount > 0
-%     video.CurrentTime
+isPawVisible = false(frameCount,2);
+isPawVisible(frameCount,:) = true(1,2);   % by definition (almost), paw is visible in both views in the initial frame
+while video.CurrentTime < video.Duration && video.CurrentTime >= 0
 
     prevFrame = frameCount;
     
     if strcmpi(timeDir,'reverse')
         frameCount = frameCount - 1;
+        if frameCount == 0
+            break;
+        end
         video.CurrentTime = frameCount / fps;
     else
         frameCount = frameCount + 1;
-%         video.CurrentTime = (startFrame + frameCount - 1) / fps;
     end
     fprintf('frame number %d\n',frameCount);
     
@@ -238,18 +221,17 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0 && frameCount
             % read the next frame
             image = readFrame(video);
         end
-    elseif abs(video.CurrentTime - timeList(prevFrame) - 2/fps) > zeroTol
-            % if going forwards, need to go back one frame; trick is
-            % figuring out how to do that. Shouldn't be a problem if just
-            % reading consecutive frames, though.
-            keyboard;
     end
-    timeList(frameCount) = video.CurrentTime - 1/fps;
-%     if length(timeList > 1)
-%         if abs(timeList(prevFrame) - timeList(frameCount)) > 0.01
-%             keyboard;
-%         end
-%     end
+    if strcmpi(timeDir,'forward') && ...
+       abs(video.CurrentTime - timeList(prevFrame) - 2/fps) > zeroTol && ...
+       video.CurrentTime - timeList(prevFrame) - 2/fps < 0
+            % if going forwards, this means the CurrentTime didn't advance
+            % by 1/fps on the last read (not sure why this occasionally
+            % happens - some sort of rounding error)
+            timeList(frameCount) = video.CurrentTime;
+    else
+        timeList(frameCount) = video.CurrentTime - 1/fps;
+    end
     
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
@@ -278,6 +260,9 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0 && frameCount
             hiddenView = 3 - visibleView;
             projMask = projMaskFromTangentLines(fullMask{visibleView},F, [1 1 w-1 h-1], [h,w]);
             fullMask{hiddenView} = projMask & prevMask{hiddenView};
+            if ~any(fullMask{hiddenView}(:))
+                fullMask{hiddenView} = prevMask{hiddenView};
+            end
             fullMask = estimateHiddenSilhouette(fullMask,full_bbox,fundMat,[h,w]);
             
             temp = bwconvhull(fullMask{visibleView});
@@ -294,6 +279,9 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0 && frameCount
             hiddenView = 3 - visibleView;
             projMask = projMaskFromTangentLines(fullMask{visibleView},F, [1 1 w-1 h-1], [h,w]);
             fullMask{hiddenView} = projMask & prevMask{hiddenView};
+            if ~any(fullMask{hiddenView}(:))
+                fullMask{hiddenView} = prevMask{hiddenView};
+            end
             fullMask = estimateHiddenSilhouette(fullMask,full_bbox,fundMat,[h,w]);
             
             temp = bwconvhull(fullMask{visibleView});

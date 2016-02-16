@@ -7,23 +7,23 @@ computeCamParams = false;
 camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
 
-if computeCamParams
-    [cameraParams, ~, ~] = cb_calibration(...
-                           'cb_path', cb_path, ...
-                           'num_rad_coeff', num_rad_coeff, ...
-                           'est_tan_distortion', est_tan_distortion, ...
-                           'estimateskew', estimateSkew);
-else
-    load(camParamFile);    % contains a cameraParameters object named cameraParams
-end
-K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
-                                    %       version - Hartley and Zisserman and the rest of the world seem to
-                                    %       use the transpose of matlab K)
+% if computeCamParams
+%     [cameraParams, ~, ~] = cb_calibration(...
+%                            'cb_path', cb_path, ...
+%                            'num_rad_coeff', num_rad_coeff, ...
+%                            'est_tan_distortion', est_tan_distortion, ...
+%                            'estimateskew', estimateSkew);
+% else
+%     load(camParamFile);    % contains a cameraParameters object named cameraParams
+% end
+% K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
+%                                     %       version - Hartley and Zisserman and the rest of the world seem to
+%                                     %       use the transpose of matlab K)
                                     
 sr_ratInfo = get_sr_RatList();
 kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Matlab Kinematics/PlotGrossTrajectory';
 
-markerSize = 10;
+markerSize = 1;
 
 for i_rat = 1 : 4%length(sr_ratInfo)
     
@@ -39,7 +39,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
     triDataFiles = dir('*.mat');
 %     numSessions = length(triDataFiles);
     numSessions = length(sr_ratInfo(i_rat).sessionList);
-    for iSession = 12 : numSessions
+    for iSession = 1 : numSessions
         
 %         sessionDate = triDataFiles(iSession).name(7:14);
         sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);
@@ -70,15 +70,21 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             if strcmp(vidList(iVid).name(1:2),'._');continue;end
             
             trialNum = vidList(iVid).name(end-6:end-4);
-            trialNum = str2num(trialNum);
             
-            pawData = load_pawTrackData(processedDir, trialNum);
+            pawData = load_pawTrackData_DL(processedDir, trialNum);
+            trialNum = str2num(trialNum);
             if isempty(pawData);
                 continue;
             end
+            
+            cameraParams = pawData.track_metadata.boxCalibration.cameraParams;
+            K = cameraParams.IntrinsicMatrix;
+            
             cd(rawDataDir);
             
             video = VideoReader(vidList(iVid).name);
+            video.CurrentTime = pawData.timeList(1);
+            
             [~,baseName,~] = fileparts(vidList(iVid).name);
             writeName = [baseName '_udmarkDL.avi'];
             writeName = fullfile(processedDir, writeName);
@@ -93,32 +99,24 @@ for i_rat = 1 : 4%length(sr_ratInfo)
                 iFrame = iFrame + 1;
 
                 frm = readFrame(video);
-                if isnan(pawData(iFrame,1,1)); continue; end
+%                 if isnan(pawData(iFrame,1,1)); continue; end
                 
                 frm_ud = undistortImage(frm,cameraParams);
-                
-%                 figure(1)
-%                 imshow(frm);
-%                 hold on
-%                 for iView = 1 : 3
-%                     plot(pawData(iFrame,1,iView),pawData(iFrame,2,iView),...
-%                          'linestyle','none',...
-%                          'marker','o',...
-%                          'markersize',6,...
-%                          'markeredgecolor','r',...
-%                          'markerfacecolor','r');
-%                 end
-                
-%                 figure(2)
-%                 imshow(frm_ud);
-%                 hold on
-%                 set(gcf,'name',[vidList(iVid).name ', undistorted']);
-                for iView = 1 : 3
-                    if isnan(pawData(iFrame,1,iView)); continue; end
-                    ud_pt = undistortPoints(squeeze(pawData(iFrame,:,iView)),cameraParams);
-                    frm_ud = insertMarker(frm_ud, ud_pt,'star',...
+
+                for iView = 1 : 2
+%                     if isnan(pawData(iFrame,1,iView)); continue; end
+%                     ud_pt = undistortPoints(squeeze(pawData(iFrame,:,iView)),cameraParams);
+                    if isempty(pawData.points2d{iFrame});continue;end
+                    ud_pt = pawData.points2d{iFrame}(:,:,iView);
+                    if isempty(ud_pt);continue;end
+                    if all(isnan(ud_pt(:))); continue; end
+                    try
+                    frm_ud = insertMarker(frm_ud, ud_pt,'o',...
                                                     'size', markerSize, ...
                                                     'color','r');
+                    catch
+                        keyboard
+                    end
 %                     plot(ud_pt(1),ud_pt(2),...
 %                          'linestyle','none',...
 %                          'marker','o',...

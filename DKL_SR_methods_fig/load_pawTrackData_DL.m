@@ -6,6 +6,11 @@ function pawData = load_pawTrackData_DL(processedDir, trialNum)
 pawData = [];
 
 cd(processedDir);
+
 pawTrackFile = dir(['*' trialNum '_DLtrack.mat']);
 
-pawData = load(pawTrackFile);
+if isempty(pawTrackFile)
+    return;
+end
+
+pawData = load(pawTrackFile.name);
