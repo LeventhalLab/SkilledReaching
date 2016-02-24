@@ -39,7 +39,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     triDataFiles = dir('*.mat');
 %     numSessions = length(triDataFiles);
     numSessions = length(sr_ratInfo(i_rat).sessionList);
-    for iSession = 1 : 3%numSessions
+    for iSession = 4 : numSessions
         
 %         sessionDate = triDataFiles(iSession).name(7:14);
         sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);
@@ -64,7 +64,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         
         vidList = dir('*.avi');
         
-        for iVid = 1 : length(vidList)
+        for iVid = 15 : length(vidList)
             fprintf('%s, %s, video %d of %d, %s\n', ratID, sessionDate, iVid, length(vidList), vidList(iVid).name);
             
             if strcmp(vidList(iVid).name(1:2),'._');continue;end

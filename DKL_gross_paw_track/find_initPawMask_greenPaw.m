@@ -1,20 +1,31 @@
-function initPawMask = find_initPawMask_greenPaw( video, BGimg_ud, sr_ratInfo, session_mp, boxCalibration, triggerTime )
+function initPawMask = find_initPawMask_greenPaw( video, BGimg_ud, sr_ratInfo, session_mp, boxCalibration, boxRegions, triggerTime, varargin )
 
 h = video.Height;
 w = video.Width;
 
-restrictive_pawHSVrange = [0.33, 0.05, 0.9, 1.0, 0.9, 1.0];
-liberal_pawHSVrange = [0.2, 0.3, 0.7, 1.0, 0.6, 1.0];
+maxFrontPanelSep = 20;
+
+pawHSVrange = [0.33, 0.16, 0.8, 1.0, 0.8, 1.0   % pick out anything that's green and bright
+               0.00, 0.16, 0.8, 1.0, 0.8, 1.0     % pick out only red and bright
+               0.33, 0.16, 0.6, 1.0, 0.6, 1.0]; % pick out anything green (only to be used just behind the front panel in the mirror view
 
 initPawMask = cell(1,2);
-foregroundThresh = 45/255;
+foregroundThresh = 25/255;
+
+frontPanelMask = boxRegions.frontPanelMask;
+intMask = boxRegions.intMask;
+% extMask = boxRegions.extMask;
+shelfMask = boxRegions.shelfMask;
+belowShelfMask = boxRegions.belowShelfMask;
+floorMask = boxRegions.floorMask;
 
 ROIheight = 220;    % in pixels - how high above the shelf to look for the paw
 ROIwidth = 120;
 
 stretchTol = [0 1];
+directWidth = 250;    % in pixels
 
-for iarg = 1 : 2 : nargin - 6
+for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
         case 'pawgraylevels',
             pawGrayLevels = varargin{iarg + 1};
@@ -55,7 +66,7 @@ restrictiveBlob.CentroidOutputPort = true;
 restrictiveBlob.BoundingBoxOutputPort = true;
 % restrictiveBlob.ExtentOutputPort = true;
 restrictiveBlob.LabelMatrixOutputPort = true;
-restrictiveBlob.MinimumBlobArea = 20;
+restrictiveBlob.MinimumBlobArea = 1;
 restrictiveBlob.MaximumBlobArea = 10000;
 
 if strcmpi(class(BGimg_ud),'uint8')
@@ -71,10 +82,11 @@ cameraParams = boxCalibration.cameraParams;
 srCal = boxCalibration.srCal;
 
 image = readFrame(video);
-image_ud = undistortImage(image, cameraParams);
-if strcmpi(class(image_ud),'uint8')
-    image_ud = double(image_ud) / 255;
+orig_image_ud = undistortImage(image, cameraParams);
+if strcmpi(class(orig_image_ud),'uint8')
+    orig_image_ud = double(orig_image_ud) / 255;
 end
+image_ud = color_adapthisteq(orig_image_ud);
 
 pawPref = lower(sr_ratInfo.pawPref);
 if iscell(pawPref)
@@ -100,7 +112,10 @@ shelf_left = session_mp.direct.left_back_shelf_corner(1);
 shelf_right = session_mp.direct.right_back_shelf_corner(1);
 shelf_bot = session_mp.direct.left_bottom_shelf_corner(2);
 shelf_top = shelf_bot - 200;
-directMask(shelf_top:shelf_bot,shelf_left:shelf_right) = true;
+direct_left = round((shelf_left+shelf_right)/2 - directWidth/2);
+direct_right = direct_left + directWidth;
+% directMask(shelf_top:shelf_bot,shelf_left:shelf_right) = true;
+directMask(shelf_top:shelf_bot,direct_left:direct_right) = true;
 
 switch pawPref
     case 'left',
@@ -111,6 +126,7 @@ switch pawPref
         fundMat = srCal.F(:,:,1);
 end
 
+mirrorMask = imdilate(mirrorMask,strel('disk',40));
 s = regionprops(mirrorMask, 'BoundingBox');
 mirror_bbox = round(s.BoundingBox);
 s = regionprops(directMask, 'BoundingBox');
@@ -118,28 +134,41 @@ direct_bbox = round(s.BoundingBox);
 
 BGimg_mirror = BGimg_ud(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
                 mirror_bbox(1) : mirror_bbox(1) + mirror_bbox(3), :);
-image_ud_mirror = image_ud(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
+image_ud_mirror = orig_image_ud(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
                 mirror_bbox(1) : mirror_bbox(1) + mirror_bbox(3), :);
 
 BGimg_direct = BGimg_ud(direct_bbox(2) : direct_bbox(2) + direct_bbox(4), ...
                 direct_bbox(1) : direct_bbox(1) + direct_bbox(3), :);
-image_ud_direct = image_ud(direct_bbox(2) : direct_bbox(2) + direct_bbox(4), ...
+image_ud_direct = orig_image_ud(direct_bbox(2) : direct_bbox(2) + direct_bbox(4), ...
                 direct_bbox(1) : direct_bbox(1) + direct_bbox(3), :);
             
 BGdiff_mirror = imabsdiff(image_ud_mirror, BGimg_mirror);
 BGdiff_direct = imabsdiff(image_ud_direct, BGimg_direct);
 
-BGdiff_gray_mirror = mean(BGdiff_mirror, 3);
-BGdiff_gray_direct = mean(BGdiff_direct, 3);
-image_masked_mirror = (BGdiff_gray_mirror > foregroundThresh);
-image_masked_direct = (BGdiff_gray_direct > foregroundThresh);
+image_ud_mirror = image_ud(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
+                mirror_bbox(1) : mirror_bbox(1) + mirror_bbox(3), :);
+image_ud_direct = image_ud(direct_bbox(2) : direct_bbox(2) + direct_bbox(4), ...
+                direct_bbox(1) : direct_bbox(1) + direct_bbox(3), :);
+            
+% BGdiff_gray_mirror = mean(BGdiff_mirror, 3);
+% BGdiff_gray_direct = mean(BGdiff_direct, 3);
+image_masked_mirror = false(size(BGimg_mirror,1),size(BGimg_mirror,2));
+image_masked_direct = false(size(BGimg_direct,1),size(BGimg_direct,2));
+for iChannel = 1 : 3
+    image_masked_mirror = image_masked_mirror | (BGdiff_mirror(:,:,iChannel) > foregroundThresh);
+    image_masked_direct = image_masked_direct | (BGdiff_direct(:,:,iChannel) > foregroundThresh);
+end
+% image_masked_mirror = (BGdiff_gray_mirror > foregroundThresh);
+% image_masked_direct = (BGdiff_gray_direct > foregroundThresh);
 
-fg_image_ud_mirror = repmat(double(image_masked_mirror),1,1,3) .* image_ud_mirror;
-decorr_fg_mirror = decorrstretch(fg_image_ud_mirror,'tol',stretchTol);%, 'samplesubs', {y,x});
+% fg_image_ud_mirror = repmat(double(image_masked_mirror),1,1,3) .* image_ud_mirror;
+% decorr_fg_mirror = decorrstretch(fg_image_ud_mirror,'tol',stretchTol);%, 'samplesubs', {y,x});
+decorr_fg_mirror = decorrstretch(image_ud_mirror,'tol',stretchTol);
 decorr_fg_mirror = decorr_fg_mirror .* repmat(double(image_masked_mirror),1,1,3);
 
-fg_image_ud_direct = repmat(double(image_masked_direct),1,1,3) .* image_ud_direct;
-decorr_fg_direct = decorrstretch(fg_image_ud_direct,'tol',stretchTol);%, 'samplesubs', {y,x});
+% fg_image_ud_direct = repmat(double(image_masked_direct),1,1,3) .* image_ud_direct;
+% decorr_fg_direct = decorrstretch(fg_image_ud_direct,'tol',stretchTol);%, 'samplesubs', {y,x});
+decorr_fg_direct = decorrstretch(image_ud_direct,'tol',stretchTol);
 decorr_fg_direct = decorr_fg_direct .* repmat(double(image_masked_direct),1,1,3);
 
 decorr_hsv_mirror = rgb2hsv(decorr_fg_mirror);
@@ -147,15 +176,22 @@ decorr_hsv_mirror = decorr_hsv_mirror .* repmat(double(image_masked_mirror),1,1,
 decorr_hsv_direct = rgb2hsv(decorr_fg_direct);
 decorr_hsv_direct = decorr_hsv_direct .* repmat(double(image_masked_direct),1,1,3);
 
-liberal_mask_mirror = HSVthreshold(decorr_hsv_mirror, liberal_pawHSVrange);
-restrictive_mask_mirror = HSVthreshold(decorr_hsv_mirror, restrictive_pawHSVrange);
+liberal_mask_mirror = HSVthreshold(decorr_hsv_mirror, pawHSVrange(3,:));
+restrictive_mask_mirror = HSVthreshold(decorr_hsv_mirror, pawHSVrange(1,:));
+
+temp = imdilate(frontPanelMask,strel('disk',maxFrontPanelSep));
+temp = temp & intMask;
+behindPanelMask = temp(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
+                       mirror_bbox(1) : mirror_bbox(1) + mirror_bbox(3));
+restrictive_mask_mirror = restrictive_mask_mirror | (liberal_mask_mirror & behindPanelMask);
+
 [~,~,~,resLabMat] = step(restrictiveBlob,restrictive_mask_mirror);
 restrictive_mask_mirror = (resLabMat > 0);
 [~,~,~,mirrorLabMat] = step(pawBlob{2},liberal_mask_mirror);
 liberal_mask_mirror = (mirrorLabMat > 0);
 
-liberal_mask_direct = HSVthreshold(decorr_hsv_direct, liberal_pawHSVrange);
-restrictive_mask_direct = HSVthreshold(decorr_hsv_direct, restrictive_pawHSVrange);
+liberal_mask_direct = HSVthreshold(decorr_hsv_direct, pawHSVrange(3,:));
+restrictive_mask_direct = HSVthreshold(decorr_hsv_direct, pawHSVrange(1,:));
 [~,~,~,resLabMat] = step(restrictiveBlob,restrictive_mask_direct);
 restrictive_mask_direct = (resLabMat > 0);
 [~,~,~,directLabMat] = step(pawBlob{1},liberal_mask_direct);
@@ -174,6 +210,9 @@ direct_mask = imreconstruct(overlap_mask, mask);
 full_directMask = false(h,w);
 full_directMask(direct_bbox(2):direct_bbox(2) + direct_bbox(4),...
                 direct_bbox(1):direct_bbox(1) + direct_bbox(3)) = direct_mask;
+temp = imdilate(full_directMask & boxRegions.slotMask,strel('disk',10));
+temp = temp & full_directMask;
+full_directMask = imreconstruct(temp, full_directMask);   % only keep blobs that overlap with the slot
             
 mirror_projMask = projMaskFromTangentLines(mirror_mask, fundMat, mirror_bbox, [h,w]);
 direct_projMask = projMaskFromTangentLines(direct_mask, fundMat, direct_bbox, [h,w]);
@@ -183,6 +222,17 @@ direct_proj_overlap = (full_directMask & mirror_projMask);
 
 initPawMask{1} = imreconstruct(direct_proj_overlap, full_directMask);
 initPawMask{2} = imreconstruct(mirror_proj_overlap, full_mirrorMask);
+
+for iView = 1 : 2
+    s = regionprops(initPawMask{iView},'area');
+    if length(s) > 1
+        % dilate blobs until they're all connected
+        [temp,n] = mergeBlobs(initPawMask{iView});
+%         temp = imdilate(temp,strel('disk',1));
+        temp_skel = bwmorph(temp,'skel',inf);
+        initPawMask{iView} = initPawMask{iView} | temp_skel;
+    end
+end
 % [mirror_tpts, mirror_tlines] = findTangentToEpipolarLine(initPawMask{2}, fundMat, [1 1 w-1 h-1]);
 % m_bpts = lineToBorderPoints(mirror_tlines, [h,w]);
 % [direct_tpts, direct_tlines] = findTangentToEpipolarLine(initPawMask{1}, fundMat, [1 1 w-1 h-1]);

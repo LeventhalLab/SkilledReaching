@@ -1,4 +1,4 @@
-function [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo, session_mp, triggerTime, initPawMask, boxCalibration, varargin)
+function [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo, session_mp, triggerTime, initPawMask, boxCalibration, boxRegions, varargin)
 
 h = video.Height;
 w = video.Width;
@@ -44,7 +44,7 @@ restrictiveBlob.LabelMatrixOutputPort = true;
 restrictiveBlob.MinimumBlobArea = 5;
 restrictiveBlob.MaximumBlobArea = 5000;
 
-for iarg = 1 : 2 : nargin - 7
+for iarg = 1 : 2 : nargin - 8
     switch lower(varargin{iarg})
         case 'pawgraylevels',
             pawGrayLevels = varargin{iarg + 1};
@@ -54,6 +54,8 @@ for iarg = 1 : 2 : nargin - 7
             foregroundThresh = varargin{iarg + 1};
         case 'maxdistperframe',
             maxDistPerFrame = varargin{iarg + 1};
+        case 'hsvlimits',
+            pawHSVrange = varargin{iarg + 1};
     end
 end
 
@@ -83,8 +85,6 @@ switch pawPref
         boxFrontThick = 20;
 end
 cameraParams = boxCalibration.cameraParams;
-
-boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
 
 [fpoints3d,fpoints2d,timeList_f,isPawVisible_f] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'forward',...
                                      'foregroundthresh',foregroundThresh,...
@@ -197,6 +197,9 @@ center3d(frameCount,:) = mean(points3d{frameCount},1);
 timeList(frameCount) = video.CurrentTime;
 image = readFrame(video);   % just to advance one frame for forward direction
 
+orig_BGimg_ud = BGimg_ud;
+BGimg_ud = color_adapthisteq(BGimg_ud);
+
 isPawVisible = false(frameCount,2);
 isPawVisible(frameCount,:) = true(1,2);   % by definition (almost), paw is visible in both views in the initial frame
 while video.CurrentTime < video.Duration && video.CurrentTime >= 0
@@ -221,18 +224,25 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
             % read the next frame
             image = readFrame(video);
         end
-    elseif abs(video.CurrentTime - timeList(prevFrame) - 2/fps) > zeroTol
-            % if going forwards, this means the CurrentTime didn't advance
-            % by 1/
-            keyboard;
     end
-    timeList(frameCount) = video.CurrentTime - 1/fps;
+    if strcmpi(timeDir,'forward') && ...
+       abs(video.CurrentTime - timeList(prevFrame) - 2/fps) > zeroTol && ...
+       video.CurrentTime - timeList(prevFrame) - 2/fps < 0
+            % if going forwards, this means the CurrentTime didn't advance
+            % by 1/fps on the last read (not sure why this occasionally
+            % happens - some sort of rounding error)
+            timeList(frameCount) = video.CurrentTime;
+    else           
+        timeList(frameCount) = video.CurrentTime - 1/fps;
+    end
     
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
+    orig_image_ud = image_ud;
+    image_ud = color_adapthisteq(image_ud);
     
     prevMask = fullMask;
-    [fullMask,bbox] = trackNextStep(image_ud,BGimg_ud,fullMask,boxRegions,fundMat,pawPref,...
+    [fullMask,bbox] = trackNextStep_20160217(image_ud,BGimg_ud,fullMask,boxRegions,fundMat,pawPref,...
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxredgreendist',maxRedGreenDist,...
@@ -305,7 +315,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
         
     end
   
-%     showTracking(image_ud,fullMask,bbox);
+    showTracking(image_ud,fullMask,bbox);
 
 
 %     for iView = 1 : 2

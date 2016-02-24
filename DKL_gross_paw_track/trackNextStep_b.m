@@ -1,4 +1,4 @@
-function [fullMask,bbox] = trackNextStep( image_ud, BGimg_ud, prevMasks, boxRegions, fundMat, pawPref, varargin)
+function [fullMask,bbox] = trackNextStep_b( image_ud, BGimg_ud, prevMasks, boxRegions, fundMat, pawPref, varargin)
 
 h = size(image_ud,1); w = size(image_ud,2);
 
@@ -72,7 +72,7 @@ bbox(:,4) = bbox(:,4) + threshFrameExpansion;
 % if any of the previous mask is on the interior side of the front
 % panel, don't add the width of the front panel to the search window
 overlap_mask = prevMask_dilate{2} & frontPanelMask;
-if any(overlap_mask(:))
+if ~any(overlap_mask(:))
     if strcmpi(pawPref,'right')
         bbox(2,3) = bbox(2,3) + boxFrontThick;
     else
@@ -172,10 +172,9 @@ for iView = 2:-1:1
                           extended_bbox(1):extended_bbox(1)+extended_bbox(3)) = true;
                 tempMask2 = tempMask2 & projMask;   % projection mask directly below bbox
                 tempMask = tempMask | tempMask2;
-                tempMask = bwconvhull(tempMask,'union');
                 s = regionprops(tempMask,'boundingbox');
                 bbox(1,:) = round(s.BoundingBox);
-                bbox(1,4) = min(bbox(1,4) + 10,h-bbox(1,2));    % cushion in case mirror view was too restrictive
+                bbox(1,4) = bbox(1,4) + 10;    % cushion in case mirror view was too restrictive
             end
         end
         
