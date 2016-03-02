@@ -148,8 +148,12 @@ P2 = squeeze(P(:,:,1));
 leftMirror_shelf_corners = [leftShelfEdge;...
                             session_mp.leftMirror.right_top_shelf_corner];
 leftMirror_norm = normalize_points(leftMirror_shelf_corners, K);
-                        
-[points3d,reprojectedPoints,errors] = triangulate_DL(direct_norm, leftMirror_norm, P1, P2);
+
+if any(isnan(direct_norm(:))) || any(isnan(leftMirror_norm(:)))
+    points3d = NaN(2,3);
+else
+    [points3d,reprojectedPoints,errors] = triangulate_DL(direct_norm, leftMirror_norm, P1, P2);
+end
 
 % calculate the euclidean distance between the 3d points
 xyz_dist = diff(points3d,1,1);
@@ -161,8 +165,12 @@ P2 = squeeze(P(:,:,2));
 rightMirror_shelf_corners = [rightShelfEdge;...
                             session_mp.rightMirror.left_top_shelf_corner];
 rightMirror_norm = normalize_points(rightMirror_shelf_corners, K);
-                        
-[points3d,reprojectedPoints,errors] = triangulate_DL(direct_norm, rightMirror_norm, P1, P2);
+
+if any(isnan(direct_norm(:))) || any(isnan(rightMirror_norm(:)))
+    points3d = NaN(2,3);
+else
+    [points3d,reprojectedPoints,errors] = triangulate_DL(direct_norm, rightMirror_norm, P1, P2);
+end
 
 % calculate the euclidean distance between the 3d points
 xyz_dist = diff(points3d,1,1);

@@ -36,7 +36,7 @@ numBGframes = 20;
 gray_paw_limits = [60 125] / 255;
 foregroundThresh = 25/255;
 
-pawHSVrange = [0.33, 0.10, 0.9, 1.0, 0.9, 1.0   % pick out anything that's green and bright
+pawHSVrange = [0.33, 0.05, 0.9, 1.0, 0.9, 1.0   % pick out anything that's green and bright
                0.33, 0.10, 0.9, 1.0, 0.5, 1.0     % pick out anything that's green and bright immediately behind the front panel
                0.33, 0.16, 0.7, 1.0, 0.4, 1.0]; % pick out anything green 
            
@@ -72,7 +72,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 6:6%7 : 7%length(sessionList);
+    for iSession = 3:4%7 : 7%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -137,7 +137,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                 BGimg_udName = [fullSessionName(1:end-1) '_' currentVidNumber '_BG_ud.bmp'];
                 pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_DLtrack.mat'];
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
-%                 if exist(pawTrackName,'file');continue;end
+                if exist(pawTrackName,'file');continue;end
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
                 end

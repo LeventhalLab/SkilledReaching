@@ -19,14 +19,15 @@ w = video.Width;
 foregroundThresh = 45/255;
 pawGrayLevels = [60 125] / 255;
 pixCountThresh = 2000;
-minPixCount = 30;    % mininum number of green pixels to count as the paw being visible
+minPixCount = 700;    % mininum number of green pixels to count as the paw being visible
+maxFramesAfterThresh = 50;
 
 ROIheight = 200;    % in pixels - how high above the shelf to look for the paw
 ROIwidth = 100;
 
 numBGframes = 50;    % don't look for the paw too early
 
-pawHSVrange = [0.33, 0.16, 0.8, 1.0, 0.8, 1.0   % pick out anything that's green and bright
+pawHSVrange = [0.33, 0.10, 0.9, 1.0, 0.9, 1.0   % pick out anything that's green and bright
                0.00, 0.16, 0.8, 1.0, 0.8, 1.0     % pick out only red and bright
                0.33, 0.16, 0.6, 1.0, 0.6, 1.0]; % pick out anything green (only to be used just behind the front panel in the mirror view
 for iarg = 1 : 2 : nargin - 5
@@ -81,6 +82,7 @@ end
 s = regionprops(mirrorMask, 'BoundingBox');
 reach_bbox = round(s.BoundingBox);
 
+BGimg_ud = color_adapthisteq(BGimg_ud);
 BGimg_ud = BGimg_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
               reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
 % identify the frames where the paw is visible over the shelf
@@ -95,15 +97,14 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     % undistort image
     orig_image_ud = undistortImage(image, cameraParams);
 
-    image_ud = orig_image_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
-                        reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
-    image_ud = double(image_ud) / 255;
-    
-    BGdiff = imabsdiff(image_ud, BGimg_ud);
-    
     image_ud = color_adapthisteq(orig_image_ud);
     image_ud = image_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
                         reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
+    if max(image_ud(:)) > 1
+        image_ud = double(image_ud) / 255;
+    end
+    
+    BGdiff = imabsdiff(image_ud, BGimg_ud);
                     
     BG_masked = false(size(BGdiff,1),size(BGdiff,2));
     for iChannel = 1 : 3
@@ -122,6 +123,8 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     decorr_hsv = rgb2hsv(decorr_fg);
     res_mask = HSVthreshold(decorr_hsv, pawHSVrange(1,:));
     lib_mask = HSVthreshold(decorr_hsv, pawHSVrange(3,:));
+    lib_mask = processMask(lib_mask,2);
+    res_mask = processMask(res_mask,2);
     mask = imreconstruct(res_mask,lib_mask);
 %     
 %     figure(1)
@@ -146,7 +149,16 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
 end
 
 if max(pixCount) > minPixCount
-    threshFrame = find(pixCount == max(pixCount));
+    firstReach = find(pixCount > minPixCount,1);
+    temp = pixCount;
+    idx1 = firstReach - 1;
+    idx2 = min(firstReach + maxFramesAfterThresh + 1, length(pixCount));
+    temp(1:idx1) = 0;
+    temp(idx2:end) = 0;
+    threshFrame = find(temp == max(temp),1,'first');
+    triggerTime = firstFrameTime + threshFrame / video.FrameRate;
+elseif max(pixCount) > 0
+    threshFrame = find(pixCount == max(pixCount),1,'first');
     triggerTime = firstFrameTime + threshFrame / video.FrameRate;
 else
     triggerTime = video.CurrentTime;

@@ -21,11 +21,14 @@
 
 %%
 % sampleVid  = fullfile('/Volumes/RecordingsLeventhal04/SkilledReaching/R0030/R0030-rawdata/R0030_20140430a','R0030_20140430_13-09-15_023.avi');
-sampleSession = fullfile('/Volumes/RecordingsLeventhal3/SkilledReaching/R0044/R0044-rawdata/R0044_20150416a');
+% sampleSession = fullfile('/Volumes/RecordingsLeventhal3/SkilledReaching/R0044/R0044-rawdata/R0044_20150416a');
+sampleSession = fullfile('/Volumes/RecordingsLeventhal04/SkilledReaching/R0104/R0104-rawdata/R0104_20160223a');
 cd(sampleSession);
 vidList = dir('*.avi');
-sampleVid  = fullfile(sampleSession, 'R0044_20150416_12-11-45_034.avi');
-sr_summary = sr_ratList();
+sampleVid  = fullfile(sampleSession, 'R0104_20160223_12-51-12_005.avi');
+% sr_summary = sr_ratList();
+sr_summary.ratID = 104;
+sr_summary.pawPref = 'right';
 
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
 num_rad_coeff = 2;

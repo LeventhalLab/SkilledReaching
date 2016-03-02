@@ -1,4 +1,4 @@
-function [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204_b(video, BGimg_ud, sr_ratInfo, session_mp, triggerTime, initPawMask, boxCalibration, boxRegions, varargin)
+function [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo, session_mp, triggerTime, initPawMask, boxCalibration, boxRegions, varargin)
 
 h = video.Height;
 w = video.Width;
@@ -7,9 +7,6 @@ maxFrontPanelSep = 20;
 maxRedGreenDist = 20;
 minRGDiff = 0.0;
 maxDistPerFrame = 20;
-
-% decorrStretchMean = [0.5 0.5 0.5];
-% decorrStretchStd  = [0.25 0.25 0.25];
 
 pawHSVrange = [0.33, 0.16, 0.8, 1.0, 0.8, 1.0   % pick out anything that's green and bright
                0.00, 0.16, 0.8, 1.0, 0.8, 1.0     % pick out only red and bright
@@ -197,6 +194,9 @@ center3d(frameCount,:) = mean(points3d{frameCount},1);
 timeList(frameCount) = video.CurrentTime;
 image = readFrame(video);   % just to advance one frame for forward direction
 
+orig_BGimg_ud = BGimg_ud;
+BGimg_ud = color_adapthisteq(BGimg_ud);
+
 isPawVisible = false(frameCount,2);
 isPawVisible(frameCount,:) = true(1,2);   % by definition (almost), paw is visible in both views in the initial frame
 while video.CurrentTime < video.Duration && video.CurrentTime >= 0
@@ -229,15 +229,17 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
             % by 1/fps on the last read (not sure why this occasionally
             % happens - some sort of rounding error)
             timeList(frameCount) = video.CurrentTime;
-    else
+    else           
         timeList(frameCount) = video.CurrentTime - 1/fps;
     end
     
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
+    orig_image_ud = image_ud;
+    image_ud = color_adapthisteq(image_ud);
     
     prevMask = fullMask;
-    [fullMask,bbox] = trackNextStep_20160217(image_ud,BGimg_ud,fullMask,boxRegions,fundMat,pawPref,...
+    [fullMask,bbox] = trackNextStep_20160217_b(image_ud,BGimg_ud,fullMask,boxRegions,fundMat,pawPref,...
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxredgreendist',maxRedGreenDist,...
@@ -310,53 +312,9 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
         
     end
   
+    % ****** UNCOMMENT LINE BELOW TO MONITOR TRACKING AS ITS PERFORMED
 %     showTracking(image_ud,fullMask,bbox);
 
-
-%     for iView = 1 : 2
-%         mask_outline = bwmorph(fullMask{iView},'remove');
-%         [y,x] = find(mask_outline);
-%         edge_pts{frameCount,iView} = [x,y];
-%     end
-%     
-%     figure(1);
-%     imshow(image_ud);
-%     hold on
-%     rectangle('position',bbox(1,:));
-%     rectangle('position',bbox(2,:));
-%     plot(edge_pts{frameCount,1}(:,1),edge_pts{frameCount,1}(:,2),'marker','.','linestyle','none')
-%     plot(edge_pts{frameCount,2}(:,1),edge_pts{frameCount,2}(:,2),'marker','.','linestyle','none')
-%     
-%     if strcmpi(timeDir,'reverse')
-%         video.CurrentTime = video.CurrentTime - 2/fps;
-%     end
 end
 
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function tracks = initGreenPawTracks()
-%     % create an empty array of tracks
-%     tracks = struct(...
-%         'id', {}, ...
-%         'bbox', {}, ...
-%         'color', {}, ...
-%         'digitmask1', {}, ...
-%         'digitmask2', {}, ...
-%         'digitmask3', {}, ...
-%         'prevmask1', {}, ...
-%         'prevmask2', {}, ...
-%         'prevmask3', {}, ...
-%         'meanHSV', {}, ...
-%         'stdHSV', {}, ...
-%         'markers3D', {}, ...
-%         'prev_markers3D', {}, ...
-%         'currentDigitMarkers', {}, ...
-%         'previousDigitMarkers', {}, ...
-%         'age', {}, ...
-%         'isvisible', {}, ...
-%         'markersCalculated', {}, ...
-%         'totalVisibleCount', {}, ...
-%         'consecutiveInvisibleCount', {});
-% end
+end 

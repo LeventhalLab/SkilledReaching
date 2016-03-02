@@ -79,15 +79,10 @@ if any(overlap_mask(:))
         bbox(2,1) = bbox(2,1) + boxFrontThick;
         bbox(2,3) = bbox(2,3) - boxFrontThick;
     end
-%     prevMask_dilate{2} = prevMask_dilate{2} | frontPanelMask;
 end
 bbox(bbox<=0) = 1;
 
 BGdiff = imabsdiff(image_ud, BGimg_ud);
-% orig_image_ud = image_ud;
-% image_ud = color_adapthisteq(image_ud);
-% full_decorr = decorrstretch(image_ud,'tol',stretchTol);
-% full_hsv = rgb2hsv(full_decorr);
 
 im_masked = false(h,w);
 for iChannel = 1 : 3
@@ -95,24 +90,15 @@ for iChannel = 1 : 3
 end
 orig_im_mask = im_masked;
 im_masked = processMask(orig_im_mask, 2);
-im_masked = imdilate(im_masked,strel('disk',maskDilate));
-
-% rgDiffMap = abs(image_ud(:,:,2) - image_ud(:,:,1));
-% rgMask = rgDiffMap < minRGDiff;
 
 fullMask = cell(1,2);
-% redMask = cell(1,2);
 greenMask = cell(1,2);
-any_greenMask = cell(1,2);
 imView = cell(1,2);
 decorr_fg = cell(1,2);
 decorr_hsv = cell(1,2);
-% full_hsv_cropped = cell(1,2);
-% meanHSV = cell(1,2);
 viewMask = cell(1,2);
 lib_greenMask = cell(1,2);
 res_greenMask{iView} = cell(1,2);
-% prevMask_crop = cell(1,2);
 
 projMask = true(h,w);
 projMask_dilate = cell(1,2);
@@ -166,6 +152,7 @@ for iView = 2:-1:1
     end
         
     temp = processMask(lib_greenMask{iView},2);
+    res_greenMask{iView} = imerode(res_greenMask{iView},strel('disk',1));
     greenMask{iView} = imreconstruct(res_greenMask{iView}, temp);
 
     mask = greenMask{iView} & viewMask{iView};    % allow green area to extend outside background diff mask, but only if they overlap
@@ -202,6 +189,8 @@ end
 fullMask = estimateHiddenSilhouette(fullMask,full_bbox,fundMat,[h,w]);
 
 % eliminate the floor
-fullMask{1} = fullMask{1} & ~floorMask;
-direct_projMask = projMaskFromTangentLines(fullMask{1}, fundMat, [1 1 w-1 h-1], [h,w]);
-fullMask{2} = fullMask{2} & direct_projMask;
+if any(fullMask{1}(:))
+    fullMask{1} = fullMask{1} & ~floorMask;
+    direct_projMask = projMaskFromTangentLines(fullMask{1}, fundMat, [1 1 w-1 h-1], [h,w]);
+    fullMask{2} = fullMask{2} & direct_projMask;
+end

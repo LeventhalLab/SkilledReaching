@@ -25,7 +25,7 @@ kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Pr
 
 markerSize = 1;
 
-for i_rat = 1 : 1%length(sr_ratInfo)
+for i_rat = 2 : 2%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir = fullfile(kinematics_rootDir,ratID);
@@ -39,7 +39,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     triDataFiles = dir('*.mat');
 %     numSessions = length(triDataFiles);
     numSessions = length(sr_ratInfo(i_rat).sessionList);
-    for iSession = 4 : numSessions
+    for iSession = 2 : 2%numSessions
         
 %         sessionDate = triDataFiles(iSession).name(7:14);
         sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);
@@ -64,7 +64,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
         
         vidList = dir('*.avi');
         
-        for iVid = 15 : length(vidList)
+        for iVid = 1 : length(vidList)
             fprintf('%s, %s, video %d of %d, %s\n', ratID, sessionDate, iVid, length(vidList), vidList(iVid).name);
             
             if strcmp(vidList(iVid).name(1:2),'._');continue;end
@@ -88,7 +88,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
             [~,baseName,~] = fileparts(vidList(iVid).name);
             writeName = [baseName '_udmarkDL.avi'];
             writeName = fullfile(processedDir, writeName);
-%             if exist(writeName,'file');continue;end
+            if exist(writeName,'file');continue;end
             
             w_vid = VideoWriter(writeName, 'motion jpeg avi');
             w_vid.FrameRate = video.FrameRate;

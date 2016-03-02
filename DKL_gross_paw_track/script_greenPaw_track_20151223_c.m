@@ -137,7 +137,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                 BGimg_udName = [fullSessionName(1:end-1) '_' currentVidNumber '_BG_ud.bmp'];
                 pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_DLtrack.mat'];
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
-%                 if exist(pawTrackName,'file');continue;end
+                if exist(pawTrackName,'file');continue;end
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
                 end

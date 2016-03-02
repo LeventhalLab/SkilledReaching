@@ -1,7 +1,6 @@
 function pawData = load_pawTrackData_DL(processedDir, trialNum)
 %
-% function to read left, center, right paw coordinates from Titus'
-% directories
+% function to read paw coordinates from DL's tracking algorithms
 
 pawData = [];
 

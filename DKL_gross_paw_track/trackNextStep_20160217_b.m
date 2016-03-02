@@ -79,15 +79,10 @@ if any(overlap_mask(:))
         bbox(2,1) = bbox(2,1) + boxFrontThick;
         bbox(2,3) = bbox(2,3) - boxFrontThick;
     end
-%     prevMask_dilate{2} = prevMask_dilate{2} | frontPanelMask;
 end
 bbox(bbox<=0) = 1;
 
 BGdiff = imabsdiff(image_ud, BGimg_ud);
-% orig_image_ud = image_ud;
-% image_ud = color_adapthisteq(image_ud);
-% full_decorr = decorrstretch(image_ud,'tol',stretchTol);
-% full_hsv = rgb2hsv(full_decorr);
 
 im_masked = false(h,w);
 for iChannel = 1 : 3
@@ -95,24 +90,15 @@ for iChannel = 1 : 3
 end
 orig_im_mask = im_masked;
 im_masked = processMask(orig_im_mask, 2);
-im_masked = imdilate(im_masked,strel('disk',maskDilate));
-
-% rgDiffMap = abs(image_ud(:,:,2) - image_ud(:,:,1));
-% rgMask = rgDiffMap < minRGDiff;
 
 fullMask = cell(1,2);
-% redMask = cell(1,2);
 greenMask = cell(1,2);
-any_greenMask = cell(1,2);
 imView = cell(1,2);
 decorr_fg = cell(1,2);
 decorr_hsv = cell(1,2);
-% full_hsv_cropped = cell(1,2);
-% meanHSV = cell(1,2);
 viewMask = cell(1,2);
 lib_greenMask = cell(1,2);
 res_greenMask{iView} = cell(1,2);
-% prevMask_crop = cell(1,2);
 
 projMask = true(h,w);
 projMask_dilate = cell(1,2);
@@ -153,9 +139,12 @@ for iView = 2:-1:1
         temp = imdilate(frontPanelMask,strel('disk',maxFrontPanelSep));
         temp = temp & intMask;
         res_behindPanelMask = HSVthreshold(decorr_hsv{iView}, pawHSVrange(2,:));
-        behindPanelMask = behindPanelMask & projMask_dilate{iView};
-        behindPanelMask = temp(bbox(iView,2):bbox(iView,2) + bbox(iView,4),...
-                               bbox(iView,1):bbox(iView,1) + bbox(iView,3));
+        if isempty(projMask_dilate{iView})
+            projMask_dilate{iView} = true(size(temp));
+        end
+        behindPanelMask = temp & projMask_dilate{iView};
+        behindPanelMask = behindPanelMask(bbox(iView,2):bbox(iView,2) + bbox(iView,4),...
+                                          bbox(iView,1):bbox(iView,1) + bbox(iView,3));
         res_behindPanelMask = res_behindPanelMask & behindPanelMask;
         viewMask{iView} = viewMask{iView} | behindPanelMask;
         res_greenMask{iView} = res_greenMask{iView} | res_behindPanelMask;
@@ -163,6 +152,7 @@ for iView = 2:-1:1
     end
         
     temp = processMask(lib_greenMask{iView},2);
+    res_greenMask{iView} = imerode(res_greenMask{iView},strel('disk',1));
     greenMask{iView} = imreconstruct(res_greenMask{iView}, temp);
 
     mask = greenMask{iView} & viewMask{iView};    % allow green area to extend outside background diff mask, but only if they overlap
