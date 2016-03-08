@@ -59,7 +59,7 @@ while tangentPointsFound > 2
     linesDiff = diff(tangentLines,1);
     linesDist = sqrt(sum(linesDiff.^2,2));
     
-    minDistIdx = find(linesDist == min(linesDist));
+    minDistIdx = find(linesDist == min(linesDist),1,'first');
     
     tangentLines = removeRow(tangentLines, minDistIdx);
     tangentPoints = removeRow(tangentPoints, minDistIdx);

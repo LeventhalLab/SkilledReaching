@@ -25,7 +25,7 @@ kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Pr
 
 markerSize = 1;
 
-for i_rat = 2 : 2%length(sr_ratInfo)
+for i_rat = 1 : 1%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir = fullfile(kinematics_rootDir,ratID);
@@ -39,7 +39,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     triDataFiles = dir('*.mat');
 %     numSessions = length(triDataFiles);
     numSessions = length(sr_ratInfo(i_rat).sessionList);
-    for iSession = 2 : 2%numSessions
+    for iSession = 4:4%numSessions
         
 %         sessionDate = triDataFiles(iSession).name(7:14);
         sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);
@@ -50,7 +50,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
         rawDataDirList = dir(rawDataDirList);
         if isempty(rawDataDirList)
             fprintf('no data folder for %s, %s\n',ratID, sessionDate)
-            continue
+            continue 
         end
         if length(rawDataDirList) > 1
             fprintf('more than one data folder for %s, %s\n', ratID, sessionDate)
@@ -131,4 +131,3 @@ for i_rat = 2 : 2%length(sr_ratInfo)
         end
     end
 end
-            

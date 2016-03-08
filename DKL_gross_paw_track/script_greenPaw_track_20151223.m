@@ -37,8 +37,8 @@ gray_paw_limits = [60 125] / 255;
 foregroundThresh = 25/255;
 
 pawHSVrange = [0.33, 0.05, 0.9, 1.0, 0.9, 1.0   % pick out anything that's green and bright
-               0.33, 0.10, 0.9, 1.0, 0.5, 1.0     % pick out anything that's green and bright immediately behind the front panel
-               0.33, 0.16, 0.7, 1.0, 0.4, 1.0]; % pick out anything green 
+               0.33, 0.16, 0.8, 1.0, 0.8, 1.0     % pick out anything that's green and bright immediately behind the front panel
+               0.33, 0.16, 0.7, 1.0, 0.6, 1.0]; % pick out anything green 
            
 xl_directory = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
@@ -72,7 +72,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 9 : 9%length(sessionList);
+    for iSession = 3:3%7 : 7%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -137,7 +137,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                 BGimg_udName = [fullSessionName(1:end-1) '_' currentVidNumber '_BG_ud.bmp'];
                 pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_DLtrack.mat'];
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
-                if exist(pawTrackName,'file');continue;end
+%                 if exist(pawTrackName,'file');continue;end
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
                 end
@@ -154,9 +154,14 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                                                
                 initPawMask = find_initPawMask_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
                                   
-                [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
+%                 [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
+%                     'hsvlimits', pawHSVrange,...
+%                     'foregroundthresh',foregroundThresh);
+                
+                [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160302(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh);
+                
                 track_metadata.triggerTime = triggerTime;
                 track_metadata.boxCalibration = boxCalibration;
                 save(pawTrackName,'points3d','points2d','timeList','isPawVisible','track_metadata');
