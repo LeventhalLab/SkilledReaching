@@ -1,4 +1,4 @@
-function [fullMask,greenMask,bbox] = trackNextStep_20160303( image_ud, prev_image_ud, BGimg_ud, prevMasks,prev_greenMask, boxRegions, fundMat, pawPref, varargin)
+function [fullMask,greenMask,bbox] = trackNextStep_20160310( image_ud, prev_image_ud, BGimg_ud, prevMasks,prev_greenMask, boxRegions, fundMat, pawPref, varargin)
 
 h = size(image_ud,1); w = size(image_ud,2);
 targetMean = [0.5,0.2,0.5
@@ -118,14 +118,16 @@ decorr_green = decorrstretch(image_ud,...
 decorr_green_BG_hsv = rgb2hsv(decorr_green_BG);
 decorr_green_hsv = rgb2hsv(decorr_green);
 diff_greenHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(1,:));
-diff_greenHSVthresh = processMask(diff_greenHSVthresh,2);
+diff_greenHSVthresh = processMask(diff_greenHSVthresh,'sesize',1);
 
 redHSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(4,:));
+redHSVthresh = redHSVthresh & ~belowShelfMask;
 
 greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(2,:));
 % greenHSVthresh = processMask(greenHSVthresh,2);
 
 saturatedHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(3,:));
+saturatedHSVthresh = saturatedHSVthresh & ~centerMask;   % don't use this criterion in the direct view
 % saturatedHSVthresh = processMask(saturatedHSVthresh,2);
 
 im_masked = false(h,w);
@@ -142,7 +144,7 @@ if any(overlapMask(:))
     greenMasked = greenMasked | (overlapMask & diff_greenHSVthresh);
 end
 greenMasked = greenMasked & (prevMask_dilate{1} | prevMask_dilate{2});
-greenMasked = processMask(greenMasked);
+greenMasked = processMask(greenMasked,'sesize',1);
 
 % im_masked = im_masked | (~extMask & ~centerMask);    % exclude regions in side views behind front panel from background subtraction
 % 
@@ -181,8 +183,8 @@ for iView = 1 : 2
         projMask = projMaskFromTangentLines(greenMask{iView}, fundMat, [1 1 w-1 h-1], [h,w]);
         if iView == 2
             redHSVthresh = redHSVthresh & projMask;
-            redHSVthresh = processMask(redHSVthresh,2);
-            temp = redHSVthresh & imdilate(greenMask{1},strel('disk',30));
+            redHSVthresh = processMask(redHSVthresh,'sesize',2);
+            temp = redHSVthresh & imdilate(greenMask{1},strel('disk',10));
             redHSVthresh = imreconstruct(temp, redHSVthresh);
             greenMask{1} = greenMask{1} | redHSVthresh;
         end

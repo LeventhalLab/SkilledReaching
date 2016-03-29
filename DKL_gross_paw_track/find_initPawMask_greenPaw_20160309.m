@@ -1,4 +1,4 @@
-function initPawMask = find_initPawMask_greenPaw( video, BGimg_ud, sr_ratInfo, session_mp, boxCalibration, boxRegions, triggerTime, varargin )
+function initPawMask = find_initPawMask_greenPaw_20160309( video, BGimg_ud, sr_ratInfo, session_mp, boxCalibration, boxRegions, triggerTime, varargin )
 
 h = video.Height;
 w = video.Width;
@@ -22,15 +22,10 @@ whiteThresh = 0.3;
 ROIheight = 220;    % in pixels - how high above the shelf to look for the paw
 ROIwidth = 120;
 
-stretchTol = [0 1];
 directWidth = 250;    % in pixels
 
 for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
-        case 'pawgraylevels',
-            pawGrayLevels = varargin{iarg + 1};
-        case 'pixelcountthreshold',
-            pixCountThresh = varargin{iarg + 1};
         case 'foregroundthresh',
             foregroundThresh = varargin{iarg + 1};
         case 'hsvlimits',
@@ -57,9 +52,9 @@ for iSide = 1 : 2
     frontPanelEdge{iSide} = imdilate(frontPanelMask{iSide}, strel('disk',maxFrontPanelSep)) & ~frontPanelMask{iSide};
 end
 intMask = boxRegions.intMask;
-shelfMask = boxRegions.shelfMask;
-belowShelfMask = boxRegions.belowShelfMask;
-floorMask = boxRegions.floorMask;
+% shelfMask = boxRegions.shelfMask;
+% belowShelfMask = boxRegions.belowShelfMask;
+% floorMask = boxRegions.floorMask;
 
 pawBlob = cell(1,2);
 % blob parameters for direct view
@@ -115,32 +110,32 @@ if iscell(pawPref)
     pawPref = pawPref{1};
 end
 
-decorr_green = decorrstretch(image_ud,...
-                             'targetmean',targetMean(1,:),...
-                             'targetsigma',targetSigma(1,:));
+% decorr_green = decorrstretch(image_ud,...
+%                              'targetmean',targetMean(1,:),...
+%                              'targetsigma',targetSigma(1,:));
 abs_BGdiff = imabsdiff(BGimg_ud,image_ud);
-BGdiff = imsubtract(image_ud,BGimg_ud);
+% BGdiff = imsubtract(image_ud,BGimg_ud);
 BGdiff_stretch = color_adapthisteq(abs_BGdiff);
 decorr_green_BG = decorrstretch(BGdiff_stretch,...
                              'targetmean',targetMean(1,:),...
                              'targetsigma',targetSigma(1,:));
 decorr_green_BG_hsv = rgb2hsv(decorr_green_BG);
-BGdiff2 = imabsdiff(BGimg_ud,image_ud);
+% BGdiff2 = imsubtract(BGimg_ud,image_ud);
 % decorr_green_hsv = rgb2hsv(decorr_green);
 % greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(1,:));
 greenHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(1,:));
-whiteHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(3,:));
+% whiteHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(3,:));
 
-whiteMask = true(h,w);
+% whiteMask = true(h,w);
 im_masked = false(h,w);
 for iCh = 1 : 3
-    whiteMask = whiteMask & (BGdiff(:,:,iCh) > whiteThresh);
+%     whiteMask = whiteMask & (BGdiff(:,:,iCh) > whiteThresh);
     im_masked = im_masked | (abs_BGdiff(:,:,iCh) > foregroundThresh);
 end
 im_masked = processMask(im_masked,2);
-whiteMask = processMask(whiteMask,2);
-whiteMask_b = whiteMask & whiteHSVthresh;
-whiteMask_c = whiteMask_b & ~imdilate(greenHSVthresh,strel('disk',5));
+% whiteMask = processMask(whiteMask,2);
+% whiteMask_b = whiteMask & whiteHSVthresh;
+% whiteMask_c = whiteMask_b & ~imdilate(greenHSVthresh,strel('disk',5));
 greenMasked = im_masked & greenHSVthresh;
 
 leftMirrorMask = false(h,w);
@@ -193,90 +188,7 @@ switch pawPref
         fundMat = srCal.F(:,:,1);
 end
 direct_mask = directGreen;
-
-% mirrorMask = imdilate(mirror_mask,strel('disk',40));
-% s = regionprops(mirrorMask, 'BoundingBox');
-% mirror_bbox = round(s.BoundingBox);
-% directMask = imdilate(direct_mask,strel('disk',40));
-% s = regionprops(directMask, 'BoundingBox');
-% direct_bbox = round(s.BoundingBox);
-
-% BGimg_mirror = BGimg_ud(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
-%                 mirror_bbox(1) : mirror_bbox(1) + mirror_bbox(3), :);
-% image_ud_mirror = orig_image_ud(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
-%                 mirror_bbox(1) : mirror_bbox(1) + mirror_bbox(3), :);
-% 
-% BGimg_direct = BGimg_ud(direct_bbox(2) : direct_bbox(2) + direct_bbox(4), ...
-%                 direct_bbox(1) : direct_bbox(1) + direct_bbox(3), :);
-% image_ud_direct = orig_image_ud(direct_bbox(2) : direct_bbox(2) + direct_bbox(4), ...
-%                 direct_bbox(1) : direct_bbox(1) + direct_bbox(3), :);
-%             
-% BGdiff_mirror = imabsdiff(image_ud_mirror, BGimg_mirror);
-% BGdiff_direct = imabsdiff(image_ud_direct, BGimg_direct);
-% 
-% image_ud_mirror = image_ud(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
-%                 mirror_bbox(1) : mirror_bbox(1) + mirror_bbox(3), :);
-% image_ud_direct = image_ud(direct_bbox(2) : direct_bbox(2) + direct_bbox(4), ...
-%                 direct_bbox(1) : direct_bbox(1) + direct_bbox(3), :);
-            
-% BGdiff_gray_mirror = mean(BGdiff_mirror, 3);
-% BGdiff_gray_direct = mean(BGdiff_direct, 3);
-% image_masked_mirror = false(size(BGimg_mirror,1),size(BGimg_mirror,2));
-% image_masked_direct = false(size(BGimg_direct,1),size(BGimg_direct,2));
-% for iChannel = 1 : 3
-%     image_masked_mirror = image_masked_mirror | (BGdiff_mirror(:,:,iChannel) > foregroundThresh);
-%     image_masked_direct = image_masked_direct | (BGdiff_direct(:,:,iChannel) > foregroundThresh);
-% end
-
-% decorr_fg_mirror = decorrstretch(image_ud_mirror,'tol',stretchTol);
-% decorr_fg_mirror = decorr_fg_mirror .* repmat(double(image_masked_mirror),1,1,3);
-% 
-% decorr_fg_direct = decorrstretch(image_ud_direct,'tol',stretchTol);
-% decorr_fg_direct = decorr_fg_direct .* repmat(double(image_masked_direct),1,1,3);
-% 
-% decorr_hsv_mirror = rgb2hsv(decorr_fg_mirror);
-% decorr_hsv_mirror = decorr_hsv_mirror .* repmat(double(image_masked_mirror),1,1,3);
-% decorr_hsv_direct = rgb2hsv(decorr_fg_direct);
-% decorr_hsv_direct = decorr_hsv_direct .* repmat(double(image_masked_direct),1,1,3);
-% 
-% liberal_mask_mirror = HSVthreshold(decorr_hsv_mirror, pawHSVrange(3,:));
-% restrictive_mask_mirror = HSVthreshold(decorr_hsv_mirror, pawHSVrange(1,:));
-% 
-% temp = imdilate(frontPanelMask,strel('disk',maxFrontPanelSep));
-% temp = temp & intMask;
-% behindPanelMask = temp(mirror_bbox(2) : mirror_bbox(2) + mirror_bbox(4), ...
-%                        mirror_bbox(1) : mirror_bbox(1) + mirror_bbox(3));
-% restrictive_mask_mirror = restrictive_mask_mirror | (liberal_mask_mirror & behindPanelMask);
-
-% [~,~,~,resLabMat] = step(restrictiveBlob,restrictive_mask_mirror);
-% restrictive_mask_mirror = (resLabMat > 0);
-% [~,~,~,mirrorLabMat] = step(pawBlob{2},liberal_mask_mirror);
-% liberal_mask_mirror = (mirrorLabMat > 0);
-% 
-% liberal_mask_direct = HSVthreshold(decorr_hsv_direct, pawHSVrange(3,:));
-% restrictive_mask_direct = HSVthreshold(decorr_hsv_direct, pawHSVrange(1,:));
-% [~,~,~,resLabMat] = step(restrictiveBlob,restrictive_mask_direct);
-% restrictive_mask_direct = (resLabMat > 0);
-% [~,~,~,directLabMat] = step(pawBlob{1},liberal_mask_direct);
-% liberal_mask_direct = (directLabMat > 0);
-% 
-% mask = processMask(liberal_mask_mirror, 2);
-% overlap_mask = mask & restrictive_mask_mirror;
-% mirror_mask = imreconstruct(overlap_mask, mask);
-% full_mirrorMask = false(h,w);
-% full_mirrorMask(mirror_bbox(2):mirror_bbox(2) + mirror_bbox(4),...
-%                 mirror_bbox(1):mirror_bbox(1) + mirror_bbox(3)) = mirror_mask;
-% 
-% mask = processMask(liberal_mask_direct, 2);
-% overlap_mask = mask & restrictive_mask_direct;
-% direct_mask = imreconstruct(overlap_mask, mask);
-% full_directMask = false(h,w);
-% full_directMask(direct_bbox(2):direct_bbox(2) + direct_bbox(4),...
-%                 direct_bbox(1):direct_bbox(1) + direct_bbox(3)) = direct_mask;
-% temp = imdilate(full_directMask & boxRegions.slotMask,strel('disk',10));
-% temp = temp & full_directMask;
-% full_directMask = imreconstruct(temp, full_directMask);   % only keep blobs that overlap with the slot
-%             
+       
 mirror_projMask = projMaskFromTangentLines(mirror_mask, fundMat, [1,1,h-1,w-1], [h,w]);
 direct_projMask = projMaskFromTangentLines(direct_mask, fundMat, [1,1,h-1,w-1], [h,w]);
 

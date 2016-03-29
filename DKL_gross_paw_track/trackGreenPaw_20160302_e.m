@@ -6,12 +6,18 @@ w = video.Width;
 maxFrontPanelSep = 20;
 maxRedGreenDist = 20;
 minRGDiff = 0.0;
-maxDistPerFrame = 20;
+maxDistPerFrame = 30;
 
 pawHSVrange = [0.33, 0.16, 0.8, 1.0, 0.8, 1.0   % pick out anything that's green and bright
-               0.00, 0.16, 0.8, 1.0, 0.8, 1.0     % pick out only red and bright
+               0.00, 0.16, 0.8, 1.0, 0.8, 1.0    
                0.33, 0.16, 0.6, 1.0, 0.6, 1.0]; % pick out anything green (only to be used just behind the front panel in the mirror view
 
+targetMean = [0.5,0.2,0.5
+              0.3,0.5,0.5];
+    
+targetSigma = [0.2,0.2,0.2
+               0.2,0.2,0.2];
+           
 foregroundThresh = 25/255;
 
 % blob parameters for direct view
@@ -53,6 +59,10 @@ for iarg = 1 : 2 : nargin - 8
             maxDistPerFrame = varargin{iarg + 1};
         case 'hsvlimits',
             pawHSVrange = varargin{iarg + 1};
+        case 'targetmean',
+            targetMean = varargin{iarg + 1};
+        case 'targetsigma',
+            targetSigma = varargin{iarg + 1};
     end
 end
 
@@ -82,7 +92,7 @@ switch pawPref
         boxFrontThick = 20;
 end
 cameraParams = boxCalibration.cameraParams;
-
+% 
 [fpoints3d,fpoints2d,timeList_f,isPawVisible_f] = trackPaw( video, BGimg_ud, fundMat, cameraParams, initPawMask,pawBlob, boxFrontThick, boxRegions, pawPref, P2, 'forward',...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
@@ -144,6 +154,12 @@ w = video.Width;
 full_bbox = [1 1 w-1 h-1];
 full_bbox(2,:) = full_bbox;
 
+targetMean = [0.5,0.2,0.5
+              0.3,0.5,0.5];
+    
+targetSigma = [0.2,0.2,0.2
+               0.2,0.2,0.2];
+           
 maxFrontPanelSep = 20;
 
 maxDistPerFrame = 30;
@@ -175,6 +191,10 @@ for iarg = 1 : 2 : nargin - 11
             minRGDiff = varargin{iarg + 1};
         case 'maxdistperframe',
             maxDistPerFrame = varargin{iarg + 1};
+        case 'targetmean',
+            targetMean = varargin{iarg + 1};
+        case 'targetsigma',
+            targetSigma = varargin{iarg + 1};
     end
 end
 
@@ -255,7 +275,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
 %                              'boxfrontthick',boxFrontThick,...
 %                              'maxdistperframe',maxDistPerFrame);
          
-    [fullMask,greenMask,bbox] = trackNextStep_20160303(image_ud,prev_image_ud,BGimg_ud,fullMask,greenMask,boxRegions,fundMat,pawPref,...
+    [fullMask,greenMask,bbox] = trackNextStep_20160310(image_ud,prev_image_ud,BGimg_ud,fullMask,greenMask,boxRegions,fundMat,pawPref,...
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxredgreendist',maxRedGreenDist,...
@@ -263,7 +283,9 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
                              'resblob',restrictiveBlob,...
                              'stretchtol',stretchTol,...
                              'boxfrontthick',boxFrontThick,...
-                             'maxdistperframe',maxDistPerFrame);
+                             'maxdistperframe',maxDistPerFrame,...
+                             'targetmean',targetMean,...
+                             'targetsigma',targetSigma);
                          
 	maxDistPerFrame = orig_maxDistPerFrame;
 	% if the mask isn't visible in either view, start with the 3d points

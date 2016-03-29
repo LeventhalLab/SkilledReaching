@@ -1,4 +1,4 @@
-% script_checkPawTrack
+% script_checkPaw_mirror_tracks
 
 % script to check that 3D locations stored in the processed data folder
 % actually match with the video files
@@ -39,7 +39,7 @@ for i_rat = 1 : 2%length(sr_ratInfo)
     triDataFiles = dir('*.mat');
 %     numSessions = length(triDataFiles);
     numSessions = length(sr_ratInfo(i_rat).sessionList);
-    for iSession = 1 : 6%numSessions
+    for iSession = 1 : 12%numSessions
         
 %         sessionDate = triDataFiles(iSession).name(7:14);
         sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);
@@ -70,8 +70,8 @@ for i_rat = 1 : 2%length(sr_ratInfo)
             if strcmp(vidList(iVid).name(1:2),'._');continue;end
             
             trialNum = vidList(iVid).name(end-6:end-4);
-            
-            pawData = load_pawTrackData_DL(processedDir, trialNum);
+            tnum = str2num(trialNum);
+            pawData = load_pawMirrorTrackData(processedDir, tnum);
             trialNum = str2num(trialNum);
             if isempty(pawData);
                 continue;
@@ -86,7 +86,7 @@ for i_rat = 1 : 2%length(sr_ratInfo)
             video.CurrentTime = pawData.timeList(1);
             
             [~,baseName,~] = fileparts(vidList(iVid).name);
-            writeName = [baseName '_udmarkDL.avi'];
+            writeName = [baseName '_mirror.avi'];
             writeName = fullfile(processedDir, writeName);
             if exist(writeName,'file');continue;end
             
@@ -102,28 +102,34 @@ for i_rat = 1 : 2%length(sr_ratInfo)
 %                 if isnan(pawData(iFrame,1,1)); continue; end
                 
                 frm_ud = undistortImage(frm,cameraParams);
-
-                for iView = 1 : 2
-%                     if isnan(pawData(iFrame,1,iView)); continue; end
-%                     ud_pt = undistortPoints(squeeze(pawData(iFrame,:,iView)),cameraParams);
-                    if isempty(pawData.points2d{iFrame});continue;end
-                    ud_pt = pawData.points2d{iFrame}(:,:,iView);
-                    if isempty(ud_pt);continue;end
-                    if all(isnan(ud_pt(:))); continue; end
-                    try
+                
+                ud_pt = pawData.mirror_points2d{iFrame};
+                if ~isempty(ud_pt)
                     frm_ud = insertMarker(frm_ud, ud_pt,'o',...
-                                                    'size', markerSize, ...
-                                                    'color','r');
-                    catch
-                        keyboard
-                    end
-%                     plot(ud_pt(1),ud_pt(2),...
-%                          'linestyle','none',...
-%                          'marker','o',...
-%                          'markersize',6,...
-%                          'markeredgecolor','r',...
-%                          'markerfacecolor','r');
+                                                        'size', markerSize, ...
+                                                        'color','r');
                 end
+%                 for iView = 1 : 2
+% %                     if isnan(pawData(iFrame,1,iView)); continue; end
+% %                     ud_pt = undistortPoints(squeeze(pawData(iFrame,:,iView)),cameraParams);
+%                     if isempty(pawData.points2d{iFrame});continue;end
+%                     ud_pt = pawData.points2d{iFrame}(:,:,iView);
+%                     if isempty(ud_pt);continue;end
+%                     if all(isnan(ud_pt(:))); continue; end
+%                     try
+%                     frm_ud = insertMarker(frm_ud, ud_pt,'o',...
+%                                                     'size', markerSize, ...
+%                                                     'color','r');
+%                     catch
+%                         keyboard
+%                     end
+% %                     plot(ud_pt(1),ud_pt(2),...
+% %                          'linestyle','none',...
+% %                          'marker','o',...
+% %                          'markersize',6,...
+% %                          'markeredgecolor','r',...
+% %                          'markerfacecolor','r');
+%                 end
 %                 imshow(frm_ud);
                 writeVideo(w_vid, frm_ud);
             end

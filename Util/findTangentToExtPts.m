@@ -1,4 +1,4 @@
-function [tangentPoints, tangentLines] = findTangentToEpipolarLine(mask, fundmat, bbox)
+function [tangentPoints, tangentLines] = findTangentToExtPts(ext_pts, fundmat, bbox)
 %
 % INPUTS:
 %   mask -

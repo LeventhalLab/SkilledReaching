@@ -18,7 +18,7 @@ w = video.Width;
 
 foregroundThresh = 45/255;
 pawGrayLevels = [60 125] / 255;
-pixCountThresh = 2000;
+pixCountThresh = 2500;
 minPixCount = 700;    % mininum number of green pixels to count as the paw being visible
 maxFramesAfterThresh = 50;
 

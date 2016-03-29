@@ -35,11 +35,12 @@ validScores = [1,2,3,4,7];    % scores for which there was a reach
 numBGframes = 20;
 gray_paw_limits = [60 125] / 255;
 foregroundThresh = 25/255;
-maxDistPerFrame = 30;
 
-pawHSVrange = [0.33, 0.16, 0.9, 1.0, 0.9, 1.0   % pick out anything that's green and bright
-               0.33, 0.16, 0.8, 1.0, 0.4, 1.0     % pick out anything that's green and bright immediately behind the front panel
-               0.33, 0.16, 0.7, 1.0, 0.4, 1.0]; % pick out anything green 
+pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
+               0.33, 0.05, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
+               0.50, 0.50, 0.95, 1.0, 0.95, 1.0
+               0.00, 0.16, 0.90, 1.0, 0.90, 1.0       % find red objects
+               0.33, 0.10, 0.85, 1.0, 0.85, 1.0];  % liberal green mask
            
 xl_directory = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
@@ -61,7 +62,7 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 %                        'estimateskew', estimateSkew);
                    
 sr_ratInfo = get_sr_RatList();     
-for i_rat = 2 : 2%length(sr_ratInfo)
+for i_rat = 1 : 1%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawdata_dir = sr_ratInfo(i_rat).directory.rawdata;
@@ -73,7 +74,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 1:1%7 : 7%length(sessionList);
+    for iSession = 3:3%7 : 7%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -119,7 +120,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
             
             BGcalculated = false;
             
-            for iVid = 1 : length(vidList)
+            for iVid = 36 : length(vidList)
                 if vidList(iVid).bytes < 10000; continue; end
                 if strcmp(vidList(iVid).name(1:2),'._'); continue; end
                 
@@ -136,9 +137,9 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 w = video.Width;
                 
                 BGimg_udName = [fullSessionName(1:end-1) '_' currentVidNumber '_BG_ud.bmp'];
-                pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_DLtrack.mat'];
+                pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_mirror_track.mat'];
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
-%                 if exist(pawTrackName,'file');continue;end
+                if exist(pawTrackName,'file');continue;end
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
                 end
@@ -153,20 +154,28 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                                                    'pawgraylevels',gray_paw_limits,...
                                                    'hsvlimits',pawHSVrange);
                                                
-                initPawMask = find_initPawMask_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
+                track_metadata.triggerTime = triggerTime;
+                track_metadata.boxCalibration = boxCalibration;
+                
+                initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
                                   
 %                 [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh);
                 
-                [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160302(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
+                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
                     'hsvlimits', pawHSVrange,...
-                    'foregroundthresh',foregroundThresh,...
-                    'maxdistperframe',maxDistPerFrame);
+                    'foregroundthresh',foregroundThresh);
                 
-                track_metadata.triggerTime = triggerTime;
-                track_metadata.boxCalibration = boxCalibration;
-                save(pawTrackName,'points3d','points2d','timeList','isPawVisible','track_metadata');
+%                 [points3d,direct_points2d,isPawVisible_direct] = trackDirectView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
+%                     'hsvlimits', pawHSVrange,...
+%                     'foregroundthresh',foregroundThresh);
+                
+%                 [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160302(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
+%                     'hsvlimits', pawHSVrange,...
+%                     'foregroundthresh',foregroundThresh);
+                
+                save(pawTrackName,'mirror_points2d','timeList','isPawVisible_mirror','track_metadata');
             end    % for iVid
         end    % for iFolder
 
