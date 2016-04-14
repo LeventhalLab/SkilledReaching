@@ -34,6 +34,7 @@ validScores = [1,2,3,4,7];    % scores for which there was a reach
 %%
 numBGframes = 20;
 gray_paw_limits = [60 125] / 255;
+<<<<<<< HEAD
 foregroundThresh = 15/255;
 
 targetMean = [0.5,0.1,0.5];
@@ -56,6 +57,18 @@ pawHSVrange = [0.33, 0.01, 0.99, 1.0, 0.95, 1.0   % for restrictive external mas
                0.33, 0.15, 0.90, 1.0, 0.50, 1.0    % for liberal masking just behind the front panel
                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
                
+=======
+foregroundThresh = 25/255;
+
+pawHSVrange = [0.33, 0.03, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
+               0.33, 0.05, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
+               0.50, 0.50, 0.95, 1.0, 0.95, 1.0
+               0.00, 0.16, 0.90, 1.0, 0.90, 1.0       % find red objects
+               0.33, 0.10, 0.85, 1.0, 0.85, 1.0          % liberal green mask
+               0.33, 0.02, 0.99, 1.0, 0.99, 1.0
+               0.33, 0.05, 0.95, 1.0, 0.95, 1.0];  % slighly more liberal for the external mask
+           
+>>>>>>> origin/master
 xl_directory = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
 cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
@@ -166,13 +179,18 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                 
                 triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, cameraParams,...
                                                    'pawgraylevels',gray_paw_limits,...
+<<<<<<< HEAD
                                                    'hsvlimits',pawHSVrange,...
                                                    'targetmean',targetMean,...
                                                    'targetsigma',targetSigma);
+=======
+                                                   'hsvlimits',pawHSVrange);
+>>>>>>> origin/master
                                                
                 track_metadata.triggerTime = triggerTime;
                 track_metadata.boxCalibration = boxCalibration;
                 
+<<<<<<< HEAD
 %                 initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,...
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh,...
@@ -184,6 +202,9 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...
                     'targetsigma',targetSigma);
+=======
+                initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
+>>>>>>> origin/master
                                   
 %                 [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
 %                     'hsvlimits', pawHSVrange,...
@@ -191,9 +212,13 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                 
                 [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
                     'hsvlimits', pawHSVrange,...
+<<<<<<< HEAD
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...
                     'targetsigma',targetSigma);
+=======
+                    'foregroundthresh',foregroundThresh);
+>>>>>>> origin/master
                 
 %                 [points3d,direct_points2d,isPawVisible_direct] = trackDirectView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
 %                     'hsvlimits', pawHSVrange,...

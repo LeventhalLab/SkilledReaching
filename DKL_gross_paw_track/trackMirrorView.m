@@ -7,16 +7,25 @@ targetSigma = [0.2,0.2,0.2];
 
 foregroundThresh = 25/255;
 
+<<<<<<< HEAD
 pawHSVrange = [1/3, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
                1/3, 0.05, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
+=======
+pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
+               0.33, 0.05, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
+>>>>>>> origin/master
                0.50, 0.50, 0.95, 1.0, 0.95, 1.0
                0.00, 0.16, 0.90, 1.0, 0.90, 1.0       % find red objects
                0.33, 0.10, 0.9, 1.0, 0.9, 1.0];  % liberal green mask
 
 maxDistPerFrame = 20;
+<<<<<<< HEAD
 
 whiteThresh_ext = 0.95;
 whiteThresh_int = 0.85;
+=======
+whiteThresh = 0.8;
+>>>>>>> origin/master
 
 % blob parameters for mirror view
 pawBlob = vision.BlobAnalysis;
@@ -45,10 +54,15 @@ for iarg = 1 : 2 : nargin - 8
             targetSigma = varargin{iarg + 1};
         case 'pawblob',
             pawBlob = varargin{iarg + 1};
+<<<<<<< HEAD
         case 'whitethresh_ext',
             whiteThresh_ext = varargin{iarg + 1};
         case 'whitethresh_int',
             whiteThresh_int = varargin{iarg + 1};
+=======
+        case 'whitethresh',
+            whiteThresh = varargin{iarg + 1};
+>>>>>>> origin/master
     end
 end
 
@@ -72,8 +86,12 @@ video.CurrentTime = triggerTime;
                                      'maxdistperframe',maxDistPerFrame,...
                                      'targetmean',targetMean,...
                                      'targetsigma',targetSigma,...
+<<<<<<< HEAD
                                      'whitethresh_ext',whiteThresh_ext,...
                                      'whitethresh_int',whiteThresh_int);
+=======
+                                     'whitethresh',whiteThresh);
+>>>>>>> origin/master
                                  
 video.CurrentTime = triggerTime;
 
@@ -83,8 +101,12 @@ video.CurrentTime = triggerTime;
                                      'maxdistperframe',maxDistPerFrame,...
                                      'targetmean',targetMean,...
                                      'targetsigma',targetSigma,...
+<<<<<<< HEAD
                                      'whitethresh_ext',whiteThresh_ext,...
                                      'whitethresh_int',whiteThresh_int);
+=======
+                                     'whitethresh',whiteThresh);
+>>>>>>> origin/master
                                  
    
 points2d = rpoints2d;
@@ -158,10 +180,15 @@ for iarg = 1 : 2 : nargin - 8
             targetMean = varargin{iarg + 1};
         case 'targetsigma',
             targetSigma = varargin{iarg + 1};
+<<<<<<< HEAD
         case 'whitethresh_ext',
             whiteThresh_ext = varargin{iarg + 1};
         case 'whitethresh_int',
             whiteThresh_int = varargin{iarg + 1};
+=======
+        case 'whitethresh',
+            whiteThresh = varargin{iarg + 1};
+>>>>>>> origin/master
     end
 end
 
@@ -221,18 +248,32 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
         timeList(frameCount) = video.CurrentTime - 1/fps;
     end
     
+<<<<<<< HEAD
 %     prev_image_ud = image_ud;
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
                          
     [fullMask,~] = trackNextStep_mirror_20160330(image_ud,fundMat,prevMask,boxRegions,pawPref,...
+=======
+    prev_image_ud = image_ud;
+    image_ud = undistortImage(image, cameraParams);
+    image_ud = double(image_ud) / 255;
+%     orig_image_ud = image_ud;
+    image_ud = color_adapthisteq(image_ud);
+    
+    [fullMask,~] = trackNextStep_mirror(image_ud,fundMat,BGimg_ud,prevMask,boxRegions,pawPref,...
+>>>>>>> origin/master
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxdistperframe',maxDistPerFrame,...
                              'targetmean',targetMean,...
                              'targetsigma',targetSigma,...
+<<<<<<< HEAD
                              'whitethresh_ext',whiteThresh_ext,...
                              'whitethresh_int',whiteThresh_int);
+=======
+                             'whitethresh',whiteThresh);
+>>>>>>> origin/master
 
 	if any(fullMask(:))
         temp = bwmorph(fullMask,'remove');

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 function triggerTime = identifyTriggerTime_greenPaw( video, rat_metadata, session_mp, cameraParams, varargin )
+=======
+function triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, rat_metadata, session_mp, cameraParams, varargin )
+>>>>>>> origin/master
 %
 % INPUTS:
 %   video - a VideoReader object for the relevant video
@@ -16,6 +20,7 @@ function triggerTime = identifyTriggerTime_greenPaw( video, rat_metadata, sessio
 h = video.Height;
 w = video.Width;
 
+<<<<<<< HEAD
 targetMean = [0.5,0.2,0.5
               0.3,0.5,0.5];
     
@@ -24,6 +29,10 @@ targetSigma = [0.2,0.2,0.2
            
 % foregroundThresh = 45/255;
 % pawGrayLevels = [60 125] / 255;
+=======
+foregroundThresh = 45/255;
+pawGrayLevels = [60 125] / 255;
+>>>>>>> origin/master
 pixCountThresh = 2500;
 minPixCount = 700;    % mininum number of green pixels to count as the paw being visible
 maxFramesAfterThresh = 50;
@@ -36,7 +45,11 @@ numBGframes = 50;    % don't look for the paw too early
 pawHSVrange = [0.33, 0.10, 0.9, 1.0, 0.9, 1.0   % pick out anything that's green and bright
                0.00, 0.16, 0.8, 1.0, 0.8, 1.0     % pick out only red and bright
                0.33, 0.16, 0.6, 1.0, 0.6, 1.0]; % pick out anything green (only to be used just behind the front panel in the mirror view
+<<<<<<< HEAD
 for iarg = 1 : 2 : nargin - 4
+=======
+for iarg = 1 : 2 : nargin - 5
+>>>>>>> origin/master
     switch lower(varargin{iarg})
         case 'pawgraylevels',
             pawGrayLevels = varargin{iarg + 1};
@@ -46,18 +59,28 @@ for iarg = 1 : 2 : nargin - 4
             foregroundThresh = varargin{iarg + 1};
         case 'hsvlimits',
             pawHSVrange = varargin{iarg + 1};
+<<<<<<< HEAD
         case 'targetmean',
             targetMean = varargin{iarg + 1};
         case 'targetsigma',
             targetSigma = varargin{iarg + 1};
+=======
+>>>>>>> origin/master
     end
 end
 
 % session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
+<<<<<<< HEAD
 % 
 % if strcmpi(class(BGimg_ud),'uint8')
 %     BGimg_ud = double(BGimg_ud) / 255;
 % end
+=======
+
+if strcmpi(class(BGimg_ud),'uint8')
+    BGimg_ud = double(BGimg_ud) / 255;
+end
+>>>>>>> origin/master
 
 vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
@@ -92,9 +115,15 @@ end
 s = regionprops(mirrorMask, 'BoundingBox');
 reach_bbox = round(s.BoundingBox);
 
+<<<<<<< HEAD
 % BGimg_ud = color_adapthisteq(BGimg_ud);
 % BGimg_ud = BGimg_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
 %               reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
+=======
+BGimg_ud = color_adapthisteq(BGimg_ud);
+BGimg_ud = BGimg_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
+              reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
+>>>>>>> origin/master
 % identify the frames where the paw is visible over the shelf
 pawPixelCount = 0;
 frameNum = 0;
@@ -108,16 +137,21 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     orig_image_ud = undistortImage(image, cameraParams);
 
     image_ud = color_adapthisteq(orig_image_ud);
+<<<<<<< HEAD
     decorr_green = decorrstretch(image_ud,'targetmean',targetMean(1,:),'targetsigma',targetSigma(1,:));
     lo_hi = stretchlim(decorr_green);
     decorr_green = imadjust(decorr_green,lo_hi,[]);
 
     decorr_green = decorr_green(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
+=======
+    image_ud = image_ud(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
+>>>>>>> origin/master
                         reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
     if max(image_ud(:)) > 1
         image_ud = double(image_ud) / 255;
     end
     
+<<<<<<< HEAD
 %     BGdiff = imabsdiff(image_ud, BGimg_ud);
 %                     
 %     BG_masked = false(size(BGdiff,1),size(BGdiff,2));
@@ -140,6 +174,29 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     lib_mask = HSVthreshold(decorr_hsv, pawHSVrange(2,:));
     lib_mask = processMask(lib_mask,'sesize',1);
     res_mask = processMask(res_mask,'sesize',1);
+=======
+    BGdiff = imabsdiff(image_ud, BGimg_ud);
+                    
+    BG_masked = false(size(BGdiff,1),size(BGdiff,2));
+    for iChannel = 1 : 3
+        BG_masked = BG_masked | (BGdiff(:,:,iChannel) > foregroundThresh);
+    end
+    
+    if ~any(BG_masked(:)); continue; end    % no foreground pixels
+
+    im_decorr = decorrstretch(image_ud,'tol',[0 1]);
+    decorr_fg = im_decorr .* repmat(double(BG_masked),1,1,3);
+%     decorr_fg = decorrstretch(fg_image_ud);%, 'samplesubs', {y,x});
+%     figure(2)
+%     imshow(decorr_fg);
+    decorr_fg = decorr_fg .* repmat(double(BG_masked),1,1,3);
+    
+    decorr_hsv = rgb2hsv(decorr_fg);
+    res_mask = HSVthreshold(decorr_hsv, pawHSVrange(1,:));
+    lib_mask = HSVthreshold(decorr_hsv, pawHSVrange(3,:));
+    lib_mask = processMask(lib_mask,2);
+    res_mask = processMask(res_mask,2);
+>>>>>>> origin/master
     mask = imreconstruct(res_mask,lib_mask);
 %     
 %     figure(1)

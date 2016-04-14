@@ -104,6 +104,7 @@ end
 whiteMask = rgb2gray(str_img) > whiteThresh;
 whiteMask = whiteMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
 
+<<<<<<< HEAD
 % decorr_green = decorrstretch(str_img,...
 %                              'targetmean',targetMean(1,:),...
 %                              'targetsigma',targetSigma(1,:));
@@ -113,6 +114,11 @@ decorr_green = decorrstretch(image_ud,...
 lo_hi = stretchlim(decorr_green);
 decorr_green = imadjust(decorr_green,lo_hi,[]);
 
+=======
+decorr_green = decorrstretch(str_img,...
+                             'targetmean',targetMean(1,:),...
+                             'targetsigma',targetSigma(1,:));
+>>>>>>> origin/master
 % mirror_decorr_green = decorr_green(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
 decorr_green_hsv = rgb2hsv(decorr_green);
 mirror_decorr_green_hsv = decorr_green_hsv(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
@@ -150,7 +156,11 @@ end
 prevMask_dilate = imdilate(prevMask,strel('disk',maxDistPerFrame));
 
 mirror_greenHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(6,:));
+<<<<<<< HEAD
 mirror_greenHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(6,:));
+=======
+mirror_greenHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(2,:));
+>>>>>>> origin/master
 
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & (prevMask_dilate | prevMask_panel_dilate);
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & (prevMask_dilate | prevMask_panel_dilate);
@@ -159,11 +169,19 @@ mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & extMask;
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & intMask;
 
 % temp = prevMask_dilate & mirror_greenHSVthresh_int;
+<<<<<<< HEAD
 mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);
 mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',1);
 
 libHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(7,:));
 libHSVthresh_int = libHSVthresh_int & intMask& ~whiteMask;
+=======
+% mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',2);
+% mirror_greenHSVthresh_int = processMask(temp,'sesize',2);
+
+libHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(5,:));
+libHSVthresh_int = libHSVthresh_int & intMask;
+>>>>>>> origin/master
 
 libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(7,:));
 libHSVthresh_ext = libHSVthresh_ext & extMask & ~whiteMask;

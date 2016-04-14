@@ -39,7 +39,11 @@ for i_rat = 1 : 2%length(sr_ratInfo)
     triDataFiles = dir('*.mat');
 %     numSessions = length(triDataFiles);
     numSessions = length(sr_ratInfo(i_rat).sessionList);
+<<<<<<< HEAD
     for iSession = 7 : 12%numSessions
+=======
+    for iSession = 1 : 12%numSessions
+>>>>>>> origin/master
         
 %         sessionDate = triDataFiles(iSession).name(7:14);
         sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);

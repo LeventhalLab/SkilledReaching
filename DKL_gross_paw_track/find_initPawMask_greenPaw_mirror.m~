@@ -78,19 +78,11 @@ pawBlob{2}.MaximumBlobArea = 3000;
 if strcmpi(class(BGimg_ud),'uint8')
     BGimg_ud = double(BGimg_ud) / 255;
 end
-<<<<<<< HEAD
-% orig_BGimg_ud = BGimg_ud;
-BGimg_ud = color_adapthisteq(BGimg_ud);
-
-% vidName = fullfile(video.Path, video.Name);
-% video = VideoReader(vidName);
-=======
 orig_BGimg_ud = BGimg_ud;
 BGimg_ud = color_adapthisteq(BGimg_ud);
 
 vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
->>>>>>> origin/master
 video.CurrentTime = triggerTime;
 
 cameraParams = boxCalibration.cameraParams;
@@ -117,20 +109,10 @@ end
 decorr_green = decorrstretch(str_img,...
                              'targetmean',targetMean(1,:),...
                              'targetsigma',targetSigma(1,:));
-<<<<<<< HEAD
-orig_decorr_green = decorrstretch(image_ud,...
-                             'targetmean',targetMean(1,:),...
-                             'targetsigma',targetSigma(1,:));
-=======
->>>>>>> origin/master
 abs_BGdiff = imabsdiff(BGimg_ud,image_ud);
 % BGdiff = imsubtract(image_ud,BGimg_ud);
 
 decorr_green_hsv = rgb2hsv(decorr_green);
-<<<<<<< HEAD
-orig_decorr_green_hsv = rgb2hsv(orig_decorr_green);
-=======
->>>>>>> origin/master
 greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(6,:));
 % diff_greenHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(1,:));
 libHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(5,:));
@@ -171,17 +153,7 @@ directMask(shelf_top:shelf_bot,direct_left:direct_right) = true;
 
 leftMirrorGreen = leftMirrorMask & greenMasked;
 rightMirrorGreen = rightMirrorMask & greenMasked;
-<<<<<<< HEAD
-
-orig_greenHSVthresh = HSVthreshold(orig_decorr_green_hsv,pawHSVrange(7,:));
-orig_greenHSVthresh = orig_greenHSVthresh & ~whiteMask & directMask;
-orig_greenHSVthresh = processMask(orig_greenHSVthresh,'sesize',1);
-orig_libHSVthresh = HSVthreshold(orig_decorr_green_hsv,pawHSVrange(5,:));
-orig_green_masked = imreconstruct(orig_greenHSVthresh,orig_libHSVthresh);
-directGreen = directMask & orig_green_masked;
-=======
 directGreen = directMask & greenMasked;
->>>>>>> origin/master
 
 leftFrontPanelMask = false(h,w);
 rightFrontPanelMask = false(h,w);
@@ -199,54 +171,29 @@ switch pawPref
         frontPanelEdge = rightFrontEdge;
         fundMat = srCal.F(:,:,2);
         mirror_mask = rightMirrorGreen;
-<<<<<<< HEAD
         
         SE_fromExt = [ones(1,maxFrontPanelSep+25),zeros(1,maxFrontPanelSep+25)];
         overlapCheck_SE_fromExt = [ones(1,5),zeros(1,5)];
-=======
->>>>>>> origin/master
     case 'right',
         frontPanelMask = leftFrontPanelMask;     % left mirror
         frontPanelEdge = leftFrontEdge;
         fundMat = srCal.F(:,:,1);
         mirror_mask = leftMirrorGreen;
-<<<<<<< HEAD
         
         SE_fromExt = [zeros(1,maxFrontPanelSep+25),ones(1,maxFrontPanelSep+25)];
         overlapCheck_SE_fromExt = [zeros(1,5),ones(1,5)];
 end
 
 side_overlap_mask = imdilate(mirror_mask,overlapCheck_SE_fromExt) & frontPanelMask;
-=======
-end
-
-side_overlap_mask = imdilate(mirror_mask,strel('line',3,0)) & frontPanelMask;
->>>>>>> origin/master
 
 if any(side_overlap_mask(:))    % previous paw mask is very close to the front panel image in the mirror
                                 % therefore, check the other side of the
                                 % front panel to see if the paw is showing
                                 % up there
-<<<<<<< HEAD
 %     SE = strel('rectangle',[5 boxFrontThick + 50]);
-    mask_panel_dilate = imdilate(mirror_mask, SE_fromExt);
-    mask_panel_dilate = imdilate(mask_panel_dilate,strel('line',10,90));
-    int_greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(2,:));
-    int_greenHSVthresh = int_greenHSVthresh & intMask;
-    
-    libHSVthresh_int = HSVthreshold(decorr_green_hsv, pawHSVrange(5,:));
-    libHSVthresh_int = libHSVthresh_int & intMask;
-    
-    int_greenHSVthresh = imreconstruct(int_greenHSVthresh, libHSVthresh_int);
-else
-    mask_panel_dilate = false(size(mirror_mask));
-    int_greenHSVthresh = false(size(mirror_mask));
-=======
-    SE = strel('rectangle',[5 boxFrontThick + 50]);
     mask_panel_dilate = imdilate(mirror_mask, SE);
 else
     mask_panel_dilate = false(size(mirror_mask));
->>>>>>> origin/master
 end
 
 behindPanelMask = frontPanelEdge & intMask;
@@ -259,13 +206,8 @@ if any(behindOverlap(:))
     decorr_green_BG_hsv = rgb2hsv(decorr_green_BG);
 
     temp = HSVthreshold(decorr_green_BG_hsv,pawHSVrange(2,:));
-<<<<<<< HEAD
-    temp = temp & behindOverlap & mask_panel_dilate;
-    mirror_mask = mirror_mask | temp | (mask_panel_dilate & int_greenHSVthresh);
-=======
     temp = temp & behindOverlap;
     mirror_mask = mirror_mask | temp;
->>>>>>> origin/master
 end
 overlapMask = imdilate(mirror_mask,strel('disk',5)) & greenMasked;
 if any(overlapMask(:))
@@ -273,24 +215,6 @@ if any(overlapMask(:))
     mirror_mask = mirror_mask | temp;
 end
 mirror_mask = bwconvhull(mirror_mask,'union');
-<<<<<<< HEAD
-% direct_mask = processMask(directGreen,'sesize',2);
-      
-mirror_projMask = projMaskFromTangentLines(mirror_mask, fundMat, [1,1,h-1,w-1], [h,w]);
-% direct_projMask = projMaskFromTangentLines(direct_mask, fundMat, [1,1,h-1,w-1], [h,w]);
-
-% mirror_proj_overlap = (mirror_mask & direct_projMask);
-direct_proj_overlap = (directGreen & mirror_projMask);
-direct_proj_overlap = imreconstruct(direct_proj_overlap, directGreen);
-
-initPawMask{1} = bwconvhull(direct_proj_overlap,'union');
-initPawMask{2} = mirror_mask;
-
-bbox = [1,1,w-1,h-1];
-bbox(2,:) = bbox;
-initPawMask = estimateHiddenSilhouette(initPawMask, bbox,fundMat,[h,w]);
-
-=======
 direct_mask = processMask(directGreen,'sesize',2);
       
 mirror_projMask = projMaskFromTangentLines(mirror_mask, fundMat, [1,1,h-1,w-1], [h,w]);
@@ -302,7 +226,6 @@ direct_proj_overlap = (direct_mask & mirror_projMask);
 initPawMask{1} = bwconvhull(direct_proj_overlap,'union');%imreconstruct(direct_proj_overlap, direct_mask);
 initPawMask{2} = mirror_mask;
 
->>>>>>> origin/master
 % for iView = 1 : 2
 %     s = regionprops(initPawMask{iView},'area');
 %     if length(s) > 1
