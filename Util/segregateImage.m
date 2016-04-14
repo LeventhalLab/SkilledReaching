@@ -19,9 +19,14 @@ function [mask, borderPts] = segregateImage(linePoints, ptInRegion, imSize)
 % m = diff(linePoints(:,2))/diff(linePoints(:,1));
 % % calculate y-intercept
 % b = linePoints(1,2) - m * linePoints(1,1);
-A = -diff(linePoints(:,2));
-B = diff(linePoints(:,1));
-C = -A*linePoints(1,1) - B*linePoints(1,2);
+% A = -diff(linePoints(:,2));
+% B = diff(linePoints(:,1));
+% C = -A*linePoints(1,1) - B*linePoints(1,2);
+
+lineCoeff = lineCoeffFromPoints(linePoints);
+A = lineCoeff(1);
+B = lineCoeff(2);
+C = lineCoeff(3);
 
 testValue = A*ptInRegion(1) + B*ptInRegion(2) + C;
 cornerPts = [1         1            % top left

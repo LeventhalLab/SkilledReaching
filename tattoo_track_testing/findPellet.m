@@ -1,6 +1,14 @@
 function pelletMasks = findPellet(BGimg_ud, boxCalibration, varargin)
+%
+% INPUTS:
+%   BGimg_ud - undistorted background image
+%   boxCalibration - boxCalibration structure that includes the boxMarkers
+%       and fundamental matrix
+%
+% OUTPUTS:
+%   pelletMasks - 
 
-maxEccentricity = 0.85;
+maxEccentricity = 0.90;
 
 for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})

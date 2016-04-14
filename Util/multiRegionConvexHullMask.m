@@ -63,27 +63,6 @@ if numCentroids == 2   % if only two connected regions
                  centroids(1,1) - 1, centroids(1,2) - 1;...
                  centroids(2,1) - 1, centroids(2,2) - 1;...
                  centroids(2,1) + 1, centroids(1,2) + 1];
-           
-%     % arrange corners in a clockwise direction
-%     cornerCenter = mean(corners,1);
-%     % calculate angles between center point, first point, and the other points
-%     cornerRef = [corners(:,1) - cornerCenter(1), corners(:,2) - cornerCenter(2)];   % corner points in a coordinate system centered on the average of the corners
-%     cornerAngles = angle(cornerRef(:,1) + 1i*cornerRef(:,2));
-%     [~, sortIdx] = sort(cornerAngles);
-%     corners = corners(sortIdx,:);
-% 
-% 
-% 
-%     s = regionprops(old_mask, 'BoundingBox', 'ConvexImage', 'ConvexHull');
-%     new_mask = false(size(old_mask));
-%     hullLeft  = round(s(1).BoundingBox(1));
-%     hullRight = hullLeft + s(1).BoundingBox(3) - 1;
-%     hullTop   = round(s(1).BoundingBox(2));
-%     hullBot   = hullTop + s(1).BoundingBox(4) - 1;
-%     new_mask(hullTop:hullBot, hullLeft:hullRight) = s.ConvexImage;
-%     
-%     hullPoints = s(1).ConvexHull;
-%     return;
 end
 
 % now if there are 3 or more centroids, create a polygon using each
@@ -91,11 +70,12 @@ end
 
 % arrange centroids in a clockwise direction
 centroidCenter = mean(centroids,1);
-% calculate angles between center point, first point, and the other points
-centroidRef = [centroids(:,1) - centroidCenter(1), centroids(:,2) - centroidCenter(2)];   % corner points in a coordinate system centered on the average of the corners
-centroidAngles = angle(centroidRef(:,1) + 1i*centroidRef(:,2));
-[~, sortIdx] = sort(centroidAngles);
-centroids = centroids(sortIdx,:);
+[centroids, ~] = sortClockWise(centroidCenter, centroids);
+% % calculate angles between center point, first point, and the other points
+% centroidRef = [centroids(:,1) - centroidCenter(1), centroids(:,2) - centroidCenter(2)];   % corner points in a coordinate system centered on the average of the corners
+% centroidAngles = angle(centroidRef(:,1) + 1i*centroidRef(:,2));
+% [~, sortIdx] = sort(centroidAngles);
+% centroids = centroids(sortIdx,:);
 
 BW = poly2mask(centroids(:,1), centroids(:,2), size(old_mask,1), size(old_mask, 2));
 SE = strel('disk',2);
@@ -107,13 +87,23 @@ BW = BW | old_mask;    % polygon containing centroids of vertices combined
 % now find convex image of the single connected region in the mask BW
 % because regionprops returns a mask only inside the bounding box, need to
 % translate that mask into an image the size of old_mask
-s = regionprops(BW, 'BoundingBox', 'ConvexImage', 'ConvexHull');
+numRegions = 2;
+numDilations = 2;
+while numRegions > 1
+    s = regionprops(BW, 'BoundingBox', 'ConvexImage', 'ConvexHull');
+    numRegions = length(s);
+    if numRegions == 1;continue;end
+    
+    BW = imdilate(BW,strel('disk',1));
+    numDilations = numDilations + 1;
+end
 new_mask = false(size(old_mask));
 hullLeft  = round(s(1).BoundingBox(1));
 hullRight = hullLeft + s(1).BoundingBox(3) - 1;
 hullTop   = round(s(1).BoundingBox(2));
 hullBot   = hullTop + s(1).BoundingBox(4) - 1;
 new_mask(hullTop:hullBot, hullLeft:hullRight) = s.ConvexImage;
+new_mask = imerode(new_mask,strel('disk',numDilations));
 
 hullPoints = s(1).ConvexHull;
 end

@@ -15,15 +15,21 @@ for iarg = 1 : 2 : nargin - 2
     end
 end
 
-[y,x] = find(mask);
 overlapMask = false(size(mask));
 
-for ii = 1 : length(y)
-    
-    lineValue = lineCoeff(1) * x(ii) + ...
-                lineCoeff(2) * y(ii) + ...
-                lineCoeff(3);
-    if abs(lineValue) < distThresh
-        overlapMask(y(ii),x(ii)) = true;
+% while all(overlapMask(:) == 0)
+    [y,x] = find(mask);
+
+
+    for ii = 1 : length(y)
+
+        lineValue = lineCoeff(1) * x(ii) + ...
+                    lineCoeff(2) * y(ii) + ...
+                    lineCoeff(3);
+        if abs(lineValue) < distThresh
+            overlapMask(y(ii),x(ii)) = true;
+        end
     end
-end
+%     mask = imdilate(mask,strel('disk',1));   % grow mask until there is overlap
+    
+% end

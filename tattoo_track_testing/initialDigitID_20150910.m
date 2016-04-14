@@ -1,4 +1,5 @@
-function [viewMask, mask_bbox, digitMarkers, refImageTime] = initialDigitID_20150910(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, varargin)
+function [viewMask, mask_bbox, digitMarkers, refImageTime, dig_edge3D] = ...
+    initialDigitID_20150910(video, triggerTime, BGimg_ud, rat_metadata, boxCalibration, varargin)
 %
 % usage
 %
@@ -24,15 +25,20 @@ function [viewMask, mask_bbox, digitMarkers, refImageTime] = initialDigitID_2015
 %       masks the size of the bounding box around the initial paw masking
 %   mask_bbox - 3 x 4 matrix, where each row contains the bounding box for
 %       each viewMask. Format of each row is [x,y,w,h], where x,y is the
-%       upper left corner of the bounding box, and w and h are the width
+%       upper left corner of the bounding box, and w and h are the
+%       width
 %       and height, respectively
-%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%   digitMarkers - 5x2x3x2 array. First dimension is the digit ID, second
 %       dimension is (x,y), third dimension is proximal,centroid,tip of
 %       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
 %   refImageTime - the time in the video at which the reference image was
 %       taken
 
-% TO DO - ADD IN MASKING OUT THE FRONT PANEL MASK IF NOT ALREADY THERE
+% TO DO - MODIFY DIGITMARKERS TO INCLUDE THE PAW DORSUM
+
+
+
+
 
 
 % NEED TO ADJUST THE VALUES TO ENHANCE THE DESIRED PAW BITS
@@ -41,38 +47,50 @@ decorrStretchSigma = cell(1,3);
 decorrStretchMean{1}  = [127.5 127.5 127.5     % to isolate dorsum of paw
                          127.5 127.5 100.0     % to isolate blue digits
                          100.0 127.5 127.5     % to isolate red digits
-                         127.5 100.0 127.5     % to isolate green digits
-                         100.0 127.5 127.5];   % to isolate red digits
+                         100.0 025.0 100.0     % to isolate green digits
+                         100.0 127.5 127.5     % to isolate red digits
+                         127.5 127.5 127.5
+                         127.5 127.5 127.5];
 
 decorrStretchSigma{1} = [075 075 075       % to isolate dorsum of paw
                          075 075 075       % to isolate blue digits
                          075 075 075       % to isolate red digits
                          075 075 075       % to isolate green digits
-                         075 075 075];     % to isolate red digits
-                  
+                         075 075 075       % to isolate red digits
+                         075 075 075
+                         075 075 075];
+                     
 decorrStretchMean{2}  = [127.5 127.5 127.5     % to isolate dorsum of paw
                          127.5 127.5 100.0     % to isolate blue digits
                          100.0 127.5 127.5     % to isolate red digits
                          127.5 100.0 127.5     % to isolate green digits
-                         100.0 127.5 127.5];   % to isolate red digits
-
+                         100.0 127.5 127.5     % to isolate red digits
+                         127.5 127.5 127.5
+                         127.5 127.5 127.5];
+                     
 decorrStretchSigma{2} = [075 075 075       % to isolate dorsum of paw
                          075 075 075       % to isolate blue digits
                          075 075 075       % to isolate red digits
                          075 075 075       % to isolate green digits
-                         075 075 075];     % to isolate red digits
+                         075 075 075       % to isolate red digits
+                         075 075 075
+                         075 075 075];
                      
 decorrStretchMean{3}  = [127.5 127.5 127.5     % to isolate dorsum of paw
                          127.5 127.5 100.0     % to isolate blue digits
                          100.0 127.5 127.5     % to isolate red digits
                          127.5 100.0 127.5     % to isolate green digits
-                         100.0 127.5 127.5];   % to isolate red digits
-
+                         100.0 127.5 127.5     % to isolate red digits
+                         127.5 127.5 127.5
+                         127.5 127.5 127.5];
+                     
 decorrStretchSigma{3} = [075 075 075       % to isolate dorsum of paw
                          075 075 075       % to isolate blue digits
                          075 075 075       % to isolate red digits
                          075 075 075       % to isolate green digits
-                         075 075 075];     % to isolate red digits
+                         075 075 075       % to isolate red digits
+                         075 075 075
+                         075 075 075];
                      
 for ii = 1 : 3
     decorrStretchMean{ii} = decorrStretchMean{ii} / 255;
@@ -136,22 +154,58 @@ pdBlob{2}.MinimumBlobArea = 50;
 pdBlob{2}.MaximumBlobArea = 30000;
 
 colorList = {'darkgreen','blue','red','green','red'};
-satLimits = [0.80000    1.00
+satLimits{1} = [0.20000    1.00
              0.90000    1.00
              0.90000    1.00
              0.90000    1.00
              0.90000    1.00];
-valLimits = [0.00001    0.70
+valLimits{1} = [0.20000    1.00
              0.95000    1.00
              0.95000    1.00
              0.95000    1.00
              0.95000    1.00];
-hueLimits = [0.00, 0.16;    % red
+hueLimits{1} = [0.00, 0.16;    % red
+             0.33, 0.16;    % green
+             0.66, 0.05;    % blue
+             0.50, 0.16];   % dark green
+         
+satLimits{2} = [0.20000    1.00
+             0.90000    1.00
+             0.90000    1.00
+             0.90000    1.00
+             0.90000    1.00];
+valLimits{2} = [0.20000    1.00
+             0.95000    1.00
+             0.95000    1.00
+             0.95000    1.00
+             0.95000    1.00];
+hueLimits{2} = [0.00, 0.16;    % red
              0.33, 0.16;    % green
              0.66, 0.05;    % blue
              0.33, 0.16];   % dark green
+         
+satLimits{3} = [0.20000    1.00
+             0.90000    1.00
+             0.90000    1.00
+             0.90000    1.00
+             0.90000    1.00];
+valLimits{3} = [0.20000    1.00
+             0.95000    1.00
+             0.95000    1.00
+             0.95000    1.00
+             0.95000    1.00];
+hueLimits{3} = [0.00, 0.16;    % red
+             0.33, 0.16;    % green
+             0.66, 0.05;    % blue
+             0.50, 0.16];   % dark green
+
 h = video.Height;
 w = video.Width;
+
+dorsumAngle = -3*pi/8;
+% further down, will draw a line between the base of the 1st and 4th
+% digits. The paw dorsum is assumed to lie on one side of this line,
+% constrained by the geometry of the reach.
 
 boxMarkers = boxCalibration.boxMarkers;
 F = boxCalibration.F;
@@ -163,10 +217,13 @@ if iscell(pawPref)
     pawPref = pawPref{1};
 end
 
-minSideOverlap = 0.6;   % mirror image projection into the direct view must
+minSideOverlap = 0.25;   % mirror image projection into the direct view must
                         % overlap by this much to be counted
                         
 numViews = 3;
+
+trackCheck.maxEpiLineDist = 10;     % how far a point in the mirror view can be from the epipolar line passing through the corresponding point in the direct view
+raw_threshold = 0.2;
 
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -184,13 +241,20 @@ for iarg = 1 : 2 : nargin - 5
             mirrorPawBlob.MinimumBlobArea = varargin{iarg + 1};
         case 'maxmirrorpawarea',
             mirrorPawBlob.MaximumBlobArea = varargin{iarg + 1};
-            
+        case 'maxEpiLineDist',
+            trackCheck.maxEpiLineDist = varargin{iarg + 1};
+        case 'blackthreshold',
+            raw_threshold = varargin{iarg + 1};    % values smaller than this are too black to be the paw in the raw image
             % NEED TO CLEAN UP THE REST OF THE VARARGINS...
     end
 end
 
 if diff_threshold > 1
     diff_threshold = diff_threshold / 255;
+end
+
+if raw_threshold > 1
+    raw_threshold = raw_threshold / 255;
 end
 
 S = whos('BGimg_ud');
@@ -207,6 +271,7 @@ switch pawPref
         dMirrorIdx = 3;   % index of mirror with dorsal view of paw
         pMirrorIdx = 1;   % index of mirror with palmar view of paw
         F_side = F.right;
+        dorsumAngle = -dorsumAngle;
     case 'right',
         dMirrorIdx = 1;   % index of mirror with dorsal view of paw
         pMirrorIdx = 3;   % index of mirror with palmar view of paw
@@ -217,18 +282,24 @@ digitMissing = true;
 
 [mirror_shelf_mask, center_region_mask] = reach_region_mask(boxMarkers, [h,w]);
 
-numObjects = size(decorrStretchMean{1}, 1);
+numObjects = size(decorrStretchMean{1}, 1) - 2;
 numFramesChecked = 0;
 
 blueBeadMask = boxMarkers.beadMasks(:,:,3);
 while digitMissing
     numFramesChecked = numFramesChecked  + 1;
+    fprintf('number of frames: %d\n',numFramesChecked)
+    
+    
     
     image = readFrame(video);
     image_ud = undistortImage(image, boxCalibration.cameraParams);
     image_ud = double(image_ud) / 255;
     BG_diff = imabsdiff(BGimg_ud,image_ud);
 
+    figure(4);imshow(image_ud);
+    
+    
     BG_mask = false(h,w);
     for iCh = 1 : 3
         BG_mask = BG_mask | (squeeze(BG_diff(:,:,iCh)) > diff_threshold);
@@ -267,6 +338,11 @@ while digitMissing
     projMask = (leftProjMask & rightProjMask);
     projMask = imdilate(projMask,strel('disk',10));
     
+    grayMask = false(h,w);
+    for iColor = 1 : 3
+        grayMask = grayMask | (image_ud(:,:,iColor) > raw_threshold);
+    end
+    BG_mask = BG_mask & grayMask;
     centerMask = projMask & BG_mask & center_region_mask;
     centerMask = bwdist(centerMask) < 2;
     centerMask = imopen(centerMask, SE);
@@ -279,7 +355,7 @@ while digitMissing
                                 decorrStretchSigma{2}(4,:), ...
                                 'mask',centerMask);
 	tempMask = HSVthreshold(rgb2hsv(rgb_enh), ...
-                            [hueLimits(2,:), satLimits(4,:), valLimits(4,:)]);                    
+                            [hueLimits{2}(2,:), satLimits{2}(4,:), valLimits{2}(4,:)]);                    
 	tempMask = tempMask & centerMask;
     [A,~,~,~,labMat] = step(centerDigitBlob, tempMask);
     if isempty(A); continue; end
@@ -289,22 +365,25 @@ while digitMissing
     
     centerMask = imreconstruct(tempMask, centerMask);
     [A,~,~,~,~] = step(centerPawBlob, centerMask);
-    if isempty(A); continue; end
+    if isempty(A);
+        continue;
+    end
 
     BG_mask = mirrorMask | centerMask;
 
     masked_hsv_enh = cell(numViews,1);
+    rgb_enh = cell(numViews,1);
     dMask = cell(numViews,1);
     mask_bbox = zeros(numViews,4);
     for iView = 1 : numViews
             
         switch iView
             case 1,
-                mask = (leftMask & ~center_region_mask) & BG_mask;
+                mask = (leftMask & mirror_shelf_mask) & BG_mask;
             case 2,
                 mask = center_region_mask & BG_mask;
             case 3,
-                mask = (~leftMask & ~center_region_mask) & BG_mask;
+                mask = (~leftMask & mirror_shelf_mask) & BG_mask;
         end
         mask = mask & BG_mask;
         % find the bounding box for the current region
@@ -321,19 +400,22 @@ while digitMissing
         masked_hsv_enh{iView} = zeros(mask_bbox(iView,4)+1, ...
                                       mask_bbox(iView,3)+1, ...
                                       3, numObjects);
+        rgb_enh{iView} = zeros(mask_bbox(iView,4)+1, ...
+                                      mask_bbox(iView,3)+1, ...
+                                      3, numObjects);
         dMask{iView} = false(mask_bbox(iView,4)+1, ...
                              mask_bbox(iView,3)+1, ...
                              numObjects);
         for ii = 1 : numObjects
             im_bbox = image_ud(mask_bbox(iView,2):mask_bbox(iView,2) + mask_bbox(iView,4), ...
                                mask_bbox(iView,1):mask_bbox(iView,1) + mask_bbox(iView,3),:);
-            rgb_enh = enhanceColorImage(im_bbox, ...
+            rgb_enh{iView}(:,:,:,ii) = enhanceColorImage(im_bbox, ...
                                         decorrStretchMean{iView}(ii,:), ...
                                         decorrStretchSigma{iView}(ii,:), ...
                                         'mask',mask);
 %                                     figure(1);imshow(rgb_enh);figure(2);imshow(rgb2hsv(rgb_enh));
 
-            masked_hsv_enh{iView}(:,:,:,ii) = rgb2hsv(rgbMask .* rgb_enh);
+            masked_hsv_enh{iView}(:,:,:,ii) = rgb2hsv(rgbMask .* rgb_enh{iView}(:,:,:,ii));
         end
     end
 
@@ -363,11 +445,9 @@ while digitMissing
                 tempMask = squeeze(dMask{iView}(:,:,lastColIdx));
             else
                 tempMask = HSVthreshold(squeeze(masked_hsv_enh{iView}(:,:,:,ii)), ...
-                                        [hueLimits(colorIdx,:), satLimits(ii,:), valLimits(ii,:)]);
+                                        [hueLimits{iView}(colorIdx,:), satLimits{iView}(ii,:), valLimits{iView}(ii,:)]);
 
                 regMask = projMask | mirrorMask;
-%                 regMask = regMask(register_ROI(iView,2) : register_ROI(iView,2) + register_ROI(iView,4), ...
-%                                   register_ROI(iView,1) : register_ROI(iView,1) + register_ROI(iView,3));
                 regMask = regMask(mask_bbox(iView,2) : mask_bbox(iView,2) + mask_bbox(iView,4), ...
                                   mask_bbox(iView,1) : mask_bbox(iView,1) + mask_bbox(iView,3));
                 tempMask = tempMask & regMask;
@@ -412,7 +492,8 @@ while digitMissing
                     end
                 end
             end
-
+            
+            % make sure digits don't overlap with each other
             overlapMask = dMask{iView}(:,:,ii-1) & tempMask;
             dMask{iView}(:,:,ii-1) = dMask{iView}(:,:,ii-1) & ~overlapMask;
             tempMask = tempMask & ~overlapMask;
@@ -449,11 +530,11 @@ while digitMissing
             tempMask = imerode(dMask{iView}(:,:,ii),strel('disk',1));
             % make sure erosion didn't separate a single digit blob into
             % multiple blobs
-            if iView == 2
-                blobObject = centerDigitBlob;
-            else
-                blobObject = mirrorDigitBlob;
-            end
+%             if iView == 2
+%                 blobObject = centerDigitBlob;
+%             else
+%                 blobObject = mirrorDigitBlob;
+%             end
             labMat = bwlabel(tempMask);
             s = regionprops(tempMask,'area');
             A = [s.Area];
@@ -470,7 +551,32 @@ while digitMissing
             fullDigitMask{iView} = fullDigitMask{iView} | tempMask;
             viewMask{iView}(:,:,ii) = tempMask;
         end
+    end
 
+    if any(~isDigitVisible(:))   % one of the digits isn't visible in one of the views
+        continue   % go back and try the next video frame
+    end
+    
+    % check that centroids of blobs in different views lie on the same
+    % epipolar lines
+    if dMirrorIdx == 1
+        dorsum_F = boxCalibration.F.left;
+    else
+        dorsum_F = boxCalibration.F.right;
+    end
+    areBlobsAligned = checkEpipolarAlignment(viewMask, ...
+                                             dorsum_F, ...
+                                             trackCheck, ...
+                                             dMirrorIdx, ...
+                                             mask_bbox, ...
+                                             [h,w]);
+	if any(~areBlobsAligned)
+        continue;
+    end
+    
+    for iView = 1 : numViews
+        if iView == pMirrorIdx; continue; end    % don't bother with the palmar view
+        
         % now need to assign blobs that are the same color to the appropriate digit
         % start with the index finger
         s = regionprops(fullDigitMask{iView},'centroid');
@@ -525,7 +631,7 @@ while digitMissing
     if any(~isDigitVisible(:)); continue; end
     
     [digitMarkers, dorsumRegionMask] = ...
-        findInitDorsumRegion(viewMask, pawPref);
+        findInitDorsumRegion(viewMask, pawPref, dorsumAngle);
     switch lower(colorList{1}),
         case 'red',
             colorIdx = 1;
@@ -538,15 +644,14 @@ while digitMissing
     end
         
     HSVlimits = zeros(2,6);
-    HSVlimits(1,:) = [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)];
-    HSVlimits(2,:) = [hueLimits(colorIdx,:), satLimits(1,:), valLimits(1,:)];
+    HSVlimits(1,:) = [hueLimits{2}(colorIdx,:), satLimits{2}(1,:), valLimits{2}(1,:)];
+    HSVlimits(2,:) = [hueLimits{1}(colorIdx,:), satLimits{1}(1,:), valLimits{1}(1,:)];
     
     hsv{1} = squeeze(masked_hsv_enh{2}(:,:,:,1));
     hsv{2} = squeeze(masked_hsv_enh{dMirrorIdx}(:,:,:,1));
 
     pdMask = initThresholdDorsum(HSVlimits, ...
                                  hsv, ...
-                                 digitMarkers, ...
                                  dorsumRegionMask, ...
                                  pdBlob);
     for iView = 1 : 2    % this is confusing. Here, iView = 1 for direct view, 2 for the mirror view with the paw dorsum
@@ -563,6 +668,8 @@ while digitMissing
         end
             
         viewMask{viewIdx}(:,:,1) = pdMask{iView};
+        s_dorsum = regionprops(pdMask{iView},'centroid');
+        digitMarkers(1,:,2,iView) = s_dorsum.Centroid;
         
     end    % for iView...
     
@@ -588,11 +695,89 @@ while digitMissing
 % WE PICK THE MAXIMUM PAW EXTENT IN THE MIRROR VIEW. CAN CONSIDER TAKING A
 % PICTURE OF THE PAW IN A CALIBRATED VIEW IN THE FUTURE SO WE HAVE AN
 % ESTIMATE OF HOW BIG THE DIGITS AND PAW SHOULD BE.
-    if all(validOverlap)
+    if all(validOverlap(2:5))
         digitMissing = false;
     end
         
 end    % while digitMissing
+
+% match the paw dorsum blob points
+pdMask{1} = viewMask{2}(:,:,1);
+pdMask{2} = viewMask{dMirrorIdx}(:,:,1);
+bboxes = zeros(2,4);
+bboxes(1,:) = mask_bbox(2,:);
+bboxes(2,:) = mask_bbox(dMirrorIdx,:);
+
+% find average location of digits in direct and mirror views
+dig_edge3D = cell(1,5);
+fullPawMasks = false(h,w,2);
+fullPawMasks(:,:,1) = centerMask;
+digitMasks = cell(1,2);
+current_digitMasks = cell(1,2);
+possObscuredMatrix = false(5,5,2);
+if dMirrorIdx == 1
+    fullPawMasks(:,:,2) = leftMirrorPawMask;
+else
+    fullPawMasks(:,:,2) = rightMirrorPawMask;
+end
+for iView = 1 : 2
+    digitMasks{iView} = false(bboxes(iView,4)+1,bboxes(iView,3)+1,5);
+%     current_digitMasks{iView} = false(bboxes(iView,2),bboxes(iView,1),4);   % for all digit masks except the one for which we're currently trying to match silhouettes
+
+    for iDigit = 1 : 5
+        if iView == 1
+            digitMasks{iView}(:,:,iDigit) = viewMask{2}(:,:,iDigit);
+%             tempDigMask = viewMask{2}(:,:,iDigit);
+        else
+%             tempDigMask = viewMask{dMirrorIdx}(:,:,iDigit);
+            digitMasks{iView}(:,:,iDigit) = viewMask{dMirrorIdx}(:,:,iDigit);
+        end
+
+%         tempMask(bboxes(iView,2):bboxes(iView,2) + bboxes(iView,4), ...
+%                  bboxes(iView,1):bboxes(iView,1) + bboxes(iView,3)) = tempDigMask;
+%         fullPawMasks{iView} = fullPawMasks{iView} & ~tempMask;
+    end
+    if iView == 1
+        F = F_side;
+    else
+        F = F_side';
+    end
+    possObscuredMatrix(:,:,iView) = findPotentialObscurations(digitMasks{iView}, ...
+                                                              F, ...
+                                                              bboxes(iView,:), ...
+                                                              [h,w], ...
+                                                              2-iView);    % true for direct view, false for mirror view
+%     current_digitMasks{iView} = digitMasks{iView}(:,:,2:5);
+end
+
+% [matchedMasks, tangentPoints] = matchSilhouettes(pdMask, F_side, bboxes, [h,w], fullPawMasks, current_digitMasks);
+% pd_edge3D = silhouetteTo3D(matchedMasks, boxCalibration, bboxes, tangentPoints, [h,w], fullPawMasks, digitMasks);
+
+for iDigit = 1 : 5
+    digitMask{1} = viewMask{2}(:,:,iDigit);
+    digitMask{2} = viewMask{dMirrorIdx}(:,:,iDigit);
+    
+%     otherDigitIdx = setdiff(1:5, iDigit+1);
+%     current_digitMasks{1} = digitMasks{1}(:,:,otherDigitIdx);
+%     current_digitMasks{2} = digitMasks{2}(:,:,otherDigitIdx);
+    [matchedMasks, tangentPoints] = matchSilhouettes(digitMask, ...
+                                                     F_side, ...
+                                                     bboxes, ...
+                                                     [h,w], ...
+                                                     fullPawMasks, ...
+                                                     digitMasks, ...
+                                                     possObscuredMatrix, ...
+                                                     iDigit);
+    dig_edge3D{iDigit} = silhouetteTo3D(matchedMasks, boxCalibration, bboxes, tangentPoints, [h,w], fullPawMasks);
+    viewMask{dMirrorIdx}(:,:,iDigit) = matchedMasks{2};
+    viewMask{2}(:,:,iDigit) = matchedMasks{1};
+end
+% PROBABLY NEED SOMETHING HERE TO CHECK THAT WE HAVE THE OPTIMUM MATCHES
+% BEFORE LEAVING THIS ROUTINE (NOT JUST ALL DIGITS/PAW DORSUM VISIBLE IN
+% ALL VIEWS)
+
+% viewMask{dMirrorIdx}(:,:,1) = matchedMasks{2};
+% viewMask{2}(:,:,1) = matchedMasks{1};
 
 refImageTime = video.CurrentTime - 1/video.FrameRate;
 
@@ -610,7 +795,7 @@ end
 %- GOAL IS TO FIND THE REGION WHERE THE PAW DORSUM CAN BE GIVEN DIGIT
 %LOCATIONS, AS WELL AS FIND THE EXTREME POINTS ON THE DIGITS
 function [digitMarkers, dorsumRegionMask] = ...
-    findInitDorsumRegion(viewMask, pawPref)
+    findInitDorsumRegion(viewMask, pawPref, dorsumAngle)
 %
 % INPUTS:
 %   viewMask - cell array. viewMask{1} for the left mirror, viewMask{2} is
@@ -653,7 +838,7 @@ switch lower(pawPref)
 end
 processingMask{1} = viewMask{2};
 
-numDigits = size(processingMask{1},3) - 2;
+numDigits = size(processingMask{1},3) - 1;
 digitMarkers = zeros(numDigits, 2, 3, 2);    % number of digits by (x,y) by base/centroid/tip by view number
 
 firstVisibleDigitFound = false(1,2);
@@ -665,7 +850,7 @@ for iView = 1 : 2
 end
 firstMask = cell(1,2);
 lastMask = cell(1,2);
-for ii = 2 : numDigits+1
+for ii = 2 : numDigits
     for iView = 1 : 2
         currentMask{iView} = processingMask{iView}(:,:,ii);
         digitMasks{iView} = digitMasks{iView} | currentMask{iView};
@@ -675,12 +860,12 @@ for ii = 2 : numDigits+1
             if ~firstVisibleDigitFound(iView)
                 firstVisibleDigitFound(iView) = true;
                 digCentroids(1,:,iView) = s.Centroid;
-                digitMarkers(ii-1,:,2,iView) = s.Centroid;
+                digitMarkers(ii,:,2,iView) = s.Centroid;
                 firstMask{iView} = currentMask{iView};
             else
                 digCentroids(2,:,iView) = s.Centroid;
                 lastMask{iView} = currentMask{iView};
-                digitMarkers(ii-1,:,2,iView) = s.Centroid;
+                digitMarkers(ii,:,2,iView) = s.Centroid;
             end
         end
     end
@@ -715,8 +900,8 @@ for iView = 1 : 2
         if ~any(currentMask{iView}(:))
             continue;
         end
-        if firstValidIdx == 0; firstValidIdx = ii-1; end
-        lastValidIdx = ii-1;
+        if firstValidIdx == 0; firstValidIdx = ii; end
+        lastValidIdx = ii;
         
         currentMask{iView} = processingMask{iView}(:,:,ii);
         
@@ -724,24 +909,64 @@ for iView = 1 : 2
         [y,x] = find(edge_I);
         [~,nnidx] = findNearestPointToLine(linepts, [x,y]);
 %         [~,nnidx] = findNearestNeighbor(pts_transformed(3,:), [x,y]);
-        digitMarkers(ii-1,:,1,iView) = [x(nnidx),y(nnidx)];
+        digitMarkers(ii,:,1,iView) = [x(nnidx),y(nnidx)];
         [~,nnidx] = findFarthestPointFromLine(linepts, [x,y]);
 %         [~,nnidx] = findFarthestPoint(pts_transformed(3,:), [x,y]);
-        digitMarkers(ii-1,:,3,iView) = [x(nnidx),y(nnidx)];
+        digitMarkers(ii,:,3,iView) = [x(nnidx),y(nnidx)];
     end
     validImageBorderPts(1,:) = squeeze(digitMarkers(firstValidIdx,:,1,iView));
     validImageBorderPts(2,:) = squeeze(digitMarkers(lastValidIdx,:,1,iView));
+    
+    testPt = mean(validImageBorderPts, 1);
+    lineCoeff = lineCoeffFromPoints(validImageBorderPts);
+    
+    if iView == 2
+        rotationAngle = -dorsumAngle;
+    else
+        rotationAngle = dorsumAngle;
+    end
+    angledLine1 = angledLine(lineCoeff, validImageBorderPts(1,:), rotationAngle);
+    angledLine2 = angledLine(lineCoeff, validImageBorderPts(2,:), -rotationAngle);
+    
+    angledPts1 = lineToBorderPoints(angledLine1, size(currentMask{iView}));
+    angledPts2 = lineToBorderPoints(angledLine2, size(currentMask{iView}));
+    
+    angledPts1 = reshape(angledPts1,[2 2])';
+    angledPts2 = reshape(angledPts2,[2 2])';
+    
+    angledRegion1 = segregateImage(angledPts1, testPt, size(currentMask{iView}));
+    angledRegion2 = segregateImage(angledPts2, testPt, size(currentMask{iView}));
+    
+    angledRegion = angledRegion1 & angledRegion2;
+    
     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
                                              pts_transformed(3,:), size(digitMasks{iView}));
-%     dorsumRegionMask{iView} = segregateImage(pts_transformed(1:2,:), ...
-%                                              pts_transformed(3,:), size(digitMasks{iView}));
+                                         
+%     [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+    digitsHull = bwconvhull(digitMasks{iView},'union');
+    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull & angledRegion;
     
-    [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
-    dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull;
+    
+%     perpLine1 = perpendicularLine(lineCoeff, validImageBorderPts(1,:));
+%     perpLine2 = perpendicularLine(lineCoeff, validImageBorderPts(2,:));
+%     
+%     perpPts1 = lineToBorderPoints(perpLine1, size(currentMask{iView}));
+%     perpPts2 = lineToBorderPoints(perpLine2, size(currentMask{iView}));
+%     
+%     perpPts1 = reshape(perpPts1,[2 2])';
+%     perpPts2 = reshape(perpPts2,[2 2])';
+%     
+%     perpRegion1 = segregateImage(perpPts1, testPt, size(currentMask{iView}));
+%     perpRegion2 = segregateImage(perpPts2, testPt, size(currentMask{iView}));
+%     
+%     perpRegion = perpRegion1 & perpRegion2;
+%     
+%     dorsumRegionMask{iView} = segregateImage(validImageBorderPts, ...
+%                                              pts_transformed(3,:), size(digitMasks{iView}));
+%     
+%     [digitsHull,~] = multiRegionConvexHullMask(digitMasks{iView});
+%     dorsumRegionMask{iView} = dorsumRegionMask{iView} & ~digitsHull & perpRegion;
 end
-        
-            
-            
 
 end
 
@@ -750,7 +975,6 @@ end
 
 function pdMask = initThresholdDorsum(HSVlimits, ...
                                       hsv, ...
-                                      digitMarkers, ...
                                       dorsumRegionMask, ...
                                       pdBlob)
 %
@@ -760,7 +984,7 @@ function pdMask = initThresholdDorsum(HSVlimits, ...
 %   hsv - 2-element cell array containing the enhanced hsv image of the paw
 %       within the bounding box for the direct view (index 1) and mirror
 %       view (index 2)
-%   digitMarkers - 4x2x3x2 array. First dimension is the digit ID, second
+%   digitMarkers - 5x2x3x2 array. First dimension is the digit ID, second
 %       dimension is (x,y), third dimension is proximal,centroid,tip of
 %       each digit, 4th dimension is the view (1 = direct, 2 = mirror)
 %   dorsumRegionMask - cell array containing masks for where the paw dorsum
@@ -809,7 +1033,8 @@ function pdMask = initThresholdDorsum(HSVlimits, ...
         
         if ~any(tempMask(:)); continue; end
         
-        [tempMask,~] = multiRegionConvexHullMask(tempMask);
+        tempMask = bwconvhull(tempMask,'union');
+%         [tempMask,~] = multiRegionConvexHullMask(tempMask);
         tempMask = tempMask & dorsumRegionMask{iView};
         pdMask{iView} = tempMask;
     end
@@ -818,3 +1043,55 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function areBlobsAligned = checkEpipolarAlignment(viewMask, ...
+                                                  F, ...
+                                                  trackCheck, ...
+                                                  dMirrorIdx, ...
+                                                  mask_bbox, ...
+                                                  imSize)
+%
+% INPUTS:
+%   viewMask - 1 x numViews cell array containing
+
+areBlobsAligned = true(1,size(viewMask{1},3));
+
+for ii = 2 : 5
+    
+    s_center = regionprops(viewMask{2}(:,:,ii),'centroid');
+    s_mirror = regionprops(viewMask{dMirrorIdx}(:,:,ii),'centroid');
+    
+    center_xy = [s_center.Centroid];
+    center_xy = reshape(center_xy,2,[])';
+    center_xy = bsxfun(@plus, center_xy, mask_bbox(2,1:2));
+    
+    mirror_xy = [s_mirror.Centroid];
+    mirror_xy = reshape(mirror_xy,2,[])';
+    mirror_xy = bsxfun(@plus, mirror_xy, mask_bbox(dMirrorIdx,1:2));
+    
+    if length(s_center) ~= length(s_mirror)
+        % different numbers of blobs in the two views
+        areBlobsAligned(ii) = false;
+        return;
+    end
+    
+    dist_to_epi = zeros(1,length(s_mirror));
+    epiLine = epipolarLine(F,center_xy);
+    epiPts = lineToBorderPoints(epiLine, imSize);
+
+    for iCenterBlob = 1 : length(s_center)
+        for iMirrorBlob = 1 : length(s_mirror)
+            dist_to_epi(iMirrorBlob) = ...
+                distanceToLine(epiPts(iCenterBlob,1:2),...
+                               epiPts(iCenterBlob,3:4),...
+                               mirror_xy(iMirrorBlob,:));
+        end
+        if all(dist_to_epi > trackCheck.maxEpiLineDist)
+            areBlobsAligned(ii) = false;
+            return;
+        end
+    end
+
+end
+
+end

@@ -17,6 +17,12 @@ h = squeeze(hsv_img(:,:,1));
 s = squeeze(hsv_img(:,:,2));
 v = squeeze(hsv_img(:,:,3));
 
+s(s>1) = 1;
+s(s<0) = 0;
+
+v(v>1) = 1;
+v(v<0) = 0;
+
 h = h * 2 * pi;
 h = exp(1i*h);
 h_range_center = wrapToPi(thresholds(1) * 2*pi);

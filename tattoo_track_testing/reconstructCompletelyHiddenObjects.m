@@ -79,6 +79,8 @@ while ~allSingleViewsUpdated
                 tracks(iDigit+1) = digit3Dpoints(trackingBoxParams, tracks(iDigit+1), bboxes);
                 
                 markersCalculated(iDigit,:) = tracks(iDigit+1).markersCalculated(1:2);
+                bothMarkersCalculated = (sum(markersCalculated,2)==2);
+                
                 singleViewObscured(iDigit) = false;
                 
             end  % if validNeighbor
@@ -94,7 +96,10 @@ while ~allSingleViewsUpdated
                                                             iDigit + 1, ...
                                                             trackingBoxParams, ...
                                                             bothMarkersCalculated);
+            else
+                continue;
             end
+            
             for iView = 1 : 2
                 anticipatedPoints(:,:,iView) = bsxfun(@minus,...
                                                        squeeze(anticipatedPoints(:,:,iView)), ...
@@ -107,6 +112,7 @@ while ~allSingleViewsUpdated
             tracks(iDigit+1) = digit3Dpoints(trackingBoxParams, tracks(iDigit+1), bboxes);
             
             markersCalculated(iDigit,:) = tracks(iDigit+1).markersCalculated(1:2);
+            bothMarkersCalculated = (sum(markersCalculated,2)==2);
             
             bothViewsObscured(iDigit) = false;
         end
@@ -167,27 +173,6 @@ visible_pts_from_obscured_track = obscuredTrack.currentDigitMarkers(:,:,visibleV
 
 pointsPerDigit = size(visible_pts_from_obscured_track,1);
 
-% pts_from_visible_neighbor = visibleTrack.currentDigitMarkers(:,:,obscuredView)';         % points in the obscured view from the neighboring digit
-% prev_obscured_pts = obscuredTrack.previousDigitMarkers(:,:,obscuredView)';
-% markersDiff = NaN(pointsPerDigit * 4,2);
-% 
-% % calculate the mean movement of points that are visible
-% for iDigit = 2 : length(tracks) - 1
-%     if iDigit == obscuredTrackIdx; continue; end
-%     if tracks(iDigit).markersCalculated(obscuredView)    % we have markers for the current digit
-%         currentPoints  = tracks(iDigit).currentDigitMarkers(:,:,obscuredView)';
-%         previousPoints = tracks(iDigit).previousDigitMarkers(:,:,obscuredView)';
-%         for iPoint = 1 : pointsPerDigit
-%             currentPoints(iPoint,:)  = currentPoints(iPoint,:) + bboxes(obscuredView,1:2) - 1;
-%             previousPoints(iPoint,:) = previousPoints(iPoint,:) + prev_bboxes(obscuredView,1:2) -1 ;
-%         end
-%         startPt = (iDigit-2) * pointsPerDigit + 1;
-%         endPt = startPt + 2;
-%         markersDiff(startPt:endPt,:) = currentPoints - previousPoints;
-%     end
-% end
-% meanMovement = nanmean(markersDiff,1);
-
 % anticipatedPoints = zeros(pointsPerDigit, 2);
 for iPoint = 1 : pointsPerDigit
     visible_pts_from_obscured_track(iPoint,:) = ...
@@ -211,15 +196,33 @@ predicted_points = zeros(size(visible_pts_from_obscured_track,1),2);
 paw_mask = false(imSize);
 paw_mask(bboxes(obscuredView,2) : bboxes(obscuredView,2) + bboxes(obscuredView,4),...
          bboxes(obscuredView,1) : bboxes(obscuredView,1) + bboxes(obscuredView,3)) = BG_mask{obscuredView};
+
+% old_paw_mask = paw_mask;
+     
+for iPoint = 1 : size(anticipatedPoints,1)
+    paw_mask(round(anticipatedPoints(iPoint,2)), ...
+             round(anticipatedPoints(iPoint,1))) = true;
+    paw_mask = connectBlobs(paw_mask);
+end
+% make sure that paw_mask includes anticipatedPoints
 paw_mask = imdilate(paw_mask,strel('disk',3));
 
 for iPoint = 1 : size(predicted_points,1)
-    overlapMask = lineMaskOverlap(paw_mask, epiLines(iPoint,:),'distThresh',lineMaskDistThresh);
+    
+%     old_overlapMask = lineMaskOverlap(old_paw_mask, epiLines(iPoint,:),'distThresh',lineMaskDistThresh);
+%     if ~any(old_overlapMask(:))
+%         disp('hold here')
+%     end
+    overlapMask = false(imSize);
+    while ~any(overlapMask(:))
+        overlapMask = lineMaskOverlap(paw_mask, epiLines(iPoint,:),'distThresh',lineMaskDistThresh);
+        paw_mask = imdilate(paw_mask,strel('disk',1));
+    end
     
     [y,x] = find(overlapMask);
     [~,nnidx] = findNearestNeighbor(anticipatedPoints(iPoint,:),[x,y]);
     predicted_points(iPoint,:) = [x(nnidx),y(nnidx)];
-    
+
     predicted_points(iPoint,:) = predicted_points(iPoint,:) - bboxes(obscuredView,1:2) + 1;
 end
 
@@ -237,13 +240,13 @@ function anticipatedPoints = predictDigitMovement(tracks, ...
                                                   prev_bboxes)
 
 obscuredTrack = tracks(obscuredTrackIdx);
-obscuredView = find(~obscuredTrack.isvisible(1:2));
+obscuredView = ~obscuredTrack.isvisible(1:2);
 
 pointsPerDigit = size(obscuredTrack.currentDigitMarkers,2);
 
 anticipatedPoints = zeros(pointsPerDigit, 2, 2);
 
-for iView = 1 : length(obscuredView)
+for iView = 1 : 2
     prev_obscured_pts = obscuredTrack.previousDigitMarkers(:,:,iView)';
     markersDiff = NaN(pointsPerDigit * 4,2);
     
@@ -251,6 +254,7 @@ for iView = 1 : length(obscuredView)
     % view
     for iDigit = 2 : length(tracks) - 1
         if iDigit == obscuredTrackIdx; continue; end
+        if ~obscuredView(iView); continue; end
         if tracks(iDigit).markersCalculated(iView)    % we have markers for the current digit
             currentPoints  = tracks(iDigit).currentDigitMarkers(:,:,iView)';
             previousPoints = tracks(iDigit).previousDigitMarkers(:,:,iView)';
@@ -263,6 +267,7 @@ for iView = 1 : length(obscuredView)
             markersDiff(startPt:endPt,:) = currentPoints - previousPoints;
         end
     end
+    
     meanMovement = nanmean(markersDiff,1);
     
     for iPoint = 1 : pointsPerDigit
@@ -271,9 +276,16 @@ for iView = 1 : length(obscuredView)
                                              meanMovement;
     end
     
+    temp = squeeze(anticipatedPoints(:,:,iView));
+    if all(isnan(temp(:)))    % no digits were visible in this view, may be passing behind front panel
+        for iPoint = 1 : 3
+            anticipatedPoints(iPoint,:,iView) = prev_obscured_pts(iPoint,:) - prev_bboxes(iView,1:2) + bboxes(iView,1:2);
+        end
+    end    
+    
 end
 
-end    % function predictDigitMovement
+end % function predictDigitMovement
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -305,8 +317,12 @@ mean_3Dloc = mean_3Dloc / trackingBoxParams.scale;
 % now project back into direct and mirror views
 mean_3Dloc_hom = [mean_3Dloc, ones(size(mean_3Dloc,1),1)];
 
-% WORKING HERE, FIGURE OUT NORMALIZATION/DENORMALIZATIN
-direct_view_pts_hom = mean_3Dloc_hom * trackingBoxParams.P1;
-direct_view_pts = bsxfun(@rdivide,direct_view_pts_hom(:,1:2),direct_view_pts_hom(:,3));
+direct_view_pts_norm = mean_3Dloc_hom * trackingBoxParams.P1;
+direct_view_pts_hom = (trackingBoxParams.K' * direct_view_pts_norm')';
+anticipatedPoints(:,:,1) = bsxfun(@rdivide,direct_view_pts_hom(:,1:2),direct_view_pts_hom(:,3));
+
+mirror_view_pts_norm = mean_3Dloc_hom * trackingBoxParams.P2;
+mirror_view_pts_hom = (trackingBoxParams.K' * mirror_view_pts_norm')';
+anticipatedPoints(:,:,2) = bsxfun(@rdivide,mirror_view_pts_hom(:,1:2),mirror_view_pts_hom(:,3));
 
 end    % function predict_3DDigitMovement
