@@ -11,7 +11,7 @@ function matchedPoints = read_xl_matchedPoints_rubik( ratID, varargin )
 
 
 % kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Matlab Kinematics/PlotGrossTrajectory';
-xl_directory = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
+xl_directory = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
 
 for iarg = 1 : 2 : nargin - 1
