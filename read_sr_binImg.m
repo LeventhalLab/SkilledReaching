@@ -2,8 +2,8 @@ function img = read_sr_binImg( fname, frame_num, varargin )
 %
 % INPUTS:
 %   fname - name of a binary image file generated in the skilled reaching
-%           task
-%   frame_num - the frame number to extract
+%           task, or video
+%   frame_num - the frame number to extract from fname(video)
 %
 % VARARGS:
 %   
