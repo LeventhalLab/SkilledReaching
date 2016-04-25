@@ -11,14 +11,35 @@ clear;  % Erase all existing variables.
 workspace;  % Make sure the workspace panel is showing.
 %fontSize = 22;
 
-fid = '/Users/damienjellens/Documents/TestVideos/R0104_20151217a'; %bad bin files
+%PC
+fid = 'D:\BinToAviTestVids\R0104_20151217a'; %bad
+%fid = 'D:\BinToAviTestVids\R0000_20160225a_goodBin'; %good
+'F:\Skilled Reaching Videos\R102-108 unconverted bin vids';
+'F:\Skilled Reaching Videos\R0104-rawdata\R0104_20151217a';
+'F:\Skilled Reaching Videos\R0104-rawdata\R0104_20151218a';
+
+%PC NAS
+%fid = '\\172.20.138.143\RecordingsLeventhal04\SkilledReaching\BinToAviTestVids\R0104_20151217a' %bad
+%fid = '\\172.20.138.143\RecordingsLeventhal04\SkilledReaching\BinToAviTestVids\R0000_20160225a_goodBin'
+
+%MAC
+%fid = '/Users/damienjellens/Documents/TestVideos/R0104_20151217a'; %bad bin files
 %fid = '/Users/damienjellens/Documents/TestVideos/R0000_20160225a_goodBin'; %good bin files
 %fid = '/Users/damienjellens/Documents/TestVideos/R0112_20160314a'; %good bin files
 fidProp = dir(fid);
-numberOfVideos = 1;
-numberOfFrames = 4;
+numberOfVideos = 3;
+numberOfFrames = 1300;
 
 
+
+
+% Create the movie.
+% Get a list of x and y coordinates for every pixel in the x-y plane.
+%[x, y] = meshgrid(x1d, y1d);
+
+for fnameIt = 1 : numberOfVideos;
+    
+    
 % Set up the movie structure.
 % Preallocate movie, which will be an array of structures.
 % First get a cell array with all the frames.
@@ -39,11 +60,6 @@ myMovie = struct('cdata', allTheFrames, 'colormap', allTheColorMaps);
 set(gcf, 'renderer', 'zbuffer');
 
 
-% Create the movie.
-% Get a list of x and y coordinates for every pixel in the x-y plane.
-%[x, y] = meshgrid(x1d, y1d);
-
-for fnameIt = 1 : numberOfVideos;
     fnameIt;
     fnameStruc = fidProp(4+fnameIt); %check dir for ordinalimg value of first .bin file, 2 or 3 usually... THIS IS A DUMB WAY TO DO THIS
     fname = (fnameStruc.name);
@@ -54,7 +70,7 @@ for frameIndex = 1 : numberOfFrames;
     frameIndex;
     %read individual binary image
     frame_num = frameIndex;
-    img = read_sr_binImg(fname,frame_num);
+    img = read_sr_binImg_PC(fname,frame_num);
     
     %subplot(13,100,frame_num)
     %figure
@@ -62,8 +78,8 @@ for frameIndex = 1 : numberOfFrames;
     
     %I = imread('mandi.tif');
         imgRGB = demosaic(img,'bggr');
-        figure;
-        imshow(imgRGB);
+        %figure;
+        %imshow(imgRGB);
         %imgRGB = demosaic(img,'gbrg');
         %figure
         %imshow(imgRGB);
@@ -84,11 +100,16 @@ for frameIndex = 1 : numberOfFrames;
     
     %apply colormap
     
-    rgb = colormap(jet(2));
+    %rgb = colormap(jet(2));
+    
+    %rgb = colormap('default');
+    %rgb = colormap(MAP);
     
     %create new frame
     
-    colorFrame = im2frame(uint8(imgRGB), rgb);
+    %colorFrame = im2frame(uint8(imgRGB),rgb);
+    colorFrame = im2frame(uint8(imgRGB));
+    
     %figure
     %imshow(colorFrame)
     
@@ -108,22 +129,24 @@ for frameIndex = 1 : numberOfFrames;
 	%caption = sprintf('Frame #%d of %d, t = %.1f', frameIndex, numberOfFrames, t(frameIndex));
 	%title(caption, 'FontSize', 15);
 	%drawnow;
-	thisFrame = getframe(gca); %gca?
+    
+	%thisFrame = getframe(gca); %gca? WORKS BUT REQUIRES IMAGE ON SCREEN IN
+	%FIGURE
+    
+    %don't work below
+    %thisFrame = getframe(imgRGB);
     %thisFrame = imgRGB;
-    %thisFrame = colorFrame;
+    thisFrame = colorFrame;
+    %colorFrame = thisFrame;
+    
     %gca
 	% Write this frame out to a new video file.
 %  	writeVideo(writerObj, thisFrame);
 
 	myMovie(frameIndex) = thisFrame;
+    %myMovie(frameIndex) = colorFrame;
     close all
 end
-
-
-
-
-end
-
 
 % See if they want to replay the movie.
 %message = sprintf('Done creating movie\nDo you want to play it?');
@@ -175,7 +198,7 @@ end
 	%		profile = 'MPEG-4';
 	%	otherwise
 			% Either avi or some other invalid extension.
-			profile = 'Motion JPEG avi';
+			profile = 'Motion JPEG AVI';
             %fps = 300;
             
            %  Specifying a profile sets default values for video properties such 
@@ -192,7 +215,9 @@ end
       
       
 	%end
+    %FrameRate = 300;
 	writerObj = VideoWriter(baseFileName, profile);
+    writerObj.FrameRate = 300;
 	open(writerObj);
 	% Write out all the frames.
 	numberOfFrames = length(myMovie);
@@ -206,6 +231,12 @@ end
 	%filebrowser;
 	%message = sprintf('Finished creating movie file\n      %s.\n\nDone with demo!', fullFileName);
 	%uiwait(helpdlg(message));
+
+
+
+end
+
+
 close all;
 
 %else
