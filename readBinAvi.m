@@ -9,8 +9,9 @@ clear;  % Erase all existing variables.
 workspace;  % Make sure the workspace panel is showing.
 %fontSize = 22;
 
-fid = '/Users/damienjellens/Documents/TestVideos/R0104_20151217a'; %bad bin files
-%fid = '/Users/damienjellens/Documents/TestVideos/R0000_20160225a_goodBin'; %good bin files
+%MAC
+%fid = '/Users/damienjellens/Documents/TestVideos/R0104_20151217a'; %bad bin files
+fid = '/Users/damienjellens/Documents/TestVideos/R0000_20160225a_goodBin'; %good bin files
 %fid = '/Users/damienjellens/Documents/TestVideos/R0112_20160314a'; %good bin files
 fidProp = dir(fid);
 numberOfVideos = 1;
