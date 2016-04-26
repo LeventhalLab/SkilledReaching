@@ -15,7 +15,8 @@ maxFrontPanelSep = 20;
 maxDistBehindFrontPanel = 10;
 maxDistPerFrame = 20;
 
-stretch_hist_limit = 0.75;
+stretch_hist_limit_int = 0.5;
+stretch_hist_limit_ext = 0.75;
 % numStretches = 15;
 
 % stretchTol = [0.0 1.0];
@@ -77,6 +78,10 @@ for iarg = 1 : 2 : nargin - 5
             targetMean = varargin{iarg + 1};
         case 'targetsigma',
             targetSigma = varargin{iarg + 1};
+        case 'stretch_hist_limit_int',
+            stretch_hist_limit_int = varargin{iarg + 1};
+        case 'stretch_hist_limit_ext',
+            stretch_hist_limit_ext = varargin{iarg + 1};
     end
 end
 
@@ -107,10 +112,15 @@ im_gray = mean(mirror_image_ud,3);
 [g_hist,g_bins] = imhist(im_gray);
 totCount = sum(g_hist(1:end-1));
 cumCount = cumsum(g_hist);
-gray_lim_idx = find(cumCount < totCount*stretch_hist_limit,1,'last');
-gray_lim = g_bins(gray_lim_idx);
-in_adjust = [0,0,0;ones(1,3)*(gray_lim + 0.1)];
-out_adjust = [ones(1,3)*(gray_lim - 0.1);1,1,1];
+gray_lim_idx = find(cumCount < totCount*stretch_hist_limit_ext,1,'last');
+gray_lim_ext = g_bins(gray_lim_idx);
+in_adjust_ext = [0,0,0;ones(1,3)*min(1,(gray_lim_ext + 0.1))];
+out_adjust_ext = [ones(1,3)*max(0,(gray_lim_ext - 0.1));1,1,1];
+
+gray_lim_idx = find(cumCount < totCount*stretch_hist_limit_int,1,'last');
+gray_lim_int = g_bins(gray_lim_idx);
+in_adjust_int = [0,0,0;ones(1,3)*min(1,(gray_lim_int + 0.1))];
+out_adjust_int = [ones(1,3)*max(0,(gray_lim_int - 0.1));1,1,1];
 
 prevMask = prevMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
 frontPanelEdge = frontPanelEdge(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
@@ -118,32 +128,35 @@ frontPanelMask = frontPanelMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
 extMask = extMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
 intMask = intMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
 % str_img = imadjust(mirror_image_ud,[0.0,0.0,0.0;0.4,0.4,0.4],[0.2,0.2,0.2;1,1,1]);
-str_img = imadjust(mirror_image_ud,in_adjust,out_adjust);
-whiteMask_ext = str_img(:,:,1) > whiteThresh_ext & ...
-                str_img(:,:,2) > whiteThresh_ext & ...
-                str_img(:,:,3) > whiteThresh_ext;
+str_img_ext = imadjust(mirror_image_ud,in_adjust_ext,out_adjust_ext);
+str_img_int = imadjust(mirror_image_ud,in_adjust_int,out_adjust_int);
+
+whiteMask_ext = str_img_ext(:,:,1) > whiteThresh_ext & ...
+                str_img_ext(:,:,2) > whiteThresh_ext & ...
+                str_img_ext(:,:,3) > whiteThresh_ext;
 whiteMask_ext = whiteMask_ext & extMask;
 
-whiteMask_int = str_img(:,:,1) > whiteThresh_int & ...
-                str_img(:,:,2) > whiteThresh_int & ...
-                str_img(:,:,3) > whiteThresh_int;
+whiteMask_int = str_img_int(:,:,1) > whiteThresh_int & ...
+                str_img_int(:,:,2) > whiteThresh_int & ...
+                str_img_int(:,:,3) > whiteThresh_int;
 whiteMask_int = whiteMask_int & intMask;
 
 whiteMask = whiteMask_ext | whiteMask_int;
 
-decorr_green = decorrstretch(str_img,...
+decorr_green_ext = decorrstretch(str_img_ext,...
                              'targetmean',targetMean(1,:),...
-                             'targetsigma',targetSigma(1,:));
-% decorr_green = decorrstretch(image_ud,...
-%                              'targetmean',targetMean(1,:),...
-%                              'targetsigma',targetSigma(1,:));
-                         
-lo_hi = stretchlim(decorr_green);
-decorr_green = imadjust(decorr_green,lo_hi,[]);
+                             'targetsigma',targetSigma(1,:));                  
+lo_hi = stretchlim(decorr_green_ext);
+decorr_green_ext = imadjust(decorr_green_ext,lo_hi,[]);
 
-% mirror_decorr_green = decorr_green(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
-decorr_green_hsv = rgb2hsv(decorr_green);
-mirror_decorr_green_hsv = decorr_green_hsv(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
+decorr_green_int = decorrstretch(str_img_int,...
+                             'targetmean',targetMean(1,:),...
+                             'targetsigma',targetSigma(1,:));                  
+lo_hi = stretchlim(decorr_green_int);
+decorr_green_int = imadjust(decorr_green_int,lo_hi,[]);
+
+mirror_decorr_green_hsv_ext = rgb2hsv(decorr_green_ext);
+mirror_decorr_green_hsv_int = rgb2hsv(decorr_green_int);
 
 
 prevMask_panel_dilate = prevMask;
@@ -177,8 +190,8 @@ end
 
 prevMask_dilate = imdilate(prevMask,strel('disk',maxDistPerFrame));
 
-mirror_greenHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(1,:));
-mirror_greenHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(3,:));
+mirror_greenHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(1,:));
+mirror_greenHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv_int, pawHSVrange(3,:));
 wm_dilate = imdilate(whiteMask, strel('disk',5));
 ext_temp = mirror_greenHSVthresh_ext & ~wm_dilate;
 int_temp = mirror_greenHSVthresh_int & ~wm_dilate;
@@ -209,10 +222,10 @@ if any(temp(:))     % only keep points that overlap with the previous mask.
     mirror_greenHSVthresh_ext = temp;
 end
 
-libHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(4,:));
+libHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv_int, pawHSVrange(4,:));
 libHSVthresh_int = libHSVthresh_int & intMask & ~whiteMask;
 
-libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv, pawHSVrange(2,:));
+libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(2,:));
 libHSVthresh_ext = libHSVthresh_ext & extMask & ~whiteMask;% & im_masked;
 
 mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext);
@@ -242,7 +255,7 @@ behindOverlap = behindPanelMask & (prevMask_dilate | prevMask_panel_dilate);
 if any(behindOverlap(:))
 
     wm_int = whiteMask & intMask;
-    temp = HSVthreshold(mirror_decorr_green_hsv,pawHSVrange(5,:));
+    temp = HSVthreshold(mirror_decorr_green_hsv_int,pawHSVrange(5,:));
     
     behindShelfRegion = projMaskFromTangentLines(shelfMask, fundMat', [1,1,h-1,w-1], [h,w]);
     behindShelfRegion = imfill(behindShelfRegion, [1 1]);
@@ -261,9 +274,15 @@ if any(behindOverlap(:))
         if ~any(overlap_test(:)) || any(overlap_test2(:))    % either no white outside front panel, or there is green between the white and the wall
             temp = temp & ~wm_dilate;
 
-            lib_temp = HSVthreshold(mirror_decorr_green_hsv,pawHSVrange(6,:));
+            lib_temp = HSVthreshold(mirror_decorr_green_hsv_int,pawHSVrange(6,:));
             lib_temp = lib_temp & behindOverlap & behindShelfRegion & ~whiteMask;
             behindPanelGreenThresh = imreconstruct(temp,lib_temp);
+            if any(mirror_greenHSVthresh_int(:))    % if paw is already detected on interior of box, only accept the mask near the front panel if it overlaps with the internal part already found
+                behindPanel_int_overlap_check = mirror_greenHSVthresh_int & lib_temp;
+                if ~any(behindPanel_int_overlap_check(:))
+                    behindPanelGreenThresh = false(size(lib_temp));
+                end
+            end
             mirror_greenHSVthresh = mirror_greenHSVthresh | behindPanelGreenThresh;
         end
     end

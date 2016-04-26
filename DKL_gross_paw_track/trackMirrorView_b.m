@@ -7,14 +7,18 @@ targetSigma = [0.2,0.2,0.2];
 
 foregroundThresh = 25/255;
 
-pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
-               0.33, 0.05, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
-               0.50, 0.50, 0.95, 1.0, 0.95, 1.0
-               0.00, 0.16, 0.90, 1.0, 0.90, 1.0       % find red objects
-               0.33, 0.10, 0.9, 1.0, 0.9, 1.0];  % liberal green mask
+pawHSVrange = [1/3, 0.002, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
+               1/3, 0.005, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
+               1/3, 0.002, 0.999, 1.0, 0.95, 1.0    % for restrictive internal masking
+               1/3, 0.03, 0.95, 1.0, 0.60, 1.0    % for liberal internal masking
+               1/3, 0.03, 0.99, 1.0, 0.90, 1.0    % for restrictive masking just behind the front panel
+               1/3, 0.10, 0.95, 1.0, 0.70, 1.0    % for liberal masking just behind the front panel
+               0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
 
 maxDistPerFrame = 20;
-whiteThresh = 0.8;
+
+whiteThresh_ext = 0.95;
+whiteThresh_int = 0.85;
 
 % blob parameters for mirror view
 pawBlob = vision.BlobAnalysis;
@@ -43,8 +47,14 @@ for iarg = 1 : 2 : nargin - 8
             targetSigma = varargin{iarg + 1};
         case 'pawblob',
             pawBlob = varargin{iarg + 1};
-        case 'whitethresh',
-            whiteThresh = varargin{iarg + 1};
+        case 'whitethresh_ext',
+            whiteThresh_ext = varargin{iarg + 1};
+        case 'whitethresh_int',
+            whiteThresh_int = varargin{iarg + 1};
+        case 'stretch_hist_limit_int',
+            stretch_hist_limit_int = varargin{iarg + 1};
+        case 'stretch_hist_limit_ext',
+            stretch_hist_limit_ext = varargin{iarg + 1};
     end
 end
 
@@ -62,14 +72,17 @@ video = VideoReader(vidName);
 video.CurrentTime = triggerTime;
 
 % frontPanelWidth = panelWidthFromMask(boxRegions.frontPanelMask);
-% [fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, BGimg_ud, initPawMask{2},pawBlob, boxRegions, pawPref, 'forward',boxCalibration,...
-%                                      'foregroundthresh',foregroundThresh,...
-%                                      'pawhsvrange',pawHSVrange,...
-%                                      'maxdistperframe',maxDistPerFrame,...
-%                                      'targetmean',targetMean,...
-%                                      'targetsigma',targetSigma,...
-%                                      'whitethresh',whiteThresh);
-                                 
+[fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, BGimg_ud, initPawMask{2},pawBlob, boxRegions, pawPref, 'forward',boxCalibration,...
+                                     'foregroundthresh',foregroundThresh,...
+                                     'pawhsvrange',pawHSVrange,...
+                                     'maxdistperframe',maxDistPerFrame,...
+                                     'targetmean',targetMean,...
+                                     'targetsigma',targetSigma,...
+                                     'whitethresh_ext',whiteThresh_ext,...
+                                     'whitethresh_int',whiteThresh_int,...
+                                     'stretch_hist_limit_int',stretch_hist_limit_int,...
+                                     'stretch_hist_limit_ext',stretch_hist_limit_ext);
+    
 video.CurrentTime = triggerTime;
 
 [rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, BGimg_ud, initPawMask{2},pawBlob, boxRegions, pawPref, 'reverse',boxCalibration,...
@@ -78,7 +91,11 @@ video.CurrentTime = triggerTime;
                                      'maxdistperframe',maxDistPerFrame,...
                                      'targetmean',targetMean,...
                                      'targetsigma',targetSigma,...
-                                     'whitethresh',whiteThresh);
+                                     'whitethresh_ext',whiteThresh_ext,...
+                                     'whitethresh_int',whiteThresh_int,...
+                                     'stretch_hist_limit_int',stretch_hist_limit_int,...
+                                     'stretch_hist_limit_ext',stretch_hist_limit_ext);
+
                                  
    
 points2d = rpoints2d;
@@ -152,8 +169,14 @@ for iarg = 1 : 2 : nargin - 8
             targetMean = varargin{iarg + 1};
         case 'targetsigma',
             targetSigma = varargin{iarg + 1};
-        case 'whitethresh',
-            whiteThresh = varargin{iarg + 1};
+        case 'whitethresh_ext',
+            whiteThresh_ext = varargin{iarg + 1};
+        case 'whitethresh_int',
+            whiteThresh_int = varargin{iarg + 1};
+        case 'stretch_hist_limit_int',
+            stretch_hist_limit_int = varargin{iarg + 1};
+        case 'stretch_hist_limit_ext',
+            stretch_hist_limit_ext = varargin{iarg + 1};
     end
 end
 
@@ -212,20 +235,21 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     else           
         timeList(frameCount) = video.CurrentTime - 1/fps;
     end
-    
-    prev_image_ud = image_ud;
+
+%     prev_image_ud = image_ud;
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
-%     orig_image_ud = image_ud;
-    image_ud = color_adapthisteq(image_ud);
-    
-    [fullMask,~] = trackNextStep_mirror(image_ud,fundMat,BGimg_ud,prevMask,boxRegions,pawPref,...
+                         
+    [fullMask,~] = trackNextStep_mirror_20160330_b(image_ud,fundMat,prevMask,boxRegions,pawPref,...
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxdistperframe',maxDistPerFrame,...
                              'targetmean',targetMean,...
                              'targetsigma',targetSigma,...
-                             'whitethresh',whiteThresh);
+                             'whitethresh_ext',whiteThresh_ext,...
+                             'whitethresh_int',whiteThresh_int,...
+                             'stretch_hist_limit_int',stretch_hist_limit_int,...
+                             'stretch_hist_limit_ext',stretch_hist_limit_ext);
 
 	if any(fullMask(:))
         temp = bwmorph(fullMask,'remove');

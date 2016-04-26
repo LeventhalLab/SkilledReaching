@@ -110,7 +110,7 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     decorr_green = imadjust(decorr_green,lo_hi,[]);
 
     decorr_green = decorr_green(reach_bbox(2) : reach_bbox(2) + reach_bbox(4), ...
-    
+                                reach_bbox(1) : reach_bbox(1) + reach_bbox(3), :);
 
     decorr_hsv = rgb2hsv(decorr_green);
     res_mask = HSVthreshold(decorr_hsv, pawHSVrange(1,:));

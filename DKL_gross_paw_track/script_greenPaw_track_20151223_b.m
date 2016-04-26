@@ -34,7 +34,6 @@ validScores = [1,2,3,4,7];    % scores for which there was a reach
 %%
 numBGframes = 20;
 gray_paw_limits = [60 125] / 255;
-<<<<<<< HEAD
 foregroundThresh = 15/255;
 
 targetMean = [0.5,0.1,0.5];
@@ -42,6 +41,10 @@ targetSigma = [0.2,0.2,0.2];
 
 whiteThresh_ext = 0.95;
 whiteThresh_int = 0.85;
+stretch_hist_limit = 0.75;
+
+stretch_hist_limit_int = 0.5;
+stretch_hist_limit_ext = 0.75;
 
 % pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
 %                0.33, 0.03, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
@@ -51,34 +54,23 @@ whiteThresh_int = 0.85;
 %                0.33, 0.005, 0.999, 1.0, 0.999, 1.0
 %                0.33, 0.05, 0.95, 1.0, 0.95, 1.0];  % slighly more liberal for the external mask
            
-pawHSVrange = [1/3, 0.002, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
-               1/3, 0.005, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-               1/3, 0.002, 0.999, 1.0, 0.95, 1.0    % for restrictive internal masking
-               1/3, 0.03, 0.95, 1.0, 0.60, 1.0    % for liberal internal masking
-               1/3, 0.03, 0.99, 1.0, 0.90, 1.0    % for restrictive masking just behind the front panel
-               1/3, 0.10, 0.95, 1.0, 0.70, 1.0    % for liberal masking just behind the front panel
+pawHSVrange = [1/3, 0.02, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
+               1/3, 0.05, 0.99, 1.0, 0.90, 1.0     % for more liberal external masking
+               0.45, 0.05, 0.999, 1.0, 0.60, 1.0    % for restrictive internal masking
+               0.45, 0.15, 0.98, 1.0, 0.50, 1.0    % for liberal internal masking
+               0.45, 0.05, 0.99, 1.0, 0.50, 1.0    % for restrictive masking just behind the front panel
+               0.45, 0.10, 0.95, 1.0, 0.40, 1.0    % for liberal masking just behind the front panel
                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
-               
-=======
 foregroundThresh = 25/255;
 
-pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
-               0.33, 0.03, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
-               0.50, 0.50, 0.95, 1.0, 0.95, 1.0
-               0.00, 0.16, 0.90, 1.0, 0.90, 1.0       % find red objects
-               0.33, 0.10, 0.85, 1.0, 0.85, 1.0          % liberal green mask
-               0.33, 0.02, 0.99, 1.0, 0.99, 1.0
-               0.33, 0.05, 0.95, 1.0, 0.95, 1.0];  % slighly more liberal for the external mask
-           
->>>>>>> origin/master
-xl_directory = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
+xl_directory = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
-cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
+cb_path = '/Users/dan/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
 % num_rad_coeff = 2;
 % est_tan_distortion = false;
 % estimateSkew = false;
 
-camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 load(camParamFile);
 boxCalibration.cameraParams = cameraParams;
 K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
@@ -91,7 +83,7 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 %                        'estimateskew', estimateSkew);
                    
 sr_ratInfo = get_sr_RatList();     
-for i_rat = 1 : 1%length(sr_ratInfo)
+for i_rat = 2 : 2%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawdata_dir = sr_ratInfo(i_rat).directory.rawdata;
@@ -103,11 +95,8 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-<<<<<<< HEAD
-    for iSession = 9 : length(sessionList);
-=======
-    for iSession = 7:8%7 : 7%length(sessionList);
->>>>>>> origin/master
+
+    for iSession = 1:1%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -183,52 +172,42 @@ for i_rat = 1 : 1%length(sr_ratInfo)
 %                 end
                 boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
                 
-<<<<<<< HEAD
                 triggerTime = identifyTriggerTime_greenPaw( video, sr_ratInfo(i_rat), session_mp, cameraParams,...
                                                    'pawgraylevels',gray_paw_limits,...
                                                    'hsvlimits',pawHSVrange,...
                                                    'targetmean',targetMean,...
                                                    'targetsigma',targetSigma);
-=======
-                triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, cameraParams,...
-                                                   'pawgraylevels',gray_paw_limits,...
-                                                   'hsvlimits',pawHSVrange);
->>>>>>> origin/master
+
+%                 triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, cameraParams,...
+%                                                    'pawgraylevels',gray_paw_limits,...
+%                                                    'hsvlimits',pawHSVrange);
+
                                                
                 track_metadata.triggerTime = triggerTime;
                 track_metadata.boxCalibration = boxCalibration;
-                
-<<<<<<< HEAD
-%                 initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,...
-%                     'hsvlimits', pawHSVrange,...
-%                     'foregroundthresh',foregroundThresh,...
-%                     'targetmean',targetMean,...
-%                     'targetsigma',targetSigma);
                 
                 initPawMask = find_initPawMask_greenPaw_mirror_20160330( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...
                     'targetsigma',targetSigma);
-=======
-                initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
->>>>>>> origin/master
+
+%                 initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
+
                                   
 %                 [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh);
                 
-                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
+                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView_b(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
                     'hsvlimits', pawHSVrange,...
-<<<<<<< HEAD
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...
                     'targetsigma',targetSigma,...
                     'whitethresh_ext',whiteThresh_ext,...
-                    'whitethresh_int',whiteThresh_int);
-=======
-                    'foregroundthresh',foregroundThresh);
->>>>>>> origin/master
+                    'whitethresh_int',whiteThresh_int,...
+                    'stretch_hist_limit_int',stretch_hist_limit_int,...
+                    'stretch_hist_limit_ext',stretch_hist_limit_ext);
                 
 %                 [points3d,direct_points2d,isPawVisible_direct] = trackDirectView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
 %                     'hsvlimits', pawHSVrange,...

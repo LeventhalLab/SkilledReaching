@@ -39,8 +39,11 @@ foregroundThresh = 15/255;
 targetMean = [0.5,0.1,0.5];
 targetSigma = [0.2,0.2,0.2];
 
-whiteThresh_ext = 0.95;
+whiteThresh_ext = 0.90;
 whiteThresh_int = 0.85;
+
+stretch_hist_limit_int = 0.5;
+stretch_hist_limit_ext = 0.75;
 
 % pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
 %                0.33, 0.03, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
@@ -51,9 +54,9 @@ whiteThresh_int = 0.85;
 %                0.33, 0.05, 0.95, 1.0, 0.95, 1.0];  % slighly more liberal for the external mask
            
 pawHSVrange = [1/3, 0.002, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
-               1/3, 0.005, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-               1/3, 0.002, 0.999, 1.0, 0.95, 1.0    % for restrictive internal masking
-               1/3, 0.03, 0.95, 1.0, 0.60, 1.0    % for liberal internal masking
+               1/3, 0.05, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
+               1/3, 0.02, 0.999, 1.0, 0.95, 1.0    % for restrictive internal masking
+               1/3, 0.05, 0.95, 1.0, 0.60, 1.0    % for liberal internal masking
                1/3, 0.03, 0.99, 1.0, 0.90, 1.0    % for restrictive masking just behind the front panel
                1/3, 0.10, 0.95, 1.0, 0.70, 1.0    % for liberal masking just behind the front panel
                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
@@ -92,7 +95,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 7:8%7 : 7%length(sessionList);
+    for iSession = 14:14%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -201,7 +204,9 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                     'targetmean',targetMean,...
                     'targetsigma',targetSigma,...
                     'whitethresh_ext',whiteThresh_ext,...
-                    'whitethresh_int',whiteThresh_int);
+                    'whitethresh_int',whiteThresh_int,...
+                    'stretch_hist_limit_int',stretch_hist_limit_int,...
+                    'stretch_hist_limit_ext',stretch_hist_limit_ext);
                 
 %                 [points3d,direct_points2d,isPawVisible_direct] = trackDirectView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
 %                     'hsvlimits', pawHSVrange,...
