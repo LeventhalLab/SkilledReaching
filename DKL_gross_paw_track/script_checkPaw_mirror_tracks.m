@@ -40,7 +40,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
 %     numSessions = length(triDataFiles);
     numSessions = length(sr_ratInfo(i_rat).sessionList);
 
-    for iSession = 9 : numSessions
+    for iSession = 12:12%numSessions
         
 %         sessionDate = triDataFiles(iSession).name(7:14);
         sessionDate = sr_ratInfo(i_rat).sessionList{iSession}(1:8);

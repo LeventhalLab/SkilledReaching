@@ -43,8 +43,8 @@ whiteThresh_ext = 0.95;
 whiteThresh_int = 0.85;
 stretch_hist_limit = 0.75;
 
-stretch_hist_limit_int = 0.5;
-stretch_hist_limit_ext = 0.75;
+stretch_hist_limit_int = 0.3;
+stretch_hist_limit_ext = 0.5;
 
 % pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
 %                0.33, 0.03, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
@@ -55,11 +55,11 @@ stretch_hist_limit_ext = 0.75;
 %                0.33, 0.05, 0.95, 1.0, 0.95, 1.0];  % slighly more liberal for the external mask
            
 pawHSVrange = [1/3, 0.02, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
-               1/3, 0.05, 0.99, 1.0, 0.90, 1.0     % for more liberal external masking
-               0.45, 0.05, 0.999, 1.0, 0.60, 1.0    % for restrictive internal masking
-               0.45, 0.15, 0.98, 1.0, 0.50, 1.0    % for liberal internal masking
-               0.45, 0.05, 0.99, 1.0, 0.50, 1.0    % for restrictive masking just behind the front panel
-               0.45, 0.10, 0.95, 1.0, 0.40, 1.0    % for liberal masking just behind the front panel
+               1/3, 0.05, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
+               1/3, 0.02, 0.999, 1.0, 0.95, 1.0    % for restrictive internal masking
+               1/3, 0.05, 0.99, 1.0, 0.90, 1.0    % for liberal internal masking
+               1/3, 0.02, 0.99, 1.0, 0.95, 1.0    % for restrictive masking just behind the front panel
+               1/3, 0.05, 0.99, 1.0, 0.70, 1.0    % for liberal masking just behind the front panel
                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
 foregroundThresh = 25/255;
 
@@ -96,7 +96,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 1:1%length(sessionList);
+    for iSession = 2:2%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
