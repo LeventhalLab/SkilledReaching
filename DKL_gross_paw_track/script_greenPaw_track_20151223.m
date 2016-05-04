@@ -55,10 +55,10 @@ stretch_hist_limit_ext = 0.75;
            
 pawHSVrange = [1/3, 0.02, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
                1/3, 0.05, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-               1/3, 0.02, 0.999, 1.0, 0.95, 1.0    % for restrictive internal masking
-               1/3, 0.05, 0.99, 1.0, 0.90, 1.0    % for liberal internal masking
-               1/3, 0.02, 0.99, 1.0, 0.95, 1.0    % for restrictive masking just behind the front panel
-               1/3, 0.05, 0.99, 1.0, 0.90, 1.0    % for liberal masking just behind the front panel
+               1/3, 0.03, 0.999, 1.0, 0.85, 1.0    % for restrictive internal masking
+               1/3, 0.08, 0.99, 1.0, 0.80, 1.0    % for liberal internal masking
+               1/3, 0.03, 0.999, 1.0, 0.85, 1.0    % for restrictive masking just behind the front panel
+               1/3, 0.08, 0.99, 1.0, 0.80, 1.0    % for liberal masking just behind the front panel
                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
 foregroundThresh = 25/255;
 
@@ -141,7 +141,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
             
             BGcalculated = false;
             
-            for iVid = 1 : length(vidList)
+            for iVid = 9 : length(vidList)
                 if vidList(iVid).bytes < 10000; continue; end
                 if strcmp(vidList(iVid).name(1:2),'._'); continue; end
                 

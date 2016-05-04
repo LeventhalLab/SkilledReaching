@@ -1,4 +1,4 @@
-function [fullMask,greenMask] = trackNextStep_mirror_20160428( image_ud, prev_image_ud, fundMat, prevMask, boxRegions, pawPref, varargin)
+function [fullMask,greenMask] = trackNextStep_mirror_20160503_b( image_ud, prev_image_ud, fundMat, prevMask, boxRegions, pawPref, varargin)
 
 % CONSIDER SUBTRACTING EACH IMAGE FROM THE PREVIOUS ONE, USING THAT AS A
 % BACKGROUND MASK EXCEPT IN THE IMMEDIATE VICINITY OF THE LAST PAW
@@ -174,7 +174,7 @@ end
 
 [y,x] = find(extMask);
 decorr_green_ext = decorrstretch(mirror_image_ud,'tol',0.02,'samplesubs',{y,x});
-decorr_green_int = decorr_green_ext;
+decorr_green_int = decorrstretch(mirror_image_ud,'tol',0.04,'samplesubs',{y,x});
 % decorr_green_ext = decorr_green_int;
 % prev_decorr_green_int = decorrstretch(prev_mirror_image_ud,'tol',0.01);
 % prev_decorr_green_ext = prev_decorr_green_int;
@@ -353,9 +353,10 @@ if any(prevExtMask(:)) && ~any(prevIntMask(:))
     end
 end
     
-mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
-b = bwconvhull(mirror_greenHSVthresh);
-s = regionprops(b,'boundingbox');
+% mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
+libHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext);
+% b = bwconvhull(mirror_greenHSVthresh_ext);
+s = regionprops(bwconvhull(libHSVthresh_ext,'union'),'boundingbox');
 if ~isempty(s)
     bbox = round(s.BoundingBox);
 
@@ -364,35 +365,79 @@ if ~isempty(s)
     lh = stretchlim(q,0.05);
     q2 = imadjust(q,lh,[]);
     % find the darkest 1/2 of pixels in this region
-    im_gray = mean(q2,3);
-    [y,x] = find(mirror_greenHSVthresh);
-    y = y - bbox(2)+1;x = x - bbox(1)+1;
-    b = im_gray(y,x);
+    im_gray = zeros(size(mirror_greenHSVthresh_ext));
+    im_gray(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = mean(q2,3);
+%     im_gray_vec = im_gray(:);
+%     idx = find(mirror_greenHSVthresh_ext);
     
-    [g_hist,g_bins] = histcounts(im_gray,50);
-    totCount = sum(g_hist(1:end-1));
-    cumCount = cumsum(g_hist);
-    gray_lim_idx = find(cumCount < totCount*0.25,1,'last');
-    gray_lim = g_bins(gray_lim_idx);
+    b = im_gray(mirror_greenHSVthresh_ext);
+%     b = b(:);
     
-    darkMask = false(size(mirror_greenHSVthresh));
+%     [g_hist,g_bins] = histcounts(b,50);
+%     totCount = sum(g_hist(1:end-1));
+%     cumCount = cumsum(g_hist);
+%     gray_lim_idx = find(cumCount < totCount*0.25,1,'last');
+%     gray_lim = g_bins(gray_lim_idx);
+    
+    gray_lim_lower = prctile(b,50);    % values to include
+    gray_lim_upper = prctile(b,90);    % values to exclude
+    
+    darkMask = false(size(mirror_greenHSVthresh_ext));
     darkMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
-        q2(:,:,1) < gray_lim & q2(:,:,2) < gray_lim & q2(:,:,3) < gray_lim;
-    % mask out bright regions that get inadvertently converted to bright green
-    % during decorrstretch. This tends to happen at the edges of the front
-    % panel, but could happen anywhere (especially borders)
-%     brightMask = false(size(mirror_greenHSVthresh));
-% %     bw_thresh = multithresh(mean(q2,3),2);    % paw should be dark, reflections lighter, and background lighter still
-%     brightMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
-%         q2(:,:,1) > 0.8 & q2(:,:,2) > 0.8 & q2(:,:,3) > 0.8;
-    darkMask = darkMask & mirror_greenHSVthresh;
-    mirror_greenHSVthresh = imreconstruct(darkMask,mirror_greenHSVthresh);
-%     mirror_greenHSVthresh = mirror_greenHSVthresh & ~brightMask;
+        q2(:,:,1) < gray_lim_lower & q2(:,:,2) < gray_lim_lower & q2(:,:,3) < gray_lim_lower;
+    
+    brightMask_ext = false(size(mirror_greenHSVthresh_ext));
+    brightMask_ext(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
+        q2(:,:,1) > gray_lim_upper & q2(:,:,2) > gray_lim_upper & q2(:,:,3) > gray_lim_upper;
+
+    darkMask = darkMask & mirror_greenHSVthresh_ext;
+    mirror_greenHSVthresh_ext = imreconstruct(darkMask,mirror_greenHSVthresh_ext & ~brightMask_ext);
+    mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext & ~brightMask_ext);
 end
+
+libHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int);
+% b = bwconvhull(mirror_greenHSVthresh_int);
+s = regionprops(bwconvhull(libHSVthresh_int,'union'),'boundingbox');
+if ~isempty(s)
+    bbox = round(s.BoundingBox);
+
+    q = mirror_image_ud(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
+
+    lh = stretchlim(q,[0,0.95]);
+    q2 = imadjust(q,lh,[]);
+    % find the darkest 1/2 of pixels in this region
+    im_gray = zeros(size(mirror_greenHSVthresh_int));
+    im_gray(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = mean(q2,3);
+    b = im_gray(mirror_greenHSVthresh_int);
+    
+    gray_lim_lower = prctile(b,50);    % values to include
+    gray_lim_upper = prctile(b,90);    % values to exclude
+    
+%     [g_hist,g_bins] = histcounts(im_gray,50);
+%     totCount = sum(g_hist(1:end-1));
+%     cumCount = cumsum(g_hist);
+%     gray_lim_idx = find(cumCount < totCount*0.25,1,'last');
+%     gray_lim = g_bins(gray_lim_idx);
+    
+    darkMask = false(size(mirror_greenHSVthresh_int));
+    darkMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
+        q2(:,:,1) < gray_lim_lower & q2(:,:,2) < gray_lim_lower & q2(:,:,3) < gray_lim_lower;
+    
+    brightMask_int = false(size(mirror_greenHSVthresh_int));
+    brightMask_int(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
+        q2(:,:,1) > gray_lim_upper & q2(:,:,2) > gray_lim_upper & q2(:,:,3) > gray_lim_upper;
+    
+    darkMask = darkMask & mirror_greenHSVthresh_int;
+    mirror_greenHSVthresh_int = imreconstruct(darkMask,(mirror_greenHSVthresh_int & ~brightMask_int));
+    mirror_greenHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int & ~brightMask_int);
+    
+end
+
 % mirror_greenHSVthresh = mirror_greenHSVthresh & ~whiteMask;
 
-mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext);
-mirror_greenHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int);
+mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);
+mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',1);
+
 mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
 
 behindPanelMask = frontPanelEdge & intMask;

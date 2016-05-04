@@ -1,4 +1,4 @@
-function [fullMask,greenMask] = trackNextStep_mirror_20160428( image_ud, prev_image_ud, fundMat, prevMask, boxRegions, pawPref, varargin)
+function [fullMask,greenMask] = trackNextStep_mirror_20160503( image_ud, prev_image_ud, fundMat, prevMask, boxRegions, pawPref, varargin)
 
 % CONSIDER SUBTRACTING EACH IMAGE FROM THE PREVIOUS ONE, USING THAT AS A
 % BACKGROUND MASK EXCEPT IN THE IMMEDIATE VICINITY OF THE LAST PAW
@@ -173,7 +173,7 @@ end
 % decorr_green_int = decorrstretch(mirror_image_ud,'tol',0.01,'samplesubs',{y,x});
 
 [y,x] = find(extMask);
-decorr_green_ext = decorrstretch(mirror_image_ud,'tol',0.01,'samplesubs',{y,x});
+decorr_green_ext = decorrstretch(mirror_image_ud,'tol',0.02,'samplesubs',{y,x});
 decorr_green_int = decorr_green_ext;
 % decorr_green_ext = decorr_green_int;
 % prev_decorr_green_int = decorrstretch(prev_mirror_image_ud,'tol',0.01);
@@ -313,8 +313,7 @@ mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',1);
 % 
 % temp = mirror_greenHSVthresh_int & ~frontPanel_dilate;
 % mirror_greenHSVthresh_int = imreconstruct(temp, mirror_greenHSVthresh_int);
-
-frontPanel_overlap = (mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int)
+    
 temp = mirror_greenHSVthresh_int & prevMask;
 
 
@@ -338,8 +337,7 @@ libHSVthresh_int = libHSVthresh_int & intMask;% & ~whiteMask;
 libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(2,:));
 libHSVthresh_ext = libHSVthresh_ext & extMask;% & ~whiteMask;% & im_masked;
 
-mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext);
-mirror_greenHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int);
+
 
 if any(prevExtMask(:)) && ~any(prevIntMask(:))
     % only accept internal mask if no white parts of the limb adjacent to
@@ -355,10 +353,73 @@ if any(prevExtMask(:)) && ~any(prevIntMask(:))
     end
 end
     
+% mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
+b = bwconvhull(mirror_greenHSVthresh_ext);
+s = regionprops(b,'boundingbox');
+if ~isempty(s)
+    bbox = round(s.BoundingBox);
+
+    q = mirror_image_ud(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
+
+    lh = stretchlim(q,0.05);
+    q2 = imadjust(q,lh,[]);
+    % find the darkest 1/2 of pixels in this region
+    im_gray = mean(q2,3);
+    [y,x] = find(mirror_greenHSVthresh_ext);
+    y = y - bbox(2)+1;x = x - bbox(1)+1;
+    b = im_gray(y,x);
     
-mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int;
+    [g_hist,g_bins] = histcounts(im_gray,50);
+    totCount = sum(g_hist(1:end-1));
+    cumCount = cumsum(g_hist);
+    gray_lim_idx = find(cumCount < totCount*0.25,1,'last');
+    gray_lim = g_bins(gray_lim_idx);
+    
+    darkMask = false(size(mirror_greenHSVthresh_ext));
+    darkMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
+        q2(:,:,1) < gray_lim & q2(:,:,2) < gray_lim & q2(:,:,3) < gray_lim;
+
+    darkMask = darkMask & mirror_greenHSVthresh_ext;
+    mirror_greenHSVthresh_ext = imreconstruct(darkMask,mirror_greenHSVthresh_ext);
+
+end
+
+b = bwconvhull(mirror_greenHSVthresh_int);
+s = regionprops(b,'boundingbox');
+if ~isempty(s)
+    bbox = round(s.BoundingBox);
+
+    q = mirror_image_ud(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
+
+    lh = stretchlim(q,0.05);
+    q2 = imadjust(q,lh,[]);
+    % find the darkest 1/2 of pixels in this region
+    im_gray = mean(q2,3);
+    [y,x] = find(mirror_greenHSVthresh_int);
+    y = y - bbox(2)+1;x = x - bbox(1)+1;
+    b = im_gray(y,x);
+    
+    [g_hist,g_bins] = histcounts(im_gray,50);
+    totCount = sum(g_hist(1:end-1));
+    cumCount = cumsum(g_hist);
+    gray_lim_idx = find(cumCount < totCount*0.25,1,'last');
+    gray_lim = g_bins(gray_lim_idx);
+    
+    darkMask = false(size(mirror_greenHSVthresh_int));
+    darkMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
+        q2(:,:,1) < gray_lim & q2(:,:,2) < gray_lim & q2(:,:,3) < gray_lim;
+
+    darkMask = darkMask & mirror_greenHSVthresh_int;
+    mirror_greenHSVthresh_int = imreconstruct(darkMask,mirror_greenHSVthresh_int);
+
+end
 
 % mirror_greenHSVthresh = mirror_greenHSVthresh & ~whiteMask;
+
+mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext);
+mirror_greenHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int);
+
+mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
 
 behindPanelMask = frontPanelEdge & intMask;
 behindOverlap = behindPanelMask & (prevMask_dilate | prevMask_panel_dilate);
