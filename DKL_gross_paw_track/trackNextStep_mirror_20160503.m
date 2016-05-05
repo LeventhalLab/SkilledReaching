@@ -6,7 +6,9 @@ function [fullMask,greenMask] = trackNextStep_mirror_20160503( image_ud, prev_im
 
 h = size(image_ud,1); w = size(image_ud,2);
 
-           
+targetMean = [0.5,0.3,0.5];
+targetSigma = [0.1,0.1,0.1];
+
 maxFrontPanelSep = 20;
 maxDistBehindFrontPanel = 10;
 maxDistPerFrame = 20;
@@ -15,8 +17,13 @@ frontPanelMask = boxRegions.frontPanelMask;
 shelfMask = boxRegions.shelfMask;
 frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxDistBehindFrontPanel)) & ~frontPanelMask;
 
+whiteThresh = 0.9;
+
 intMask = boxRegions.intMask;
 extMask = boxRegions.extMask;
+floorMask = boxRegions.floorMask;
+[y,~] = find(floorMask);
+ROI_bot = min(y);
 
 for iarg = 1 : 2 : nargin - 6
     switch lower(varargin{iarg})
@@ -30,8 +37,8 @@ end
 shelfLims = regionprops(boxRegions.shelfMask,'boundingbox');
 switch lower(pawPref),
     case 'right',
-        ROI = [1,1,...
-            floor(shelfLims.BoundingBox(1)),h-1];
+        ROI = [1,1,floor(shelfLims.BoundingBox(1)),ROI_bot;...
+            ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot];
         SE_fromExt = [zeros(1,maxFrontPanelSep+25),ones(1,maxFrontPanelSep+35)];
         SE_fromInt = [ones(1,maxFrontPanelSep+35),zeros(1,maxFrontPanelSep+25)];
         
@@ -39,8 +46,8 @@ switch lower(pawPref),
         overlapCheck_SE_fromInt = [ones(1,15),zeros(1,15)];
         ext_white_check_SE = [zeros(1,10),ones(1,10)];
     case 'left',
-        ROI = [ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,...
-               w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),h-1];
+        ROI = [ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot;...
+            1,1,floor(shelfLims.BoundingBox(1)),ROI_bot];
         SE_fromExt = [ones(1,maxFrontPanelSep+25),zeros(1,maxFrontPanelSep+25)];
         SE_fromInt = [zeros(1,maxFrontPanelSep+25),ones(1,maxFrontPanelSep+25)];
         overlapCheck_SE_fromExt = [ones(1,5),zeros(1,5)];
@@ -48,15 +55,22 @@ switch lower(pawPref),
         ext_white_check_SE = [ones(1,10),zeros(1,10)];
 end
 
+% lh  = stretchlim(image_ud(1:ROI_bot,:));
+% str_img = imadjust(image_ud,lh,[]);
 
-mirror_image_ud = image_ud(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
-prev_mirror_image_ud = prev_image_ud(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
+mirror_image_ud = image_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
+other_mirror_image_ud = image_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
+lh  = stretchlim(other_mirror_image_ud,0.05);
+mirror_str_img = imadjust(mirror_image_ud,lh,[]);
+% mirror_str_img = str_img(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
 
-prevMask = prevMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
-frontPanelEdge = frontPanelEdge(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
-frontPanelMask = frontPanelMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
-extMask = extMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
-intMask = intMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
+% prev_mirror_image_ud = prev_image_ud(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
+
+prevMask = prevMask(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
+frontPanelEdge = frontPanelEdge(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
+frontPanelMask = frontPanelMask(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
+extMask = extMask(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
+intMask = intMask(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
 
 prevMask_panel_dilate = prevMask;
 
@@ -87,13 +101,22 @@ if any(side_overlap_mask(:)) && any(prevIntMask(:)) && ~any(prevExtMask(:))
 %     prevMask_panel_dilate = imdilate(prevMask_panel_dilate, SE);
 end
 
-[ye,xe] = find(extMask);
-[yi,xi] = find(intMask);
-decorr_green_ext = decorrstretch(mirror_image_ud,'tol',0.02,'samplesubs',{ye,xe});
-decorr_green_int = decorrstretch(mirror_image_ud,'tol',0.02,'samplesubs',{yi,xi});
+% [ye,xe] = find(extMask);
+% [yi,xi] = find(intMask);
+% decorr_green_ext = decorrstretch(mirror_image_ud,'tol',0.02,'samplesubs',{ye,xe});
+% decorr_green_int = decorrstretch(mirror_image_ud,'tol',0.02,'samplesubs',{yi,xi});
 
-mirror_decorr_green_hsv_ext = rgb2hsv(decorr_green_ext);
-mirror_decorr_green_hsv_int = rgb2hsv(decorr_green_int);
+% decorr_green_ext = decorrstretch(mirror_str_img,'tol',0.02,'samplesubs',{ye,xe});
+% decorr_green_int = decorrstretch(mirror_str_img,'tol',0.02,'samplesubs',{yi,xi});
+decorr_green = decorrstretch(mirror_str_img,'tol',0.02);%'targetsigma',targetSigma,'targetmean',targetMean);
+lh = stretchlim(decorr_green);
+decorr_green = imadjust(decorr_green,lh,[]);
+
+% mirror_decorr_green_hsv_ext = rgb2hsv(decorr_green_ext);
+% mirror_decorr_green_hsv_int = rgb2hsv(decorr_green_int);
+mirror_decorr_green_hsv = rgb2hsv(decorr_green);
+mirror_decorr_green_hsv_ext = mirror_decorr_green_hsv;
+mirror_decorr_green_hsv_int = mirror_decorr_green_hsv;
 
 prevMask_dilate = imdilate(prevMask,strel('disk',maxDistPerFrame));
 
@@ -159,37 +182,63 @@ if ~isempty(s)
 
     lh = stretchlim(q,0.05);
     q2 = imadjust(q,lh,[]);
+    im_str = zeros(size(mirror_image_ud));
+    im_str(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:) = q2;
     % find the darkest 1/2 of pixels in this region
-    im_gray = zeros(size(mirror_greenHSVthresh_ext));
-    im_gray(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = mean(q2,3);
+%     im_gray = zeros(size(mirror_greenHSVthresh_ext));
+%     im_gray(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = mean(q2,3);
 %     im_gray_vec = im_gray(:);
 %     idx = find(mirror_greenHSVthresh_ext);
     
-    b = im_gray(mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int);
+%     b = im_gray(mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int);
+    b = double(repmat(mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int,1,1,3)) .* im_str;
     
-    gray_lim_lower = prctile(b,50);    % values to include
-    gray_lim_upper = prctile(b,90);    % values to exclude
-    
-    darkMask = false(size(mirror_greenHSVthresh_ext));
-    darkMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
-        q2(:,:,1) < gray_lim_lower & q2(:,:,2) < gray_lim_lower & q2(:,:,3) < gray_lim_lower;
-    
-    brightMask = false(size(mirror_greenHSVthresh_ext));
-    brightMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
-        q2(:,:,1) > gray_lim_upper & q2(:,:,2) > gray_lim_upper & q2(:,:,3) > gray_lim_upper;
+    clims = zeros(2,3);
+    newMask = true(size(mirror_greenHSVthresh_ext));
+    brightMask = true(size(mirror_greenHSVthresh_ext));
+    darkMask = true(size(mirror_greenHSVthresh_ext));
+    for iCh = 1 : 3
+        temp = b(:,:,iCh);
+        temp = temp(:);
+        chVals = temp(temp > 0);
+        clims(1,iCh) = prctile(chVals,25);
+        clims(2,iCh) = prctile(chVals,50);
+        
+        newMask = newMask & ((im_str(:,:,iCh) > clims(1,iCh)) & (im_str(:,:,iCh) < clims(2,iCh)));
+        brightMask = brightMask & (im_str(:,:,iCh) > prctile(chVals,75));
+%         darkMask = darkMask & (im_str(:,:,iCh) < prctile(chVals,50));
+    end
 
-    darkMask_ext = darkMask & mirror_greenHSVthresh_ext;
-    mirror_greenHSVthresh_ext = imreconstruct(darkMask_ext,mirror_greenHSVthresh_ext & ~imdilate(brightMask,strel('disk',2)));
-    mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext & ~imdilate(brightMask,strel('disk',2)));
+%     gray_lim_lower = prctile(b,50);    % values to include
+%     gray_lim_upper = prctile(b,90);    % values to exclude
     
-    darkMask_int = darkMask & mirror_greenHSVthresh_int;
-    mirror_greenHSVthresh_int = imreconstruct(darkMask_int,mirror_greenHSVthresh_int & ~brightMask);
+%     darkMask = false(size(mirror_greenHSVthresh_ext));
+%     darkMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
+%         q2(:,:,1) < gray_lim_lower & q2(:,:,2) < gray_lim_lower & q2(:,:,3) < gray_lim_lower;
+    
+%     brightMask = false(size(mirror_greenHSVthresh_ext));
+    
+%     brightMask(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = ...
+%         q2(:,:,1) > gray_lim_upper & q2(:,:,2) > gray_lim_upper & q2(:,:,3) > gray_lim_upper;
+
+%     darkMask_ext = darkMask & mirror_greenHSVthresh_ext;
+    mirror_greenHSVthresh_ext = imreconstruct(newMask,mirror_greenHSVthresh_ext & ~brightMask);
+    mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext & ~brightMask);
+    
+%     darkMask_int = darkMask & mirror_greenHSVthresh_int;
+    mirror_greenHSVthresh_int = imreconstruct(newMask,mirror_greenHSVthresh_int & ~brightMask);
     mirror_greenHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int & ~brightMask);
 end
 
 % mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);
 % mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',1);
 
+if ~any(mirror_greenHSVthresh_ext(:)) && any(mirror_greenHSVthresh_int(:))  % paw is entirely on the inside, eliminate reflection
+    s = regionprops(bwconvhull(libHSVthresh_int),'boundingbox');
+    bbox = round(s.BoundingBox);
+    paw_zoom = mirror_str_img(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
+    
+end
 mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
 
 behindPanelMask = frontPanelEdge & intMask;
@@ -201,7 +250,7 @@ if any(behindOverlap(:))
     
     behindShelfRegion = projMaskFromTangentLines(shelfMask, fundMat', [1,1,h-1,w-1], [h,w]);
     behindShelfRegion = imfill(behindShelfRegion, [1 1]);
-    behindShelfRegion = behindShelfRegion(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
+    behindShelfRegion = behindShelfRegion(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
     
     temp = temp & behindOverlap & behindShelfRegion;
 
@@ -222,4 +271,4 @@ greenMask = mirror_greenHSVthresh;
 
 temp = bwconvhull(greenMask,'union');
 fullMask = false(h,w);
-fullMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3)) = temp;
+fullMask(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3)) = temp;
