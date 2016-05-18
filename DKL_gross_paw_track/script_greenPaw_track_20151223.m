@@ -95,7 +95,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 12:12%length(sessionList);
+    for iSession = 1:length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -141,7 +141,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
             
             BGcalculated = false;
             
-            for iVid = 9 : length(vidList)
+            for iVid = 1 : length(vidList)
                 if vidList(iVid).bytes < 10000; continue; end
                 if strcmp(vidList(iVid).name(1:2),'._'); continue; end
                 

@@ -1,4 +1,4 @@
-function [points2d,timeList,isPawVisible] = trackMirrorView( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, varargin )
+function [points2d,timeList,isPawVisible] = trackMirrorView_b( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, varargin )
 
 video.CurrentTime = triggerTime;
 
@@ -187,8 +187,8 @@ currentFrame = round((video.CurrentTime) * fps);
 image = readFrame(video);   % just to advance one frame for forward direction
 image_ud = undistortImage(image, cameraParams);
 image_ud = double(image_ud) / 255;
-orig_BGimg_ud = BGimg_ud;
-image_ud = color_adapthisteq(image_ud);
+% orig_BGimg_ud = BGimg_ud;
+% image_ud = color_adapthisteq(image_ud);
 
 
 isPawVisible = false(totalFrames,1);
@@ -199,6 +199,24 @@ temp = bwmorph(bwconvhull(initPawMask),'remove');
 points2d{currentFrame} = [x,y];
 % framesChecked = 0;
 % isPawVisible(frameCount,:) = true(1,2);   % by definition (almost), paw is visible in both views in the initial frame
+
+[y,~] = find(boxRegions.floorMask);
+ROI_bot = min(y);
+shelfLims = regionprops(boxRegions.shelfMask,'boundingbox');
+switch lower(pawPref),
+    case 'right',
+        ROI = [1,1,floor(shelfLims.BoundingBox(1)),ROI_bot;...
+            ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot];
+    case 'left',
+        ROI = [ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot;...
+            1,1,floor(shelfLims.BoundingBox(1)),ROI_bot];
+%         ext_white_check_SE = [ones(1,10),zeros(1,10)];
+end
+mirror_BG_image_ud = BGimg_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
+other_mirror_BG_image_ud = BGimg_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
+lh  = stretchlim(other_mirror_BG_image_ud,0.05);
+BGimg_ud_str = imadjust(mirror_BG_image_ud,lh,[]);
+
 while video.CurrentTime < video.Duration && video.CurrentTime >= 0
 
     prevFrame = frameCount;
@@ -240,7 +258,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
                          
-    [fullMask,~] = trackNextStep_mirror_20160503(image_ud,prev_image_ud,fundMat,prevMask,boxRegions,pawPref,...
+    [fullMask,~] = trackNextStep_mirror_20160503(image_ud,BGimg_ud_str,fundMat,prevMask,boxRegions,pawPref,...
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxdistperframe',maxDistPerFrame,...
