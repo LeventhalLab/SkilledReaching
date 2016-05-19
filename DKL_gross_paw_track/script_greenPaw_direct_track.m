@@ -147,7 +147,8 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                 if exist(pawTrackName,'file');continue;end
                 
                 boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
-
+                boxRegions.floorCoords = estimateFloor_3dcoords(session_mp,boxCalibration);
+                
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
                     greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(1,:), sr_ratInfo(i_rat).pawPref);

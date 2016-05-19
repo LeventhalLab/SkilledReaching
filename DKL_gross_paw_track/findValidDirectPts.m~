@@ -1,0 +1,37 @@
+function [ validDirectMask ] = findValidDirectPts( floorCoords, directMask, mirrorMask, boxCalibration, pawPref )
+%UNTITLED3 Summary of this function goes here
+%   Detailed explanation goes here
+
+overlapThresh = 0.01;
+
+switch lower(pawPref)
+    case 'left',
+        valid_fc = floorCoords(2,:);
+        fundMat = boxCalibration.srCal.F(:,:,2);
+    case 'right',
+        valid_fc = floorCoords(1,:);
+        fundMat = boxCalibration.srCal.F(:,:,1);
+end
+
+[yd,xd] = find(directMask);
+epiLines = epipolarLine(fundMat,[xd,yd]);
+
+[ym,xm] = find(mirrorMask);
+
+lineVals = epiLines * [xm';ym';ones(1,length(xm))];
+for i_dpt = 1 : length(yd)
+    
+    overlap_pts = (lineVals(i_dpt,:) < overlapThresh);
+    switch lower(pawPref)
+        case 'left',
+        case 'right',
+            overlap_x_val = min(xm(overlap_pts));
+    end
+%     
+%     % find overlap of current point with mask in mirror
+%     valid_x = []; valid_y = [];
+%     for i_mpt = 1 : length(ym)
+%         lineVal = lines(1) * xm(i_mpt) + 
+    
+    
+end
