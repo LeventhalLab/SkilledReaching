@@ -95,7 +95,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 1:length(sessionList);
+    for iSession = 12:length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];

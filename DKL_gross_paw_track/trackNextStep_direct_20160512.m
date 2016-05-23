@@ -1,4 +1,4 @@
-function [fullMask] = trackNextStep_direct_20160512( image_ud, prev_image_ud, BGimg_ud, prevMask, cur_mir_points2d, boxRegions, pawPref, boxCalibration, greenBGmask, varargin)
+function [fullMask] = trackNextStep_direct_20160512( image_ud, prevMask, cur_mir_points2d, boxRegions, pawPref, boxCalibration, greenBGmask, varargin)
 
 % MAY HAVE TO UPDATE HOW GREENBGMASK IS CALCULATED IN THE CALLING FUNCTION
 
@@ -33,9 +33,8 @@ centerMask = imdilate(centerMask,strel('line',100,0));
 distFromSlot = 150;
 % ROI = [centerPoly_x(1)-distFromSlot, 1, range(x)+2*distFromSlot, h-1];
 centerShelfMask = centerMask & shelfMask;
-
 belowShelfMask = boxRegions.belowShelfMask;
-floorMask = boxRegions.floorMask;
+
 
 boxFrontThick = 20;
 maskDilate = 15;
@@ -51,7 +50,7 @@ restrictiveBlob.LabelMatrixOutputPort = true;
 restrictiveBlob.MinimumBlobArea = 5;
 restrictiveBlob.MaximumBlobArea = 10000;
 
-for iarg = 1 : 2 : nargin - 9
+for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
         case 'foregroundthresh',
             foregroundThresh = varargin{iarg + 1};
@@ -97,9 +96,9 @@ other_mirror_image_ud = image_ud(ROI(3,2):ROI(3,2)+ROI(3,4),ROI(3,1):ROI(3,1)+RO
 lh  = stretchlim(other_mirror_image_ud,0.05);
 direct_str_img = imadjust(direct_image_ud,lh,[]);
 mirror_str_img = imadjust(mirror_image_ud,lh,[]);
-str_img = image_ud;
-str_img(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:) = mirror_str_img;
-str_img(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:) = direct_str_img;
+% str_img = image_ud;
+% str_img(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:) = mirror_str_img;
+% str_img(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:) = direct_str_img;
 
 direct_green = decorrstretch(direct_str_img,'tol',0.02);
 mirror_green = decorrstretch(mirror_str_img,'tol',0.02);
@@ -145,55 +144,20 @@ greenHSVthresh = greenHSVthresh & ~greenBGmask;
 projGreenThresh = greenHSVthresh & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
 % projGreenThresh = projGreenThresh & ~whiteMask;
 
+lib_HSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(2,:));
+fullThresh = imreconstruct(projGreenThresh, lib_HSVthresh);
+
 extCheck = mirror_mask & extMask;
 if ~any(extCheck(:))  % paw mask is entirely inside the box - do we have to eliminate reflections in the floor?
     %   WORKING HERE...
     % new strategy is to check for points that would be below the floor
    
-	[y,x] = find(projGreenThresh);
-    
-%     
-%     mirror_mask_b = greenHSVthresh & mirror_mask;
-% %     for iCh = 1 : 3
-%         
-%     mirror_props = regionprops(bwconvhull(mirror_mask_b,'union'),'boundingbox');
-%     mirror_bbox = round(mirror_props.BoundingBox);
-%     mirror_region = str_img(mirror_bbox(2):mirror_bbox(2)+mirror_bbox(4),...
-%                                    mirror_bbox(1):mirror_bbox(1)+mirror_bbox(3),:);
-%                                
-%     direct_props = regionprops(bwconvhull(projGreenThresh,'union'),'boundingbox');
-%     direct_bbox = round(direct_props.BoundingBox);
-% 	direct_region = str_img(direct_bbox(2):direct_bbox(2)+direct_bbox(4),...
-%                                    direct_bbox(1):direct_bbox(1)+direct_bbox(3),:);
-%                                
-% 	lh_direct = stretchlim(direct_region);
-%     lh_mirror = stretchlim(mirror_region);
-%     direct_str = imadjust(direct_region,lh_direct,[]);
-%     mirror_str = imadjust(mirror_region,lh_mirror,[]);
-%     
-%     new_str = image_ud;
-%     new_str(mirror_bbox(2):mirror_bbox(2)+mirror_bbox(4),...
-%                                    mirror_bbox(1):mirror_bbox(1)+mirror_bbox(3),:) = mirror_str;
-%     new_str(direct_bbox(2):direct_bbox(2)+direct_bbox(4),...
-%                                    direct_bbox(1):direct_bbox(1)+direct_bbox(3),:) = direct_str;
-%     
-%     new_mirror_str = new_str(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
-%     new_direct_str = new_str(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
-%     new_decorr_mirror = decorrstretch(new_mirror_str,'tol',0.02);
-%     new_decorr_direct = decorrstretch(new_direct_str,'tol',0.02);
-%     new_decorr_mirror_hsv = rgb2hsv(new_decorr_mirror);
-%     new_decorr_direct_hsv = rgb2hsv(new_decorr_direct);
-%     
-%     new_decorr_mirror_thresh = HSVthreshold(new_decorr_mirror_hsv, pawHSVrange(3,:));
-%     new_decorr_direct_thresh = HSVthreshold(new_decorr_direct_hsv, pawHSVrange(3,:));
-% %     decorr_mirror = decorrstretch(mirror_str,'tol',0.02);
-%     % start by limiting direct view
-% %     new_direct_mask = HSVthreshold(new_
-    
+    [validDirectMask, validMirrorMask] = findValidDirectPts( boxRegions.floorCoords, fullThresh, mirror_mask, boxCalibration, pawPref);
+    mirror_mask = validMirrorMask;
+    fullThresh = validDirectMask;
 end
 
-lib_HSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(2,:));
-fullThresh = imreconstruct(projGreenThresh, lib_HSVthresh);
+
 
 fullThresh = bwconvhull(fullThresh,'union');
 
