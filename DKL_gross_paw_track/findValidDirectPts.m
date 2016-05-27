@@ -28,6 +28,7 @@ epiLines = epipolarLine(fundMat,[xd,yd]);
 [ym,xm] = find(mirrorMask);
 
 lineVals = epiLines * [xm';ym';ones(1,length(xm))];
+pts_below_floor = false;
 for i_dpt = 1 : length(yd)
     
     overlap_pts = (abs(lineVals(i_dpt,:)) < overlapThresh);
@@ -50,6 +51,7 @@ for i_dpt = 1 : length(yd)
         if pt3d(2) > valid_fc(2)   % the highest this point in the direct view can be is still below floor level
             validDirectMask(yd(i_dpt),xd(i_dpt)) = false;
 %             validMirrorMask(overlap_x,overlap_y) = false;
+            pts_below_floor = true;
         else
             break;
         end
@@ -60,7 +62,11 @@ for i_dpt = 1 : length(yd)
    
 end
 
-projMask = projMaskFromTangentLines(validDirectMask, fundMat, [1 1 w-1 h-1], [h,w]);
-validMirrorMask = validMirrorMask & projMask;
+% cut off the mirror mask ONLY if some of the triangulated points are below
+% the floor.
+if pts_below_floor
+    projMask = projMaskFromTangentLines(validDirectMask, fundMat, [1 1 w-1 h-1], [h,w]);
+    validMirrorMask = validMirrorMask & projMask;
+end
 
 end

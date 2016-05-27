@@ -29,12 +29,12 @@ decorr_BG = BGimg_ud;
 % decorr_green(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:) = mirror_green;
 decorr_BG(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:) = direct_green;
 
-slotMask = boxRegions.slotMask;
-slotMask = imdilate(slotMask,strel('line',6,0)) | imdilate(slotMask,strel('line',6,180));
+% slotMask = boxRegions.slotMask;
+% slotMask = imdilate(slotMask,strel('line',6,0)) | imdilate(slotMask,strel('line',6,180));
 % decorr_BG = decorrstretch(BGimg_ud,'targetmean',targetMean,'targetsigma',targetSigma);
 BGhsv = rgb2hsv(decorr_BG);
 
-greenBG = HSVthreshold(BGhsv, pawHSVrange);
-greenBGmask = greenBG & slotMask;
+greenBGmask = HSVthreshold(BGhsv, pawHSVrange);
+% greenBGmask = greenBG & slotMask;
 
 end

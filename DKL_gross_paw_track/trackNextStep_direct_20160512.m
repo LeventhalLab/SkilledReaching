@@ -139,22 +139,29 @@ else
 end
 
 greenHSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(1,:));
-greenHSVthresh = greenHSVthresh & ~greenBGmask;
+greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',2));
 
 projGreenThresh = greenHSVthresh & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
 % projGreenThresh = projGreenThresh & ~whiteMask;
 
 lib_HSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(2,:));
+lib_HSVthresh = lib_HSVthresh & ~greenBGmask;
+
 fullThresh = imreconstruct(projGreenThresh, lib_HSVthresh);
 
 extCheck = mirror_mask & extMask;
 if ~any(extCheck(:))  % paw mask is entirely inside the box - do we have to eliminate reflections in the floor?
-    %   WORKING HERE...
     % new strategy is to check for points that would be below the floor
-   
-    [validDirectMask, validMirrorMask] = findValidDirectPts( boxRegions.floorCoords, fullThresh, mirror_mask, boxCalibration, pawPref);
-    mirror_mask = validMirrorMask;
-    fullThresh = validDirectMask;
+    
+    if any(fullThresh(:)) && any(mirror_mask(:))
+        [validDirectMask, validMirrorMask] = findValidDirectPts( boxRegions.floorCoords, fullThresh, mirror_mask, boxCalibration, pawPref);
+        mirror_mask = validMirrorMask;
+        fullThresh = validDirectMask;
+    end
+else
+    % part of the paw is outside the box, so the paw must be pretty close
+    % to the slot. Get rid of any points too far from the slot
+    fullThresh = fullThresh & imdilate(slotMask,strel('disk',50));
 end
 
 

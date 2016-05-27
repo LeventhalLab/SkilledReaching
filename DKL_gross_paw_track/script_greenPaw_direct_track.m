@@ -76,7 +76,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 12:12%7 : 7%length(sessionList);
+    for iSession = 3 : length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -122,7 +122,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
             
             BGcalculated = false;
             
-            for iVid = 3:3%1 : length(vidList)
+            for iVid = 1 : length(vidList)
                 if vidList(iVid).bytes < 10000; continue; end
                 if strcmp(vidList(iVid).name(1:2),'._'); continue; end
                 
