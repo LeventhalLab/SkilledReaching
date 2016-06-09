@@ -95,7 +95,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 13:length(sessionList);
+    for iSession = 15:length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -161,15 +161,18 @@ for i_rat = 1 : 1%length(sr_ratInfo)
                 pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_mirror_track.mat'];
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
                 if exist(pawTrackName,'file');continue;end
+                boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
+                
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
+                    greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(1,:), sr_ratInfo(i_rat).pawPref);
                 end
 %                 if ~BGcalculated
 %                     BGcalculated = true;
 %                     BGimg = extractBGimg( video, 'numbgframes', numBGframes);
 %                     BGimg_ud = undistortImage(BGimg, cameraParams);
 %                 end
-                boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
+                
                 
                 triggerTime = identifyTriggerTime_greenPaw( video, sr_ratInfo(i_rat), session_mp, cameraParams,...
                                                    'pawgraylevels',gray_paw_limits,...
@@ -198,7 +201,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh);
                 
-                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
+                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...

@@ -161,7 +161,17 @@ if ~any(extCheck(:))  % paw mask is entirely inside the box - do we have to elim
 else
     % part of the paw is outside the box, so the paw must be pretty close
     % to the slot. Get rid of any points too far from the slot
-    fullThresh = fullThresh & imdilate(slotMask,strel('disk',50));
+    switch lower(pawPref),
+        case 'left',
+            extended_SE = [ones(1,100),zeros(1,100)];
+        case 'right',
+            extended_SE = [zeros(1,100),ones(1,100)];
+    end
+    extSlotMask = imdilate(slotMask,strel('disk',50));
+    extSlotMask = imdilate(extSlotMask,extended_SE);
+    extSlotMask = imdilate(extSlotMask,[zeros(50,1);ones(50,1)]);
+    
+    fullThresh = fullThresh & extSlotMask;
 end
 
 

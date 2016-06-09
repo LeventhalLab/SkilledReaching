@@ -1,4 +1,4 @@
-function [fullMask,greenMask] = trackNextStep_mirror_20160503( image_ud, BGimg_ud_str, fundMat, prevMask, boxRegions, pawPref, varargin)
+function [fullMask,greenMask] = trackNextStep_mirror_20160503( image_ud, BGimg_ud_str, fundMat, prevMask, boxRegions, pawPref, greenBGmask,varargin)
 
 % CONSIDER SUBTRACTING EACH IMAGE FROM THE PREVIOUS ONE, USING THAT AS A
 % BACKGROUND MASK EXCEPT IN THE IMMEDIATE VICINITY OF THE LAST PAW
@@ -26,7 +26,7 @@ floorMask = boxRegions.floorMask;
 [y,~] = find(floorMask);
 ROI_bot = min(y);
 
-for iarg = 1 : 2 : nargin - 6
+for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
         case 'pawhsvrange',
             pawHSVrange = varargin{iarg + 1};
@@ -112,6 +112,7 @@ end
 decorr_green = decorrstretch(mirror_str_img,'tol',0.02);%'targetsigma',targetSigma,'targetmean',targetMean);
 BG_decorr_green = decorrstretch(BGimg_ud_str,'tol',0.02);%'targetsigma',targetSigma,'targetmean',targetMean);
 decorr_diff = imabsdiff(BG_decorr_green, decorr_green);
+mirror_greenBGmask = greenBGmask(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
 
 BG_mask = ~(decorr_diff(:,:,1) < diff_thresh(1) & ...
             decorr_diff(:,:,2) < diff_thresh(2) & ...
@@ -129,6 +130,8 @@ prevMask_dilate = imdilate(prevMask,strel('disk',maxDistPerFrame));
 
 mirror_greenHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(1,:));
 mirror_greenHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv_int, pawHSVrange(3,:));
+mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & ~mirror_greenBGmask;
+mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & ~mirror_greenBGmask;
 
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & (prevMask_dilate | prevMask_panel_dilate);
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & (prevMask_dilate | prevMask_panel_dilate);
@@ -161,7 +164,8 @@ libHSVthresh_int = libHSVthresh_int & intMask & BG_mask;% & ~whiteMask;
 libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(2,:));
 libHSVthresh_ext = libHSVthresh_ext & extMask & BG_mask;% & ~whiteMask;% & im_masked;
 
-
+libHSVthresh_ext = libHSVthresh_ext & ~mirror_greenBGmask;
+libHSVthresh_int = libHSVthresh_int & ~mirror_greenBGmask;
 
 % if any(prevExtMask(:)) && ~any(prevIntMask(:))
 %     % only accept internal mask if no white parts of the limb adjacent to
@@ -277,6 +281,17 @@ if ~any(mirror_greenHSVthresh_ext(:)) && any(mirror_greenHSVthresh_int(:))  % pa
         masked_str_ch(:,iCh) = temp_ch(mirror_greenHSVthresh_int(:));
     end
 end
+
+% check to see if there are green spots identified away from the front
+% panel, while the paw is behind the front panel
+if any(mirror_greenHSVthresh_ext(:)) && any(mirror_greenHSVthresh_int(:))
+    ext_dilate = imdilate(mirror_greenHSVthresh_ext,strel('disk',5));
+    ext_overlap = ext_dilate & frontPanelMask;
+    if ~any(ext_overlap(:))
+        mirror_greenHSVthresh_ext = false(size(mirror_greenHSVthresh_ext));
+    end
+end
+
 mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
 
 behindPanelMask = frontPanelEdge & intMask;

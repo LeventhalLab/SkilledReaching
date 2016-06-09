@@ -17,16 +17,16 @@ switch lower(pawPref),
                1,1,floor(shelfLims.BoundingBox(1)),ROI_bot];
 end
 
-% mirror_image_ud = image_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
+mirror_image_ud = BGimg_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
 direct_image_ud = BGimg_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
 other_mirror_image_ud = BGimg_ud(ROI(3,2):ROI(3,2)+ROI(3,4),ROI(3,1):ROI(3,1)+ROI(3,3),:);
 lh  = stretchlim(other_mirror_image_ud,0.05);
 direct_str_img = imadjust(direct_image_ud,lh,[]);
-% mirror_str_img = imadjust(mirror_image_ud,lh,[]);
+mirror_str_img = imadjust(mirror_image_ud,lh,[]);
 direct_green = decorrstretch(direct_str_img,'tol',0.02);
-% mirror_green = decorrstretch(mirror_str_img,'tol',0.02);
+mirror_green = decorrstretch(mirror_str_img,'tol',0.02);
 decorr_BG = BGimg_ud;
-% decorr_green(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:) = mirror_green;
+decorr_BG(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:) = mirror_green;
 decorr_BG(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:) = direct_green;
 
 % slotMask = boxRegions.slotMask;
