@@ -3,13 +3,13 @@
 showPanelMarkers = true;
 
 computeCamParams = false;
-camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+cb_path = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
 
-kinematics_rootDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Matlab Kinematics/PlotGrossTrajectory';
-pdfDir  = '/Users/dleventh/Documents/SR_plots';
+kinematics_rootDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Matlab Kinematics/PlotGrossTrajectory';
+pdfDir  = '/Users/dan/Documents/SR_plots';
 
-xl_directory = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
+xl_directory = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
 
 rubikSpacing = 17.5;    % in mm
@@ -35,7 +35,7 @@ ratDir = cell(1,length(sr_ratInfo));
 triDir = cell(1,length(sr_ratInfo));
 scoreDir = cell(1,length(sr_ratInfo));
 
-for i_rat = 2 : 2%length(sr_ratInfo)
+for i_rat = 1 : 1%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir{i_rat} = fullfile(kinematics_rootDir,ratID);
@@ -58,7 +58,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     % video into the raw data folder
     
     numSessions = length(mp_metadata.sessionNames);
-    for iSession = 2 : 2%numSessions
+    for iSession = numSessions: numSessions %1 : numSessions
         
         sessionDate = mp_metadata.sessionNames{iSession}(7:end);
         cd(rawData_parentDir);

@@ -18,7 +18,7 @@ shelfMask = boxRegions.shelfMask;
 frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxDistBehindFrontPanel)) & ~frontPanelMask;
 
 whiteThresh = 0.9;
-diff_thresh = [0.4,0.4,0.4];
+diff_thresh = [0.2,0.2,0.2];
 
 intMask = boxRegions.intMask;
 extMask = boxRegions.extMask;
@@ -61,7 +61,7 @@ end
 
 mirror_image_ud = image_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
 other_mirror_image_ud = image_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
-lh  = stretchlim(other_mirror_image_ud,0.05);
+lh  = stretchlim(other_mirror_image_ud,0.10);
 mirror_str_img = imadjust(mirror_image_ud,lh,[]);
 % mirror_str_img = str_img(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
 
@@ -211,12 +211,13 @@ if ~isempty(s)
         for iCh = 1 : 3
             temp = q2(:,:,iCh);
             chVals = temp(:);
+            validVals = chVals(chVals > 0.1);
     %         chVals = temp(temp > 0);
-            clims(1,iCh) = prctile(chVals,10);
-            clims(2,iCh) = prctile(chVals,50);
+            clims(1,iCh) = prctile(validVals,10);
+            clims(2,iCh) = prctile(validVals,50);
 
             newMask = newMask & ((im_str(:,:,iCh) > clims(1,iCh)) & (im_str(:,:,iCh) < clims(2,iCh)));
-            brightMask = brightMask & (im_str(:,:,iCh) > prctile(chVals,75));
+            brightMask = brightMask & (im_str(:,:,iCh) > prctile(validVals,90));
         end
 
         mirror_greenHSVthresh_ext = imreconstruct(newMask,mirror_greenHSVthresh_ext & ~imdilate(brightMask,strel('disk',4)));
@@ -245,12 +246,13 @@ if ~isempty(s)
         for iCh = 1 : 3
             temp = q2(:,:,iCh);
             chVals = temp(:);
+            validVals = chVals(chVals > 0.1);
     %         chVals = temp(temp > 0);
-            clims(1,iCh) = prctile(chVals,10);
-            clims(2,iCh) = prctile(chVals,50);
+            clims(1,iCh) = prctile(validVals,10);
+            clims(2,iCh) = prctile(validVals,50);
 
             newMask = newMask & ((im_str(:,:,iCh) > clims(1,iCh)) & (im_str(:,:,iCh) < clims(2,iCh)));
-            brightMask = brightMask & (im_str(:,:,iCh) > prctile(chVals,75));
+            brightMask = brightMask & (im_str(:,:,iCh) > prctile(validVals,85));
         end
 
         mirror_greenHSVthresh_int = imreconstruct(newMask,mirror_greenHSVthresh_int & ~imdilate(brightMask,strel('disk',4)));

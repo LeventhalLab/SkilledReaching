@@ -9,8 +9,8 @@ function srCal = sr_calibration(x1_left,x2_left,x1_right,x2_right, varargin)
 % OUTPUTS:
 %
 computeCamParams = false;
-camParamFile = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-cb_path = '/Users/dleventh/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+cb_path = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
 % cb_path is to checkerboard patterns for computing the camera parameters
 
 K = [];

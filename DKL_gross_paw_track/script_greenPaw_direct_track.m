@@ -76,7 +76,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 1 : length(sessionList);
+    for iSession = 9 : length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];

@@ -44,7 +44,7 @@ for iSheet = 1 : numSheets
 %     fprintf('%s, %s\n', ratID,sheets{iSheet})
     [xldata,xlstrings,~] = xlsread(xlName, sheets{iSheet});
     sessionDate = sheets{iSheet}(7:14);
-    if strcmpi(sessionDate,'20140528')    % for this session, the mirrors shifted after the first 4 videos, so there are 2 matched point sheets
+    if strcmpi(sessionDate,'20140528') && strcmp(ratID,'R0027')    % for this session, the mirrors shifted after the first 4 videos, so there are 2 matched point sheets
         sessionDate = sheets{iSheet}(7:15);
     end
     sessionName = [ratID '_' sessionDate];

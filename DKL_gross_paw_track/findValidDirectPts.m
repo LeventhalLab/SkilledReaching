@@ -64,9 +64,9 @@ end
 
 % cut off the mirror mask ONLY if some of the triangulated points are below
 % the floor.
-if pts_below_floor
+% if pts_below_floor
     projMask = projMaskFromTangentLines(validDirectMask, fundMat, [1 1 w-1 h-1], [h,w]);
     validMirrorMask = validMirrorMask & projMask;
-end
+% end
 
 end

@@ -61,14 +61,16 @@ stretch_hist_limit_ext = 0.75;
 %                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
 %                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
            
-% for rat 1, 5/28 session
+% for rat 0027, 5/29 vids 61-64
 pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
                1/3, 0.03, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive internal masking
-               1/3, 0.05, 0.990, 1.0, 0.60, 1.0    % for liberal internal masking
-               1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive masking just behind the front panel
-               1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
+               1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal internal masking
+               1/3, 0.03, 0.999, 1.0, 0.8, 1.0    % for restrictive masking just behind the front panel
+               1/3, 0.06, 0.99, 1.0, 0.7, 1.0    % for liberal masking just behind the front panel
                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
+           
+           
 foregroundThresh = 25/255;
 
 xl_directory = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
@@ -91,7 +93,7 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 %                        'estimateskew', estimateSkew);
                    
 sr_ratInfo = get_sr_RatList();     
-for i_rat = 2 : 2%length(sr_ratInfo)
+for i_rat = 1 : 1%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawdata_dir = sr_ratInfo(i_rat).directory.rawdata;
@@ -104,7 +106,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 14:14%length(sessionList);
+    for iSession = 15:length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
