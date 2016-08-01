@@ -150,15 +150,15 @@ lib_HSVthresh = lib_HSVthresh & ~greenBGmask;
 fullThresh = imreconstruct(projGreenThresh, lib_HSVthresh);
 
 extCheck = mirror_mask & extMask;
-if ~any(extCheck(:))  % paw mask is entirely inside the box - do we have to eliminate reflections in the floor?
-    % new strategy is to check for points that would be below the floor
-    
-    if any(fullThresh(:)) && any(mirror_mask(:))
-        [validDirectMask, validMirrorMask] = findValidDirectPts( boxRegions.floorCoords, fullThresh, mirror_mask, boxCalibration, pawPref);
-        mirror_mask = validMirrorMask;
-        fullThresh = validDirectMask;
-    end
-else
+% if ~any(extCheck(:))  % paw mask is entirely inside the box - do we have to eliminate reflections in the floor?
+%     % new strategy is to check for points that would be below the floor
+%     
+%     if any(fullThresh(:)) && any(mirror_mask(:))
+%         [validDirectMask, validMirrorMask] = findValidDirectPts( boxRegions.floorCoords, fullThresh, mirror_mask, boxCalibration, pawPref);
+%         mirror_mask = validMirrorMask;
+%         fullThresh = validDirectMask;
+%     end
+if any(extCheck(:))
     % part of the paw is outside the box, so the paw must be pretty close
     % to the slot. Get rid of any points too far from the slot
     switch lower(pawPref),
@@ -184,6 +184,9 @@ if ~isempty(cur_mir_points2d) && any(fullThresh(:))
     masks{1} = fullThresh;
     masks{2} = mirror_mask;
     fullMask = estimateHiddenSilhouette(masks, bbox,fundMat,[h,w]);
+    if ~any(extCheck(:))   % only eliminate points below the floor if paw is entirely within the box (time saver)
+        [fullMask{1}, fullMask{2}] = findValidDirectPts( boxRegions.floorCoords, fullMask{1}, fullMask{2}, boxCalibration, pawPref);
+    end
 elseif ~isempty(cur_mir_points2d) && ~any(fullThresh(:))
     fullMask{1} = false(h,w);
     fullMask{2} = mirror_mask;

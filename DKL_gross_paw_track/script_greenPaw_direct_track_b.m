@@ -34,43 +34,16 @@ validScores = [1,2,3,4,7];    % scores for which there was a reach
 %%
 numBGframes = 20;
 gray_paw_limits = [60 125] / 255;
-foregroundThresh = 15/255;
+foregroundThresh = 25/255;
 
-targetMean = [0.5,0.1,0.5];
-targetSigma = [0.2,0.2,0.2];
-
-whiteThresh_ext = 0.90;
-whiteThresh_int = 0.85;
-
-stretch_hist_limit_int = 0.5;
-stretch_hist_limit_ext = 0.75;
-
-% pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
-%                0.33, 0.03, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
-%                0.50, 0.50, 0.95, 1.0, 0.95, 1.0
-%                0.00, 0.16, 0.90, 1.0, 0.90, 1.0       % find red objects
-%                0.33, 0.10, 0.85, 1.0, 0.85, 1.0          % liberal green mask
-%                0.33, 0.005, 0.999, 1.0, 0.999, 1.0
-%                0.33, 0.05, 0.95, 1.0, 0.95, 1.0];  % slighly more liberal for the external mask
-           
-% pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
-%                1/3, 0.03, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-%                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive internal masking
-%                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal internal masking
-%                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive masking just behind the front panel
-%                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
-%                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
-           
-% for rat 1, 5/28 session
 pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
                1/3, 0.03, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive internal masking
-               1/3, 0.05, 0.990, 1.0, 0.60, 1.0    % for liberal internal masking
+               1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal internal masking
                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive masking just behind the front panel
                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
-foregroundThresh = 25/255;
-
+           
 xl_directory = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
 cb_path = '/Users/dan/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
@@ -91,7 +64,7 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 %                        'estimateskew', estimateSkew);
                    
 sr_ratInfo = get_sr_RatList();     
-for i_rat = 2 : 2%length(sr_ratInfo)
+for i_rat = 1 : 1%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawdata_dir = sr_ratInfo(i_rat).directory.rawdata;
@@ -103,21 +76,13 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-
-    for iSession = 7:14%length(sessionList);
+    for iSession = 10 : length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
         curDateStr = sessionName(1:8);
         
-        
-        % WORKING HERE - IF R0027 5/28, NEED TO USE TWO DIFFERENT SETS OF
-        % MATCHED POINTS AND FUNDAMENTAL MATRICES BECAUSE THE LEFT MIRROR
-        % MOVED DURING TRIAL 004
-        
-        if strcmp(sessionName,'20140528a')
-            session_mp = matchedPoints.([fullSessionName(1:end-1) 'a']);
-        elseif isfield(matchedPoints,fullSessionName(1:end-1))
+        if isfield(matchedPoints,fullSessionName(1:end-1))
             session_mp = matchedPoints.(fullSessionName(1:end-1));
         else
             continue;
@@ -163,11 +128,10 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 
                 currentVidName = vidList(iVid).name
                 currentVidNumber = currentVidName(end-6:end-4);
-                
                 scoreIdx = find(csv_trialNums == str2double(currentVidNumber));
                 
                 if ~any(validScores == csv_scores(scoreIdx)); continue; end
-                                
+                
                 disp(currentVidName)
 
                 video = VideoReader(currentVidName);
@@ -175,17 +139,15 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 w = video.Width;
                 
                 BGimg_udName = [fullSessionName(1:end-1) '_' currentVidNumber '_BG_ud.bmp'];
-                pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_mirror_track.mat'];
+                pawTrackMirrorName = [fullSessionName(1:end-1) '_' currentVidNumber '_mirror_track.mat'];
+                pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_full_track.mat'];
+                pawTrackMirrorName = fullfile(curProcFolder,pawTrackMirrorName);
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
+                
                 if exist(pawTrackName,'file');continue;end
                 
-                if strcmp(sessionName,'20140528a') && str2num(currentVidNumber) > 4
-                    session_mp = matchedPoints.([fullSessionName(1:end-1) 'b']);
-                    session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
-                    boxCalibration.srCal = session_srCal;
-                end
-                
                 boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
+                boxRegions.floorCoords = estimateFloor_3dcoords(session_mp,boxCalibration);
                 
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
@@ -197,53 +159,42 @@ for i_rat = 2 : 2%length(sr_ratInfo)
 %                     BGimg_ud = undistortImage(BGimg, cameraParams);
 %                 end
                 
-                
-                triggerTime = identifyTriggerTime_greenPaw( video, sr_ratInfo(i_rat), session_mp, cameraParams,...
-                                                   'pawgraylevels',gray_paw_limits,...
-                                                   'hsvlimits',pawHSVrange,...
-                                                   'targetmean',targetMean,...
-                                                   'targetsigma',targetSigma);
-
-%                 triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, cameraParams,...
-%                                                    'pawgraylevels',gray_paw_limits,...
-%                                                    'hsvlimits',pawHSVrange);
-
-                                               
-                track_metadata.triggerTime = triggerTime;
-                track_metadata.boxCalibration = boxCalibration;
-                
-                initPawMask = find_initPawMask_greenPaw_mirror_20160330( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,...
+                if exist(pawTrackMirrorName,'file');
+                    load(pawTrackMirrorName);
+                    triggerTime = track_metadata.triggerTime;
+%                     initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
+%                     initPawMask = find_initPawMask_greenPaw_mirror_20160330( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,...
+%                                         'hsvlimits', pawHSVrange,...
+%                                         'foregroundthresh',foregroundThresh,...
+%                                         'targetmean',targetMean,...
+%                                         'targetsigma',targetSigma);
+                    initPawMask = find_initPawMask_greenPaw_direct( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, mirror_points2d,boxCalibration, boxRegions,triggerTime,greenBGmask,...
+                                        'hsvlimits', pawHSVrange,...
+                                        'foregroundthresh',foregroundThresh);
+                else
+                    triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, mirror_points2d, cameraParams,...
+                                                       'pawgraylevels',gray_paw_limits,...
+                                                       'hsvlimits',pawHSVrange);
+                    track_metadata.triggerTime = triggerTime;
+                    track_metadata.boxCalibration = boxCalibration;
+                    initPawMask = find_initPawMask_greenPaw_20160309( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
+                    [mirror_points2d,~,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
+                        'hsvlimits', pawHSVrange,...
+                        'foregroundthresh',foregroundThresh);
+                end
+                    
+               
+                [points3d,points2d,timeList,isPawVisible] = trackDirectView(video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
                     'hsvlimits', pawHSVrange,...
-                    'foregroundthresh',foregroundThresh,...
-                    'targetmean',targetMean,...
-                    'targetsigma',targetSigma);
-
-%                 initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
-
-                                  
-%                 [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160204(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
-%                     'hsvlimits', pawHSVrange,...
-%                     'foregroundthresh',foregroundThresh);
-                
-                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
-                    'hsvlimits', pawHSVrange,...
-                    'foregroundthresh',foregroundThresh,...
-                    'targetmean',targetMean,...
-                    'targetsigma',targetSigma,...
-                    'whitethresh_ext',whiteThresh_ext,...
-                    'whitethresh_int',whiteThresh_int,...
-                    'stretch_hist_limit_int',stretch_hist_limit_int,...
-                    'stretch_hist_limit_ext',stretch_hist_limit_ext);
-                
-%                 [points3d,direct_points2d,isPawVisible_direct] = trackDirectView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
-%                     'hsvlimits', pawHSVrange,...
-%                     'foregroundthresh',foregroundThresh);
+                    'foregroundthresh',foregroundThresh);
                 
 %                 [points3d,points2d,timeList,isPawVisible] = trackGreenPaw_20160302(video, BGimg_ud, sr_ratInfo(i_rat), session_mp, triggerTime, initPawMask, boxCalibration,boxRegions,...
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh);
-                
-                save(pawTrackName,'mirror_points2d','timeList','isPawVisible_mirror','track_metadata');
+%                 points2d{1} = direct_points2d;
+%                 points2d{2} = mirror_points2d;
+%                 isPawVisible = [isPawVisible_mirror,isPawVisible_direct];
+                save(pawTrackName,'points2d','points3d','timeList','isPawVisible','track_metadata');
             end    % for iVid
         end    % for iFolder
 
