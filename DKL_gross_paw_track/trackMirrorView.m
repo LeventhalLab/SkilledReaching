@@ -12,7 +12,7 @@ stretch_hist_limit_ext = 0.75;
 
 pawHSVrange = [1/3, 0.002, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
                1/3, 0.005, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-               1/3, 0.002, 0.999, 1.0, 0.95, 1.0    % for restrictive internal masking
+               1/3, 0.002, 0.999, 1.0, 0.80, 1.0    % for restrictive internal masking
                1/3, 0.03, 0.95, 1.0, 0.60, 1.0    % for liberal internal masking
                1/3, 0.03, 0.99, 1.0, 0.90, 1.0    % for restrictive masking just behind the front panel
                1/3, 0.10, 0.95, 1.0, 0.70, 1.0    % for liberal masking just behind the front panel

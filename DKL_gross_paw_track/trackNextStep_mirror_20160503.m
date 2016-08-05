@@ -139,7 +139,7 @@ mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & (prevMask_dilate | prevM
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & extMask & BG_mask;
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & intMask & BG_mask;
 
-mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);
+mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',2);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
 mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',1);
 
 % temp = mirror_greenHSVthresh_int & prevMask;
@@ -225,41 +225,41 @@ if ~isempty(s)
     end
 end
 
-s = regionprops(bwconvhull(libHSVthresh_int,'union'),'boundingbox');
-if ~isempty(s)
-    
-    bbox = round(s.BoundingBox);
-    
-    if prod(bbox(3:4)) > 900 % at least 30x30
-        q = mirror_str_img(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
-
-        lh = stretchlim(q,0.05);
-        q2 = imadjust(q,lh,[]);
-        im_str = zeros(size(mirror_image_ud));
-        im_str(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:) = q2;
-
-    %     b = double(repmat(mirror_greenHSVthresh_int,1,1,3)) .* im_str;
-
-        clims = zeros(2,3);
-        newMask = true(size(mirror_greenHSVthresh_int));
-        brightMask = true(size(mirror_greenHSVthresh_int));
-        for iCh = 1 : 3
-            temp = q2(:,:,iCh);
-            chVals = temp(:);
-            validVals = chVals(chVals > 0.1);
-    %         chVals = temp(temp > 0);
-            clims(1,iCh) = prctile(validVals,10);
-            clims(2,iCh) = prctile(validVals,50);
-
-            newMask = newMask & ((im_str(:,:,iCh) > clims(1,iCh)) & (im_str(:,:,iCh) < clims(2,iCh)));
-            brightMask = brightMask & (im_str(:,:,iCh) > prctile(validVals,85));
-        end
-
-        mirror_greenHSVthresh_int = imreconstruct(newMask,mirror_greenHSVthresh_int & ~imdilate(brightMask,strel('disk',4)));
-        mirror_greenHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int & ~imdilate(brightMask,strel('disk',4)));
-    end
-
-end
+% s = regionprops(bwconvhull(libHSVthresh_int,'union'),'boundingbox');
+% if ~isempty(s)
+%     
+%     bbox = round(s.BoundingBox);
+%     
+%     if prod(bbox(3:4)) > 900 % at least 30x30
+%         q = mirror_str_img(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
+% 
+%         lh = stretchlim(q,0.05);
+%         q2 = imadjust(q,lh,[]);
+%         im_str = zeros(size(mirror_image_ud));
+%         im_str(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:) = q2;
+% 
+%     %     b = double(repmat(mirror_greenHSVthresh_int,1,1,3)) .* im_str;
+% 
+%         clims = zeros(2,3);
+%         newMask = true(size(mirror_greenHSVthresh_int));
+%         brightMask = true(size(mirror_greenHSVthresh_int));
+%         for iCh = 1 : 3
+%             temp = q2(:,:,iCh);
+%             chVals = temp(:);
+%             validVals = chVals(chVals > 0.1);
+%     %         chVals = temp(temp > 0);
+%             clims(1,iCh) = prctile(validVals,5);
+%             clims(2,iCh) = prctile(validVals,50);
+% 
+%             newMask = newMask & ((im_str(:,:,iCh) > clims(1,iCh)) & (im_str(:,:,iCh) < clims(2,iCh)));
+%             brightMask = brightMask & (im_str(:,:,iCh) > prctile(validVals,85));
+%         end
+% 
+%         mirror_greenHSVthresh_int = imreconstruct(newMask,mirror_greenHSVthresh_int & ~imdilate(brightMask,strel('disk',4)));
+%         mirror_greenHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int & ~imdilate(brightMask,strel('disk',4)));
+%     end
+% 
+% end
 
 % mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);
 % mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',1);
