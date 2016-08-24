@@ -39,12 +39,11 @@ foregroundThresh = 15/255;
 targetMean = [0.5,0.1,0.5];
 targetSigma = [0.2,0.2,0.2];
 
-whiteThresh_ext = 0.95;
+whiteThresh_ext = 0.90;
 whiteThresh_int = 0.85;
-stretch_hist_limit = 0.75;
 
-stretch_hist_limit_int = 0.3;
-stretch_hist_limit_ext = 0.5;
+stretch_hist_limit_int = 0.5;
+stretch_hist_limit_ext = 0.75;
 
 % pawHSVrange = [0.33, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's green and bright
 %                0.33, 0.03, 0.98, 1.0, 0.98, 1.0     % pick out anything that's green and bright immediately behind the front panel
@@ -54,13 +53,22 @@ stretch_hist_limit_ext = 0.5;
 %                0.33, 0.005, 0.999, 1.0, 0.999, 1.0
 %                0.33, 0.05, 0.95, 1.0, 0.95, 1.0];  % slighly more liberal for the external mask
            
+% pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
+%                1/3, 0.03, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
+%                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive internal masking
+%                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal internal masking
+%                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive masking just behind the front panel
+%                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
+%                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
+           
+% for rat 1, 5/28 session
 pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
                1/3, 0.03, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-               1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive internal masking
-               1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal internal masking
+               1/3, 0.01, 0.999, 1.0, 0.80, 1.0    % for restrictive internal masking
+               1/3, 0.03, 0.990, 1.0, 0.60, 1.0    % for liberal internal masking
                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive masking just behind the front panel
                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
-               0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
+               1/3, 0.015, 0.99, 1.0, 0.50, 1.0];  % for masking out green in the background image
 foregroundThresh = 25/255;
 
 xl_directory = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
@@ -96,13 +104,20 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 2:2%length(sessionList);
+    for iSession = 3:5%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
         curDateStr = sessionName(1:8);
         
-        if isfield(matchedPoints,fullSessionName(1:end-1))
+        
+        % WORKING HERE - IF R0027 5/28, NEED TO USE TWO DIFFERENT SETS OF
+        % MATCHED POINTS AND FUNDAMENTAL MATRICES BECAUSE THE LEFT MIRROR
+        % MOVED DURING TRIAL 004
+        
+        if strcmp(sessionName,'20140528a')
+            session_mp = matchedPoints.([fullSessionName(1:end-1) 'a']);
+        elseif isfield(matchedPoints,fullSessionName(1:end-1))
             session_mp = matchedPoints.(fullSessionName(1:end-1));
         else
             continue;
@@ -148,10 +163,11 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 
                 currentVidName = vidList(iVid).name
                 currentVidNumber = currentVidName(end-6:end-4);
+                
                 scoreIdx = find(csv_trialNums == str2double(currentVidNumber));
                 
                 if ~any(validScores == csv_scores(scoreIdx)); continue; end
-                
+                                
                 disp(currentVidName)
 
                 video = VideoReader(currentVidName);
@@ -162,15 +178,25 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_mirror_track.mat'];
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
                 if exist(pawTrackName,'file');continue;end
+                
+                if strcmp(sessionName,'20140528a') && i_rat == 1 && str2num(currentVidNumber) > 4
+                    session_mp = matchedPoints.([fullSessionName(1:end-1) 'b']);
+                    session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
+                    boxCalibration.srCal = session_srCal;
+                end
+                
+                boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
+                
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
+                    greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(7,:), sr_ratInfo(i_rat).pawPref);
                 end
 %                 if ~BGcalculated
 %                     BGcalculated = true;
 %                     BGimg = extractBGimg( video, 'numbgframes', numBGframes);
 %                     BGimg_ud = undistortImage(BGimg, cameraParams);
 %                 end
-                boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
+                
                 
                 triggerTime = identifyTriggerTime_greenPaw( video, sr_ratInfo(i_rat), session_mp, cameraParams,...
                                                    'pawgraylevels',gray_paw_limits,...
@@ -199,7 +225,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh);
                 
-                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView_b(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,...
+                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...

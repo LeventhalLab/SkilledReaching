@@ -1,4 +1,4 @@
-function [points3d,points2d,timeList,isPawVisible] = trackDirectView( video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration,varargin )
+function [points3d,points2d,timeList,isPawVisible] = trackDirectView( video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration,greenBGmask,varargin )
 
 video.CurrentTime = triggerTime;
 
@@ -28,7 +28,7 @@ pawBlob.LabelMatrixOutputPort = true;
 pawBlob.MinimumBlobArea = 100;
 pawBlob.MaximumBlobArea = 4000;
 
-for iarg = 1 : 2 : nargin - 8
+for iarg = 1 : 2 : nargin - 9
     switch lower(varargin{iarg})
         case 'pawgraylevels',
             pawGrayLevels = varargin{iarg + 1};
@@ -71,9 +71,8 @@ video.CurrentTime = triggerTime;
 orig_BGimg_ud = BGimg_ud;
 BGimg_ud = color_adapthisteq(BGimg_ud);
 
-greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(1,:), pawPref);
+% greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(1,:), pawPref);
 
-% frontPanelWidth = panelWidthFromMask(boxRegions.frontPanelMask);
 [fpoints2d, fpoints3d, timeList_f,isPawVisible_f] = trackPaw_direct_local( video, BGimg_ud, greenBGmask, initPawMask{1},mirror_points2d, boxRegions, pawPref, 'forward',boxCalibration,...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
@@ -176,7 +175,7 @@ switch lower(pawPref)
         P2 = srCal.P(:,:,1);
 end
 
-for iarg = 1 : 2 : nargin - 10
+for iarg = 1 : 2 : nargin - 9
     switch lower(varargin{iarg})
 %         case 'pawgraylevels',
 %             pawGrayLevels = varargin{iarg + 1};

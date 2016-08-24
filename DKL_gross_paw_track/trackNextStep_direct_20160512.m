@@ -4,20 +4,20 @@ function [fullMask] = trackNextStep_direct_20160512( image_ud, prevMask, cur_mir
 
 h = size(image_ud,1); w = size(image_ud,2);
            
-maxFrontPanelSep = 20;
+% maxFrontPanelSep = 20;
 maxDistPerFrame = 20;
 
-numStretches = 7;
-
-foregroundThresh = 45/255;
-whiteThresh = 0.8;
+% numStretches = 7;
+% 
+% foregroundThresh = 45/255;
+% whiteThresh = 0.8;
 
 shelfThick = 50;
 
-frontPanelMask = boxRegions.frontPanelMask;
-shelfMask = boxRegions.shelfMask;
+% frontPanelMask = boxRegions.frontPanelMask;
 % frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxFrontPanelSep)) & ~frontPanelMask;
 % shelfEdge = imdilate(shelfMask, strel('disk',maxFrontPanelSep)) & ~frontPanelMask;
+shelfMask = boxRegions.shelfMask;
 intMask = boxRegions.intMask;
 extMask = boxRegions.extMask;
 slotMask = boxRegions.slotMask;
@@ -30,25 +30,25 @@ centerPoly_x = [min(x),max(x),max(x),min(x),min(x)];
 centerPoly_y = [1,1,h,h,1];
 centerMask = poly2mask(centerPoly_x,centerPoly_y,h,w);
 centerMask = imdilate(centerMask,strel('line',100,0));
-distFromSlot = 150;
+% distFromSlot = 150;
 % ROI = [centerPoly_x(1)-distFromSlot, 1, range(x)+2*distFromSlot, h-1];
-centerShelfMask = centerMask & shelfMask;
+% centerShelfMask = centerMask & shelfMask;
 belowShelfMask = boxRegions.belowShelfMask;
 
 
-boxFrontThick = 20;
-maskDilate = 15;
+% boxFrontThick = 20;
+% maskDilate = 15;
 
-full_bbox = [1 1 w-1 h-1];
+% full_bbox = [1 1 w-1 h-1];
 
 % blob parameters for tight thresholding
-restrictiveBlob = vision.BlobAnalysis;
-restrictiveBlob.AreaOutputPort = true;
-restrictiveBlob.CentroidOutputPort = true;
-restrictiveBlob.BoundingBoxOutputPort = true;
-restrictiveBlob.LabelMatrixOutputPort = true;
-restrictiveBlob.MinimumBlobArea = 5;
-restrictiveBlob.MaximumBlobArea = 10000;
+% restrictiveBlob = vision.BlobAnalysis;
+% restrictiveBlob.AreaOutputPort = true;
+% restrictiveBlob.CentroidOutputPort = true;
+% restrictiveBlob.BoundingBoxOutputPort = true;
+% restrictiveBlob.LabelMatrixOutputPort = true;
+% restrictiveBlob.MinimumBlobArea = 5;
+% restrictiveBlob.MaximumBlobArea = 10000;
 
 for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
@@ -56,8 +56,8 @@ for iarg = 1 : 2 : nargin - 7
             foregroundThresh = varargin{iarg + 1};
         case 'pawhsvrange',
             pawHSVrange = varargin{iarg + 1};
-        case 'resblob',
-            restrictiveBlob = varargin{iarg + 1};
+%         case 'resblob',
+%             restrictiveBlob = varargin{iarg + 1};
         case 'stretchtol',
             stretchTol = varargin{iarg + 1};
         case 'boxfrontthick',
@@ -73,15 +73,11 @@ shelfLims = regionprops(boxRegions.shelfMask,'boundingbox');
 switch lower(pawPref),
     case 'right',
         fundMat = boxCalibration.srCal.F(:,:,1);
-%         ROI = [1,1,floor(shelfLims.BoundingBox(1) + shelfLims.BoundingBox(3)),ROI_bot;...
-%             ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot];
         ROI = [1,1,floor(shelfLims.BoundingBox(1)),ROI_bot;...
                ceil(shelfLims.BoundingBox(1)),1,ceil(shelfLims.BoundingBox(3)),ROI_bot;...
                ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot];
     case 'left',
         fundMat = boxCalibration.srCal.F(:,:,2);
-%         ROI = [ceil(shelfLims.BoundingBox(1)),1,w-ceil(shelfLims.BoundingBox(1)),ROI_bot;...
-%                1,1,floor(shelfLims.BoundingBox(1)),ROI_bot];
         ROI = [ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot;...
                ceil(shelfLims.BoundingBox(1)),1,ceil(shelfLims.BoundingBox(3)),ROI_bot;...
                1,1,floor(shelfLims.BoundingBox(1)),ROI_bot];
@@ -139,7 +135,8 @@ else
 end
 
 greenHSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(1,:));
-greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',2));
+% greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',2));
+greenHSVthresh = processMask(greenHSVthresh,'sesize',1);
 
 projGreenThresh = greenHSVthresh & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
 % projGreenThresh = projGreenThresh & ~whiteMask;
@@ -147,7 +144,15 @@ projGreenThresh = greenHSVthresh & (centerProjMask & (prevMask_dilate | prevMask
 lib_HSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(2,:));
 lib_HSVthresh = lib_HSVthresh & ~greenBGmask;
 
+belowShelf_HSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(8,:));
+belowShelf_HSVthresh = belowShelf_HSVthresh & belowShelfMask & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
+
+% NEED TO FIGURE OUT FOR R0027_5/28, vid 93 HOW THE PIXEL CLOSE TO THE
+% DELIVERY ARM GETS PICKED UP (CAN IT BE EXCLUDED FROM THE PREVMASK? WHICH
+% PREVMASK (PREVMASK_PANEL OR PREVMASK) CAUSES IT TO BE PICKED UP?
 fullThresh = imreconstruct(projGreenThresh, lib_HSVthresh);
+fullThresh = fullThresh | belowShelf_HSVthresh;
+fullThresh = processMask(fullThresh,'sesize',1);
 
 extCheck = mirror_mask & extMask;
 % if ~any(extCheck(:))  % paw mask is entirely inside the box - do we have to eliminate reflections in the floor?
