@@ -62,11 +62,11 @@ stretch_hist_limit_ext = 0.75;
 %                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
            
 pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
-               1/3, 0.03, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-               0.35, 0.03, 0.999, 1.0, 0.70, 1.0    % for restrictive internal masking
-               0.35, 0.05, 0.990, 1.0, 0.60, 1.0    % for liberal internal masking
-               0.35, 0.03, 0.999, 1.0, 0.7, 1.0    % for restrictive masking just behind the front panel
-               0.35, 0.05, 0.99, 1.0, 0.6, 1.0    % for liberal masking just behind the front panel
+               1/3, 0.02, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
+               1/3, 0.001, 0.999, 1.0, 0.90, 1.0    % for restrictive internal masking
+               1/3, 0.002, 0.990, 1.0, 0.70, 1.0    % for liberal internal masking
+               0.35, 0.02, 0.999, 1.0, 0.6, 1.0    % for restrictive masking just behind the front panel
+               0.35, 0.03, 0.99, 1.0, 0.5, 1.0    % for liberal masking just behind the front panel
                1/3, 0.015, 0.99, 1.0, 0.50, 1.0];  % for masking out green in the background image
 foregroundThresh = 25/255;
 
@@ -103,7 +103,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 6:length(sessionList);
+    for iSession = 14:14%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -261,3 +261,4 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     end
     
 end
+se

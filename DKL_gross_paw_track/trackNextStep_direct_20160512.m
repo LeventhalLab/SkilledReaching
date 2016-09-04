@@ -111,6 +111,7 @@ if ~isempty(cur_mir_points2d)
     mirror_mask_dil = imdilate(mirror_mask, strel('disk',10));
     projMask = projMaskFromTangentLines(mirror_mask_dil, fundMat, [1 1 w-1 h-1], [h,w]);
     centerProjMask = projMask & centerMask;
+    centerProjMask = imdilate(centerProjMask,strel('disk',30));   % added 08/24/2016
 else
     centerProjMask = imdilate(centerMask,strel('disk',150));    % expand center region because this is probably the rat walking up to the slot
 end
@@ -135,8 +136,8 @@ else
 end
 
 greenHSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(1,:));
-% greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',2));
-greenHSVthresh = processMask(greenHSVthresh,'sesize',1);
+greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',2));
+greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
 
 projGreenThresh = greenHSVthresh & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
 % projGreenThresh = projGreenThresh & ~whiteMask;
@@ -190,8 +191,29 @@ if ~isempty(cur_mir_points2d) && any(fullThresh(:))
     masks{2} = mirror_mask;
     fullMask = estimateHiddenSilhouette(masks, bbox,fundMat,[h,w]);
     if ~any(extCheck(:))   % only eliminate points below the floor if paw is entirely within the box (time saver)
-        [fullMask{1}, fullMask{2}] = findValidDirectPts( boxRegions.floorCoords, fullMask{1}, fullMask{2}, boxCalibration, pawPref);
+        [fullMask{1}, fullMask{2},pts_below_floor] = findValidDirectPts( boxRegions.floorCoords, fullMask{1}, fullMask{2}, boxCalibration, pawPref);
+        
+        if pts_below_floor    % part of the image was cut off, so go back and repeat the green thresholding only on points within the currently accepted region
+            greenHSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(1,:));
+            greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',2));
+            greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
+            
+            lib_HSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(2,:));
+            lib_HSVthresh = lib_HSVthresh & ~greenBGmask;
+            
+            newMask = imreconstruct(greenHSVthresh, lib_HSVthresh);
+            
+            for ii = 1 : 2
+                masks{ii} = newMask & fullMask{ii};
+            end
+            
+            fullMask = restrictSilhouettes(masks, bbox, fundMat,[h,w]);
+            for ii = 1 : 2
+                fullMask{ii} = bwconvhull(fullMask{ii},'union');
+            end
+        end
     end
+    
 elseif ~isempty(cur_mir_points2d) && ~any(fullThresh(:))
     fullMask{1} = false(h,w);
     fullMask{2} = mirror_mask;

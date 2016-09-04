@@ -162,10 +162,10 @@ abs_BGdiff = imabsdiff(BGimg_ud,image_ud);
 decorr_green_hsv = rgb2hsv(decorr_green);
 % orig_decorr_green_hsv = rgb2hsv(orig_decorr_green);
 greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(1,:));
-greenHSVthresh = greenHSVthresh & ~greenBGmask;
+greenHSVthresh = greenHSVthresh & ~greenBGmask & ~imdilate(whiteMask,strel('disk',5));
 
 
-greenHSVthresh = processMask(greenHSVthresh,'sesize',1);
+greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
 % diff_greenHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(1,:));
 libHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(2,:));
 
@@ -254,6 +254,7 @@ if any(side_overlap_mask(:))    % previous paw mask is very close to the front p
     mask_panel_dilate = imdilate(mask_panel_dilate,strel('line',10,90));
     int_greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(2,:));
     int_greenHSVthresh = int_greenHSVthresh & intMask;
+    int_greenHSVthresh = processMask(int_greenHSVthresh,2);
     
     libHSVthresh_int = HSVthreshold(decorr_green_hsv, pawHSVrange(2,:));
     libHSVthresh_int = libHSVthresh_int & intMask;

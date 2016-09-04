@@ -77,7 +77,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 1 : 5%length(sessionList);
+    for iSession = 4 : 4%length(sessionList);
         
         if exist('session_mp','var')
             clear session_mp;
@@ -171,7 +171,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
-                    greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(1,:), sr_ratInfo(i_rat).pawPref);
+                    greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(2,:), sr_ratInfo(i_rat).pawPref);
                 end
 %                 if ~BGcalculated
 %                     BGcalculated = true;

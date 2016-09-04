@@ -61,13 +61,12 @@ stretch_hist_limit_ext = 0.75;
 %                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
 %                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
            
-% for rat 1, 5/28 session
 pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
-               1/3, 0.03, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-               1/3, 0.01, 0.999, 1.0, 0.80, 1.0    % for restrictive internal masking
-               1/3, 0.03, 0.990, 1.0, 0.60, 1.0    % for liberal internal masking
-               1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive masking just behind the front panel
-               1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
+               1/3, 0.05, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
+               1/3, 0.001, 0.999, 1.0, 0.99, 1.0    % for restrictive internal masking
+               1/3, 0.002, 0.990, 1.0, 0.70, 1.0    % for liberal internal masking
+               0.35, 0.02, 0.999, 1.0, 0.6, 1.0    % for restrictive masking just behind the front panel
+               0.35, 0.03, 0.99, 1.0, 0.5, 1.0    % for liberal masking just behind the front panel
                1/3, 0.015, 0.99, 1.0, 0.50, 1.0];  % for masking out green in the background image
 foregroundThresh = 25/255;
 
@@ -104,18 +103,23 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 3:5%length(sessionList);
+    for iSession = 13:13%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
         curDateStr = sessionName(1:8);
         
         
-        % WORKING HERE - IF R0027 5/28, NEED TO USE TWO DIFFERENT SETS OF
+        % IF R0027 5/28, NEED TO USE TWO DIFFERENT SETS OF
         % MATCHED POINTS AND FUNDAMENTAL MATRICES BECAUSE THE LEFT MIRROR
         % MOVED DURING TRIAL 004
         
-        if strcmp(sessionName,'20140528a')
+        % SIMILARLY, IF R0028, 4/27, NEED TO USE TWO DIFFERENT SETS OF
+        % MATCHED POINTS AND FUNDAMENTAL MATRICES BECAUSE THE CAMERA MOVED
+        % BETWEEN TRIALS 11 AND 12
+        
+        if (strcmp(sessionName,'20140528a') && i_rat == 1) || ...
+           (strcmp(sessionName,'20140427a') && i_rat == 2)
             session_mp = matchedPoints.([fullSessionName(1:end-1) 'a']);
         elseif isfield(matchedPoints,fullSessionName(1:end-1))
             session_mp = matchedPoints.(fullSessionName(1:end-1));
@@ -179,7 +183,13 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
                 if exist(pawTrackName,'file');continue;end
                 
-                if strcmp(sessionName,'20140528a') && i_rat == 1 && str2num(currentVidNumber) > 4
+                if strcmp(sessionName,'20140528a') && i_rat == 1 &&  str2num(currentVidNumber) > 4
+                    session_mp = matchedPoints.([fullSessionName(1:end-1) 'b']);
+                    session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
+                    boxCalibration.srCal = session_srCal;
+                end
+                
+                if strcmp(sessionName,'20140427a') && i_rat == 2 &&  str2num(currentVidNumber) > 11
                     session_mp = matchedPoints.([fullSessionName(1:end-1) 'b']);
                     session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
                     boxCalibration.srCal = session_srCal;
@@ -212,7 +222,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 track_metadata.triggerTime = triggerTime;
                 track_metadata.boxCalibration = boxCalibration;
                 
-                initPawMask = find_initPawMask_greenPaw_mirror_20160330( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,...
+                initPawMask = find_initPawMask_greenPaw_mirror_20160823( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...
@@ -225,7 +235,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh);
                 
-                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
+                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView_b(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...

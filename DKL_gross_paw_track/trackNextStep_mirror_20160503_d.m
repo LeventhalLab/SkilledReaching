@@ -1,4 +1,4 @@
-function [fullMask,greenMask] = trackNextStep_mirror_20160503_b( image_ud, BGimg_ud_str, fundMat, prevMask, boxRegions, pawPref, greenBGmask,varargin)
+function [fullMask,greenMask] = trackNextStep_mirror_20160503_d( image_ud, BGimg_ud_str, fundMat, prevMask, boxRegions, pawPref, greenBGmask,varargin)
 
 % CONSIDER SUBTRACTING EACH IMAGE FROM THE PREVIOUS ONE, USING THAT AS A
 % BACKGROUND MASK EXCEPT IN THE IMMEDIATE VICINITY OF THE LAST PAW
@@ -174,7 +174,7 @@ temp = libHSVthresh_int & (prevMask_dilate | prevMask_panel_dilate);
 libHSVthresh_int = imreconstruct(temp, libHSVthresh_int);
 
 libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(2,:));
-libHSVthresh_ext = libHSVthresh_ext & extMask;% & BG_mask;% & ~whiteMask;% & im_masked;
+libHSVthresh_ext = libHSVthresh_ext & extMask;% & ~whiteMask;% & BG_mask;% & ~whiteMask;% & im_masked;
 
 libHSVthresh_ext = libHSVthresh_ext;% & ~mirror_greenBGmask;
 libHSVthresh_int = libHSVthresh_int & ~mirror_greenBGmask;
@@ -322,7 +322,7 @@ if any(behindOverlap(:))
     behindShelfRegion = behindShelfRegion(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
     
     temp = temp & behindOverlap & behindShelfRegion & ~mirror_greenBGmask;
-    temp = processMask(temp,strel('disk',1));
+    temp = processMask(temp,strel('disk',2));
 
     lib_temp = HSVthreshold(mirror_decorr_green_hsv_int,pawHSVrange(6,:));
     lib_temp = lib_temp & behindShelfRegion & ~mirror_greenBGmask & ~whiteMask; %behindOverlap & ;% & ~whiteMask;

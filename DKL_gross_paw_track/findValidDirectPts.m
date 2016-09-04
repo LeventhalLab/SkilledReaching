@@ -1,4 +1,4 @@
-function [ validDirectMask, validMirrorMask ] = findValidDirectPts( floorCoords, directMask, mirrorMask, boxCalibration, pawPref )
+function [ validDirectMask, validMirrorMask, pts_below_floor ] = findValidDirectPts( floorCoords, directMask, mirrorMask, boxCalibration, pawPref )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 

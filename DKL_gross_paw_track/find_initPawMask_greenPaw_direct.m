@@ -177,9 +177,9 @@ decorr_green_hsv = rgb2hsv(decorr_green);
 greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(1,:));
 % greenHSVthresh = greenHSVthresh & ~greenBGthresh;
 
-
-greenHSVthresh = processMask(greenHSVthresh,'sesize',1);
 greenHSVthresh = greenHSVthresh & ~greenBGmask;
+greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
+
 
 projGreenThresh = greenHSVthresh & centerProjMask;
 
