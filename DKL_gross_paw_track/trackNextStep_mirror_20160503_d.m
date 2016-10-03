@@ -146,7 +146,7 @@ mirror_greenHSVthresh_int = mirror_greenHSVthresh_int;% & ~mirror_greenBGmask;
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & extMask & BG_mask;
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & intMask & BG_mask;
 
-mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',2);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
+mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
 mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',2);
 
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & (prevMask_dilate | prevMask_panel_dilate);
@@ -176,7 +176,6 @@ libHSVthresh_int = imreconstruct(temp, libHSVthresh_int);
 libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(2,:));
 libHSVthresh_ext = libHSVthresh_ext & extMask;% & ~whiteMask;% & BG_mask;% & ~whiteMask;% & im_masked;
 
-libHSVthresh_ext = libHSVthresh_ext;% & ~mirror_greenBGmask;
 libHSVthresh_int = libHSVthresh_int & ~mirror_greenBGmask;
 
 % if any(prevExtMask(:)) && ~any(prevIntMask(:))

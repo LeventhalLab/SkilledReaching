@@ -26,6 +26,8 @@ ROIwidth = 120;
 
 directWidth = 250;    % in pixels
 
+whiteThresh = 0.8;
+blackThresh = 0.05;
 
 for iarg = 1 : 2 : nargin - 8
     switch lower(varargin{iarg})
@@ -96,7 +98,7 @@ image_ud = undistortImage(image, cameraParams);
 mirror_image_ud = image_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
 direct_image_ud = image_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
 other_mirror_image_ud = image_ud(ROI(3,2):ROI(3,2)+ROI(3,4),ROI(3,1):ROI(3,1)+ROI(3,3),:);
-lh  = stretchlim(other_mirror_image_ud,0.05);
+lh  = stretchlim(other_mirror_image_ud,0.1);
 direct_str_img = imadjust(direct_image_ud,lh,[]);
 mirror_str_img = imadjust(mirror_image_ud,lh,[]);
 
@@ -134,9 +136,16 @@ srCal = boxCalibration.srCal;
 ctrstImg = imadjust(image_ud,[0.2,0.2,0.2;0.8,0.8,0.8],[]);
 ctrstImg_hsv = rgb2hsv(ctrstImg);
 
-whiteMask = HSVthreshold(ctrstImg_hsv,[0.5,0.5,0,0.001,0.999,1]);
-
-
+% whiteMask = HSVthreshold(ctrstImg_hsv,[0.5,0.5,0,0.001,0.999,1]);
+mirror_bright_im = imadjust(rgb2gray(mirror_str_img),[0.1,0.9]);
+mirror_whiteMask = mirror_bright_im > whiteThresh;
+direct_bright_im = imadjust(rgb2gray(direct_str_img),[0.1,0.9]);
+direct_whiteMask = direct_bright_im > 0.8;
+whiteMask = false(h,w);
+whiteMask(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3)) = mirror_whiteMask;
+whiteMask(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3)) = direct_whiteMask;
+% WORKING HERE - TRY USING BRIGHT_IM ANALYSIS TO GET RID OF WHITE, BUT
+% STILL ALLOW DARK GREEN FINGER TIPS TO BE DETECTED...
 
 % decorr_green = decorrstretch(image_ud,...
 %                              'targetmean',targetMean(1,:),...
@@ -162,9 +171,7 @@ abs_BGdiff = imabsdiff(BGimg_ud,image_ud);
 decorr_green_hsv = rgb2hsv(decorr_green);
 % orig_decorr_green_hsv = rgb2hsv(orig_decorr_green);
 greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(1,:));
-greenHSVthresh = greenHSVthresh & ~greenBGmask & ~imdilate(whiteMask,strel('disk',5));
-
-
+greenHSVthresh = greenHSVthresh & ~greenBGmask & ~whiteMask;% & ~imdilate(whiteMask,strel('disk',5));
 greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
 % diff_greenHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(1,:));
 libHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(2,:));
@@ -188,9 +195,9 @@ shelf_left = max(1,shelf_right - ROIwidth);
 leftMirrorMask(shelf_top:shelf_bot,shelf_left:shelf_right) = true;
 
 rightMirrorMask = false(h,w);
-shelf_bot = session_mp.rightMirror.right_back_shelf_corner(2)+20;
+shelf_bot = session_mp.rightMirror.right_back_shelf_corner(2)+40;
 shelf_top = shelf_bot - ROIheight;
-shelf_left = session_mp.rightMirror.right_back_shelf_corner(1)-20;
+shelf_left = session_mp.rightMirror.right_back_shelf_corner(1)-40;
 shelf_right = min(w,shelf_left + ROIwidth);
 rightMirrorMask(shelf_top:shelf_bot,shelf_left:shelf_right) = true;
 
@@ -252,7 +259,7 @@ if any(side_overlap_mask(:))    % previous paw mask is very close to the front p
 %     SE = strel('rectangle',[5 boxFrontThick + 50]);
     mask_panel_dilate = imdilate(mirror_mask, SE_fromExt);
     mask_panel_dilate = imdilate(mask_panel_dilate,strel('line',10,90));
-    int_greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(2,:));
+    int_greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(1,:));
     int_greenHSVthresh = int_greenHSVthresh & intMask;
     int_greenHSVthresh = processMask(int_greenHSVthresh,2);
     

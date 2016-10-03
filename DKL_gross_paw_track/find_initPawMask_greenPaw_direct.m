@@ -13,14 +13,14 @@ pawHSVrange = [1/3, 0.05, 0.95, 1.0, 0.95, 1.0   % pick out anything that's gree
                1/3, 0.02, 0.99, 1.0, 0.99, 1.0];  % very narror for the external region where lighting is good
 
 initPawMask = cell(1,2);
-foregroundThresh = 25/255;
-
-ROIheight = 220;    % in pixels - how high above the shelf to look for the paw
-ROIwidth = 120;
-
-directWidth = 250;    % in pixels
-
-boxFrontThick = 20;
+% foregroundThresh = 25/255;
+% 
+% ROIheight = 220;    % in pixels - how high above the shelf to look for the paw
+% ROIwidth = 120;
+% 
+% directWidth = 250;    % in pixels
+% 
+% boxFrontThick = 20;
 
 pawPref = sr_ratInfo.pawPref;
 
@@ -52,18 +52,30 @@ switch pawPref
 end
 
 frontPanelMask = boxRegions.frontPanelMask;
-shelfMask = boxRegions.shelfMask;
+% shelfMask = boxRegions.shelfMask;
+slotMask = boxRegions.slotMask;
 frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxFrontPanelSep)) & ~frontPanelMask;
 intMask = boxRegions.intMask;
 floorMask = boxRegions.floorMask;
 [y,~] = find(floorMask);
 ROI_bot = min(y);
 
-[~,x] = find(shelfMask);
-centerPoly_x = [min(x),max(x),max(x),min(x),min(x)];
-centerPoly_y = [1,1,h,h,1];
-centerMask = poly2mask(centerPoly_x,centerPoly_y,h,w);
-centerMask = imdilate(centerMask,strel('line',100,0));
+% [~,x] = find(shelfMask);
+% centerPoly_x = [min(x),max(x),max(x),min(x),min(x)];
+% centerPoly_y = [1,1,h,h,1];
+% centerMask = poly2mask(centerPoly_x,centerPoly_y,h,w);
+% centerMask = imdilate(centerMask,strel('line',100,0));
+
+switch lower(pawPref),
+    case 'left',
+        extended_SE = [ones(1,50),zeros(1,50)];
+    case 'right',
+        extended_SE = [zeros(1,50),ones(1,50)];
+end
+extSlotMask = imdilate(slotMask,strel('disk',50));
+extSlotMask = imdilate(extSlotMask,extended_SE);
+centerMask = imdilate(extSlotMask,[zeros(50,1);ones(50,1)]);
+
 
 % belowShelfMask = boxRegions.belowShelfMask;
 
@@ -100,7 +112,11 @@ cameraParams = boxCalibration.cameraParams;
 % K = cameraParams.IntrinsicMatrix;
 srCal = boxCalibration.srCal;
 
+prevTime = video.CurrentTime;
 image = readFrame(video);
+if video.CurrentTime - prevTime < 1e-10
+	image = readFrame(video);
+end
 image_ud = undistortImage(image, cameraParams);
 if strcmpi(class(image_ud),'uint8')
     image_ud = double(image_ud) / 255;
@@ -138,7 +154,9 @@ end
 mirror_mask = imfill(mirror_mask,'holes');
 mirror_mask_dil = imdilate(mirror_mask, strel('disk',10));
 projMask = projMaskFromTangentLines(mirror_mask_dil, fundMat, [1 1 w-1 h-1], [h,w]);
-centerProjMask = projMask & centerMask;
+% centerProjMask = projMask & centerMask;
+    
+    
 % centerProjMask = centerProjMask(ROI(2,2):ROI(2,2) + ROI(2,4),ROI(2,1):ROI(2,1) + ROI(2,3));
 
 % ctrstImg = imadjust(image_ud,[0.2,0.2,0.2;0.8,0.8,0.8],[]);
@@ -180,8 +198,12 @@ greenHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(1,:));
 greenHSVthresh = greenHSVthresh & ~greenBGmask;
 greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
 
+mirrorProj = projMaskFromTangentLines(mirror_mask,fundMat, [1 1 w-1 h-1], [h,w]);
+temp = mirrorProj & greenHSVthresh;
+projGreenThresh = imreconstruct(temp,greenHSVthresh) & centerMask;
 
-projGreenThresh = greenHSVthresh & centerProjMask;
+% projGreenThresh = greenHSVthresh & centerProjMask;
+projGreenThresh = processMask(projGreenThresh,'sesize',1);
 
 % diff_greenHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(1,:));
 lib_HSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(2,:));

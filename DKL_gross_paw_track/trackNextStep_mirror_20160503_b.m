@@ -17,7 +17,9 @@ frontPanelMask = imdilate(boxRegions.frontPanelMask,strel('disk',2));
 shelfMask = boxRegions.shelfMask;
 frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxDistBehindFrontPanel)) & ~frontPanelMask;
 
-whiteThresh = 0.9;
+whiteThresh = 0.6;
+int_whiteThresh = 0.6;
+blackThresh = 0.1;
 diff_thresh = [0.2,0.2,0.2];
 
 intMask = boxRegions.intMask;
@@ -56,6 +58,7 @@ switch lower(pawPref),
 %         ext_white_check_SE = [ones(1,10),zeros(1,10)];
 end
 
+vertSTREL = strel('line',15,90);
 % lh  = stretchlim(image_ud(1:ROI_bot,:));
 % str_img = imadjust(image_ud,lh,[]);
 
@@ -133,20 +136,21 @@ mirror_decorr_green_hsv_ext = mirror_decorr_green_hsv;
 mirror_decorr_green_hsv_int = mirror_decorr_green_hsv;
 
 prevMask_dilate = imdilate(prevMask,strel('disk',maxDistPerFrame));
-bright_im = imadjust(rgb2gray(mirror_str_img),[0.1,0.9]);
-whiteMask = bright_im > 0.5;
+bright_im = imadjust(rgb2gray(mirror_str_img),[0.05,0.9]);
+whiteMask = bright_im > whiteThresh;
+blackMask = bright_im < blackThresh;
 
 mirror_greenHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(1,:));
-mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & ~whiteMask;
+mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & ~whiteMask & ~blackMask;
 mirror_greenHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv_int, pawHSVrange(3,:));
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & ~whiteMask;
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext;% & ~mirror_greenBGmask;
-mirror_greenHSVthresh_int = mirror_greenHSVthresh_int;% & ~mirror_greenBGmask;
+% mirror_greenHSVthresh_int = mirror_greenHSVthresh_int;% & ~mirror_greenBGmask;
 
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & extMask & BG_mask;
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & intMask & BG_mask;
 
-mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',2);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
+% mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
 mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',2);
 
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & (prevMask_dilate | prevMask_panel_dilate);
@@ -169,14 +173,17 @@ mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & (prevMask_dilate | prevM
 % end
 
 libHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv_int, pawHSVrange(4,:));
-libHSVthresh_int = libHSVthresh_int & intMask;% & BG_mask;% & ~whiteMask;
+int_whiteMask = bright_im > int_whiteThresh;
+libHSVthresh_int = libHSVthresh_int & intMask & ~int_whiteMask;% & BG_mask;% & ~whiteMask;
+libHSVthresh_int = processMask(libHSVthresh_int,'sesize',2);
 temp = libHSVthresh_int & (prevMask_dilate | prevMask_panel_dilate);
 libHSVthresh_int = imreconstruct(temp, libHSVthresh_int);
 
 libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(2,:));
-libHSVthresh_ext = libHSVthresh_ext & extMask;% & BG_mask;% & ~whiteMask;% & im_masked;
+libHSVthresh_ext = libHSVthresh_ext & extMask & ~whiteMask & ~blackMask;% & BG_mask;% & ~whiteMask;% & im_masked;
+libHSVthresh_ext = processMask(libHSVthresh_ext,'sesize',2);
 
-libHSVthresh_ext = libHSVthresh_ext;% & ~mirror_greenBGmask;
+% libHSVthresh_ext = libHSVthresh_ext;% & ~mirror_greenBGmask;
 libHSVthresh_int = libHSVthresh_int & ~mirror_greenBGmask;
 
 % if any(prevExtMask(:)) && ~any(prevIntMask(:))
@@ -300,7 +307,7 @@ end
 % check to see if there are green spots identified away from the front
 % panel, while the paw is behind the front panel
 if any(mirror_greenHSVthresh_ext(:)) && any(mirror_greenHSVthresh_int(:))
-    ext_dilate = imdilate(mirror_greenHSVthresh_ext,strel('disk',7));
+    ext_dilate = imdilate(mirror_greenHSVthresh_ext,strel('disk',25));
     ext_overlap = ext_dilate & frontPanelMask;
     if ~any(ext_overlap(:))
         mirror_greenHSVthresh_ext = false(size(mirror_greenHSVthresh_ext));

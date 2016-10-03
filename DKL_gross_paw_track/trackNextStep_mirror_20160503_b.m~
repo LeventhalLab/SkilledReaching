@@ -1,4 +1,4 @@
-function [fullMask,greenMask] = trackNextStep_mirror_20160503_c( image_ud, BGimg_ud_str, fundMat, prevMask, boxRegions, pawPref, greenBGmask,varargin)
+function [fullMask,greenMask] = trackNextStep_mirror_20160503_b( image_ud, BGimg_ud_str, fundMat, prevMask, boxRegions, pawPref, greenBGmask,varargin)
 
 % CONSIDER SUBTRACTING EACH IMAGE FROM THE PREVIOUS ONE, USING THAT AS A
 % BACKGROUND MASK EXCEPT IN THE IMMEDIATE VICINITY OF THE LAST PAW
@@ -17,8 +17,9 @@ frontPanelMask = imdilate(boxRegions.frontPanelMask,strel('disk',2));
 shelfMask = boxRegions.shelfMask;
 frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxDistBehindFrontPanel)) & ~frontPanelMask;
 
-whiteThresh = 0.7;
-blackThresh = 0.0;
+whiteThresh = 0.6;
+int_whiteThresh = 0.6;
+blackThresh = 0.1;
 diff_thresh = [0.2,0.2,0.2];
 
 intMask = boxRegions.intMask;
@@ -35,9 +36,6 @@ for iarg = 1 : 2 : nargin - 7
             maxDistPerFrame = varargin{iarg + 1};
     end
 end
-
-frontPanelIntDilateSize = 2;
-
 
 shelfLims = regionprops(boxRegions.shelfMask,'boundingbox');
 switch lower(pawPref),
@@ -60,12 +58,13 @@ switch lower(pawPref),
 %         ext_white_check_SE = [ones(1,10),zeros(1,10)];
 end
 
+vertSTREL = strel('line',15,90);
 % lh  = stretchlim(image_ud(1:ROI_bot,:));
 % str_img = imadjust(image_ud,lh,[]);
 
 mirror_image_ud = image_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
 other_mirror_image_ud = image_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
-lh  = stretchlim(other_mirror_image_ud,0.05);
+lh  = stretchlim(other_mirror_image_ud,0.1);
 mirror_str_img = imadjust(mirror_image_ud,lh,[]);
 % mirror_str_img = str_img(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
 
@@ -137,21 +136,21 @@ mirror_decorr_green_hsv_ext = mirror_decorr_green_hsv;
 mirror_decorr_green_hsv_int = mirror_decorr_green_hsv;
 
 prevMask_dilate = imdilate(prevMask,strel('disk',maxDistPerFrame));
-bright_im = imadjust(rgb2gray(mirror_str_img),[0.1,0.9]);
+bright_im = imadjust(rgb2gray(mirror_str_img),[0.05,0.9]);
 whiteMask = bright_im > whiteThresh;
 blackMask = bright_im < blackThresh;
 
 mirror_greenHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(1,:));
-mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & ~imdilate(whiteMask,strel('disk',5)) & ~blackMask;
+mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & ~whiteMask & ~blackMask;
 mirror_greenHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv_int, pawHSVrange(3,:));
-mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & ~whiteMask & ~blackMask & ~imdilate(frontPanelMask, strel('disk',frontPanelIntDilateSize));
-% mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext;% & ~mirror_greenBGmask;
+mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & ~whiteMask;
+mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext;% & ~mirror_greenBGmask;
 % mirror_greenHSVthresh_int = mirror_greenHSVthresh_int;% & ~mirror_greenBGmask;
 
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & extMask & BG_mask;
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & intMask & BG_mask;
 
-mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',2);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
+mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
 mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',2);
 
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & (prevMask_dilate | prevMask_panel_dilate);
@@ -174,12 +173,15 @@ mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & (prevMask_dilate | prevM
 % end
 
 libHSVthresh_int = HSVthreshold(mirror_decorr_green_hsv_int, pawHSVrange(4,:));
-libHSVthresh_int = libHSVthresh_int & intMask & ~whiteMask & ~blackMask & ~imdilate(frontPanelMask, strel('disk',frontPanelIntDilateSize));% & BG_mask;% & ~whiteMask;
+int_whiteMask = bright_im > int_whiteThresh;
+libHSVthresh_int = libHSVthresh_int & intMask & ~int_whiteMask;% & BG_mask;% & ~whiteMask;
+libHSVthresh_int = processMask(libHSVthresh_int,'sesize',2);
 temp = libHSVthresh_int & (prevMask_dilate | prevMask_panel_dilate);
 libHSVthresh_int = imreconstruct(temp, libHSVthresh_int);
 
 libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(2,:));
-libHSVthresh_ext = libHSVthresh_ext & extMask & ~imerode(whiteMask,strel('disk',2));% & BG_mask;% & ~whiteMask;% & im_masked;
+libHSVthresh_ext = libHSVthresh_ext & extMask & ~whiteMask & ~blackMask;% & BG_mask;% & ~whiteMask;% & im_masked;
+libHSVthresh_ext = processMask(libHSVthresh_ext,'sesize',2);
 
 % libHSVthresh_ext = libHSVthresh_ext;% & ~mirror_greenBGmask;
 libHSVthresh_int = libHSVthresh_int & ~mirror_greenBGmask;
@@ -305,7 +307,7 @@ end
 % check to see if there are green spots identified away from the front
 % panel, while the paw is behind the front panel
 if any(mirror_greenHSVthresh_ext(:)) && any(mirror_greenHSVthresh_int(:))
-    ext_dilate = imdilate(mirror_greenHSVthresh_ext,strel('disk',7));
+    ext_dilate = imdilate(mirror_greenHSVthresh_ext,strel('disk',25));
     ext_overlap = ext_dilate & frontPanelMask;
     if ~any(ext_overlap(:))
         mirror_greenHSVthresh_ext = false(size(mirror_greenHSVthresh_ext));
@@ -326,11 +328,11 @@ if any(behindOverlap(:))
     behindShelfRegion = imfill(behindShelfRegion, [1 1]);
     behindShelfRegion = behindShelfRegion(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
     
-    temp = temp & behindOverlap & behindShelfRegion & ~mirror_greenBGmask & ~blackMask & ~imdilate(frontPanelMask, strel('disk',frontPanelIntDilateSize));
+    temp = temp & behindOverlap & behindShelfRegion & ~mirror_greenBGmask;
     temp = processMask(temp,strel('disk',1));
 
     lib_temp = HSVthreshold(mirror_decorr_green_hsv_int,pawHSVrange(6,:));
-    lib_temp = lib_temp & behindShelfRegion & ~mirror_greenBGmask & ~whiteMask & ~blackMask & ~imdilate(frontPanelMask, strel('disk',frontPanelIntDilateSize)); %behindOverlap & ;% & ~whiteMask;
+    lib_temp = lib_temp & behindShelfRegion & ~mirror_greenBGmask & ~whiteMask; %behindOverlap & ;% & ~whiteMask;
     behindPanelGreenThresh = imreconstruct(temp,lib_temp);
     behindPanelGreenThresh = processMask(behindPanelGreenThresh, 1);
     if any(mirror_greenHSVthresh_int(:))    % if paw is already detected on interior of box, only accept the mask near the front panel if it overlaps with the internal part already found

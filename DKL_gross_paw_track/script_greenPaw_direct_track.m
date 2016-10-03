@@ -77,7 +77,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 6 : 6%length(sessionList);
+    for iSession = 14 : 14%length(sessionList);
         
         if exist('session_mp','var')
             clear session_mp;
@@ -204,6 +204,10 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 end
                     
                
+                % NOTE: FOR R0028, 04/28/2016, VID #13, LOOK AT RESTRICTING
+                % THE WIDTH OF THE PROJECTION FROM THE MIRROR VIEW ALLOWED
+                % TO MASK THE DIRECT VIEW - PROBLEM IS THE OTHER PAW HAS
+                % SOME GREEN ON IT AND IS GETTING PICKED UP.
                 [points3d,points2d,timeList,isPawVisible] = trackDirectView(video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh);

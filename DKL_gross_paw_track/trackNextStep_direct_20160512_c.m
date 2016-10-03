@@ -1,4 +1,4 @@
-function [fullMask] = trackNextStep_direct_20160512( image_ud, prevMask, cur_mir_points2d, boxRegions, pawPref, boxCalibration, greenBGmask, varargin)
+function [fullMask] = trackNextStep_direct_20160512_c( image_ud, prevMask, cur_mir_points2d, boxRegions, pawPref, boxCalibration, greenBGmask, varargin)
 
 % MAY HAVE TO UPDATE HOW GREENBGMASK IS CALCULATED IN THE CALLING FUNCTION
 
@@ -108,7 +108,7 @@ if ~isempty(cur_mir_points2d)
         mirror_mask(cur_mir_points2d(ii,2),cur_mir_points2d(ii,1)) = true;
     end
     mirror_mask = imfill(mirror_mask,'holes');
-    mirror_mask_dil = imdilate(mirror_mask, strel('disk',5));
+    mirror_mask_dil = imdilate(mirror_mask, strel('disk',10));
     projMask = projMaskFromTangentLines(mirror_mask_dil, fundMat, [1 1 w-1 h-1], [h,w]);
     centerProjMask = projMask & centerMask;
     centerProjMask = imdilate(centerProjMask,strel('disk',10));   % added 08/24/2016
@@ -136,19 +136,27 @@ else
 end
 
 greenHSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(1,:));
-greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',1));
+greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',2)) & (prevMask_dilate | prevMask_panel_dilate);
 greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
 
-projGreenThresh = greenHSVthresh & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
-projGreenThresh = processMask(projGreenThresh,'sesize',2);
+mirrorProj = projMaskFromTangentLines(mirror_mask,fundMat, [1 1 w-1 h-1], [h,w]);
+temp = mirrorProj & greenHSVthresh;
+projGreenThresh = imreconstruct(temp,greenHSVthresh) & centerMask;
+
+temp = mirrorProj & shelfMask;
+if ~any(projGreenThresh(:)) && any(temp(:))   % in rare case that projection from the mirror view overlaps with the shelf but not the green mask
+    projGreenThresh = greenHSVthresh;
+end
+% projGreenThresh = greenHSVthresh & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
 % projGreenThresh = projGreenThresh & ~whiteMask;
 
 lib_HSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(2,:));
 
-% lib_HSVthresh = lib_HSVthresh & ~greenBGmask;
+lib_HSVthresh = lib_HSVthresh & ~greenBGmask;
 
 belowShelf_HSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(8,:));
-belowShelf_HSVthresh = belowShelf_HSVthresh & belowShelfMask & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
+% belowShelf_HSVthresh = belowShelf_HSVthresh & belowShelfMask & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
+belowShelf_HSVthresh = belowShelf_HSVthresh & belowShelfMask & (centerMask & mirrorProj & (prevMask_dilate | prevMask_panel_dilate));
 
 % NEED TO FIGURE OUT FOR R0027_5/28, vid 93 HOW THE PIXEL CLOSE TO THE
 % DELIVERY ARM GETS PICKED UP (CAN IT BE EXCLUDED FROM THE PREVMASK? WHICH
@@ -161,19 +169,14 @@ fullThresh = processMask(fullThresh,'sesize',1);
 % for R0028, session 05062014, some nail polish got on the other paw. Will
 % take the largest blob only if the paw is entirely below the shelf - the
 % smaller blob should be the other paw
-if ~any(fullThresh & ~(belowShelfMask | shelfMask))    %
-    A = regionprops(fullThresh,'area');
-    A = [A.Area];
-    if length(A) > 1
-        ftlabel = bwlabel(fullThresh);
-        temp = false(size(fullThresh));
-        maxAidx = find(A == max(A));
-        for ii = 1 : length(maxAidx)
-            temp = temp | (ftlabel == maxAidx(ii));
-        end
-        fullThresh = temp;
-    end
-end
+% if ~any(fullThresh & ~(belowShelfMask | shelfMask))    %
+%     A = regionprops(fullThresh,'area');
+%     A = [A.Area];
+%     if length(A) > 1
+%         ftlabel = bwlabel(fullThresh);
+%         fullThresh = (ftlabel == find(A ==  max(A)));
+%     end
+% end
 
 extCheck = mirror_mask & extMask;
 % if ~any(extCheck(:))  % paw mask is entirely inside the box - do we have to eliminate reflections in the floor?

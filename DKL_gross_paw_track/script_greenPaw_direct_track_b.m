@@ -43,7 +43,7 @@ pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external mas
                1/3, 0.01, 0.999, 1.0, 0.99, 1.0    % for restrictive masking just behind the front panel
                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
                1/3, 0.015, 0.99, 1.0, 0.50, 1.0
-               1/3, 0.02, 0.99, 1.0, 0.9, 1.0];  % for green masking below the shelf
+               1/3, 0.02, 0.99, 1.0, 0.5, 0.80];  % for green masking below the shelf
            
 xl_directory = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';
 xlName = 'rubiks_matched_points_DL.xlsx';
@@ -77,7 +77,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 4 : 4%length(sessionList);
+    for iSession = 13 : 13%length(sessionList);
         
         if exist('session_mp','var')
             clear session_mp;
@@ -204,7 +204,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 end
                     
                
-                [points3d,points2d,timeList,isPawVisible] = trackDirectView(video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
+                [points3d,points2d,timeList,isPawVisible] = trackDirectView_b(video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh);
                 

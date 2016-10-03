@@ -1,4 +1,4 @@
-function [points3d,points2d,timeList,isPawVisible] = trackDirectView( video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration,greenBGmask,varargin )
+function [points3d,points2d,timeList,isPawVisible] = trackDirectView_b( video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration,greenBGmask,varargin )
 
 video.CurrentTime = triggerTime;
 
@@ -16,7 +16,7 @@ pawHSVrange = [1/3, 0.01, 0.999, 1.0, 0.99, 1.0   % for restrictive external mas
                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
            
 
-maxDistPerFrame = 20;
+maxDistPerFrame = 30;
 whiteThresh = 0.8;
 
 % blob parameters for mirror view
@@ -211,10 +211,9 @@ image = readFrame(video);   % just to advance one frame for forward direction
 if video.CurrentTime - prevTime < 1e-10
 	image = readFrame(video);
 end
-
 image_ud = undistortImage(image, cameraParams);
 image_ud = double(image_ud) / 255;
-% image_ud = color_adapthisteq(image_ud);
+image_ud = color_adapthisteq(image_ud);
 
 isPawVisible = false(totalFrames,2);
 isPawVisible(currentFrame,:) = true(1,2);   % by definition (almost), paw is visible in both views in the initial frame
@@ -234,22 +233,21 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
         if frameCount == 0
             break;
         end
-        video.CurrentTime = (frameCount) / fps;
+        video.CurrentTime = frameCount / fps;
     else
         frameCount = frameCount + 1;
     end
     currentFrame = round((video.CurrentTime) * fps);
-    
     fprintf('frame number %d, current frame %d\n',frameCount, currentFrame);
     
     image = readFrame(video);
     if strcmpi(timeDir,'reverse')
         if abs(video.CurrentTime - timeList(prevFrame)) > zeroTol    % a frame was skipped
-%             if going backwards, went one too many frames back, so just
-%             read the next frame
+            % if going backwards, went one too many frames back, so just
+            % read the next frame
             image = readFrame(video);
         end
-    end 
+    end
 
     if strcmpi(timeDir,'forward') && ...
        abs(video.CurrentTime - timeList(prevFrame) - 2/fps) > zeroTol && ...
@@ -272,7 +270,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     prevMasks{1} = prevMask;
     prevMasks{2} = fullMask{2};
     cur_points2d = mirror_points2d{currentFrame};
-    [fullMask] = trackNextStep_direct_20160512(image_ud,prevMask,cur_points2d,boxRegions,pawPref,boxCalibration,greenBGmask,...
+    [fullMask] = trackNextStep_direct_20160512_b(image_ud,prevMask,cur_points2d,boxRegions,pawPref,boxCalibration,greenBGmask,...
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxdistperframe',maxDistPerFrame,...

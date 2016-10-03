@@ -26,7 +26,7 @@ targetSigma = [0.2,0.2,0.2
 foregroundThresh = 45/255;
 
 pixCountThresh = 2500;
-minPixCount = 700;    % mininum number of green pixels to count as the paw being visible
+minPixCount = 1000;    % mininum number of green pixels to count as the paw being visible
 maxFramesAfterThresh = 50;
 
 ROIheight = 200;    % in pixels - how high above the shelf to look for the paw

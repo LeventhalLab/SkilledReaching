@@ -77,7 +77,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
     matchedPoints = read_xl_matchedPoints_rubik( ratID, ...
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
-    for iSession = 5 : 5%length(sessionList);
+    for iSession = 7 : 7%length(sessionList);
         
         if exist('session_mp','var')
             clear session_mp;
@@ -146,7 +146,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
             
             BGcalculated = false;
             
-            for iVid = 1 : length(vidList)
+            for iVid = 84 : length(vidList)
                 if vidList(iVid).bytes < 10000; continue; end
                 if strcmp(vidList(iVid).name(1:2),'._'); continue; end
                 
@@ -215,7 +215,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 end
                     
                
-                [points3d,points2d,timeList,isPawVisible] = trackDirectView(video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
+                [points3d,points2d,timeList,isPawVisible] = trackDirectView_c(video, triggerTime, initPawMask, mirror_points2d, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh);
                 

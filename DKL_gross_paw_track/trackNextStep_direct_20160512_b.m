@@ -1,4 +1,4 @@
-function [fullMask] = trackNextStep_direct_20160512( image_ud, prevMask, cur_mir_points2d, boxRegions, pawPref, boxCalibration, greenBGmask, varargin)
+function [fullMask] = trackNextStep_direct_20160512_b( image_ud, prevMask, cur_mir_points2d, boxRegions, pawPref, boxCalibration, greenBGmask, varargin)
 
 % MAY HAVE TO UPDATE HOW GREENBGMASK IS CALCULATED IN THE CALLING FUNCTION
 
@@ -108,10 +108,10 @@ if ~isempty(cur_mir_points2d)
         mirror_mask(cur_mir_points2d(ii,2),cur_mir_points2d(ii,1)) = true;
     end
     mirror_mask = imfill(mirror_mask,'holes');
-    mirror_mask_dil = imdilate(mirror_mask, strel('disk',5));
+    mirror_mask_dil = mirror_mask;%imdilate(mirror_mask, strel('disk',10));
     projMask = projMaskFromTangentLines(mirror_mask_dil, fundMat, [1 1 w-1 h-1], [h,w]);
     centerProjMask = projMask & centerMask;
-    centerProjMask = imdilate(centerProjMask,strel('disk',10));   % added 08/24/2016
+%     centerProjMask = imdilate(centerProjMask,strel('disk',10));   % added 08/24/2016
 else
     centerProjMask = imdilate(centerMask,strel('disk',150));    % expand center region because this is probably the rat walking up to the slot
 end
@@ -136,16 +136,25 @@ else
 end
 
 greenHSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(1,:));
-greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',1));
-greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
+greenHSVthresh = greenHSVthresh & ~imdilate(greenBGmask,strel('disk',2));
+greenHSVthresh = processMask(greenHSVthresh,'sesize',1);
 
 projGreenThresh = greenHSVthresh & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
-projGreenThresh = processMask(projGreenThresh,'sesize',2);
+
+
+% SHOULD BE CUT OUT LATER... FOR NOW, GET RID OF THE SMALLEST SPOT
+% rprops = regionprops(projGreenThresh,'area');
+% A = [rprops.Area];
+% projGreenThresh_label = bwlabel(projGreenThresh);
+% if length(A) > 1
+%     minAidx = find(A == min(A));
+%     projGreenThresh = projGreenThresh & ~(projGreenThresh_label == minAidx);
+% end
 % projGreenThresh = projGreenThresh & ~whiteMask;
 
 lib_HSVthresh = HSVthreshold(decorr_green_hsv,pawHSVrange(2,:));
 
-% lib_HSVthresh = lib_HSVthresh & ~greenBGmask;
+lib_HSVthresh = lib_HSVthresh & ~greenBGmask;
 
 belowShelf_HSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(8,:));
 belowShelf_HSVthresh = belowShelf_HSVthresh & belowShelfMask & (centerProjMask & (prevMask_dilate | prevMask_panel_dilate));
@@ -161,19 +170,19 @@ fullThresh = processMask(fullThresh,'sesize',1);
 % for R0028, session 05062014, some nail polish got on the other paw. Will
 % take the largest blob only if the paw is entirely below the shelf - the
 % smaller blob should be the other paw
-if ~any(fullThresh & ~(belowShelfMask | shelfMask))    %
-    A = regionprops(fullThresh,'area');
-    A = [A.Area];
-    if length(A) > 1
-        ftlabel = bwlabel(fullThresh);
-        temp = false(size(fullThresh));
-        maxAidx = find(A == max(A));
-        for ii = 1 : length(maxAidx)
-            temp = temp | (ftlabel == maxAidx(ii));
-        end
-        fullThresh = temp;
-    end
-end
+% if ~any(fullThresh & ~(belowShelfMask | shelfMask))    %
+%     A = regionprops(fullThresh,'area');
+%     A = [A.Area];
+%     if length(A) > 1
+%         ftlabel = bwlabel(fullThresh);
+%         temp = false(size(fullThresh));
+%         maxAidx = find(A == max(A));
+%         for ii = 1 : length(maxAidx)
+%             temp = temp | (ftlabel == maxAidx(ii));
+%         end
+%         fullThresh = temp;
+%     end
+% end
 
 extCheck = mirror_mask & extMask;
 % if ~any(extCheck(:))  % paw mask is entirely inside the box - do we have to eliminate reflections in the floor?
@@ -219,6 +228,7 @@ if ~isempty(cur_mir_points2d) && any(fullThresh(:))
     masks{1} = fullThresh;
     masks{2} = mirror_mask;
     fullMask = estimateHiddenSilhouette(masks, bbox,fundMat,[h,w]);
+%     fullMask = restrictSilhouettes(masks, bbox, fundMat,[h,w]);
     if ~any(extCheck(:))   % only eliminate points below the floor if paw is entirely within the box (time saver)
         [fullMask{1}, fullMask{2},pts_below_floor] = findValidDirectPts( boxRegions.floorCoords, fullMask{1}, fullMask{2}, boxCalibration, pawPref);
         
