@@ -22,14 +22,13 @@ initPawMask = cell(1,2);
 foregroundThresh = 25/255;
 
 ROIheight = 220;    % in pixels - how high above the shelf to look for the paw
-ROIwidth = 200;
+ROIwidth = 120;
 
 directWidth = 250;    % in pixels
 
 whiteThresh = 0.9;
 blackThresh = 0.05;
-libHSVthresh_ext_maxBW = 0.5;
-
+libHSVthresh_ma
 for iarg = 1 : 2 : nargin - 8
     switch lower(varargin{iarg})
         case 'foregroundthresh',
@@ -99,7 +98,7 @@ image_ud = undistortImage(image, cameraParams);
 mirror_image_ud = image_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
 direct_image_ud = image_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
 other_mirror_image_ud = image_ud(ROI(3,2):ROI(3,2)+ROI(3,4),ROI(3,1):ROI(3,1)+ROI(3,3),:);
-lh  = stretchlim(other_mirror_image_ud,0.10);
+lh  = stretchlim(other_mirror_image_ud,0.05);
 direct_str_img = imadjust(direct_image_ud,lh,[]);
 mirror_str_img = imadjust(mirror_image_ud,lh,[]);
 
@@ -145,10 +144,6 @@ direct_whiteMask = direct_bright_im > 0.8;
 whiteMask = false(h,w);
 whiteMask(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3)) = mirror_whiteMask;
 whiteMask(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3)) = direct_whiteMask;
-bright_im = rgb2gray(image_ud);
-bright_im(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:) = mirror_bright_im;
-bright_im(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:) = direct_bright_im;
-
 % WORKING HERE - TRY USING BRIGHT_IM ANALYSIS TO GET RID OF WHITE, BUT
 % STILL ALLOW DARK GREEN FINGER TIPS TO BE DETECTED...
 
@@ -180,10 +175,6 @@ greenHSVthresh = greenHSVthresh & ~greenBGmask & ~whiteMask;% & ~imdilate(whiteM
 greenHSVthresh = processMask(greenHSVthresh,'sesize',2);
 % diff_greenHSVthresh = HSVthreshold(decorr_green_BG_hsv, pawHSVrange(1,:));
 libHSVthresh = HSVthreshold(decorr_green_hsv, pawHSVrange(2,:));
-
-% temp = libHSVthresh & ~greenHSVthresh;
-temp = libHSVthresh & ~(bright_im > libHSVthresh_ext_maxBW);
-libHSVthresh = greenHSVthresh | temp;
 
 im_masked = false(h,w);
 for iCh = 1 : 3

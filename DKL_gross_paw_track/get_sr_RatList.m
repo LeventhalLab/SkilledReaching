@@ -6,7 +6,8 @@ function [ sr_ratInfo ] = get_sr_RatList(  )
 % OUTPUTS:
 %   sr_ratInfo
 
-SRparentDir_a = '/Volumes/RecordingsLeventhal04/SkilledReaching';
+% SRparentDir_a = '/Volumes/RecordingsLeventhal04/SkilledReaching';
+SRparentDir_a = '/Volumes/Tbolt_01/Skilled Reaching';
 SRparentDir_b = '/Volumes/RecordingsLeventhal3/SkilledReaching';
 ratIDlist = ['R0027';'R0028';'R0029';'R0030';'R0041';'R0043';'R0055'];
 % ratIDlist_a = ratIDlist(1:4,:);

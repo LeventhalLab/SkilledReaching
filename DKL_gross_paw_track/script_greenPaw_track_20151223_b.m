@@ -61,13 +61,20 @@ stretch_hist_limit_ext = 0.75;
 %                1/3, 0.03, 0.99, 1.0, 0.95, 1.0    % for liberal masking just behind the front panel
 %                0.00, 0.02, 0.00, 0.001, 0.999, 1.0];  % for white masking
            
-pawHSVrange = [1/3, 0.02, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
-               1/3, 0.16, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
-               1/3, 0.02, 0.999, 1.0, 0.99, 1.0    % for restrictive internal masking
-               1/3, 0.030, 0.990, 1.0, 0.70, 1.0    % for liberal internal masking
-               0.35, 0.02, 0.999, 1.0, 0.7, 1.0    % for restrictive masking just behind the front panel
-               0.35, 0.03, 0.99, 1.0, 0.6, 1.0    % for liberal masking just behind the front panel
-               1/3, 0.015, 0.99, 1.0, 0.50, 1.0];  % for masking out green in the background image
+pawHSVrange = [0.3333    0.0300    0.9990    1.0000    0.9900    1.0000
+    0.3333    0.1500    0.9900    1.0000    0.9700    1.0000
+    0.3333    0.0200    0.9990    1.0000    0.9900    1.0000
+    0.3333    0.0300    0.9900    1.0000    0.7000    1.0000
+    0.3500    0.0200    0.9990    1.0000    0.6000    1.0000
+    0.3500    0.0300    0.9900    1.0000    0.5000    1.0000
+    0.3333    0.0150    0.9900    1.0000    0.5000    1.0000];
+% pawHSVrange = [1/3, 0.02, 0.999, 1.0, 0.99, 1.0   % for restrictive external masking
+%                1/3, 0.16, 0.99, 1.0, 0.97, 1.0     % for more liberal external masking
+%                1/3, 0.02, 0.999, 1.0, 0.99, 1.0    % for restrictive internal masking
+%                1/3, 0.030, 0.990, 1.0, 0.70, 1.0    % for liberal internal masking
+%                0.35, 0.02, 0.999, 1.0, 0.7, 1.0    % for restrictive masking just behind the front panel
+%                0.35, 0.03, 0.99, 1.0, 0.6, 1.0    % for liberal masking just behind the front panel
+%                1/3, 0.015, 0.99, 1.0, 0.50, 1.0];  % for masking out green in the background image
 foregroundThresh = 25/255;
 
 xl_directory = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/SR_box_matched_points';

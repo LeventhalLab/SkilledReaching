@@ -10,16 +10,17 @@ h = size(image_ud,1); w = size(image_ud,2);
 % targetSigma = [0.1,0.1,0.1];
 
 maxFrontPanelSep = 20;
-maxDistBehindFrontPanel = 10;
+maxDistBehindFrontPanel = 20;
 maxDistPerFrame = 20;
 
 frontPanelMask = imdilate(boxRegions.frontPanelMask,strel('disk',2));
 shelfMask = boxRegions.shelfMask;
 frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxDistBehindFrontPanel)) & ~frontPanelMask;
 
-whiteThresh = 0.6;
-int_whiteThresh = 0.6;
-blackThresh = 0.1;
+whiteThresh = 0.7;
+int_whiteThresh = 0.3;
+libHSVthresh_ext_maxBW = 0.3;
+blackThresh = 0.04;
 diff_thresh = [0.2,0.2,0.2];
 
 intMask = boxRegions.intMask;
@@ -64,7 +65,7 @@ vertSTREL = strel('line',15,90);
 
 mirror_image_ud = image_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
 other_mirror_image_ud = image_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
-lh  = stretchlim(other_mirror_image_ud,0.1);
+lh  = stretchlim(other_mirror_image_ud,0.05);
 mirror_str_img = imadjust(mirror_image_ud,lh,[]);
 % mirror_str_img = str_img(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
 
@@ -150,8 +151,8 @@ mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext;% & ~mirror_greenBGmask;
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & extMask & BG_mask;
 mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & intMask & BG_mask;
 
-% mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
-mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',2);
+mirror_greenHSVthresh_ext = processMask(mirror_greenHSVthresh_ext,'sesize',1);   % **** SESIZE USED TO BE 1, CHANGED IT TO 2 TO AVOID DETECTING GREEN TINGE ON THE PELLET 20180804
+mirror_greenHSVthresh_int = processMask(mirror_greenHSVthresh_int,'sesize',1);
 
 mirror_greenHSVthresh_ext = mirror_greenHSVthresh_ext & (prevMask_dilate | prevMask_panel_dilate);
 % mirror_greenHSVthresh_int = mirror_greenHSVthresh_int & (prevMask_dilate | prevMask_panel_dilate);
@@ -180,8 +181,11 @@ temp = libHSVthresh_int & (prevMask_dilate | prevMask_panel_dilate);
 libHSVthresh_int = imreconstruct(temp, libHSVthresh_int);
 
 libHSVthresh_ext = HSVthreshold(mirror_decorr_green_hsv_ext, pawHSVrange(2,:));
+temp = libHSVthresh_ext & ~(bright_im > libHSVthresh_ext_maxBW);
+libHSVthresh_ext = mirror_greenHSVthresh_ext | temp;
+
 libHSVthresh_ext = libHSVthresh_ext & extMask & ~whiteMask & ~blackMask;% & BG_mask;% & ~whiteMask;% & im_masked;
-libHSVthresh_ext = processMask(libHSVthresh_ext,'sesize',2);
+% libHSVthresh_ext = processMask(libHSVthresh_ext,'sesize',2);
 
 % libHSVthresh_ext = libHSVthresh_ext;% & ~mirror_greenBGmask;
 libHSVthresh_int = libHSVthresh_int & ~mirror_greenBGmask;
@@ -205,44 +209,44 @@ libHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext);
 libHSVthresh_int = imreconstruct(mirror_greenHSVthresh_int, libHSVthresh_int);
 % b = bwconvhull(mirror_greenHSVthresh_ext);
 s = regionprops(bwconvhull(libHSVthresh_ext,'union'),'boundingbox');
-if ~isempty(s)
-    bbox = round(s.BoundingBox);
-
-    if prod(bbox(3:4)) > 900 % at least 30x30
-        q = mirror_str_img(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
-
-        lh = stretchlim(q,0.05);
-        q2 = imadjust(q,lh,[]);
-        im_str = zeros(size(mirror_image_ud));
-        im_str(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:) = q2;
-        % find the darkest 1/2 of pixels in this region
-    %     im_gray = zeros(size(mirror_greenHSVthresh_ext));
-    %     im_gray(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = mean(q2,3);
-    %     im_gray_vec = im_gray(:);
-    %     idx = find(mirror_greenHSVthresh_ext);
-
-    %     b = im_gray(mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int);
-    %     b = double(repmat(mirror_greenHSVthresh_ext,1,1,3)) .* im_str;
-
-        clims = zeros(2,3);
-        newMask = true(size(mirror_greenHSVthresh_ext));
-        brightMask = true(size(mirror_greenHSVthresh_ext));
-        for iCh = 1 : 3
-            temp = q2(:,:,iCh);
-            chVals = temp(:);
-            validVals = chVals(chVals > 0.1);
-    %         chVals = temp(temp > 0);
-            clims(1,iCh) = prctile(validVals,10);
-            clims(2,iCh) = prctile(validVals,50);
-
-            newMask = newMask & ((im_str(:,:,iCh) >= clims(1,iCh)) & (im_str(:,:,iCh) <= clims(2,iCh)));
-            brightMask = brightMask & (im_str(:,:,iCh) >= prctile(validVals,90));
-        end
-
-        mirror_greenHSVthresh_ext = imreconstruct(newMask,mirror_greenHSVthresh_ext & ~imdilate(brightMask,strel('disk',4)));
-        mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext & ~imdilate(brightMask,strel('disk',4)));
-    end
-end
+% if ~isempty(s)
+%     bbox = round(s.BoundingBox);
+% 
+%     if prod(bbox(3:4)) > 900 % at least 30x30
+%         q = mirror_str_img(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
+% 
+%         lh = stretchlim(q,0.05);
+%         q2 = imadjust(q,lh,[]);
+%         im_str = zeros(size(mirror_image_ud));
+%         im_str(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:) = q2;
+%         % find the darkest 1/2 of pixels in this region
+%     %     im_gray = zeros(size(mirror_greenHSVthresh_ext));
+%     %     im_gray(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3)) = mean(q2,3);
+%     %     im_gray_vec = im_gray(:);
+%     %     idx = find(mirror_greenHSVthresh_ext);
+% 
+%     %     b = im_gray(mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int);
+%     %     b = double(repmat(mirror_greenHSVthresh_ext,1,1,3)) .* im_str;
+% 
+%         clims = zeros(2,3);
+%         newMask = true(size(mirror_greenHSVthresh_ext));
+%         brightMask = true(size(mirror_greenHSVthresh_ext));
+%         for iCh = 1 : 3
+%             temp = q2(:,:,iCh);
+%             chVals = temp(:);
+%             validVals = chVals(chVals > 0.1);
+%     %         chVals = temp(temp > 0);
+%             clims(1,iCh) = prctile(validVals,10);
+%             clims(2,iCh) = prctile(validVals,50);
+% 
+%             newMask = newMask & ((im_str(:,:,iCh) >= clims(1,iCh)) & (im_str(:,:,iCh) <= clims(2,iCh)));
+%             brightMask = brightMask & (im_str(:,:,iCh) >= prctile(validVals,90));
+%         end
+% 
+%         mirror_greenHSVthresh_ext = imreconstruct(newMask,mirror_greenHSVthresh_ext & ~imdilate(brightMask,strel('disk',4)));
+%         mirror_greenHSVthresh_ext = imreconstruct(mirror_greenHSVthresh_ext, libHSVthresh_ext & ~imdilate(brightMask,strel('disk',4)));
+%     end
+% end
 
 % s = regionprops(bwconvhull(libHSVthresh_int,'union'),'boundingbox');
 % if ~isempty(s)
@@ -314,7 +318,8 @@ if any(mirror_greenHSVthresh_ext(:)) && any(mirror_greenHSVthresh_int(:))
     end
 end
 
-mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
+% mirror_greenHSVthresh = mirror_greenHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
+mirror_greenHSVthresh = libHSVthresh_ext | mirror_greenHSVthresh_int & ~frontPanelMask;
 
 behindPanelMask = frontPanelEdge & intMask;
 behindOverlap = behindPanelMask & (prevMask_dilate | prevMask_panel_dilate);
@@ -329,12 +334,12 @@ if any(behindOverlap(:))
     behindShelfRegion = behindShelfRegion(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3));
     
     temp = temp & behindOverlap & behindShelfRegion & ~mirror_greenBGmask;
-    temp = processMask(temp,strel('disk',1));
+    temp = processMask(temp,'sesize',1);
 
     lib_temp = HSVthreshold(mirror_decorr_green_hsv_int,pawHSVrange(6,:));
-    lib_temp = lib_temp & behindShelfRegion & ~mirror_greenBGmask & ~whiteMask; %behindOverlap & ;% & ~whiteMask;
+    lib_temp = lib_temp & behindShelfRegion & ~mirror_greenBGmask & ~int_whiteMask & ~blackMask; %behindOverlap & ;% & ~whiteMask;
     behindPanelGreenThresh = imreconstruct(temp,lib_temp);
-    behindPanelGreenThresh = processMask(behindPanelGreenThresh, 1);
+%     behindPanelGreenThresh = processMask(behindPanelGreenThresh, 1);
     if any(mirror_greenHSVthresh_int(:))    % if paw is already detected on interior of box, only accept the mask near the front panel if it overlaps with the internal part already found
         behindPanel_int_overlap_check = mirror_greenHSVthresh_int & lib_temp;
         if ~any(behindPanel_int_overlap_check(:))
