@@ -38,25 +38,25 @@ for iarg = 1 : 2 : nargin - 9
 %             pawGrayLevels = varargin{iarg + 1};
 %         case 'pixelcountthreshold',
 %             pixCountThresh = varargin{iarg + 1};
-        case 'foregroundthresh',
+        case 'foregroundthresh'
             foregroundThresh = varargin{iarg + 1};
-        case 'maxdistperframe',
+        case 'maxdistperframe'
             maxDistPerFrame = varargin{iarg + 1};
-        case 'hsvlimits',
+        case 'hsvlimits'
             pawHSVrange = varargin{iarg + 1};
-        case 'targetmean',
+        case 'targetmean'
             targetMean = varargin{iarg + 1};
-        case 'targetsigma',
+        case 'targetsigma'
             targetSigma = varargin{iarg + 1};
-        case 'pawblob',
+        case 'pawblob'
             pawBlob = varargin{iarg + 1};
-        case 'whitethresh_ext',
+        case 'whitethresh_ext'
             whiteThresh_ext = varargin{iarg + 1};
-        case 'whitethresh_int',
+        case 'whitethresh_int'
             whiteThresh_int = varargin{iarg + 1};
-        case 'stretch_hist_limit_int',
+        case 'stretch_hist_limit_int'
             stretch_hist_limit_int = varargin{iarg + 1};
-        case 'stretch_hist_limit_ext',
+        case 'stretch_hist_limit_ext'
             stretch_hist_limit_ext = varargin{iarg + 1};
     end
 end
@@ -74,6 +74,7 @@ vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
 video.CurrentTime = triggerTime;
 
+% initialize the CAMshift tracker
 
 % frontPanelWidth = panelWidthFromMask(boxRegions.frontPanelMask);
 [fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, BGimg_ud, initPawMask{2},pawBlob, boxRegions, pawPref,'forward',boxCalibration,greenBGmask,...
@@ -266,7 +267,18 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
                          
-    [fullMask,~] = trackNextStep_mirror_20160503(image_ud,BGimg_ud_str,fundMat,prevMask,boxRegions,pawPref,greenBGmask,...
+%     [fullMask,~] = trackNextStep_mirror_20160503(image_ud,BGimg_ud_str,fundMat,prevMask,boxRegions,pawPref,greenBGmask,...
+%                              'foregroundthresh',foregroundThresh,...
+%                              'pawhsvrange',pawHSVrange,...
+%                              'maxdistperframe',maxDistPerFrame,...
+%                              'targetmean',targetMean,...
+%                              'targetsigma',targetSigma,...
+%                              'whitethresh_ext',whiteThresh_ext,...
+%                              'whitethresh_int',whiteThresh_int,...
+%                              'stretch_hist_limit_int',stretch_hist_limit_int,...
+%                              'stretch_hist_limit_ext',stretch_hist_limit_ext);
+                         
+    [fullMask,~] = trackNextStep_mirror_relRGB(image_ud,fundMat,prevMask,boxRegions,pawPref,greenBGmask,...
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxdistperframe',maxDistPerFrame,...

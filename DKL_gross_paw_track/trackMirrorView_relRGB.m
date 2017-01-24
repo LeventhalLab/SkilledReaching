@@ -1,6 +1,7 @@
-function [points2d,timeList,isPawVisible] = trackMirrorView( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, greenBGmask, varargin )
+function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, greenBGmask, varargin )
 
-video.CurrentTime = triggerTime;
+% video.CurrentTime = triggerTime;
+cameraParams = boxCalibration.cameraParams;
 
 targetMean = [0.5,0.1,0.5];
 targetSigma = [0.2,0.2,0.2];
@@ -74,9 +75,25 @@ vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
 video.CurrentTime = triggerTime;
 
+% initialize the CAMshift tracker
+% im = readFrame(video);
+% im_ud = undistortImage(im, cameraParams);
+% rel_im = relativeRGB(im_ud);
+% rel_im_hsv = rgb2hsv(rel_im);
+% rel_im_h = rel_im_hsv(:,:,1);
+% BBox = zeros(2,4);
+% for ii = 1 : 2
+%     temp = regionprops(initPawMask{ii},'BoundingBox');
+%     BBox(ii,:) = round(temp.BoundingBox);
+% end
+% directPawTracker = vision.HistogramBasedTracker;
+% mirrorPawTracker = vision.HistogramBasedTracker;
+% 
+% initializeObject(directPawTracker, rel_im_h, BBox(1,:));
+% initializeObject(mirrorPawTracker, rel_im_h, BBox(2,:));
 
 % frontPanelWidth = panelWidthFromMask(boxRegions.frontPanelMask);
-[fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, BGimg_ud, initPawMask{2},pawBlob, boxRegions, pawPref,'forward',boxCalibration,greenBGmask,...
+[fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, initPawMask, BGimg_ud, boxRegions, pawPref,'forward',boxCalibration,...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
                                      'maxdistperframe',maxDistPerFrame,...
@@ -89,7 +106,7 @@ video.CurrentTime = triggerTime;
     
 video.CurrentTime = triggerTime;
 
-[rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, BGimg_ud, initPawMask{2},pawBlob, boxRegions, pawPref, 'reverse',boxCalibration,greenBGmask,...
+[rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, initPawMask, BGimg_ud, boxRegions, pawPref, 'reverse',boxCalibration,...
                                      'foregroundthresh',foregroundThresh,...
                                      'pawhsvrange',pawHSVrange,...
                                      'maxdistperframe',maxDistPerFrame,...
@@ -105,7 +122,9 @@ video.CurrentTime = triggerTime;
 points2d = rpoints2d;
 trigFrame = round(triggerTime * video.FrameRate);
 for iFrame = trigFrame : length(fpoints2d)
-    points2d{iFrame} = fpoints2d{iFrame};
+    for iView = 1 : 2
+        points2d{iView,iFrame} = fpoints2d{iView,iFrame};
+    end
 end
 timeList = [timeList_b,timeList_f(2:end)];
 isPawVisible = isPawVisible_b | isPawVisible_f;
@@ -115,14 +134,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [points2d,timeList,isPawVisible] = trackPaw_mirror_local( video, ...
-                                    BGimg_ud, ...
                                     initPawMask, ...
-                                    pawBlob, ...
+                                    BGimg_ud, ...
                                     boxRegions, ...
                                     pawPref, ...
                                     timeDir, ...
                                     boxCalibration,...
-                                    greenBGmask,...
                                     varargin)
 
 zeroTol = 1e-10;
@@ -134,10 +151,10 @@ w = video.Width;
 stretch_hist_limit_int = 0.5;
 stretch_hist_limit_ext = 0.75;
 
-switch lower(pawPref),
-    case 'right',
+switch lower(pawPref)
+    case 'right'
         fundMat = boxCalibration.srCal.F(:,:,1);
-    case 'left',
+    case 'left'
         fundMat = boxCalibration.srCal.F(:,:,2);
 end
 cameraParams = boxCalibration.cameraParams;
@@ -153,82 +170,67 @@ totalFrames = round(video.Duration * fps);
 
 prevMask = initPawMask;
 
-targetMean = [0.5,0.2,0.5];
-    
-targetSigma = [0.2,0.2,0.2];
+% targetMean = [0.5,0.2,0.5];
+%     
+% targetSigma = [0.2,0.2,0.2];
            
-for iarg = 1 : 2 : nargin - 9
+for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
-%         case 'pawgraylevels',
-%             pawGrayLevels = varargin{iarg + 1};
-%         case 'pixelcountthreshold',
-%             pixCountThresh = varargin{iarg + 1};
-        case 'foregroundthresh',
+        case 'foregroundthresh'
             foregroundThresh = varargin{iarg + 1};
-        case 'pawhsvrange',
+        case 'pawhsvrange'
             pawHSVrange = varargin{iarg + 1};
-%         case 'maxredgreendist',
-%             maxRedGreenDist = varargin{iarg + 1};
-%         case 'minrgdiff',
-%             minRGDiff = varargin{iarg + 1};
-        case 'maxdistperframe',
+        case 'maxdistperframe'
             maxDistPerFrame = varargin{iarg + 1};
-        case 'targetmean',
+        case 'targetmean'
             targetMean = varargin{iarg + 1};
-        case 'targetsigma',
+        case 'targetsigma'
             targetSigma = varargin{iarg + 1};
-        case 'whitethresh_ext',
+        case 'whitethresh_ext'
             whiteThresh_ext = varargin{iarg + 1};
-        case 'whitethresh_int',
+        case 'whitethresh_int'
             whiteThresh_int = varargin{iarg + 1};
-        case 'stretch_hist_limit_int',
+        case 'stretch_hist_limit_int'
             stretch_hist_limit_int = varargin{iarg + 1};
-        case 'stretch_hist_limit_ext',
+        case 'stretch_hist_limit_ext'
             stretch_hist_limit_ext = varargin{iarg + 1};
     end
 end
 
-points2d = cell(1,totalFrames);
+points2d = cell(2,totalFrames);
 
 timeList(frameCount) = video.CurrentTime;
 currentFrame = round((video.CurrentTime) * fps);
 image = readFrame(video);   % just to advance one frame for forward direction
 image_ud = undistortImage(image, cameraParams);
 image_ud = double(image_ud) / 255;
-orig_BGimg_ud = BGimg_ud;
-image_ud = color_adapthisteq(image_ud);
+% orig_BGimg_ud = BGimg_ud;
+% image_ud = color_adapthisteq(image_ud);
 
 
-isPawVisible = false(totalFrames,1);
-isPawVisible(currentFrame) = true;
+isPawVisible = false(2,totalFrames);
+isPawVisible(:,currentFrame) = [true;true];
 
-temp = bwmorph(bwconvhull(initPawMask),'remove');
-[y,x] = find(temp);
-points2d{currentFrame} = [x,y];
-% framesChecked = 0;
-% isPawVisible(frameCount,:) = true(1,2);   % by definition (almost), paw is visible in both views in the initial frame
-
-[y,~] = find(boxRegions.floorMask);
-ROI_bot = min(y);
-shelfLims = regionprops(boxRegions.shelfMask,'boundingbox');
-switch lower(pawPref),
-    case 'right',
-        ROI = [1,1,floor(shelfLims.BoundingBox(1)),ROI_bot;...
-            ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot];
-    case 'left',
-        ROI = [ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),1,w-ceil(shelfLims.BoundingBox(1)+shelfLims.BoundingBox(3)),ROI_bot;...
-            1,1,floor(shelfLims.BoundingBox(1)),ROI_bot];
-%         ext_white_check_SE = [ones(1,10),zeros(1,10)];
+relRGB_im = relativeRGB(image_ud);
+meanRelColor = zeros(2,3);
+for ii = 1 : 2
+%     temp = bwmorph(bwconvhull(initPawMask{ii}),'remove');
+    temp = bwmorph(initPawMask{ii},'remove');
+    [y,x] = find(temp);
+    points2d{ii,currentFrame} = [x,y];
+    
+    pawPixels = zeros(sum(initPawMask{ii}(:)),3);
+    for iRGB = 1 : 3
+        im_temp = squeeze(relRGB_im(:,:,iRGB));
+        pawPixels(:,iRGB) = im_temp(initPawMask{ii});
+    end
+    meanRelColor(ii,:) = mean(pawPixels);
 end
-mirror_BG_image_ud = BGimg_ud(ROI(1,2):ROI(1,2)+ROI(1,4),ROI(1,1):ROI(1,1)+ROI(1,3),:);
-other_mirror_BG_image_ud = BGimg_ud(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3),:);
-lh  = stretchlim(other_mirror_BG_image_ud,0.05);
-BGimg_ud_str = imadjust(mirror_BG_image_ud,lh,[]);
 
 while video.CurrentTime < video.Duration && video.CurrentTime >= 0
 
     prevFrame = frameCount;
-%     framesChecked = framesChecked + 1;
+    isPrevPawVisible = isPawVisible(:,currentFrame);
     
     if strcmpi(timeDir,'reverse')
         frameCount = frameCount - 1;
@@ -262,11 +264,36 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
         timeList(frameCount) = video.CurrentTime - 1/fps;
     end
 
-    prev_image_ud = image_ud;
+    prev_im_ud = image_ud;
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
                          
-on    [fullMask,~] = trackNextStep_mirror_20160503_b(image_ud,BGimg_ud_str,fundMat,prevMask,boxRegions,pawPref,greenBGmask,...
+%     rel_im = relativeRGB(image_ud);
+%     rel_im_hsv = rgb2hsv(rel_im);
+%     rel_im_h = rel_im_hsv(:,:,1);
+%     
+%     new_bbox_direct = step(directPawTracker, rel_im_h);
+%     new_bbox_mirror = step(mirrorPawTracker, rel_im_h);
+%     
+%     figure(1);
+%     imshow(image_ud)
+%     hold on
+%     rectangle('position',new_bbox_direct,'edgecolor','y');
+%     rectangle('position',new_bbox_mirror,'edgecolor','y');
+%     
+%     figure(2);
+%     imshow(rel_im)
+%     hold on
+%     rectangle('position',new_bbox_direct,'edgecolor','y');
+%     rectangle('position',new_bbox_mirror,'edgecolor','y');
+%     
+%     figure(3);
+%     imshow(rel_im_h)
+%     hold on
+%     rectangle('position',new_bbox_direct,'edgecolor','y');
+%     rectangle('position',new_bbox_mirror,'edgecolor','y');
+
+    [fullMask] = trackNextStep_mirror_relRGB(image_ud,prev_im_ud,fundMat,BGimg_ud,prevMask,isPrevPawVisible,meanRelColor,boxRegions,pawPref,...
                              'foregroundthresh',foregroundThresh,...
                              'pawhsvrange',pawHSVrange,...
                              'maxdistperframe',maxDistPerFrame,...
@@ -277,28 +304,20 @@ on    [fullMask,~] = trackNextStep_mirror_20160503_b(image_ud,BGimg_ud_str,fundM
                              'stretch_hist_limit_int',stretch_hist_limit_int,...
                              'stretch_hist_limit_ext',stretch_hist_limit_ext);
                          
-%     [fullMask,~] = trackNextStep_mirror_20160330(image_ud,fundMat,prevMask,boxRegions,pawPref,...
-%                              'foregroundthresh',foregroundThresh,...
-%                              'pawhsvrange',pawHSVrange,...
-%                              'maxdistperframe',maxDistPerFrame,...
-%                              'targetmean',targetMean,...
-%                              'targetsigma',targetSigma,...
-%                              'whitethresh_ext',whiteThresh_ext,...
-%                              'whitethresh_int',whiteThresh_int,...
-%                              'stretch_hist_limit_int',stretch_hist_limit_int,...
-%                              'stretch_hist_limit_ext',stretch_hist_limit_ext);
 
-	if any(fullMask(:))
-        temp = bwmorph(fullMask,'remove');
-        [y,x] = find(temp);
-        points2d{currentFrame} = [x,y];
-        isPawVisible(currentFrame) = true;
-        prevMask = fullMask;
-    else
-        points2d{currentFrame} = [];
-        isPawVisible(currentFrame) = false;
-        if isPawVisible(lastFrame)
-            prevMask = imdilate(prevMask, strel('disk',maxDistPerFrame));
+	for ii = 1 : 2
+        if any(fullMask{ii}(:))
+            temp = bwmorph(fullMask{ii},'remove');
+            [y,x] = find(temp);
+            points2d{ii,currentFrame} = [x,y];
+            isPawVisible(ii,currentFrame) = true;
+            prevMask{ii} = fullMask{ii};
+        else
+            points2d{ii,currentFrame} = [];
+            isPawVisible(ii,currentFrame) = false;
+            if isPawVisible(ii,lastFrame)
+                prevMask{ii} = imdilate(prevMask{ii}, strel('disk',maxDistPerFrame));
+            end
         end
     end
     

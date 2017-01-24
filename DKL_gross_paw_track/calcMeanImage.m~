@@ -1,7 +1,0 @@
-function mean_img = calcMeanImage(video, cameraParams, varargin)
-
-% function to calculate the average frame across an entire video
-
-video.CurrentTime = 0;
-
-while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration

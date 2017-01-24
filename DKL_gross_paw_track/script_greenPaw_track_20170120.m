@@ -179,12 +179,12 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 w = video.Width;
                 
                 BGimg_udName = [fullSessionName(1:end-1) '_' currentVidNumber '_BG_ud.bmp'];
-                pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_mirror_track.mat'];
+                pawTrackName = [fullSessionName(1:end-1) '_' currentVidNumber '_RGB_rel_track.mat'];
                 pawTrackName = fullfile(curProcFolder,pawTrackName);
                 
                 
                 
-%                 if exist(pawTrackName,'file');continue;end
+                if exist(pawTrackName,'file');continue;end
 %                 % TAKE OUT THIS COMMENT TO SKIP PREVIOUSLY PROCESSED
 %                 VIDEOS
                 
@@ -227,7 +227,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 track_metadata.triggerTime = triggerTime;
                 track_metadata.boxCalibration = boxCalibration;
                 
-                initPawMask = find_initPawMask_greenPaw_mirror_20160823( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,greenBGmask,...
+                initPawMask = find_initPawMask_greenPaw_relRGB( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...
@@ -240,7 +240,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh);
                 
-                [mirror_points2d,timeList,isPawVisible_mirror] = trackMirrorView(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
+                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask,...
                     'hsvlimits', pawHSVrange,...
                     'foregroundthresh',foregroundThresh,...
                     'targetmean',targetMean,...
@@ -258,7 +258,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
 %                     'hsvlimits', pawHSVrange,...
 %                     'foregroundthresh',foregroundThresh);
                 
-                save(pawTrackName,'mirror_points2d','timeList','isPawVisible_mirror','track_metadata');
+                save(pawTrackName,'points2d','timeList','isPawVisible_mirror','track_metadata');
             end    % for iVid
         end    % for iFolder
 

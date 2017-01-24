@@ -184,9 +184,7 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 
                 
                 
-%                 if exist(pawTrackName,'file');continue;end
-%                 % TAKE OUT THIS COMMENT TO SKIP PREVIOUSLY PROCESSED
-%                 VIDEOS
+                if exist(pawTrackName,'file');continue;end
                 
                 if strcmp(sessionName,'20140528a') && i_rat == 1 &&  str2num(currentVidNumber) > 4
                     session_mp = matchedPoints.([fullSessionName(1:end-1) 'b']);

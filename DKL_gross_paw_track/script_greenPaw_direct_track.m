@@ -169,9 +169,10 @@ for i_rat = 2 : 2%length(sr_ratInfo)
                 boxRegions = boxRegionsfromMatchedPoints(cur_session_mp, [h,w]);
                 boxRegions.floorCoords = estimateFloor_3dcoords(cur_session_mp,boxCalibration);
                 
+                mean_img = calcMeanImage(video, cameraParams);
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
-                    greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(2,:), sr_ratInfo(i_rat).pawPref);
+                    greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(2,:), sr_ratInfo(i_rat).pawPref, mean_img);
                 end
 %                 if ~BGcalculated
 %                     BGcalculated = true;
