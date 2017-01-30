@@ -4,7 +4,7 @@ SEsize = 2;
 
 for iarg = 1 : 2 : nargin - 1
     switch lower(varargin{iarg})
-        case 'sesize',
+        case 'sesize'
             SEsize = varargin{iarg + 1};
     end
 end

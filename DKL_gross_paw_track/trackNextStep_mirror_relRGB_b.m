@@ -206,8 +206,8 @@ for ii = 2 : -1 : 1
     prev_mask_ROI{ii} = prevMask{ii}(prev_bbox(ii,2):prev_bbox(ii,2)+prev_bbox(ii,4),prev_bbox(ii,1):prev_bbox(ii,1)+prev_bbox(ii,3));
     prev_mask_curROI{ii} = prevMask{ii}(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     prev_mask_dilate_ROI{ii} = prevMask_dilate(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
-    prev_im_relRGB{ii} = relativeRGB(prev_ROI{ii});
-    prev_im_relRGB{ii} = imboxfilt(prev_im_relRGB{ii});
+%     prev_im_relRGB{ii} = relativeRGB(prev_ROI{ii});
+%     prev_im_relRGB{ii} = imboxfilt(prev_im_relRGB{ii});
     im_relRGB{ii} = relativeRGB(cur_ROI{ii});
     relBG_ROI{ii} = relBG(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3),:);
     frontPanelMask_ROI = frontPanelMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
@@ -222,15 +222,15 @@ for ii = 2 : -1 : 1
     % and find their mean values only if the paw was identified in the
     % previous frame. Otherwise, use the last valid mean normalized RGB
     % values
-    if isPrevPawVisible(ii)
-        pawPixels{ii} = zeros(sum(prev_mask_ROI{ii}(:)), 3);
-        RGBdiffs{ii} = zeros(size(cur_ROI{ii}));
-        for iRGB = 1 : 3
-            ROI_temp = squeeze(prev_im_relRGB{ii}(:,:,iRGB));
-            pawPixels{ii}(:,iRGB) = ROI_temp(prev_mask_ROI{ii});
-        end
-        meanRelColor(ii,:) = mean(pawPixels{ii});
-    end
+%     if isPrevPawVisible(ii)
+%         pawPixels{ii} = zeros(sum(prev_mask_ROI{ii}(:)), 3);
+%         RGBdiffs{ii} = zeros(size(cur_ROI{ii}));
+%         for iRGB = 1 : 3
+%             ROI_temp = squeeze(prev_im_relRGB{ii}(:,:,iRGB));
+%             pawPixels{ii}(:,iRGB) = ROI_temp(prev_mask_ROI{ii});
+%         end
+%         meanRelColor(ii,:) = mean(pawPixels{ii});
+%     end
 %     filt_relRGB = imboxfilt(im_relRGB{ii},5);
     for iRGB = 1 : 3
         % in the red or blue channels, if current values are smaller
@@ -251,23 +251,37 @@ for ii = 2 : -1 : 1
     % very crude thresholding to find pixels highly likely to be part of
     % the paw
 %     thresh_img = sqrt(sum(RGBdiffs{ii}.^2,3));
-    scaled_im = zeros([size(prev_mask_curROI{ii}),2]);
-    sl = zeros(2,2);
-    for jj = 1 : 2
-        sl(:,jj) = stretchlim(im_relRGB{ii}(:,:,jj));
-    end
-    sl2 = zeros(2,1);
-    sl2(1) = min(sl(1,:));
-    sl2(2) = max(sl(2,:));
-    for jj = 1 : 2
-        scaled_im(:,:,jj) = imadjust(im_relRGB{ii}(:,:,jj),sl2,[]);
-    end
+%     scaled_im = zeros([size(prev_mask_curROI{ii}),2]);
+%     sl = zeros(2,2);
+%     for jj = 1 : 2
+%         sl(:,jj) = stretchlim(im_relRGB{ii}(:,:,jj));
+%     end
+%     sl2 = zeros(2,1);
+%     sl2(1) = min(sl(1,:));
+%     sl2(2) = max(sl(2,:));
+%     for jj = 1 : 2
+%         scaled_im(:,:,jj) = imadjust(im_relRGB{ii}(:,:,jj),sl2,[]);
+%     end
+
+%     abs_grdiff = cur_ROI{ii}(:,:,2) - cur_ROI{ii}(:,:,1);
+%     abs_thresh_img = imadjust(abs_grdiff);
     
-    thresh_img = scaled_im(:,:,2) - scaled_im(:,:,1);
+    rel_grdiff = im_relRGB{ii}(:,:,2) - im_relRGB{ii}(:,:,1);
+    rel_thresh_img = imadjust(rel_grdiff);
+%     thresh_img = scaled_im(:,:,2) - scaled_im(:,:,1);
 %     thresh_img = im_relRGB{ii}(:,:,2) - im_relRGB{ii}(:,:,1);
-    l = graythresh(thresh_img);
-    tempMask = thresh_img > l;
+
+%     thresh_img = (abs_thresh_img + rel_thresh_img)/2;
+%     l = graythresh(thresh_img);
+%     l_abs = graythresh(abs_thresh_img);
+%     tempMask_abs = abs_thresh_img > l_abs;
+    
+    l_rel = graythresh(rel_thresh_img);
+    tempMask = rel_thresh_img > l_rel;
 %     tempMask = thresh_img < diffThresh;
+    
+%     tempMask = tempMask_rel & tempMask_abs;
+%     tempMask = (thresh_img > l);
     
     drkmsk{ii} = true(size(tempMask));
     for jj = 1 : 3

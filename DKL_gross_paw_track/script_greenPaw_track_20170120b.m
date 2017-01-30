@@ -90,7 +90,7 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 %                        'estimateskew', estimateSkew);
                    
 sr_ratInfo = get_sr_RatList();     
-for i_rat = 1 : 4%length(sr_ratInfo)
+for i_rat = 2 : 2%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawdata_dir = sr_ratInfo(i_rat).directory.rawdata;
@@ -103,7 +103,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 1:length(sessionList)
+    for iSession = 1:5%length(sessionList);
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -161,7 +161,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             
             BGcalculated = false;
             
-            for iVid = 1 : length(vidList)
+            for iVid = 16 : length(vidList)
                 if vidList(iVid).bytes < 10000; continue; end
                 if strcmp(vidList(iVid).name(1:2),'._'); continue; end
                 
@@ -184,7 +184,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
                 
                 
                 
-                if exist(pawTrackName,'file');continue;end
+%                 if exist(pawTrackName,'file');continue;end
 %                 % TAKE OUT THIS COMMENT TO SKIP PREVIOUSLY PROCESSED
 %                 VIDEOS
                 

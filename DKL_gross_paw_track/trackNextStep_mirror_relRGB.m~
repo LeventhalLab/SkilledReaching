@@ -101,7 +101,7 @@ cur_ROI = cell(1,2);
 prev_mask_ROI = cell(1,2);
 prev_mask_curROI = cell(1,2);
 prev_mask_dilate_ROI = cell(1,2);
-% prev_im_relRGB = cell(1,2);
+prev_im_relRGB = cell(1,2);
 RGBdiffs = cell(1,2);
 pawPixels = cell(1,2);
 im_relRGB = cell(1,2);
@@ -256,13 +256,9 @@ for ii = 2 : -1 : 1
     for jj = 1 : 2
         sl(:,jj) = stretchlim(im_relRGB{ii}(:,:,jj));
     end
-    sl2 = zeros(2,1);
-    sl2(1) = min(sl(1,:));
-    sl2(2) = max(sl(2,:));
-    for jj = 1 : 2
-        scaled_im(:,:,jj) = imadjust(im_relRGB{ii}(:,:,jj),sl2,[]);
-    end
     
+    scaled_im(:,:,jj) = imadjust(im_relRGB{ii}(:,:,jj),sl,[]);
+
     thresh_img = scaled_im(:,:,2) - scaled_im(:,:,1);
 %     thresh_img = im_relRGB{ii}(:,:,2) - im_relRGB{ii}(:,:,1);
     l = graythresh(thresh_img);
