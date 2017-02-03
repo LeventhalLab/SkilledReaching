@@ -1,11 +1,12 @@
-function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, varargin )
+function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_PCA( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges,varargin )
+% function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_PCA( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar, varargin )
 
 % video.CurrentTime = triggerTime;
 % cameraParams = boxCalibration.cameraParams;
 
 maxDistPerFrame = 20;
 
-for iarg = 1 : 2 : nargin - 7
+for iarg = 1 : 2 : nargin - 11
     switch lower(varargin{iarg})
         
     end
@@ -26,11 +27,13 @@ video.CurrentTime = triggerTime;
 
 greenBGmask = threshold_BGimg( BGimg_ud );
 
-[fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,'forward',boxCalibration);
+[fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges,'forward',boxCalibration);
+% [fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar,'forward',boxCalibration);
     
 video.CurrentTime = triggerTime;
 
-[rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref, 'reverse',boxCalibration);
+[rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges,'reverse',boxCalibration);
+% [rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar,'reverse',boxCalibration);
                                  
    
 points2d = rpoints2d;
@@ -52,12 +55,29 @@ function [points2d,timeList,isPawVisible] = trackPaw_mirror_local( video, ...
                                     greenBGmask, ...
                                     boxRegions, ...
                                     pawPref, ...
+                                    PCAcoeff,...
+                                    PCA_paw_hist,...
+                                    PCA_nonpaw_hist,...
+                                    PCAbinEdges,...
                                     timeDir, ...
                                     boxCalibration,...
                                     varargin)
-
+% function [points2d,timeList,isPawVisible] = trackPaw_mirror_local( video, ...
+%                                     initPawMask, ...
+%                                     greenBGmask, ...
+%                                     boxRegions, ...
+%                                     pawPref, ...
+%                                     PCAcoeff,...
+%                                     PCAmean,...
+%                                     PCAmean_nonPaw,...
+%                                     PCAcovar,...
+%                                     timeDir, ...
+%                                     boxCalibration,...
+%                                     varargin)                                
+                                
 zeroTol = 1e-10;
 fps = video.FrameRate;
+maxDistPerFrame = 20;
 
 % h = video.Height;
 % w = video.Width;
@@ -84,9 +104,10 @@ totalFrames = round(video.Duration * fps);
 
 prevMask = initPawMask;
            
-for iarg = 1 : 2 : nargin - 7
+for iarg = 1 : 2 : nargin - 11
     switch lower(varargin{iarg})
-
+        case 'maxdistperframe'
+            maxDistPerFrame = varargin{iarg + 1};
     end
 end
 
@@ -158,13 +179,14 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
 
-    [fullMask] = trackNextStep_mirror_relRGB_b(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref);
+    [fullMask] = trackNextStep_mirror_relRGB_PCA(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
+%     [fullMask] = trackNextStep_mirror_relRGB_PCA(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar);
                          
 
 	for ii = 1 : 2
         if any(fullMask{ii}(:))
             temp = bwmorph(fullMask{ii},'remove');
-            [y,x] = find(temp);
+           [y,x] = find(temp);
             points2d{ii,currentFrame} = [x,y];
             isPawVisible(ii,currentFrame) = true;
             prevMask{ii} = fullMask{ii};

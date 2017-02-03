@@ -1,4 +1,5 @@
-function [fullMask] = trackNextStep_mirror_relRGB_b( image_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,varargin)
+function [fullMask] = trackNextStep_mirror_relRGB_PCA( image_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges,varargin)
+% function [fullMask] = trackNextStep_mirror_relRGB_PCA( image_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar,varargin)
 %
 % function to segment a video frame of a rat reaching (paw painted with
 % green nail polish) into paw and non-paw portions in both the mirror and
@@ -18,6 +19,8 @@ function [fullMask] = trackNextStep_mirror_relRGB_b( image_ud, fundMat, greenBGm
 
 % extract height and width of the video frame
 h = size(image_ud,1); w = size(image_ud,2);
+pawThresh = 0.5;
+nonPawThresh = 0.8;
 
 threshPctile_strict = 95;
 threshPctile_lib = 80;
@@ -45,7 +48,7 @@ shelfMask = boxRegions.shelfMask;
 floorMask = boxRegions.floorMask;
 slotMask = boxRegions.slotMask;
 
-for iarg = 1 : 2 : nargin - 6
+for iarg = 1 : 2 : nargin - 10
     switch lower(varargin{iarg})
         case 'maxdistperframe'
             maxDistPerFrame = varargin{iarg + 1};
@@ -85,9 +88,8 @@ prev_mask_dilate_ROI = cell(1,2);
 im_relRGB = cell(1,2);
 drkmsk = cell(1,2);
 dilated_bbox = zeros(2,4);
-% relBG_ROI = cell(1,2);
-% BG_ROI = cell(1,2);
 BGmask_ROI = cell(1,2);
+% PCA_im = cell(1,2);
 for ii = 2 : -1 : 1
     temp = regionprops(bwconvhull(prevMask{ii},'union'),'BoundingBox');
     prev_bbox(ii,:) = round(temp.BoundingBox);
@@ -193,6 +195,77 @@ for ii = 2 : -1 : 1
     BGmask_ROI{ii} = greenBGmask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     frontPanelMask_ROI = frontPanelMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     
+    r = im_relRGB{ii}(:,:,1);
+    g = im_relRGB{ii}(:,:,2);
+    b = im_relRGB{ii}(:,:,3);
+    
+    colorArray = [r(:),g(:),b(:)];
+    
+    transformed_rgb = colorArray * PCAcoeff(:,:,ii);
+%     transformed_rgb_meanSubt = transformed_rgb - repmat(PCAmean(ii,:),size(transformed_rgb,1),1);
+    % see how far each PCA axis is from the mean established for the
+    % initial mask
+%     PCAmask = true(size(BGmask_ROI{ii}));
+%     pcaDist = zeros(size(cur_ROI{ii}));
+    % use the first two principal components for image segmentation
+    pawHist = squeeze(PCA_paw_hist(:,:,ii));
+    nonPawHist = squeeze(PCA_nonpaw_hist(:,:,ii));
+    binEdges = squeeze(PCAbinEdges(:,:,ii));
+    I = zeros(size(cur_ROI{ii}));
+    for jj = 1 : 3
+        normalized_pca = (transformed_rgb(:,jj) - min(transformed_rgb(:,jj))) / range(transformed_rgb(:,jj));
+        I(:,:,jj) = reshape(normalized_pca,size(BGmask_ROI{ii}));
+%         I(:,:,jj) = reshape(transformed_rgb(:,jj),size(BGmask_ROI{ii}));
+    end
+    [paw_p,nonpaw_p]=pawPixelProb(I,pawHist,nonPawHist,binEdges);
+    paw_p(paw_p<0) = 0;
+    nonpaw_p(nonpaw_p<0) = 0;
+    
+    % use only the first two principal components
+    p = paw_p(:,:,1:2) - nonpaw_p(:,:,1:2);
+    pmax = max(p,[],3);    % find max paw probability across the first 2 principal components
+%     PCAmask = pmax > pThresh;
+    nonPawMask = nonpaw_p(:,:,2) > nonPawThresh;
+    pawMask = paw_p(:,:,1) > pawThresh;
+    PCAmask = pawMask & ~nonPawMask;
+    
+%     for jj = 1 : 2
+%         pca_vals = transformed_rgb(:,jj);
+%         pca_vals = (pca_vals-min(pca_vals))/range(pca_vals);
+%         pca_im = reshape(pca_vals, size(BGmask_ROI{ii}));
+%         pcaThresh = graythresh(pca_im);
+%         
+%         pawMask = ~imbinarize(pca_im,pcaThresh);   % first pc should be small to identify the paw
+% 
+%         PCAmask = PCAmask & pawMask;
+%     end
+%     for jj = 1 : 3
+%         test_vals = reshape(transformed_rgb(:,jj),size(BGmask_ROI{ii}));
+%         if PCAmean(ii,jj) < PCAmean_nonPaw(ii,jj)
+%              % look for values greater than the mean minus one standard
+%              % deviation
+%             pcaDist(:,:,jj) = test_vals - PCAmean(ii,jj);
+% %             PCAmask = PCAmask & (test_vals > (PCAmean(ii,jj) - PCAcovar(ii,jj)));
+%         else
+%             % look for values less than the mean plus one standard
+%             % deviation
+%             pcaDist(:,:,jj) = PCAmean(ii,jj) - test_vals;
+% %             PCAmask = PCAmask & (test_vals < (PCAmean(ii,jj) + PCAcovar(ii,jj)));
+%         end
+%         PCAmask = PCAmask & (pcaDist(:,:,jj) < sqrt(PCAcovar(ii,jj)));
+%     end
+           
+            
+%     pcaDeviation = zeros(size(transformed_rgb));
+%     pdev = zeros(size(cur_ROI{ii}));
+%     for jj = 1 : 3
+%         pcaDeviation(:,jj) = (transformed_rgb(:,jj) - PCAmean(ii,jj));
+%         pdev(:,:,jj) = reshape(pcaDeviation(:,jj),size(BGmask_ROI{ii}));
+%     end
+%     
+%     pcaDist = sqrt(sum(pcaDeviation.^2,2));
+%     pcaDist = reshape(pcaDist,size(BGmask_ROI{ii}));
+    
 %     BGdiff = imabsdiff(relBG_ROI{ii},im_relRGB{ii});
 %     BGdiffmag = sqrt(sum(BGdiff.^2,3));
 %     BGadjust = imadjust(BGdiffmag);
@@ -201,9 +274,11 @@ for ii = 2 : -1 : 1
 %     BGthresh = prctile(BGvals(BGvals>0),BGdiffPctile);
 %     BGthresh = 0.25;
 %     BGmask = imbinarize(BGadjust,BGthresh);
+
     
-    rel_grdiff = im_relRGB{ii}(:,:,2) - im_relRGB{ii}(:,:,1);
-    rel_gbdiff = im_relRGB{ii}(:,:,2) - im_relRGB{ii}(:,:,3);
+    
+%     rel_grdiff = im_relRGB{ii}(:,:,2) - im_relRGB{ii}(:,:,1);
+%     rel_gbdiff = im_relRGB{ii}(:,:,2) - im_relRGB{ii}(:,:,3);
 %     rel_gr_img = imadjust(rel_grdiff);
 %     rel_gb_img = imadjust(rel_gbdiff);
 %     rel_gr_values = rel_gr_img(:);
@@ -218,13 +293,13 @@ for ii = 2 : -1 : 1
 %     l_gr = graythresh(rel_gr_img);
 %     grMask = rel_gr_img > (l_gr + 0.05);
 %     grMask_strict = rel_gr_img > l_gr;
-    grMask = imbinarize(rel_grdiff, grDiffThresh);%rel_gr_img > l_gr2;
-    gbMask = imbinarize(rel_gbdiff, gbDiffThresh);
-    if ii == 2
+%     grMask = imbinarize(rel_grdiff, grDiffThresh);%rel_gr_img > l_gr2;
+%     gbMask = imbinarize(rel_gbdiff, gbDiffThresh);
+%     if ii == 2
 %         grMask_lib = grMask_lib & ~frontPanelMask_ROI;
 %         grMask_strict = grMask_strict & ~frontPanelMask_ROI;
-        grMask = grMask & ~frontPanelMask_ROI;
-    end
+%         grMask = grMask & ~frontPanelMask_ROI;
+%     end
         
 %     grMask = imreconstruct(grMask_strict,grMask_lib);
     
@@ -235,7 +310,7 @@ for ii = 2 : -1 : 1
 %     gbMask = imreconstruct(gbMask_strict,gbMask_lib);
 %     gbMask = imbinarize(rel_gb_img,l_gb);
 
-    tempMask = grMask & gbMask;
+    tempMask = PCAmask;%grMask & gbMask;
     
     drkmsk{ii} = true(size(tempMask));
     for jj = 1 : 3

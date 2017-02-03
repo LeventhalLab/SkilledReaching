@@ -184,7 +184,7 @@ for i_rat = 2 : 4%length(sr_ratInfo)
                 
                 
                 
-                if exist(pawTrackName,'file');continue;end
+%                 if exist(pawTrackName,'file');continue;end
 %                 % TAKE OUT THIS COMMENT TO SKIP PREVIOUSLY PROCESSED
 %                 VIDEOS
                 
@@ -240,8 +240,7 @@ for i_rat = 2 : 4%length(sr_ratInfo)
                     'targetmean',targetMean,...
                     'targetsigma',targetSigma);
                 
-                [ PCAcoeff, PCA_paw_hist, PCA_nonpaw_hist, PCAbinEdges ] = pawPCAregions( image_ud, initPawMask );
-%                 [ PCAcoeff, PCAmean, PCAmean_nonPaw, PCAcovar ] = pawPCAregions( image_ud, initPawMask );
+                [ PCAcoeff, PCAmean, PCAmean_nonPaw, PCAcovar ] = pawPCAregions( image_ud, initPawMask );
 
 %                 initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
 
@@ -260,7 +259,7 @@ for i_rat = 2 : 4%length(sr_ratInfo)
 %                     'stretch_hist_limit_int',stretch_hist_limit_int,...
 %                     'stretch_hist_limit_ext',stretch_hist_limit_ext);
                 
-                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_PCA(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
+                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_PCA(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar);
                 
                 save(pawTrackName,'points2d','timeList','isPawVisible_mirror','track_metadata');
             end    % for iVid
