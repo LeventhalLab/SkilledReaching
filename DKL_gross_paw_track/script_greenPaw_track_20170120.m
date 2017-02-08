@@ -258,7 +258,7 @@ for i_rat = 1 : 2%length(sr_ratInfo)
 %                     'stretch_hist_limit_int',stretch_hist_limit_int,...
 %                     'stretch_hist_limit_ext',stretch_hist_limit_ext);
                 
-                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
+                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_20170208(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
                 
                 save(pawTrackName,'points2d','timeList','isPawVisible_mirror','track_metadata');
             end    % for iVid
