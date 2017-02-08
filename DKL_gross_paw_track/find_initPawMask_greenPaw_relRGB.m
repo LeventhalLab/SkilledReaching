@@ -35,8 +35,8 @@ frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxFrontPanelSep)) & ~fro
 intMask = boxRegions.intMask;
 
 shelfMask = boxRegions.shelfMask;
-intMask = boxRegions.intMask;
-extMask = boxRegions.extMask;
+% intMask = boxRegions.intMask;
+% extMask = boxRegions.extMask;
 slotMask = boxRegions.slotMask;
 floorMask = boxRegions.floorMask;
 [y,~] = find(floorMask);

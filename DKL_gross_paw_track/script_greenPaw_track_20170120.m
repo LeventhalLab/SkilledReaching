@@ -90,7 +90,7 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 %                        'estimateskew', estimateSkew);
                    
 sr_ratInfo = get_sr_RatList();     
-for i_rat = 1 : 4%length(sr_ratInfo)
+for i_rat = 1 : 2%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawdata_dir = sr_ratInfo(i_rat).directory.rawdata;
@@ -184,7 +184,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
                 
                 
                 
-                if exist(pawTrackName,'file');continue;end
+%                 if exist(pawTrackName,'file');continue;end
 %                 % TAKE OUT THIS COMMENT TO SKIP PREVIOUSLY PROCESSED
 %                 VIDEOS
                 
@@ -213,15 +213,13 @@ for i_rat = 1 : 4%length(sr_ratInfo)
 %                 end
                 
                 
-                triggerTime = identifyTriggerTime_greenPaw( video, sr_ratInfo(i_rat), session_mp, cameraParams,...
-                                                   'pawgraylevels',gray_paw_limits,...
-                                                   'hsvlimits',pawHSVrange,...
-                                                   'targetmean',targetMean,...
-                                                   'targetsigma',targetSigma);
-
-%                 triggerTime = identifyTriggerTime_greenPaw( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, cameraParams,...
+%                 triggerTime = identifyTriggerTime_greenPaw( video, sr_ratInfo(i_rat), session_mp, cameraParams,...
 %                                                    'pawgraylevels',gray_paw_limits,...
-%                                                    'hsvlimits',pawHSVrange);
+%                                                    'hsvlimits',pawHSVrange,...
+%                                                    'targetmean',targetMean,...
+%                                                    'targetsigma',targetSigma);
+                triggerTime = identifyTriggerTime_greenPaw_relRGB( video, sr_ratInfo(i_rat), session_mp, cameraParams);
+
 
                                                
                 track_metadata.triggerTime = triggerTime;
@@ -240,7 +238,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
                     'targetmean',targetMean,...
                     'targetsigma',targetSigma);
                 
-                [ PCAcoeff, PCA_paw_hist, PCA_nonpaw_hist, PCAbinEdges ] = pawPCAregions( image_ud, initPawMask );
+%                 [ PCAcoeff, PCA_paw_hist, PCA_nonpaw_hist, PCAbinEdges ] = pawPCAregions( image_ud, initPawMask );
 %                 [ PCAcoeff, PCAmean, PCAmean_nonPaw, PCAcovar ] = pawPCAregions( image_ud, initPawMask );
 
 %                 initPawMask = find_initPawMask_greenPaw_mirror( video, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,triggerTime,'hsvlimits', pawHSVrange,'foregroundthresh',foregroundThresh);
@@ -260,7 +258,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
 %                     'stretch_hist_limit_int',stretch_hist_limit_int,...
 %                     'stretch_hist_limit_ext',stretch_hist_limit_ext);
                 
-                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_PCA(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
+                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
                 
                 save(pawTrackName,'points2d','timeList','isPawVisible_mirror','track_metadata');
             end    % for iVid

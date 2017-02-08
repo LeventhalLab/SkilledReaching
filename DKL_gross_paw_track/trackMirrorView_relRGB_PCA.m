@@ -179,7 +179,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
 
-    [fullMask] = trackNextStep_mirror_relRGB_PCA(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
+    [fullMask] = trackNextStep_mirror_relRGB_20170208(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
 %     [fullMask] = trackNextStep_mirror_relRGB_PCA(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar);
                          
 

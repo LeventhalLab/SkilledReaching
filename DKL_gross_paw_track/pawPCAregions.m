@@ -5,7 +5,7 @@ function [ PCAcoeff, PCA_paw_hist, PCA_nonpaw_hist, PCAbinEdges ] = pawPCAregion
 
 imFiltWidth = 5;
 pawDilation = 30;
-numHistBins = 25;
+numHistBins = 10;
 
 for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})
@@ -19,9 +19,12 @@ PCAcoeff = zeros(3,3,2);
 % PCAmean = zeros(2,3);
 % PCAcovar = zeros(3,3,2);
 % PCAmean_nonPaw = zeros(2,3);
-PCA_paw_hist = zeros(numHistBins,3,2);
-PCA_nonpaw_hist = zeros(numHistBins,3,2);
-PCAbinEdges = zeros(numHistBins+1,3,2);    % number of bins x 2 views x 3 principal components
+% PCA_paw_hist = zeros(numHistBins,3,2);
+% PCA_nonpaw_hist = zeros(numHistBins,3,2);
+% PCAbinEdges = zeros(numHistBins+1,3,2);    % number of bins x 2 views x 3 principal components
+PCA_paw_hist = zeros(numHistBins,numHistBins,2);
+PCA_nonpaw_hist = zeros(numHistBins,numHistBins,2);
+PCAbinEdges = zeros(numHistBins+1,2,2);    % number of bins x 2 views x 3 principal components
 
 filt_im = imboxfilt(image_ud,imFiltWidth);
 bbox = zeros(2,4);
@@ -44,7 +47,8 @@ for iView = 1 : 2
     colorArray = [r(:),g(:),b(:)];
     PCAcoeff(:,:,iView) = pca(colorArray);
     
-    [PCA_paw_hist(:,:,iView),PCA_nonpaw_hist(:,:,iView),PCAbinEdges(:,:,iView)] = pawPCAhists(rel_paw_img, localPawMask, PCAcoeff(:,:,iView), numHistBins);
+    [PCA_paw_hist(:,:,iView),PCA_nonpaw_hist(:,:,iView),PCAbinEdges(:,:,iView)] = pawPCAhists2(rel_paw_img, localPawMask, PCAcoeff(:,:,iView), numHistBins);
+%     [PCA_paw_hist(:,:,iView),PCA_nonpaw_hist(:,:,iView),PCAbinEdges(:,:,iView)] = pawPCAhists(rel_paw_img, localPawMask, PCAcoeff(:,:,iView), numHistBins);
     
 %     transformed_rgb = colorArray * PCAcoeff(:,:,iView);
 %     

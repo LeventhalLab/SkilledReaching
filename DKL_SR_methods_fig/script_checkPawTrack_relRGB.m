@@ -88,7 +88,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             [~,baseName,~] = fileparts(vidList(iVid).name);
             writeName = [baseName '_relRGB.avi'];
             writeName = fullfile(processedDir, writeName);
-            if exist(writeName,'file');continue;end
+%             if exist(writeName,'file');continue;end
             
             w_vid = VideoWriter(writeName, 'motion jpeg avi');
             w_vid.FrameRate = video.FrameRate;
