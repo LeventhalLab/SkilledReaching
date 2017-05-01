@@ -18,7 +18,7 @@ function h=plot3dDistance(allAlignedXyzPawCenters,plotFrames)
             yfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,2),4);
             zfilt = medfilt1(alignedXyzPawCenters(startFrame:plotFrames,3),4);
             hold on;
-            colormapline(smoothn(xfilt,3,'robust'),smoothn(yfilt,3,'robust'),smoothn(zfilt,3,'robust'));
+            colormapline(smoothn(xfilt,3,'robust'),smoothn(yfilt,3,'robust'),smoothn(zfilt,3,'robust'),jet(128));
         end
     end
 end
