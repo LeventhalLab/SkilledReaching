@@ -10,20 +10,26 @@ function sf = sr_estimateScale(session_mp, P, K, varargin)
 %
 
 rubikSpacing = 17.5;    % in mm
+postWidth = 85;         % in mm
 boxWidth = 150;         % in mm
 shelfWidth = 100;       % in mm, this seems to be fairly accurate
 useShelfInsteadofRubiks = false;
+usePostsInsteadofRubiks = false;
 
 for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
-        case 'rubikspacing',
+        case 'rubikspacing'
             rubikSpacing = varargin{iarg + 1};
-        case 'boxwidth',
+        case 'boxwidth'
             boxWidth = varargin{iarg + 1};
-        case 'shelfwidth',
+        case 'shelfwidth'
             shelfWidth = varargin{iarg + 1};
-        case 'forceshelf',
+        case 'forceshelf'
             useShelfInsteadofRubiks = varargin{iarg + 1};
+        case 'forceposts'
+            usePostsInsteadofRubiks = varargin{iarg + 1};
+        case 'postwidth'
+            postWidth = varargin{iarg + 1};
     end
 end
 
@@ -38,8 +44,14 @@ end
 if ~skipRubiks && ~useShelfInsteadofRubiks
     % this session had a rubiks calibration image
     sf = estimateScale_rubik(session_mp, P, K, rubikSpacing);
-else
+end
+
+if useShelfInsteadofRubiks
     sf = estimateScale_shelfWidth(session_mp, P, K, shelfWidth);
+end
+
+if (skipRubiks && ~useShelfInsteadofRubiks) || usePostsInsteadofRubiks
+    sf = estimateScale_shelfPosts(session_mp, P, K, postWidth);
 end
 
 end
@@ -176,5 +188,58 @@ end
 xyz_dist = diff(points3d,1,1);
 euc_dist = sqrt(sum(xyz_dist.^2));
 sf(2) = shelfWidth / euc_dist;
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function sf = estimateScale_shelfPosts(session_mp, P, K, postWidth)
+
+sf = zeros(1,2);
+P1 = eye(4,3);
+
+% leftShelfEdge and rightShelfEdge are the estimated locations of the shelf
+% corner in the mirror views - either directy measured or estimated by
+% extending the shelf edges in the mirror view until they intersect
+% [leftShelfEdge, rightShelfEdge] = estimateShelfIntersect(session_mp);
+
+direct_shelf_bolts = [session_mp.direct.left_shelf_bolt;...
+                        session_mp.direct.right_shelf_bolt];
+direct_norm = normalize_points(direct_shelf_bolts, K);
+
+% left mirror first
+P2 = squeeze(P(:,:,1));
+leftMirror_bolts = [session_mp.leftMirror.left_shelf_bolt;...
+                    session_mp.leftMirror.right_shelf_bolt];
+leftMirror_norm = normalize_points(leftMirror_bolts, K);
+
+if any(isnan(direct_norm(:))) || any(isnan(leftMirror_norm(:)))
+    points3d = NaN(2,3);
+else
+    [points3d,reprojectedPoints,errors] = triangulate_DL(direct_norm, leftMirror_norm, P1, P2);
+end
+
+% calculate the euclidean distance between the 3d points
+xyz_dist = diff(points3d,1,1);
+euc_dist = sqrt(sum(xyz_dist.^2));
+sf(1) = postWidth / euc_dist;
+
+% now right mirror
+P2 = squeeze(P(:,:,2));
+rightMirror_bolts = [session_mp.rightMirror.left_shelf_bolt;...
+                     session_mp.rightMirror.right_shelf_bolt];
+rightMirror_norm = normalize_points(rightMirror_bolts, K);
+
+if any(isnan(direct_norm(:))) || any(isnan(rightMirror_norm(:)))
+    points3d = NaN(2,3);
+else
+    [points3d,reprojectedPoints,errors] = triangulate_DL(direct_norm, rightMirror_norm, P1, P2);
+end
+
+% calculate the euclidean distance between the 3d points
+xyz_dist = diff(points3d,1,1);
+euc_dist = sqrt(sum(xyz_dist.^2));
+sf(2) = postWidth / euc_dist;
 
 end

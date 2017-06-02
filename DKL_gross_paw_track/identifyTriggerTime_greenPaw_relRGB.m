@@ -17,19 +17,12 @@ function triggerTime = identifyTriggerTime_greenPaw_relRGB( video, rat_metadata,
 h = video.Height;
 w = video.Width;
 
-targetMean = [0.5,0.2,0.5
-              0.3,0.5,0.5];
-    
-targetSigma = [0.2,0.2,0.2
-               0.2,0.2,0.2];
-          
-foregroundThresh = 45/255;
-
 grThresh = 0.2;
 gbThresh = 0.1;
+darkThresh = 0.05;    % pixels darker than this threshold in R, G, AND B should be discarded
 
 pixCountThresh = 2500;
-minPixCount = 1000;    % mininum number of green pixels to count as the paw being visible
+minPixCount = 700;    % mininum number of green pixels to count as the paw being visible
 maxFramesAfterThresh = 50;
 
 ROIheight = 200;    % in pixels - how high above the shelf to look for the paw
@@ -46,12 +39,6 @@ for iarg = 1 : 2 : nargin - 4
             pixCountThresh = varargin{iarg + 1};
         case 'foregroundthresh',
             foregroundThresh = varargin{iarg + 1};
-        case 'hsvlimits',
-            pawHSVrange = varargin{iarg + 1};
-        case 'targetmean',
-            targetMean = varargin{iarg + 1};
-        case 'targetsigma',
-            targetSigma = varargin{iarg + 1};
     end
 end
 
@@ -96,6 +83,9 @@ frameNum = 0;
 pixCount = [];
 while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     image = readFrame(video);
+    if strcmpi(class(image),'uint8')
+        image = double(image) / 255;
+    end
     frameNum = frameNum + 1;
 %     fprintf('frame number: %d\n', frameNum)
     
@@ -104,6 +94,12 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     
     im_ROI = image_ud(reach_bbox(2):reach_bbox(2)+reach_bbox(4),...
                       reach_bbox(1):reach_bbox(1)+reach_bbox(3),:);
+                  
+    drkmsk = true(size(im_ROI,1),size(im_ROI,2));
+    for jj = 1 : 3
+        drkmsk = drkmsk & im_ROI(:,:,jj) < darkThresh;
+    end
+    
 	ROI_relRGB = relativeRGB(im_ROI);
     
     r = ROI_relRGB(:,:,1);
@@ -116,7 +112,7 @@ while pawPixelCount < pixCountThresh && video.CurrentTime < video.Duration
     grMask = gr_diff > grThresh;
     gbMask = gb_diff > gbThresh;
     
-    mask = grMask & gbMask;
+    mask = grMask & gbMask & ~drkmsk;
 
 %     image_ud = color_adapthisteq(orig_image_ud);
 

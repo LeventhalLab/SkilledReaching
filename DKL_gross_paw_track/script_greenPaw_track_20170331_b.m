@@ -103,7 +103,7 @@ for i_rat = 3 : 3%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 1:length(sessionList)
+    for iSession = 8:8%length(sessionList)
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -238,7 +238,7 @@ for i_rat = 3 : 3%length(sr_ratInfo)
 %                     'foregroundthresh',foregroundThresh,...
 %                     'targetmean',targetMean,...
 %                     'targetsigma',targetSigma);
-                initPawMask = find_initPawMask_greenPaw_relRGB_20170208_b( image_ud, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,greenBGmask);
+                initPawMask = find_initPawMask_greenPaw_relRGB_20170331( image_ud, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,greenBGmask);
                 
 %                 [ PCAcoeff, PCA_paw_hist, PCA_nonpaw_hist, PCAbinEdges ] = pawPCAregions( image_ud, initPawMask );
 %                 [ PCAcoeff, PCAmean, PCAmean_nonPaw, PCAcovar ] = pawPCAregions( image_ud, initPawMask );
@@ -260,7 +260,7 @@ for i_rat = 3 : 3%length(sr_ratInfo)
 %                     'stretch_hist_limit_int',stretch_hist_limit_int,...
 %                     'stretch_hist_limit_ext',stretch_hist_limit_ext);
                 
-                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_20170208_c(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask);
+                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_20170331_b(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask);
 %                 [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_PCA(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
                 
                 save(pawTrackName,'points2d','timeList','isPawVisible_mirror','track_metadata');

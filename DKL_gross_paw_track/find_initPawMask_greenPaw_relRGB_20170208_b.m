@@ -1,29 +1,43 @@
-function initPawMask = find_initPawMask_greenPaw_relRGB( image_ud, BGimg_ud, sr_ratInfo, session_mp, boxCalibration, boxRegions, greenBGmask, varargin )
+function initPawMask = find_initPawMask_greenPaw_relRGB_20170208_b( image_ud, BGimg_ud, sr_ratInfo, session_mp, boxCalibration, boxRegions, greenBGmask, varargin )
 
 h = size(image_ud,1);
 w = size(image_ud,2);
 
-drkThresh = 0.05;    % exclude pixels with RGB values all below this value
+drkThresh = 0.06;    % exclude pixels with RGB values all below this value
 imFiltWidth = 5;
 
 maxFrontPanelSep = 20;
+max_img_bgDiff = 0.01;
 
-grDistThresh_res = 0.8;
-grDistThresh_lib = 0.5;
+if isa(BGimg_ud,'uint8')
+    BGimg_ud = double(BGimg_ud) / 255;
+end
+if isa(image_ud,'uint8')
+    image_ud = double(image_ud) / 255;
+end
+
+imDiff = imabsdiff(image_ud,BGimg_ud);
+imDiffMask = imDiff(:,:,1) < max_img_bgDiff & ...
+             imDiff(:,:,2) < max_img_bgDiff & ...
+             imDiff(:,:,3) < max_img_bgDiff;
+imDiffMask = ~imDiffMask;
+
+grDistThresh_res = [0.8,0.7];
+grDistThresh_lib = [0.5,0.5];
+
+min_internal_gr_diff = 0.15;
+min_internal_gb_diff = 0.06;
 
 min_gb_diff = 0.05;
 min_gr_diff = 0.1;
 
-% initPawMask = cell(1,2);
-
 ROIheight = 150;    % in pixels - how high above the shelf to look for the paw
 ROI_dist_from_slot = 50;
-ROIwidth = 200;
 
 belowShelfDist = 50;
 behindPanelDist = 150;
 inFrontPanelDist = 200;
-directWidth = 250;    % in pixels
+maxDistBehindFrontPanel = 15;
 
 for iarg = 1 : 2 : nargin - 7
     switch lower(varargin{iarg})
@@ -32,16 +46,16 @@ for iarg = 1 : 2 : nargin - 7
     end
 end
 
-filtBG = imboxfilt(BGimg_ud,imFiltWidth);
-relBG = relativeRGB(filtBG);
+% filtBG = imboxfilt(BGimg_ud,imFiltWidth);
+% relBG = relativeRGB(filtBG);
 
 frontPanelMask = boxRegions.frontPanelMask;
 % shelfMask = boxRegions.shelfMask;
 frontPanelEdge = imdilate(frontPanelMask, strel('disk',maxFrontPanelSep)) & ~frontPanelMask;
 intMask = boxRegions.intMask;
+extMask = boxRegions.extMask;
 
 shelfMask = boxRegions.shelfMask;
-% intMask = boxRegions.intMask;
 % extMask = boxRegions.extMask;
 slotMask = boxRegions.slotMask;
 floorMask = boxRegions.floorMask;
@@ -64,7 +78,7 @@ if iscell(pawPref)
 end
 
 srCal = boxCalibration.srCal;
-cameraParams = boxCalibration.cameraParams;
+% cameraParams = boxCalibration.cameraParams;
 
 leftFrontPanelMask = false(h,w);
 rightFrontPanelMask = false(h,w);
@@ -103,12 +117,11 @@ switch pawPref
         mirror_top = round(mirrorLims.BoundingBox(2));
         mirror_height = round(mirrorLims.BoundingBox(4));
         
-        frontPanelEdge = rightFrontEdge;
-        fundMat = srCal.F(:,:,2);
+        SE = [ones(1,maxDistBehindFrontPanel),zeros(1,maxDistBehindFrontPanel)];
 %         mirror_mask = rightMirrorGreen;
         
-        SE_fromExt = [ones(1,maxFrontPanelSep+25),zeros(1,maxFrontPanelSep+25)];
-        overlapCheck_SE_fromExt = [ones(1,5),zeros(1,5)];
+%         SE_fromExt = [ones(1,maxFrontPanelSep+25),zeros(1,maxFrontPanelSep+25)];
+%         overlapCheck_SE_fromExt = [ones(1,5),zeros(1,5)];
         
         ROI = [direct_left,direct_top,direct_width,direct_height;...
                mirror_left,mirror_top,mirror_width,mirror_height];
@@ -132,74 +145,54 @@ switch pawPref
         mirror_top = round(mirrorLims.BoundingBox(2));
         mirror_height = round(mirrorLims.BoundingBox(4));
         
-        frontPanelEdge = leftFrontEdge;
-        fundMat = srCal.F(:,:,1);
+        SE = [zeros(1,maxDistBehindFrontPanel),ones(1,maxDistBehindFrontPanel)];
 %         mirror_mask = leftMirrorGreen;
         
-        SE_fromExt = [zeros(1,maxFrontPanelSep+25),ones(1,maxFrontPanelSep+25)];
-        overlapCheck_SE_fromExt = [zeros(1,5),ones(1,5)];
+%         SE_fromExt = [zeros(1,maxFrontPanelSep+25),ones(1,maxFrontPanelSep+25)];
+%         overlapCheck_SE_fromExt = [zeros(1,5),ones(1,5)];
         
         ROI = [direct_left,direct_top,direct_width,direct_height;...
                mirror_left,mirror_top,mirror_width,mirror_height];
 end
+behindPanelMask = imdilate(frontPanelMask,SE) & ~frontPanelMask;
+behindPanelMask = behindPanelMask(ROI(2,2):ROI(2,2)+ROI(2,4),ROI(2,1):ROI(2,1)+ROI(2,3));
 
-% leftMirrorMask = false(h,w);
-% shelf_bot = session_mp.leftMirror.left_back_shelf_corner(2)+20;
-% shelf_top = shelf_bot - ROIheight;
-% shelf_right = session_mp.leftMirror.left_back_shelf_corner(1)+20;
-% shelf_left = max(1,shelf_right - ROIwidth);
-% leftMirrorMask(shelf_top:shelf_bot,shelf_left:shelf_right) = true;
-% 
-% rightMirrorMask = false(h,w);
-% shelf_bot = session_mp.rightMirror.right_back_shelf_corner(2)+40;
-% shelf_top = shelf_bot - ROIheight;
-% shelf_left = session_mp.rightMirror.right_back_shelf_corner(1)-40;
-% shelf_right = min(w,shelf_left + ROIwidth);
-% rightMirrorMask(shelf_top:shelf_bot,shelf_left:shelf_right) = true;
-% 
-% directMask = false(h,w);
-% shelf_left = session_mp.direct.left_back_shelf_corner(1);
-% shelf_right = session_mp.direct.right_back_shelf_corner(1);
-% shelf_bot = session_mp.direct.left_bottom_shelf_corner(2);
-% shelf_top = shelf_bot - 200;
-% direct_left = round((shelf_left+shelf_right)/2 - directWidth/2);
-% direct_right = direct_left + directWidth;
-% directMask(shelf_top:shelf_bot,direct_left:direct_right) = true;
-
-
-
-% video.CurrentTime = triggerTime;
-% image = readFrame(video);
-% if strcmpi(class(image),'uint8')
-%     image = double(image) / 255;
-% end
-% image_ud = undistortImage(image, cameraParams);
 filt_im = imboxfilt(image_ud,imFiltWidth);
 rel_im = relativeRGB(filt_im);
-rel_grdiff = rel_im(:,:,2) - rel_im(:,:,1);
-rel_gbdiff = rel_im(:,:,2) - rel_im(:,:,3);
+% rel_grdiff = rel_im(:,:,2) - rel_im(:,:,1);
+% rel_gbdiff = rel_im(:,:,2) - rel_im(:,:,3);
 
 view_rel_grdiff = cell(1,2);
 view_rel_gbdiff = cell(1,2);
-view_gr_thresh_img = cell(1,2);
-view_gb_thresh_img = cell(1,2);
-l_gr = zeros(1,2);
-l_gb = zeros(1,2);
+% view_gr_thresh_img = cell(1,2);
+% view_gb_thresh_img = cell(1,2);
+% l_gr = zeros(1,2);
+% l_gb = zeros(1,2);
 grMask = cell(1,2);
 gbMask = cell(1,2);
 view_im = cell(1,2);
 drkmsk = cell(1,2);
 tempMask = cell(1,2);
 newMask = cell(1,2);
-relBG_ROI = cell(1,2);
+% relBG_ROI = cell(1,2);
 im_relRGB = cell(1,2);
-BGmask = cell(1,2);
+% BGmask = cell(1,2);
 for iView = 1 : 2
-    view_rel_grdiff{iView} = rel_grdiff(ROI(iView,2):ROI(iView,2)+ROI(iView,4),...
-                                        ROI(iView,1):ROI(iView,1)+ROI(iView,3));
-    view_rel_gbdiff{iView} = rel_gbdiff(ROI(iView,2):ROI(iView,2)+ROI(iView,4),...
-                                        ROI(iView,1):ROI(iView,1)+ROI(iView,3));
+    filt_im_ROI = filt_im(ROI(iView,2):ROI(iView,2)+ROI(iView,4),...
+                          ROI(iView,1):ROI(iView,1)+ROI(iView,3),:);
+	rel_im_ROI = relativeRGB(filt_im_ROI);
+    view_rel_grdiff{iView} = rel_im_ROI(:,:,2) - rel_im_ROI(:,:,1);
+    view_rel_gbdiff{iView} = rel_im_ROI(:,:,2) - rel_im_ROI(:,:,3);
+    greenBGmask_ROI = greenBGmask(ROI(iView,2):ROI(iView,2)+ROI(iView,4),...
+                                  ROI(iView,1):ROI(iView,1)+ROI(iView,3));
+
                                     
+    view_rel_grdiff{iView}(view_rel_grdiff{iView} < 0) = 0;
+    view_rel_gbdiff{iView}(view_rel_grdiff{iView} < 0) = 0;
+                                    
+    grDist = sqrt(view_rel_grdiff{iView}.^2 + view_rel_gbdiff{iView}.^2);
+    grDist_adj = imadjust(grDist);
+    
 	view_im{iView} = filt_im(ROI(iView,2):ROI(iView,2)+ROI(iView,4),...
                              ROI(iView,1):ROI(iView,1)+ROI(iView,3),:);
 	drkmsk{iView} = view_im{iView}(:,:,1) < drkThresh & ...
@@ -208,29 +201,70 @@ for iView = 1 : 2
                 
 	im_relRGB{iView} = rel_im(ROI(iView,2):ROI(iView,2)+ROI(iView,4),ROI(iView,1):ROI(iView,1)+ROI(iView,3),:);
                 
-    relBG_ROI{iView} = relBG(ROI(iView,2):ROI(iView,2)+ROI(iView,4),ROI(iView,1):ROI(iView,1)+ROI(iView,3),:);
-	BGdiff = imabsdiff(relBG_ROI{iView},im_relRGB{iView});
-    BGdiffmag = sqrt(sum(BGdiff.^2,3));
-    BGadjust = imadjust(BGdiffmag);
-    BGthresh = graythresh(BGadjust);
-    BGmask{iView} = imbinarize(BGadjust,BGthresh);
-                                    
-	view_gr_thresh_img{iView} = imadjust(view_rel_grdiff{iView});
-    view_gb_thresh_img{iView} = imadjust(view_rel_gbdiff{iView});
+    if iView == 2
+        frontPanelMask_ROI = frontPanelMask(ROI(iView,2):ROI(iView,2)+ROI(iView,4),...
+                                            ROI(iView,1):ROI(iView,1)+ROI(iView,3));
+        intMask = intMask(ROI(iView,2):ROI(iView,2)+ROI(iView,4),ROI(iView,1):ROI(iView,1)+ROI(iView,3));
+        int_grMask = view_rel_grdiff{iView} > min_internal_gr_diff;
+        int_gbMask = view_rel_gbdiff{iView} > min_internal_gb_diff;
+        intPawTest = int_grMask & int_gbMask & intMask & ~drkmsk{iView};
+%         if any(frontPanelMask_ROI(:)) && any(intPawTest(:))   % the front panel is included in the image, and the paw may be both inside and outside the box
+%             int_grDist = grDist .* double(intMask);
+%             int_grDist_adj = imadjust(int_grDist);
+%             grDist_adj(intMask) = int_grDist_adj(intMask);
+%         end
+    end
     
-    l_gr(iView) = graythresh(view_gr_thresh_img{iView});
-    l_gb(iView) = graythresh(view_gb_thresh_img{iView});
+    grMask{iView} = view_rel_grdiff{iView} > min_gr_diff;
+    gbMask{iView} = view_rel_gbdiff{iView} > min_gb_diff;
     
-    grMask{iView} = view_gr_thresh_img{iView} > l_gr(iView);
-    gbMask{iView} = view_gb_thresh_img{iView} > l_gb(iView);
+    tempMask_res = (grDist_adj > grDistThresh_res(iView)) & grMask{iView} & gbMask{iView} & ~drkmsk{iView};
+    tempMask_lib = (grDist_adj > grDistThresh_lib(iView)) & grMask{iView} & gbMask{iView} & ~drkmsk{iView};
+    tempMask{iView} = imreconstruct(tempMask_res,tempMask_lib) & ~greenBGmask_ROI;
     
-    tempMask{iView} = grMask{iView} & gbMask{iView} & ~drkmsk{iView} & BGmask{iView};
+%     tempMask{iView} = grMask{iView} & gbMask{iView} & ~drkmsk{iView} & ~greenBGmask_ROI;
     tempMask{iView} = processMask(tempMask{iView},2);
+    
+    if iView == 2
+        extMask = extMask(ROI(iView,2):ROI(iView,2)+ROI(iView,4),ROI(iView,1):ROI(iView,1)+ROI(iView,3));
+        tempMask_ext = tempMask{iView} & extMask;
+        
+%         behindPanelMask = imdilate(frontPanelMask,SE) & ~frontPanelMask;
+        
+        tempMask_ext_dilate = imdilate(tempMask_ext, strel('disk',5));
+        frontPanelTest = tempMask_ext_dilate & frontPanelMask_ROI;
+        
+        if any(tempMask_ext(:)) && ~any(frontPanelTest(:))   % if part of the paw is external to the box AND far enough away from the front panel that there shouldn't be any part on the inside
+            tempMask_int = false(size(tempMask{iView}));
+        else
+            tempMask_int = tempMask{iView} & intMask;
+        end
+        extMask_border = bwmorph(tempMask_ext,'remove');
+        
+        if any(tempMask_ext(:)) && any(tempMask_int(:))   % make sure internal mask bits aren't wildly misaligned with the paw detected outside the box
+            [y,~] = find(extMask_border);
+            min_y = min(y);
+            max_y = max(y);
+            extMask_proj = false(size(tempMask_int));
+            extMask_proj(min_y:max_y,1:end) = true;
+            behindPanelMask = behindPanelMask & extMask_proj;
+            current_drkmsk = drkmsk{2} & ~behindPanelMask;
+            
+            intMask_overlap = extMask_proj & tempMask_int & ~current_drkmsk;
+            intMask_overlap = processMask(intMask_overlap,'sesize',2);
+            newMask_int = imreconstruct(intMask_overlap, tempMask_int);
+
+            tempMask{iView} = tempMask_ext | newMask_int;
+        else
+            tempMask{iView} = tempMask_ext | tempMask_int;
+        end
+    end
     
     newMask{iView} = false(h,w);
     
     newMask{iView}(ROI(iView,2):ROI(iView,2)+ROI(iView,4),...
                    ROI(iView,1):ROI(iView,1)+ROI(iView,3)) = tempMask{iView};
+	newMask{iView} = newMask{iView} & imDiffMask;
 end
 newMask{2} = newMask{2} & ~frontPanelMask;
 

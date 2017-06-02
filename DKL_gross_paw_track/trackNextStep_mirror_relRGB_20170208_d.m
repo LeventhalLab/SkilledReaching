@@ -1,4 +1,4 @@
-function [fullMask] = trackNextStep_mirror_relRGB_20170208( image_ud, BGimg_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,varargin)
+function [fullMask] = trackNextStep_mirror_relRGB_20170208_d( image_ud, BGimg_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,varargin)
 % function [fullMask] = trackNextStep_mirror_relRGB_PCA( image_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar,varargin)
 %
 % function to segment a video frame of a rat reaching (paw painted with
@@ -19,16 +19,26 @@ function [fullMask] = trackNextStep_mirror_relRGB_20170208( image_ud, BGimg_ud, 
 
 % extract height and width of the video frame
 h = size(image_ud,1); w = size(image_ud,2);
-% pawThresh = 0.5;
-% nonPawThresh = 0.8;
-% probDiffThresh = 0.1;
-grDistThresh_res = [0.6,0.99];
-grDistThresh_lib = [0.5,0.7];
-BGdiff_thresh = 0.015;
-relBGdiff_thresh = [0.05,0.0];
 
-min_abs_grDiff = [0.1,0.02];
-min_abs_gbDiff = [0.01,0.01];
+grDistThresh_res = [0.8,0.9];
+grDistThresh_lib = [0.7,0.8];
+belowShelfThresh_res = 0.6;
+belowShelfThresh_lib = 0.55;
+
+int_grDistThresh_res = 0.8;
+int_grDistThresh_lib = 0.6;
+
+grayRange = [0.15,0.8
+             0.20,0.6];    % pixels darker than this threshold in R, G, AND B should be discarded
+int_grayRange = [0.15,0.4];
+belowShelf_grayRange = [0.2,0.4];
+belowShelf_min_abs_grDiff = 0.01;%%%%%%%%%%%%%%
+
+BGdiff_thresh = 0.015;
+relBGdiff_thresh = [0.08,0.04];
+
+min_abs_grDiff = [0.02,0.00];
+min_abs_gbDiff = [0.02,0.02];
                 
 imDiff = imabsdiff(BGimg_ud,image_ud);
 imDiffMask = imDiff(:,:,1) < BGdiff_thresh & ...
@@ -36,11 +46,11 @@ imDiffMask = imDiff(:,:,1) < BGdiff_thresh & ...
              imDiff(:,:,3) < BGdiff_thresh;
 imDiffMask = ~imDiffMask;
 
-min_gb_diff = [0.05,0.1];
-min_gr_diff = [0.05,0.1];   % NEED TO MODIFY THRESHOLDS TO GET JUST THE GREEN CORNER OF THE PAW...
+min_gb_diff = [0.05,0.05];
+min_gr_diff = [-0.06,0.02];
 
-min_internal_gr_diff = 0.1;
-min_internal_gb_diff = 0.08;
+% min_internal_gr_diff = 0.1;
+% min_internal_gb_diff = 0.06;
 
 imFiltWidth = 5;
 
@@ -48,10 +58,12 @@ maxFrontPanelSep = 15;
 maxDistBehindFrontPanel = 30;
 maxDistPerFrame = 20;
 shelfThick = 50;
+frontPanelShadowWidth = 10;
+% imadjust_dist = 75;               %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% frontPanelMask = imdilate(boxRegions.frontPanelMask,strel('disk',2)); 
+
 frontPanelMask = boxRegions.frontPanelMask;
-darkThresh = [0.1,0.1];    % pixels darker than this threshold in R, G, AND B should be discarded
+
 
 intMask = boxRegions.intMask;
 extMask = boxRegions.extMask;
@@ -96,9 +108,10 @@ end
 
 prev_bbox = zeros(2,4);
 cur_ROI = cell(1,2);
+cur_ROI_filt = cell(1,2);
 prev_mask_dilate_ROI = cell(1,2);
 im_relRGB = cell(1,2);
-drkmsk = cell(1,2);
+grayMask = cell(1,2);
 dilated_bbox = zeros(2,4);
 BGmask_ROI = cell(1,2);
 BGdiff_mask_ROI = cell(1,2);
@@ -106,7 +119,19 @@ BG_relRGBdiff = cell(1,2);
 BG_ROI = cell(1,2);
 relBG_ROI = cell(1,2);
 
-% PCA_im = cell(1,2);
+filt_im = imboxfilt(image_ud,imFiltWidth);
+relRGB = relativeRGB(filt_im);
+rel_r = relRGB(:,:,1); rel_g = relRGB(:,:,2); rel_b = relRGB(:,:,3);
+rel_gr_diff = rel_g - rel_r; rel_gb_diff = rel_g - rel_b;
+rel_gr_diff_clipped = rel_gr_diff; rel_gb_diff_clipped = rel_gb_diff;
+rel_gr_diff_clipped(rel_gr_diff_clipped < 0) = 0;
+rel_gb_diff_clipped(rel_gb_diff_clipped < 0) = 0;
+gr_dist = sqrt(rel_gr_diff_clipped .^2 + rel_gb_diff_clipped.^2);
+lh_direct = stretchlim(gr_dist,[0.001,0.999]);
+lh_mirror = stretchlim(gr_dist,[0.002,0.998]);
+gr_dist_adj_direct = imadjust(gr_dist,lh_direct);
+gr_dist_adj_mirror = imadjust(gr_dist,lh_mirror);
+
 for ii = 2 : -1 : 1
     temp = regionprops(bwconvhull(prevMask{ii},'union'),'BoundingBox');
     prev_bbox(ii,:) = round(temp.BoundingBox);
@@ -114,11 +139,12 @@ for ii = 2 : -1 : 1
                             max(prev_bbox(ii,2)-maxDistPerFrame, 1)];
     dilated_bbox(ii,3:4) = [min(prev_bbox(ii,3)+(2*maxDistPerFrame),w-dilated_bbox(ii,1)),...
                             min(prev_bbox(ii,4)+(2*maxDistPerFrame),h-dilated_bbox(ii,2))];
-                      
+
 % 	if ii == 1
-%         dilated_bbox(ii,1) = dilated_bbox(ii,1) - 100;
-%         dilated_bbox(ii,3) = dilated_bbox(ii,3) + 150;
+%         dilated_bbox(ii,1) = dilated_bbox(ii,1) - 50;
+%         dilated_bbox(ii,3) = dilated_bbox(ii,3) + 50;
 %     end
+
     if ii == 2   
         
         if strcmpi(pawPref,'left')
@@ -219,11 +245,14 @@ for ii = 2 : -1 : 1
     end
     
 
+%     cur_ROI{ii} = image_ud(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3),:);
+%     cur_ROI{ii} = imboxfilt(cur_ROI{ii},imFiltWidth);
+    cur_ROI_filt{ii} = filt_im(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3),:);
     cur_ROI{ii} = image_ud(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3),:);
-    cur_ROI{ii} = imboxfilt(cur_ROI{ii},imFiltWidth);
     BGdiff_mask_ROI{ii} = imDiffMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     prev_mask_dilate_ROI{ii} = prevMask_dilate(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
-    im_relRGB{ii} = relativeRGB(cur_ROI{ii});
+%     im_relRGB{ii} = relativeRGB(cur_ROI{ii});
+    im_relRGB{ii} = relRGB(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3),:);
     BG_ROI{ii} = BGimg_ud(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3),:);
     BG_ROI{ii} = imboxfilt(BG_ROI{ii},imFiltWidth);
     relBG_ROI{ii} = relativeRGB(BG_ROI{ii});
@@ -232,13 +261,10 @@ for ii = 2 : -1 : 1
     frontPanelMask_ROI = frontPanelMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     shelfMask_ROI = shelfMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     
-    r = im_relRGB{ii}(:,:,1);
-    g = im_relRGB{ii}(:,:,2);
-    b = im_relRGB{ii}(:,:,3);
-    
-    BG_r = relBG_ROI{ii}(:,:,1);
-    BG_g = relBG_ROI{ii}(:,:,2);
-    BG_b = relBG_ROI{ii}(:,:,3);
+
+    rel_r_ROI = im_relRGB{ii}(:,:,1);
+    rel_g_ROI = im_relRGB{ii}(:,:,2);
+    rel_b_ROI = im_relRGB{ii}(:,:,3);
     
     abs_grdiff = cur_ROI{ii}(:,:,2) - cur_ROI{ii}(:,:,1);
     abs_gbdiff = cur_ROI{ii}(:,:,2) - cur_ROI{ii}(:,:,3);
@@ -246,74 +272,78 @@ for ii = 2 : -1 : 1
     abs_grdiffMask = abs_grdiff > min_abs_grDiff(ii);
     abs_gbdiffMask = abs_gbdiff > min_abs_gbDiff(ii);
     
-    gr_diff = g - r;
-    gb_diff = g - b;
+    gr_diff_ROI = rel_g_ROI - rel_r_ROI;
+    gb_diff_ROI = rel_g_ROI - rel_b_ROI;
     
-    BG_gr_diff = BG_g - BG_r;
-    BG_gb_diff = BG_g - BG_b;
+    grMask = gr_diff_ROI > min_gr_diff(ii);
+    gbMask = gb_diff_ROI > min_gb_diff(ii);
     
-    grMask = gr_diff > min_gr_diff(ii);
-    gbMask = gb_diff > min_gb_diff(ii);
+%     gr_diff_clipped = gr_diff;
+%     gb_diff_clipped = gb_diff;
+%     gr_diff_clipped(gr_diff < 0) = 0;
+%     gb_diff_clipped(gb_diff < 0) = 0;
     
-    gr_diff_clipped = gr_diff;
-    gb_diff_clipped = gb_diff;
-    gr_diff_clipped(gr_diff < 0) = 0;
-    gb_diff_clipped(gb_diff < 0) = 0;
-    
-    BG_gr_diff_clipped = BG_gr_diff;
-    BG_gb_diff_clipped = BG_gb_diff;
-    BG_gr_diff_clipped(BG_gr_diff < 0) = 0;
-    BG_BG_gb_diff_clipped(BG_gb_diff < 0) = 0;
-    
-    drkmsk{ii} = true(size(BGmask_ROI{ii}));
-    for jj = 1 : 3
-        drkmsk{ii} = drkmsk{ii} & cur_ROI{ii}(:,:,jj) < darkThresh(ii);
-    end
-    
-    grDist = sqrt(gr_diff_clipped.^2 + gb_diff_clipped.^2);
-    BG_grDist = sqrt(BG_gr_diff_clipped.^2 + BG_gb_diff_clipped.^2);
-    if ii == 2
-        grDist = grDist .* double(~(drkmsk{ii} & ~behindPanelMask));
+%     grDist_ROI = sqrt(gr_diff_clipped.^2 + gb_diff_clipped.^2);
+    grDist_ROI = gr_dist(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
+    if ii == 1
+        grDist_adj_ROI = gr_dist_adj_direct(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     else
-        grDist = grDist .* double(~drkmsk{ii});
+        grDist_adj_ROI = gr_dist_adj_mirror(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     end
-    grDist_adj = imadjust(grDist);
-    BG_grDist_adj = imadjust(BG_grDist);
+    belowShelf_ROI = belowShelfMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
+        
     
-
+%     grayMask{ii} = true(size(BGmask_ROI{ii}));
+    gray_img = rgb2gray(cur_ROI_filt{ii});
     
     if ii == 2
         intMask = intMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
         extMask = extMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
         
-        prevMask_int = prev_mask_dilate_ROI{ii} & intMask;
+        int_frontPanel_neighbors = imdilate(frontPanelMask_ROI,strel('disk',frontPanelShadowWidth));
+        int_frontPanel_neighbors = int_frontPanel_neighbors & intMask;
         
-        int_grMask = gr_diff > min_internal_gr_diff;
-        int_gbMask = gb_diff > min_internal_gb_diff;
-        intPawTest = int_grMask & int_gbMask & intMask & ~drkmsk{ii};
-        if any(frontPanelMask_ROI(:)) && any(intPawTest(:))  % the front panel is included in the image, and there are candidate green points inside the box.
-                                                             % Therefore, the paw may be both inside and outside the box.
-            int_grDist = grDist .* double(intMask & ~(drkmsk{2} & ~behindPanelMask));
-            int_grDist_adj = imadjust(int_grDist);
-            grDist_adj(intMask) = int_grDist_adj(intMask);
+        grayMask_ext = (gray_img > grayRange(ii,1)) & (gray_img < grayRange(ii,2)) & extMask;
+        grayMask_int = (gray_img > int_grayRange(1)) & (gray_img < int_grayRange(2)) & intMask;
+        grayMask{ii} = grayMask_ext | grayMask_int;
+        
+        if any(intMask(:)) && any(frontPanelMask_ROI(:))
+            int_tempMask_res = (grDist_adj_ROI > int_grDistThresh_res) & grMask & gbMask & BGdiff_mask_ROI{ii} & abs_grdiffMask & int_frontPanel_neighbors & grayMask_int;
+            int_tempMask_lib = (grDist_adj_ROI > int_grDistThresh_lib) & grMask & gbMask & BGdiff_mask_ROI{ii} & abs_grdiffMask & int_frontPanel_neighbors & grayMask_int;
+            int_tempMask = imreconstruct(int_tempMask_res, int_tempMask_lib);
+        else
+            int_tempMask = false(size(intMask));
+        end
+%         
+        prevMask_int = prev_mask_dilate_ROI{ii} & intMask;
+%         
+%         int_grMask = gr_diff > min_internal_gr_diff;
+%         int_gbMask = gb_diff > min_internal_gb_diff;
+%         intPawTest = int_grMask & int_gbMask & intMask & ~drkmsk{ii};
+%         if any(frontPanelMask_ROI(:)) && any(intPawTest(:))  % the front panel is included in the image, and there are candidate green points inside the box.
+%                                                              % Therefore, the paw may be both inside and outside the box.
+%             int_grDist = grDist .* double(intMask);
+%             int_grDist_adj = imadjust(int_grDist);
+%             grDist_adj(intMask) = int_grDist_adj(intMask);
+%         end
+        belowShelf_tempMask = false(size(grayMask{ii}));
+    else
+        grayMask{ii} = (gray_img > grayRange(ii,1)) & (gray_img < grayRange(ii,2));
+        int_tempMask = false(size(grayMask{ii}));
+        if any(belowShelf_ROI(:)) %&& any(shelfMask_ROI(:))
+            belowShelfGrayMask = (gray_img > belowShelf_grayRange(1)) & (gray_img < belowShelf_grayRange(2));
+            belowShelf_abs_grDiffMask = abs_grdiff > belowShelf_min_abs_grDiff;
+            belowShelf_tempMask_res = belowShelf_ROI & (grDist_adj_ROI > belowShelfThresh_res) & belowShelf_abs_grDiffMask & belowShelfGrayMask;%grayMask{ii};
+            belowShelf_tempMask_lib = belowShelf_ROI & (grDist_adj_ROI > belowShelfThresh_lib) & belowShelf_abs_grDiffMask;
+            belowShelf_tempMask = imreconstruct(belowShelf_tempMask_res,belowShelf_tempMask_lib);
+        else
+            belowShelf_tempMask = false(size(grayMask{ii}));
         end
     end
-    
-    tempMask_res = (grDist_adj > grDistThresh_res(ii)) & grMask & gbMask & abs_grdiffMask; %& BGdiff_mask_ROI{ii};
-    tempMask_lib = (grDist_adj > grDistThresh_lib(ii)) & grMask & gbMask & abs_grdiffMask;% & BGdiff_mask_ROI{ii};
-%     tempMask_res = (grDist_adj > grDistThresh_res(ii)) & gbMask & BGdiff_mask_ROI{ii};
-%     tempMask_lib = (grDist_adj > grDistThresh_lib(ii)) & gbMask & BGdiff_mask_ROI{ii};
 
+    tempMask_res = (grDist_adj_ROI > grDistThresh_res(ii)) & grMask & gbMask & BGdiff_mask_ROI{ii} & abs_grdiffMask;
+    tempMask_lib = (grDist_adj_ROI > grDistThresh_lib(ii)) & grMask & gbMask & BGdiff_mask_ROI{ii} & abs_grdiffMask;
     tempMask = imreconstruct(tempMask_res,tempMask_lib);
-%     tempMask = tempMask & abs_grdiffMask & abs_gbdiffMask;
-    
-%     if ii == 1
-%         tempMask = tempMask & ~shelfMask_ROI;
-%     end
-    
-%     tempMask = tempMask & grMask & gbMask;   % make sure that any large differences between green and red/blue are not driven by just one color channel
-    
-
     if ii == 2
         tempMask_int = tempMask & intMask;
         tempMask_ext = tempMask & extMask;
@@ -326,54 +356,61 @@ for ii = 2 : -1 : 1
             extMask_proj(min_y:max_y,1:end) = true;
             behindPanelMask = behindPanelMask & extMask_proj;
         end
-        current_drkmsk = drkmsk{2};% & ~behindPanelMask;
+        current_grayMask = grayMask{2} | behindPanelMask;
     else
-        current_drkmsk = drkmsk{ii};
+        current_grayMask = grayMask{ii};
     end
-    tempMask = tempMask & ~current_drkmsk;
-    if ii == 2
+    % this weird repeat is to make sure the "restrictive" mask does not
+    % incude values outside the gray range
+    tempMask_res = (grDist_adj_ROI > grDistThresh_res(ii)) & grMask & gbMask & BGdiff_mask_ROI{ii} & abs_grdiffMask & current_grayMask;
+    tempMask_lib = (grDist_adj_ROI > grDistThresh_lib(ii)) & grMask & gbMask & BGdiff_mask_ROI{ii} & abs_grdiffMask & current_grayMask;
+
+    tempMask = imreconstruct(tempMask_res,tempMask_lib) | int_tempMask | belowShelf_tempMask;
+%     tempMask = tempMask & current_grayMask;
+%     if ii == 2
         tempMask = tempMask & ~BGmask_ROI{ii};
-    end
+%     end
 %     tempMask = tempMask & prev_mask_dilate_ROI{ii};
 %     
-    tempMask = processMask(tempMask,'sesize',2);
+%     tempMask = processMask(tempMask,'sesize',2);
     
-    if ii == 2
-        tempMask_ext = tempMask & extMask;
+%     if ii == 2
+%         tempMask_ext = tempMask & extMask;
+%         
+%         tempMask_ext_dilate = imdilate(tempMask_ext, strel('disk',5));
+%         frontPanelTest = tempMask_ext_dilate & frontPanelMask_ROI;
+%         if any(tempMask_ext(:)) && ~any(frontPanelTest(:)) && ~any(prevMask_int(:))    % if part of the paw is external to the box AND far enough away from the front panel that there shouldn't be any part on the inside
+%             tempMask_int = false(size(tempMask));
+%         else
+%             tempMask_int = tempMask & intMask;
+%         end
+%         extMask_border = bwmorph(tempMask_ext,'remove');
+%         if any(tempMask_ext(:)) && any(tempMask_int(:))   % make sure internal mask bits aren't wildly misaligned with the paw detected outside the box
+%             [y,~] = find(extMask_border);
+%             min_y = min(y);
+%             max_y = max(y);
+%             extMask_proj = false(size(tempMask_int));
+%             extMask_proj(min_y:max_y,1:end) = true;
+%             behindPanelMask = behindPanelMask & extMask_proj;
+%             current_grayMask = grayMask{2} & ~behindPanelMask;
+%             
+%             relBGdiffMask = BG_relRGBdiff{ii} > relBGdiff_thresh(ii);
+%             relBGdiffMask = relBGdiffMask(:,:,1) | relBGdiffMask(:,:,2) | relBGdiffMask(:,:,3);
+%             intMask_overlap = imdilate(extMask_proj,strel('disk',10)) & tempMask_int & current_grayMask & relBGdiffMask;
+% %             intMask_overlap = processMask(intMask_overlap,'sesize',1);
+%             newMask_int = imreconstruct(intMask_overlap, tempMask_int);
+% 
+%             tempMask = tempMask_ext | newMask_int;
+%         else
+%             tempMask = tempMask_ext | tempMask_int;
+%         end
+%     else
+% %         relBGdiffMask = BG_relRGBdiff{ii} > relBGdiff_thresh(ii);
+% %         relBGdiffMask = relBGdiffMask(:,:,1) | relBGdiffMask(:,:,2) | relBGdiffMask(:,:,3);
+%         
+% %         tempMask = tempMask & relBGdiffMask;
+%     end
         
-        tempMask_ext_dilate = imdilate(tempMask_ext, strel('disk',5));
-        frontPanelTest = tempMask_ext_dilate & frontPanelMask_ROI;
-        if any(tempMask_ext(:)) && ~any(frontPanelTest(:)) && ~any(prevMask_int(:))    % if part of the paw is external to the box AND far enough away from the front panel that there shouldn't be any part on the inside
-            tempMask_int = false(size(tempMask));
-        else
-            tempMask_int = tempMask & intMask;
-        end
-        extMask_border = bwmorph(tempMask_ext,'remove');
-        if any(tempMask_ext(:)) && any(tempMask_int(:))   % make sure internal mask bits aren't wildly misaligned with the paw detected outside the box
-            [y,~] = find(extMask_border);
-            min_y = min(y);
-            max_y = max(y);
-            extMask_proj = false(size(tempMask_int));
-            extMask_proj(min_y:max_y,1:end) = true;
-            behindPanelMask = behindPanelMask & extMask_proj;
-            current_drkmsk = drkmsk{2} & ~behindPanelMask;
-            
-            relBGdiffMask = BG_relRGBdiff{ii} > relBGdiff_thresh(ii);
-            relBGdiffMask = relBGdiffMask(:,:,1) | relBGdiffMask(:,:,2) | relBGdiffMask(:,:,3);
-            intMask_overlap = imdilate(extMask_proj,strel('disk',10)) & tempMask_int & ~current_drkmsk & relBGdiffMask;
-%             intMask_overlap = processMask(intMask_overlap,'sesize',1);
-            newMask_int = imreconstruct(intMask_overlap, tempMask_int);
-
-            tempMask = tempMask_ext | newMask_int;
-        else
-            tempMask = tempMask_ext | tempMask_int;
-        end
-    else
-        relBGdiffMask = BG_relRGBdiff{ii} > relBGdiff_thresh(ii);
-        relBGdiffMask = relBGdiffMask(:,:,1) | relBGdiffMask(:,:,2) | relBGdiffMask(:,:,3);
-        
-        tempMask = tempMask & relBGdiffMask;
-    end
 
     if ii == 2
         testIn = intMask & tempMask;

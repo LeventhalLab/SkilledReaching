@@ -60,8 +60,12 @@ for iSheet = 1 : numSheets
             else
                 matchedPoints.(sessionName).direct.(xlstrings{ii,1}) = ...
                     xldata(ii-1,1:2);
+                try
                 matchedPoints.(sessionName).leftMirror.(xlstrings{ii,1}) = ...
                     xldata(ii-1,5:6);
+                catch
+                    keyboard
+                end
                 matchedPoints.(sessionName).rightMirror.(xlstrings{ii,1}) = ...
                     xldata(ii-1,9:10);
             end

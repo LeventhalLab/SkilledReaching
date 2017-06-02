@@ -1,4 +1,4 @@
-function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_20170208( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, greenBGmask, varargin )
+function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_20170331_c( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, greenBGmask, varargin )
 % function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_PCA( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar, varargin )
 
 % video.CurrentTime = triggerTime;
@@ -158,7 +158,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
 
-    [fullMask] = trackNextStep_mirror_relRGB_20170208(image_ud,BGimg_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref);
+    [fullMask] = trackNextStep_mirror_relRGB_20170331_c(image_ud,BGimg_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref);
 %     [fullMask] = trackNextStep_mirror_relRGB_PCA(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar);
                          
 

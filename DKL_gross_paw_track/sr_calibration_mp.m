@@ -17,6 +17,7 @@ K = [];
 
 rubikSpacing = 17.5;    % in mm
 shelfWidth = 100;       % in mm
+postWidth = 85;         % in mm
 
 % if ~iscell(x1_left)
 %     temp = x1_left;
@@ -103,10 +104,10 @@ for iSession = 1 : numSessions
     
     for iMirror = 1 : 2
         switch iMirror
-            case 1,
+            case 1
                 x1 = x1_left{iSession};
                 x2 = x2_left{iSession};
-            case 2,
+            case 2
                 x1 = x1_right{iSession};
                 x2 = x2_right{iSession};
         end
@@ -124,6 +125,11 @@ srCal.F = F;
 srCal.P = P;
 srCal.E = Edirect;
 
+% srCal.sf = sr_estimateScale(session_mp, P, K, ...
+%                             'rubikspacing',rubikSpacing, ...
+%                             'shelfwidth',shelfWidth);
+                        
 srCal.sf = sr_estimateScale(session_mp, P, K, ...
                             'rubikspacing',rubikSpacing, ...
-                            'shelfwidth',shelfWidth);
+                            'shelfwidth',shelfWidth,...
+                            'postwidth',postWidth);

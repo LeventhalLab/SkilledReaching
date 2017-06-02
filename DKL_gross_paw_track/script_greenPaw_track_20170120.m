@@ -90,7 +90,7 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 %                        'estimateskew', estimateSkew);
                    
 sr_ratInfo = get_sr_RatList();     
-for i_rat = 1 : 2%length(sr_ratInfo)
+for i_rat = 3 : 3%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawdata_dir = sr_ratInfo(i_rat).directory.rawdata;
@@ -103,7 +103,7 @@ for i_rat = 1 : 2%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 1:length(sessionList)
+    for iSession = 4:length(sessionList)
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];
@@ -168,6 +168,11 @@ for i_rat = 1 : 2%length(sr_ratInfo)
                 currentVidName = vidList(iVid).name
                 currentVidNumber = currentVidName(end-6:end-4);
                 
+                if strcmp(sessionName,'20140514a') && str2num(currentVidNumber) == 1 && i_rat == 1
+                    % this particular video doesn't have a reach
+                    continue;
+                end
+                    
                 scoreIdx = find(csv_trialNums == str2double(currentVidNumber));
                 
                 if ~any(validScores == csv_scores(scoreIdx)); continue; end
@@ -184,7 +189,7 @@ for i_rat = 1 : 2%length(sr_ratInfo)
                 
                 
                 
-%                 if exist(pawTrackName,'file');continue;end
+                if exist(pawTrackName,'file');continue;end
 %                 % TAKE OUT THIS COMMENT TO SKIP PREVIOUSLY PROCESSED
 %                 VIDEOS
                 
@@ -204,7 +209,8 @@ for i_rat = 1 : 2%length(sr_ratInfo)
                 
                 if exist(BGimg_udName,'file')
                     BGimg_ud = imread(BGimg_udName,'bmp');
-                    greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(7,:), sr_ratInfo(i_rat).pawPref);
+                    greenBGmask = findGreenBG_relRGB(BGimg_ud, boxRegions, sr_ratInfo(i_rat).pawPref, boxCalibration);
+%                     greenBGmask = findGreenBG(BGimg_ud, boxRegions, pawHSVrange(7,:), sr_ratInfo(i_rat).pawPref);
                 end
 %                 if ~BGcalculated
 %                     BGcalculated = true;
@@ -232,11 +238,12 @@ for i_rat = 1 : 2%length(sr_ratInfo)
                 end
                 image_ud = undistortImage(image, cameraParams);
                 
-                initPawMask = find_initPawMask_greenPaw_relRGB( image_ud, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,greenBGmask,...
-                    'hsvlimits', pawHSVrange,...
-                    'foregroundthresh',foregroundThresh,...
-                    'targetmean',targetMean,...
-                    'targetsigma',targetSigma);
+%                 initPawMask = find_initPawMask_greenPaw_relRGB( image_ud, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,greenBGmask,...
+%                     'hsvlimits', pawHSVrange,...
+%                     'foregroundthresh',foregroundThresh,...
+%                     'targetmean',targetMean,...
+%                     'targetsigma',targetSigma);
+                initPawMask = find_initPawMask_greenPaw_relRGB_20170208( image_ud, BGimg_ud, sr_ratInfo(i_rat), session_mp, boxCalibration, boxRegions,greenBGmask);
                 
 %                 [ PCAcoeff, PCA_paw_hist, PCA_nonpaw_hist, PCAbinEdges ] = pawPCAregions( image_ud, initPawMask );
 %                 [ PCAcoeff, PCAmean, PCAmean_nonPaw, PCAcovar ] = pawPCAregions( image_ud, initPawMask );
@@ -258,7 +265,8 @@ for i_rat = 1 : 2%length(sr_ratInfo)
 %                     'stretch_hist_limit_int',stretch_hist_limit_int,...
 %                     'stretch_hist_limit_ext',stretch_hist_limit_ext);
                 
-                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_20170208(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
+                [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_20170208(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,greenBGmask);
+%                 [points2d,timeList,isPawVisible_mirror] = trackMirrorView_relRGB_PCA(video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo(i_rat), boxRegions,boxCalibration,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
                 
                 save(pawTrackName,'points2d','timeList','isPawVisible_mirror','track_metadata');
             end    % for iVid

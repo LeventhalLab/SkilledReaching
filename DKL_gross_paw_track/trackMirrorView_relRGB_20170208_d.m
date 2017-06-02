@@ -1,4 +1,4 @@
-function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_20170208( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration,varargin )
+function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_20170208_d( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, greenBGmask, varargin )
 % function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_PCA( video, triggerTime, initPawMask, BGimg_ud, sr_ratInfo, boxRegions, boxCalibration, PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar, varargin )
 
 % video.CurrentTime = triggerTime;
@@ -6,7 +6,7 @@ function [points2d,timeList,isPawVisible] = trackMirrorView_relRGB_20170208( vid
 
 maxDistPerFrame = 20;
 
-for iarg = 1 : 2 : nargin - 7
+for iarg = 1 : 2 : nargin - 8
     switch lower(varargin{iarg})
         
     end
@@ -25,14 +25,14 @@ vidName = fullfile(video.Path, video.Name);
 video = VideoReader(vidName);
 video.CurrentTime = triggerTime;
 
-greenBGmask = threshold_BGimg( BGimg_ud );
+% greenBGmask = threshold_BGimg( BGimg_ud );
 
-[fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges,'forward',boxCalibration);
+[fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,'forward',boxCalibration,BGimg_ud);
 % [fpoints2d, timeList_f,isPawVisible_f] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar,'forward',boxCalibration);
     
 video.CurrentTime = triggerTime;
 
-[rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges,'reverse',boxCalibration);
+[rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,'reverse',boxCalibration,BGimg_ud);
 % [rpoints2d, timeList_b,isPawVisible_b] = trackPaw_mirror_local( video, initPawMask, greenBGmask, boxRegions, pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar,'reverse',boxCalibration);
                                  
    
@@ -54,32 +54,15 @@ function [points2d,timeList,isPawVisible] = trackPaw_mirror_local( video, ...
                                     initPawMask, ...
                                     greenBGmask, ...
                                     boxRegions, ...
-                                    pawPref, 
+                                    pawPref, ...
                                     timeDir, ...
                                     boxCalibration,...
-                                    varargin)
-% function [points2d,timeList,isPawVisible] = trackPaw_mirror_local( video, ...
-%                                     initPawMask, ...
-%                                     greenBGmask, ...
-%                                     boxRegions, ...
-%                                     pawPref, ...
-%                                     PCAcoeff,...
-%                                     PCAmean,...
-%                                     PCAmean_nonPaw,...
-%                                     PCAcovar,...
-%                                     timeDir, ...
-%                                     boxCalibration,...
-%                                     varargin)                                
+                                    BGimg_ud,...
+                                    varargin)                            
                                 
 zeroTol = 1e-10;
 fps = video.FrameRate;
 maxDistPerFrame = 20;
-
-% h = video.Height;
-% w = video.Width;
-
-stretch_hist_limit_int = 0.5;
-stretch_hist_limit_ext = 0.75;
 
 switch lower(pawPref)
     case 'right'
@@ -100,7 +83,7 @@ totalFrames = round(video.Duration * fps);
 
 prevMask = initPawMask;
            
-for iarg = 1 : 2 : nargin - 11
+for iarg = 1 : 2 : nargin - 8
     switch lower(varargin{iarg})
         case 'maxdistperframe'
             maxDistPerFrame = varargin{iarg + 1};
@@ -175,7 +158,7 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     image_ud = undistortImage(image, cameraParams);
     image_ud = double(image_ud) / 255;
 
-    [fullMask] = trackNextStep_mirror_relRGB_20170208(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref,PCAcoeff,PCA_paw_hist,PCA_nonpaw_hist,PCAbinEdges);
+    [fullMask] = trackNextStep_mirror_relRGB_20170208_d(image_ud,BGimg_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref);
 %     [fullMask] = trackNextStep_mirror_relRGB_PCA(image_ud,fundMat,greenBGmask,prevMask,boxRegions,pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar);
                          
 
