@@ -20,25 +20,25 @@ function [fullMask] = trackNextStep_mirror_relRGB_20170331_c( image_ud, BGimg_ud
 % extract height and width of the video frame
 h = size(image_ud,1); w = size(image_ud,2);
 
-grDistThresh_res = [0.7,0.95];
-grDistThresh_lib = [0.7,0.6];
-belowShelfThresh_res = 0.8;
-belowShelfThresh_lib = 0.6;
+grDistThresh_res = [0.99,0.99];
+grDistThresh_lib = [0.9,0.9];
+belowShelfThresh_res = 0.97;
+belowShelfThresh_lib = 0.8;
 
 int_grDistThresh_res = 0.99;
-int_grDistThresh_lib = 0.8;
+int_grDistThresh_lib = 0.9;
 
-grayRange = [0.08,0.8
-             0.03,0.8];    % pixels darker than this threshold in R, G, AND B should be discarded
+grayRange = [0.15,0.8
+             0.1,0.8];    % pixels darker than this threshold in R, G, AND B should be discarded
 int_grayRange = [0.05,0.5];
 belowShelf_grayRange = [0.08,0.5];
 
 BGdiff_thresh = 0.015;
 relBGdiff_thresh = [0.08,0.04];
 
-min_abs_grDiff = [0.02,0.03];
+min_abs_grDiff = [0.02,0.05];
 min_abs_gbDiff = [0.02,0.02];
-min_int_abs_grDiff = 0.03;
+min_int_abs_grDiff = 0.04;
 belowShelf_min_abs_grDiff = 0.01;
 
 imDiff = imabsdiff(BGimg_ud,image_ud);
@@ -48,7 +48,7 @@ imDiffMask = imDiff(:,:,1) < BGdiff_thresh & ...
 imDiffMask = ~imDiffMask;
 
 min_gb_diff = [0.05,0.05];
-min_gr_diff = [-0.05,0.05];
+min_gr_diff = [0.10,0.05];
 
 % min_internal_gr_diff = 0.1;
 % min_internal_gb_diff = 0.06;
@@ -121,6 +121,7 @@ relBG_ROI = cell(1,2);
 
 filt_im = imboxfilt(image_ud,imFiltWidth);
 relRGB = relativeRGB(filt_im);
+rawGray = rgb2gray(image_ud);
 rel_r = relRGB(:,:,1); rel_g = relRGB(:,:,2); rel_b = relRGB(:,:,3);
 rel_gr_diff = rel_g - rel_r; rel_gb_diff = rel_g - rel_b;
 rel_gr_diff_clipped = rel_gr_diff; rel_gb_diff_clipped = rel_gb_diff;
@@ -283,7 +284,7 @@ for ii = 2 : -1 : 1
 %     gb_diff_clipped(gb_diff < 0) = 0;
     
 %     grDist_ROI = sqrt(gr_diff_clipped.^2 + gb_diff_clipped.^2);
-    grDist_ROI = gr_dist(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
+%     grDist_ROI = gr_dist(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     if ii == 1
         grDist_adj_ROI = gr_dist_adj_direct(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
     else
@@ -291,7 +292,8 @@ for ii = 2 : -1 : 1
     end
     belowShelf_ROI = belowShelfMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));
 
-    gray_img = rgb2gray(cur_ROI{ii});
+%     gray_img = rgb2gray(cur_ROI{ii});
+    gray_img = rawGray(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3),:);
     
     if ii == 2
         intMask = intMask(dilated_bbox(ii,2):dilated_bbox(ii,2)+dilated_bbox(ii,4),dilated_bbox(ii,1):dilated_bbox(ii,1)+dilated_bbox(ii,3));

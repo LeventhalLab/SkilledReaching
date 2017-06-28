@@ -58,7 +58,7 @@ for i_rat = 3:3%length(sr_ratInfo)
     % video into the raw data folder
     
     numSessions = length(mp_metadata.sessionNames);
-    for iSession = 7: numSessions
+    for iSession = 11: numSessions
         
         sessionDate = mp_metadata.sessionNames{iSession}(7:end);
         cd(rawData_parentDir);

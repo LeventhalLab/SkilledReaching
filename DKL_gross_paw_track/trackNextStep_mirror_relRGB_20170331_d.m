@@ -1,4 +1,4 @@
-function [fullMask] = trackNextStep_mirror_relRGB_20170331_b( image_ud, BGimg_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,varargin)
+function [fullMask] = trackNextStep_mirror_relRGB_20170331_d( image_ud, BGimg_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,varargin)
 % function [fullMask] = trackNextStep_mirror_relRGB_PCA( image_ud, fundMat, greenBGmask, prevMask, boxRegions, pawPref,PCAcoeff,PCAmean,PCAmean_nonPaw,PCAcovar,varargin)
 %
 % function to segment a video frame of a rat reaching (paw painted with
@@ -21,27 +21,27 @@ function [fullMask] = trackNextStep_mirror_relRGB_20170331_b( image_ud, BGimg_ud
 h = size(image_ud,1); w = size(image_ud,2);
 
 grDistThresh_res = [0.999,0.999];
-grDistThresh_lib = [0.8,0.7];
+grDistThresh_lib = [0.8,0.8];
 belowShelfThresh_res = 0.9;
 belowShelfThresh_lib = 0.7;
 
 int_grDistThresh_res = [0.95,0.95];     % first one is for next to the front panel, second is for deep in the interior
-int_grDistThresh_lib = [0.80,0.7];
+int_grDistThresh_lib = [0.80,0.8];
 
 grayRange = [0.15,0.8
-             0.1,0.5];    % pixels darker than this threshold in R, G, AND B should be discarded
+             0.1,0.7];    % pixels darker than this threshold in R, G, AND B should be discarded
 grayRange_ext = [0.2,0.8            % could eventually use this for when the paw is outside the front of the box...
-                 0.2,0.5];
+                 0.2,0.7];
 int_grayRange = [0.16,0.5
-                 0.2,0.5];
+                 0.1,0.5];
 int_grayRange_nearFrontPanel = [0.16,0.5
-                                0.2,0.5];
+                                0.15,0.5];
 belowShelf_grayRange = [0.3,0.6];
 
 BGdiff_thresh = 0.015;
 relBGdiff_thresh = [0.08,0.04];
 
-min_abs_grDiff = [0.08,0.1];
+min_abs_grDiff = [0.08,0.06];
 min_abs_gbDiff = [0.02,0.02];
 min_int_abs_grDiff = 0.02;
 belowShelf_min_abs_grDiff = -0.02;
@@ -132,7 +132,7 @@ rel_gr_diff_clipped = rel_gr_diff; rel_gb_diff_clipped = rel_gb_diff;
 rel_gr_diff_clipped(rel_gr_diff_clipped < 0) = 0;
 rel_gb_diff_clipped(rel_gb_diff_clipped < 0) = 0;
 gr_dist = sqrt(rel_gr_diff_clipped .^2 + rel_gb_diff_clipped.^2);
-lh_direct = stretchlim(gr_dist,[0.0005,0.9995]);
+lh_direct = stretchlim(gr_dist,[0.001,0.999]);
 lh_mirror = stretchlim(gr_dist,[0.005,0.995]);
 gr_dist_adj_direct = imadjust(gr_dist,lh_direct);
 gr_dist_adj_mirror = imadjust(gr_dist,lh_mirror);

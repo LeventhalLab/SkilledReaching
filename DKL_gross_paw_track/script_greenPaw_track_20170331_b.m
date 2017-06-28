@@ -103,7 +103,7 @@ for i_rat = 3 : 3%length(sr_ratInfo)
                                                  'xldir', xl_directory, ...
                                                  'xlname', xlName);
 
-    for iSession = 8:8%length(sessionList)
+    for iSession = length(sessionList):length(sessionList)
         
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];

@@ -20,23 +20,23 @@ function [fullMask] = trackNextStep_mirror_relRGB_20170331( image_ud, BGimg_ud, 
 % extract height and width of the video frame
 h = size(image_ud,1); w = size(image_ud,2);
 
-grDistThresh_res = [0.999,0.9];
-grDistThresh_lib = [0.9,0.8];
+grDistThresh_res = [0.999,0.999];
+grDistThresh_lib = [0.9,0.95];
 belowShelfThresh_res = 0.95;
 belowShelfThresh_lib = 0.7;
 
 neighborThresh = 0.5;
 neighborBrightThresh = 0.4;
 
-int_grDistThresh_res = [0.7,0.9];   % first one is for next to the front panel, second is for deep in the interior
-int_grDistThresh_lib = [0.55,0.75];
+int_grDistThresh_res = [0.7,0.95];   % first one is for next to the front panel, second is for deep in the interior
+int_grDistThresh_lib = [0.6,0.9];
 
 grayRange = [0.4,0.9
-             0.1,0.8];    % pixels darker than this threshold in R, G, AND B should be discarded
-int_grayRange = [0.1,0.9
-                 0.1,0.5];
+             0.4,0.8];    % pixels darker than this threshold in R, G, AND B should be discarded
+int_grayRange = [0.2,0.9
+                 0.1,0.65];
 int_grayRange_nearFrontPanel = [0.1,0.9
-                 0.2,0.5];
+                 0.2,0.65];
 
 belowShelf_grayRange = [0.25,0.6];
 
@@ -44,7 +44,7 @@ BGdiff_thresh = 0.015;
 relBGdiff_thresh = [0.08,0.04];
 
 min_abs_grDiff = [0.05,0.10];
-min_abs_gbDiff = [0.02,0.10];
+min_abs_gbDiff = [0.02,0.25];
 min_int_abs_grDiff = 0.05;
 belowShelf_min_abs_grDiff = 0.02;
 
@@ -55,7 +55,7 @@ imDiffMask = imDiff(:,:,1) < BGdiff_thresh & ...
 imDiffMask = ~imDiffMask;
 
 min_gb_diff = [0.05,0.15];
-min_gr_diff = [-0.05,0.05];
+min_gr_diff = [-0.05,0.09];
 
 % min_internal_gr_diff = 0.1;
 % min_internal_gb_diff = 0.06;
@@ -134,10 +134,13 @@ rel_gr_diff_clipped = rel_gr_diff; rel_gb_diff_clipped = rel_gb_diff;
 rel_gr_diff_clipped(rel_gr_diff_clipped < 0) = 0;
 rel_gb_diff_clipped(rel_gb_diff_clipped < 0) = 0;
 gr_dist = sqrt(rel_gr_diff_clipped .^2 + rel_gb_diff_clipped.^2);
-lh_direct = stretchlim(gr_dist,[0.002,0.998]);
+lh_direct = stretchlim(gr_dist,[0.0005,0.9995]);
 lh_mirror = stretchlim(gr_dist,[0.002,0.998]);
+lh_mirror_int = stretchlim(gr_dist,[0.003,0.997]);
+
 gr_dist_adj_direct = imadjust(gr_dist,lh_direct);
 gr_dist_adj_mirror = imadjust(gr_dist,lh_mirror);
+% gr_dist_adj_mirror_int = imadjust(gr_dist,lh_mirror_int);
 
 for ii = 2 : -1 : 1
     temp = regionprops(bwconvhull(prevMask{ii},'union'),'BoundingBox');
@@ -148,15 +151,15 @@ for ii = 2 : -1 : 1
                             min(prev_bbox(ii,4)+(2*maxDistPerFrame),h-dilated_bbox(ii,2))];
 
 % 	if ii == 2
-%         dilated_bbox(ii,1) = dilated_bbox(ii,1) - 100;
-%         dilated_bbox(ii,3) = dilated_bbox(ii,3) + 100;
-%         dilated_bbox(ii,2) = dilated_bbox(ii,2) - 100;
-%         dilated_bbox(ii,4) = dilated_bbox(ii,4) + 100;
+%         dilated_bbox(ii,1) = max(dilated_bbox(ii,1) - 100,1);
+%         dilated_bbox(ii,3) = min(dilated_bbox(ii,3) + 200,w);
+%         dilated_bbox(ii,2) = max(dilated_bbox(ii,2) - 100,1);
+%         dilated_bbox(ii,4) = min(dilated_bbox(ii,4) + 100,h);
 %     end
 % 	if ii == 1
-%         dilated_bbox(ii,4) = dilated_bbox(ii,4) + 150;
-%         dilated_bbox(ii,1) = dilated_bbox(ii,1) - 100;
-%         dilated_bbox(ii,3) = dilated_bbox(ii,3) + 100;
+%         dilated_bbox(ii,4) = min(dilated_bbox(ii,4) + 100,h);
+%         dilated_bbox(ii,1) = max(dilated_bbox(ii,1) - 100,1);
+%         dilated_bbox(ii,3) = min(dilated_bbox(ii,3) + 200,w);
 %     end
     if ii == 2   
         
@@ -316,7 +319,7 @@ for ii = 2 : -1 : 1
         if any(intMask(:)) %&& any(frontPanelMask_ROI(:))
             grayMask_ext = (gray_img > grayRange(ii,1)) & (gray_img < grayRange(ii,2)) & extMask;
             tempMask_ext = (grDist_adj_ROI > grDistThresh_res(2)) & grayMask_ext & grMask & gbMask & BGdiff_mask_ROI{ii};
-            pawBehindFrontPanel = true;
+%             pawBehindFrontPanel = true;
             grDist_adj_int = grDist_adj_ROI .* double(intMask);
             
             if any(frontPanelMask_ROI(:)) && (max(grDist_adj_int(:)) < int_grDistThresh_res(2)) %&& any(tempMask_ext(:))
@@ -339,6 +342,11 @@ for ii = 2 : -1 : 1
             pawBehindFrontPanel = false;
             int_tempMask = false(size(intMask));
             grayMask{ii} = (gray_img > grayRange(ii,1)) & (gray_img < grayRange(ii,2));
+        end
+        if any(int_tempMask(:)) && ~any(tempMask_ext(:))
+            pawBehindFrontPanel = true;
+        else
+            pawBehindFrontPanel = false;
         end
 %         
         prevMask_int = prev_mask_dilate_ROI{ii} & intMask;

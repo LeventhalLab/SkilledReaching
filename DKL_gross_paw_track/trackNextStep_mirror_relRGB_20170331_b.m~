@@ -33,9 +33,9 @@ grayRange = [0.15,0.8
 grayRange_ext = [0.2,0.8            % could eventually use this for when the paw is outside the front of the box...
                  0.2,0.5];
 int_grayRange = [0.16,0.5
-                 0.2,0.5];
+                 0.1,0.5];
 int_grayRange_nearFrontPanel = [0.16,0.5
-                                0.2,0.5];
+                                0.15,0.5];
 belowShelf_grayRange = [0.3,0.6];
 
 BGdiff_thresh = 0.015;
@@ -133,7 +133,7 @@ rel_gr_diff_clipped(rel_gr_diff_clipped < 0) = 0;
 rel_gb_diff_clipped(rel_gb_diff_clipped < 0) = 0;
 gr_dist = sqrt(rel_gr_diff_clipped .^2 + rel_gb_diff_clipped.^2);
 lh_direct = stretchlim(gr_dist,[0.0005,0.9995]);
-lh_mirror = stretchlim(gr_dist,[0.005,0.995]);
+lh_mirror = stretchlim(gr_dist,[0.01,0.99]);
 gr_dist_adj_direct = imadjust(gr_dist,lh_direct);
 gr_dist_adj_mirror = imadjust(gr_dist,lh_mirror);
 
