@@ -41,7 +41,7 @@ belowShelf_grayRange = [0.3,0.6];
 BGdiff_thresh = 0.015;
 relBGdiff_thresh = [0.08,0.04];
 
-min_abs_grDiff = [0.08,0.06];
+min_abs_grDiff = [0.08,0.12];
 min_abs_gbDiff = [0.02,0.02];
 min_int_abs_grDiff = 0.02;
 belowShelf_min_abs_grDiff = -0.02;
@@ -53,6 +53,7 @@ imDiffMask = imDiff(:,:,1) < BGdiff_thresh & ...
 imDiffMask = ~imDiffMask;
 
 min_gb_diff = [0.05,0.05];
+min_ext_gb_diff = 0.10;
 min_gr_diff = [-0.05,0.05];
 
 % min_internal_gr_diff = 0.1;
@@ -311,6 +312,8 @@ for ii = 2 : -1 : 1
         int_frontPanel_neighbors = imdilate(frontPanelMask_ROI,strel('disk',frontPanelShadowWidth));
         int_frontPanel_neighbors = int_frontPanel_neighbors & intMask;
         grayMask_ext = (gray_img > grayRange_ext(ii,1)) & (gray_img < grayRange_ext(ii,2)) & extMask;
+        gbMask_ext = (gb_diff_ROI > min_ext_gb_diff) & extMask;
+        gbMask = (gbMask_ext & gbMask) | (gbMask & intMask);
         if any(intMask(:))
             
             pawBehindFrontPanel = true;

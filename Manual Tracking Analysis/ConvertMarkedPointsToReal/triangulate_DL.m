@@ -8,7 +8,7 @@ refine_estimates = true;
 
 for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
-        case 'refineestimates',
+        case 'refineestimates'
             refine_estimates = varargin{iarg + 1};
     end
 end

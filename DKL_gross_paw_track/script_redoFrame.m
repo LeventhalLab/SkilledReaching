@@ -1,5 +1,8 @@
 %%
-frameNum = 177;
+% frameNum = 237;
+    
+
+frameNum = frameNum + 1;
 iView = 2;
 
 q = points2d{iView,frameNum};
@@ -11,9 +14,8 @@ set(gca,'ydir','reverse')
 
 %%
 % filtIdx = 2;
-idx1 = q(:,1) > 432;
-idx2 = q(:,2) < 648;
-
+idx1 = q(:,1) > 360;
+idx2 = q(:,2) > 620;
 idx = idx1 & idx2;
 
 figure(1);
@@ -31,3 +33,7 @@ points2d{iView,frameNum} = q2;
 figure(1);
         hold on
 plot(points2d{iView,frameNum}(:,1),points2d{iView,frameNum}(:,2),'marker','.','linestyle','none')
+
+
+
+
