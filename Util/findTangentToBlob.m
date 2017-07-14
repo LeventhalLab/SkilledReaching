@@ -1,4 +1,17 @@
 function [tanPts,tanLines] = findTangentToBlob(blobMask, pivotPt)
+%
+% usage:
+%
+% INPUTS:
+%   blobMask - the blob to which we want to find the tangent line
+%   pivotPt - point outside the blob the through which the tangent line
+%       must pass
+%
+% OUTPUTS:
+%	tanPts - points on the edge of the blob through which the tangent line
+%       passes
+%   tanLines - [A,B,C] coefficients to describe the tangent line
+%       (Ax + By + C = 0)
 
 mask_ext = bwmorph(blobMask,'remove');
 s = regionprops(mask_ext,'Centroid');

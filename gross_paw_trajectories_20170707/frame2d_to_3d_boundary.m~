@@ -32,12 +32,15 @@ end
 tanPts = zeros(2,2,2);   % x,y,view
 tanLines = zeros(2,3,2);   % x,y,view
 borderpts = zeros(2,4,2);
+boundaryPts = cell(1,2);
 for iView = 1 : 2
 %     pawOutline = false(imSize);
 %     for ii = 1 : size(points2d{iView},1)
 %         pawOutline(points2d{iView}(ii,2),points2d{iView}(ii,1)) = true;
 %     end
-    pawMask{iView} = bwconvhull(pawOutline,'union');
+%     pawMask{iView} = bwconvhull(pawOutline,'union');
+    boundaryIdx = boundary(points2d{iView});
+    boundaryPts{iView} = points2d{iView}(boundaryIdx,:);
     [tanPts(:,:,iView), tanLines(:,:,iView)] = findTangentToBlob(pawMask{iView}, epipole);
     
     % for development; can comment out later

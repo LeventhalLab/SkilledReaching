@@ -1,4 +1,4 @@
-function edge3D = silhouetteTo3D(masks, boxCalibration, bboxes, tangentPoints, imSize, fullPawMasks)
+function edge3D = silhouetteTo3D(masks, boxCalibration, bboxes, tangentPoints, imSize)
 %
 % INPUTS:
 %   masks - 2-element cell array - first index is the direct view, second
@@ -24,10 +24,10 @@ for iView = 1 : 2
     mask_ext{iView} = bwmorph(full_mask{iView},'remove');
     
     [y,x] = find(mask_ext{iView});
-%     s = regionprops(mask_ext{iView},'Centroid');
-    ext_pts{iView} = arrangeBorderClockwise([x,y]);
+    s = regionprops(mask_ext{iView},'Centroid');
+    ext_pts{iView} = sortClockWise(s.Centroid,[x,y]);
 %     ext_pts{iView} = bsxfun(@plus,ext_pts{iView}, bboxes(iView,1:2));
-    full_tanPts(:,:,iView) = bsxfun(@plus,squeeze(tangentPoints(:,:,iView)),bboxes(iView,1:2));
+    full_tanPts(:,:,iView) = bsxfun(@plus,squeeze(tangentPoints(:,:,iView)),(bboxes(iView,1:2)-1));
     tanLineCoeff(iView,:) = lineCoeffFromPoints(squeeze(full_tanPts(:,:,iView)));
 end
 ext_pts{2} = flipud(ext_pts{2});   % now these points are sorted in the clockwise direction
@@ -50,15 +50,15 @@ overlapCheck = full_mask{2} & direct_leftRegion;
 if any(overlapCheck(:))
 %     interiorRegion = direct_leftRegion & mirror_rightRegion;
 %     exteriorRegion = direct_rightRegion | mirror_leftRegion;
-    fundmat = boxCalibration.F.left;
-    P2 = boxCalibration.P.left;
-    scale3D = boxCalibration.scale(1);
+    fundmat = squeeze(boxCalibration.srCal.F(:,:,1));
+    P2 = squeeze(boxCalibration.srCal.P(:,:,1));
+    scale3D = mean(boxCalibration.srCal.sf(:,1));
 else
 %     interiorRegion = direct_rightRegion & mirror_leftRegion;
 %     exteriorRegion = direct_leftRegion | mirror_rightRegion;
-    fundmat = boxCalibration.F.right;
-    P2 = boxCalibration.P.right;
-    scale3D = boxCalibration.scale(2);
+    fundmat = squeeze(boxCalibration.srCal.F(:,:,2));
+    P2 = squeeze(boxCalibration.srCal.P(:,:,2));
+    scale3D = mean(boxCalibration.srCal.sf(:,2));
 end
 
 epiLines = epipolarLine(fundmat, ext_pts{1});   % start with the direct view

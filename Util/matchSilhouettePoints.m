@@ -1,4 +1,16 @@
 function matchedPoints = matchSilhouettePoints(masks, boxCalibration, bboxes, tangentPoints, imSize)
+%
+% usage:
+%
+% INPUTS:
+%   masks - cell array of paw masks. These masks could be small regions of
+%       a larger image defined by bboxes (see below).
+%       1 = direct view, 2 = mirror view
+%   boxCalibration - standard box calibration structure
+%   bboxes - location of windows containing the direct and mirror paw masks
+%
+% OUTPUTS:
+%   matchedPoints - 
 
 K = boxCalibration.cameraParams.IntrinsicMatrix;
 P1 = eye(4,3);
@@ -68,12 +80,12 @@ for ii = 1 : numDirectEdgePoints
     % THE TWO TOGETHER
     
     switch length(intersect_idx)
-        case 0,
+        case 0
             % will have to find point closest to the tangent line in the
             % mirror view
-        case 1,
+        case 1
             matchedPoints(ii,:,2) = ext_pts{2}(intersect_idx,:);
-        case 2,
+        case 2
             % figure out which of the two intersecting points is on the
             % right side to match with the current direct view point
             tempMask = false(imSize);

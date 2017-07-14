@@ -1,6 +1,15 @@
 function [idx, isLocalExtremum] = detectCircularZeroCrossings(x)
+%
+% usage:
+%
+% INPUTS:
+%
+% OUTPUTS:
+%   idx - 
+%   isLocalExtremum - 
+%
 
-zerotol = 1e-10;
+zerotol = 1e-9;
 
 x_length = length(x);
 

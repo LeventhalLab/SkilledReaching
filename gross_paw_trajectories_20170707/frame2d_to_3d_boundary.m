@@ -4,6 +4,7 @@ function [ points3d ] = frame2d_to_3d( points2d, boxCalibration, pawPref, imSize
 
 showSilhouettes = true;
 refine_estimates = true;
+s = 0.95;    % shrink factor for boundaries
 
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -32,12 +33,17 @@ end
 tanPts = zeros(2,2,2);   % x,y,view
 tanLines = zeros(2,3,2);   % x,y,view
 borderpts = zeros(2,4,2);
+boundaryPts = cell(1,2);
 for iView = 1 : 2
 %     pawOutline = false(imSize);
 %     for ii = 1 : size(points2d{iView},1)
 %         pawOutline(points2d{iView}(ii,2),points2d{iView}(ii,1)) = true;
 %     end
-    pawMask{iView} = bwconvhull(pawOutline,'union');
+%     pawMask{iView} = bwconvhull(pawOutline,'union');
+    boundaryIdx = boundary(points2d{iView},s);
+    boundaryPts{iView} = points2d{iView}(boundaryIdx,:);
+    
+    pawMask{iView} = poly2mask(boundaryPts{iView}(:,1),boundaryPts{iView}(:,2),imSize(1),imSize(2));
     [tanPts(:,:,iView), tanLines(:,:,iView)] = findTangentToBlob(pawMask{iView}, epipole);
     
     % for development; can comment out later
@@ -52,10 +58,11 @@ if showSilhouettes
     imshow(pawMask{1} | pawMask{2});
     hold on
     for iView = 1 : 2
+        plot(boundaryPts{iView}(:,1),boundaryPts{iView}(:,2),'marker','.','linestyle','none')
         plot(squeeze(tanPts(:,1,iView)),squeeze(tanPts(:,2,iView)),'marker','o','linestyle','none')
-        for i_pt = 1 : 2
-            line([borderpts(i_pt,1,iView),borderpts(i_pt,3,iView)],[borderpts(i_pt,2,iView),borderpts(i_pt,4,iView)])
-        end
+%         for i_pt = 1 : 2
+%             line([borderpts(i_pt,1,iView),borderpts(i_pt,3,iView)],[borderpts(i_pt,2,iView),borderpts(i_pt,4,iView)])
+%         end
     end
 end
     

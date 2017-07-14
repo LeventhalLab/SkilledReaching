@@ -1,5 +1,7 @@
 function [new_points, idx] = sortClockWise(referencePoint, points)
 %
+% usage: [new_points, idx] = sortClockWise(referencePoint, points)
+%
 % INPUTS:
 %   referencePoint - the "center" point around which to generate the
 %       clockwise rotation. 1 x 2 row vector
