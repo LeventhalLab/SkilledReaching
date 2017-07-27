@@ -7,19 +7,13 @@ function [x1_left,x2_left,x1_right,x2_right,leftMirrorPoints,rightMirrorPoints] 
 %
 % OUTPUTS:
 %   x1_left - points in the direct view that show up in the left mirror
-%       view. M x 2 where M is the number of matched points
-%   x2_left - points in the left mirror view that correspond to the x1_left
-%       matrix (M x 2)
-%   x1_right - points in the direct view that show up in the right mirror
-%       view. M x 2 where M is the number of matched points
-%   x2_right - points in the right mirror view that correspond to the
-%       x1_right matrix (M x 2)
-
+%   view. M x 2 where M is the num
+%   x2_left
 excludePoints = {'left_bottom_box_corner','right_bottom_box_corner'};
 
 for iarg = 1 : 2 : nargin - 1
     switch lower(varargin{iarg})
-        case 'excludepoints'
+        case 'excludepoints',
             excludePoints = varargin{iarg + 1};
     end
 end

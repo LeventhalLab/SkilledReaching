@@ -1,0 +1,17 @@
+function points3d = compute3Dtrajectory(video, points2d, track_metadata, pawPref, 
+
+boxCalibration = track_metadata.boxCalibration;
+numFrames = size(points2d, 2);
+
+points3d = cell(numFrames,1);
+
+video.CurrentTime = track_metadata.triggerTime;
+
+
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function frame_points3D = computeNext3Dpoints( 

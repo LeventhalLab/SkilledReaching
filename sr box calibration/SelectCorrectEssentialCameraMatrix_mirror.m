@@ -10,7 +10,7 @@ function [cRot,cT,correct] = SelectCorrectEssentialCameraMatrix_mirror(rot,t,x1,
 %  
 % Input:
 %       - rot and t are the four rotation and traslation matrice retrieved 
-%         form the essential matrix.
+%         from the essential matrix.
 %         rot is a 3x3x4 matrix where the last dimension corresponds
 %         to the different camera matrices and 3x3 are rotation matrices.
 %         t is a 3x1x4 matrix where the last dimension corresponds

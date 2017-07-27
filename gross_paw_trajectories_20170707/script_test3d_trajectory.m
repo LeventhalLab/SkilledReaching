@@ -69,4 +69,21 @@ end
 [~,epipole] = isEpipoleInImage(F,[h,w]);
 
 %%
-[ points3d ] = frame2d_to_3d( pawPts, boxCalibration, pawPref, [h,w], epipole );
+
+switch lower(pawPref)
+    case 'right'
+        F = squeeze(boxCalibration.srCal.F(:,:,1));
+        sf = sf(1);
+    case 'left'
+        F = squeeze(boxCalibration.srCal.F(:,:,2));
+        sf = sf(2);
+                            % need to figure out how I organized the scale factor matrix and comment that into the estimate scale function
+                                                                   % looks like the columns are the view: 1 = left, 2 = right. The rows are the independent estimates for pairs of rubiks spacings. So, should take the mean across rows to estimate the scale factor in each mirror view                   
+end
+    
+[x1_left,x2_left,x1_right,x2_right,leftMirrorPoints,rightMirrorPoints] = ...
+    sr_sessionMatchedPointVector(session_mp);
+[tform1,tform2] = estimateUncalibratedRectification(F,x1_left,x2_left,[h,w]);
+
+%%
+[ points3d ] = frame2d_to_3d_boundary( pawPts, boxCalibration, pawPref, [h,w], epipole );
