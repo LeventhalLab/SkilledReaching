@@ -17,7 +17,7 @@ markerSize = 1;
 
 h = 1086; w = 2040;
 
-for i_rat = 1 : 4%length(sr_ratInfo)
+for i_rat = 2 : 4%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawData_parentDir = sr_ratInfo(i_rat).directory.rawdata;
@@ -34,6 +34,8 @@ for i_rat = 1 : 4%length(sr_ratInfo)
     for iSession = 1 : numSessions
 
         sessionName = sessionList{iSession};
+        fullSessionName = [ratID '_' sessionName];
+        
         sessionDate = sessionName(1:8);
         shortDate = sessionDate(5:end);
         
