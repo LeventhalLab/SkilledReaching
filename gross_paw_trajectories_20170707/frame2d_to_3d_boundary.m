@@ -112,7 +112,7 @@ end
 bboxes = [1,1,imSize(2)-1,imSize(1)-1];
 bboxes = [bboxes;bboxes];
 % points3d = silhouetteTo3D(pawMask, boxCalibration, bboxes, tanPts, imSize);
-[points3d,matchedPoints] = bordersTo3D_bothDirs(ext_pts, boxCalibration, bboxes, tanPts, imSize, currentFrame_ud);
+[points3d,matchedPoints] = bordersTo3D_bothDirs(ext_pts, boxCalibration, bboxes, tanPts, imSize);
 
 if show3dpoints
     figure(2)

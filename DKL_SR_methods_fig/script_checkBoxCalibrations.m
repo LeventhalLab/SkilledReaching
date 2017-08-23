@@ -35,7 +35,7 @@ ratDir = cell(1,length(sr_ratInfo));
 triDir = cell(1,length(sr_ratInfo));
 scoreDir = cell(1,length(sr_ratInfo));
 
-for i_rat = 3:3%length(sr_ratInfo)
+for i_rat = 2:2%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     ratDir{i_rat} = fullfile(kinematics_rootDir,ratID);
@@ -58,7 +58,7 @@ for i_rat = 3:3%length(sr_ratInfo)
     % video into the raw data folder
     
     numSessions = length(mp_metadata.sessionNames);
-    for iSession = 11: numSessions
+    for iSession = 1: numSessions
         
         sessionDate = mp_metadata.sessionNames{iSession}(7:end);
         cd(rawData_parentDir);

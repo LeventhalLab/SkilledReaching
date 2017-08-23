@@ -20,7 +20,7 @@ markerSize = 1;
 
 h = 1086; w = 2040;
 
-for i_rat = 2 : 4%length(sr_ratInfo)
+for i_rat = 3 : 4%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawData_parentDir = sr_ratInfo(i_rat).directory.rawdata;
@@ -105,6 +105,7 @@ for i_rat = 2 : 4%length(sr_ratInfo)
             track_metadata.boxCalibration.srCal = session_srCal;
             
             boxCalibration = track_metadata.boxCalibration;
+            boxCalibration.srCal = session_srCal;
             cameraParams = boxCalibration.cameraParams;
             
             switch lower(pawPref)

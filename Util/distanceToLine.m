@@ -16,7 +16,7 @@ end
 if size(Q2,1) == length(Q2)
     Q2 = Q2';
 end
-if size(Q1,1) == length(Q1)
+if size(Q0,1) == length(Q0)
     Q0 = Q0';
 end
 

@@ -1,4 +1,4 @@
-function points3d = compute3Dtrajectory(video, points2d, track_metadata, pawPref, boxRegions )
+function points3d = compute3Dtrajectory_b(video, points2d, track_metadata, pawPref, boxRegions )
 
 numFrames = size(points2d, 2);
 
@@ -10,6 +10,7 @@ timeDirection = 'forward';
 [points3d,new_points2d,timeList] = compute_3Dtrajectory_loop(video, new_points2d, points3d, track_metadata, pawPref, boxRegions, timeDirection,timeList);
 
 timeDirection = 'reverse';
+[points3d,new_points2d,timeList] = compute_3Dtrajectory_loop(video, new_points2d, points3d, track_metadata, pawPref, boxRegions, timeDirection,timeList);
 
 end
 
@@ -20,6 +21,7 @@ function [points3d,new_points2d,timeList] = compute_3Dtrajectory_loop(video, new
 zeroTol = 1e-10;
 fps = video.FrameRate;
 video.CurrentTime = track_metadata.triggerTime;
+
 boxCalibration = track_metadata.boxCalibration;
 cameraParams = boxCalibration.cameraParams;
 
@@ -88,11 +90,14 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     
     [points3d{currentFrame},new_points2d] = computeNext3Dpoints( new_points2d, points3d, currentFrame, prevFrame, img_ud, prev_img_ud, boxCalibration, pawPref, boxRegions );
     
+    % code below is for visualization purposes during debugging
+    
     old_2d{1} = old_points2d{1,currentFrame};
     old_2d{2} = old_points2d{2,currentFrame};
     new_2d{1} = new_points2d{1,currentFrame};
     new_2d{2} = new_points2d{2,currentFrame};
     showNewTracking(img_ud,old_2d,new_2d,F);
+    plot3Dpoints(points3d{currentFrame});
     
     prevFrame = currentFrame;
 end
@@ -153,17 +158,17 @@ tanPts = zeros(2,2,2);   % x,y,view
 
 ext_pts = cell(1,2);
 for iView = 1 : 2
-    cvx_hull_idx = convhull(new_points2d{iView});
+    cvx_hull_idx = convhull(new_points2d{iView,currentFrame});
     pawMask{iView} = poly2mask(new_points2d{iView,currentFrame}(cvx_hull_idx,1),new_points2d{iView,currentFrame}(cvx_hull_idx,2),h,w);
     pawMask{iView} = bwconvhull(pawMask{iView},'union');
 
     extMask = bwmorph(pawMask{iView},'remove');
+    [y,x] = find(extMask);
+    s = regionprops(extMask,'centroid');
+    ext_pts{iView} = sortClockWise(s.Centroid,[x,y]);
     [tanPts(:,:,iView), ~] = findTangentToBlob(pawMask{iView}, epipole);
 end
 
-
-ext_pts{1} = new_points2d{1,currentFrame};
-ext_pts{2} = new_points2d{2,currentFrame};
 [frame_points3D,~] = bordersTo3D_bothDirs(ext_pts, boxCalibration, bboxes, tanPts, [h,w]);
 
 end    % function
@@ -204,7 +209,16 @@ end
 [~,epipole] = isEpipoleInImage(F,[h,w]);
 
 projMask = cell(1,2);
+prev_pawMask = cell(1,2);
 for iView = 1 : 2
+    
+    if prevFrame > 0
+        prev_hull_idx = convhull(prev_points2d{iView});
+        prev_pawMask{iView} = poly2mask(prev_points2d{iView}(prev_hull_idx,1),prev_points2d{iView}(prev_hull_idx,2),h,w);
+        prev_pawMask{iView} = bwconvhull(prev_pawMask{iView},'union');
+    else
+        prev_pawMask{iView} = false(h,w);
+    end
     
     cvx_hull_idx = convhull(frame_points2d{iView});
     pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
@@ -245,7 +259,7 @@ if prevFrame == 0    % this is the first frame tested
     end
 
     if ~any(shelfOverlap)   % paw is either entirely outside the box or entirely below the shelf
-        [greenMask,redMask] = findGreen_and_red_paw_regions(img_ud, pawMask, boxCalibration, pawPref, boxRegions);
+        [greenMask,redMask] = findGreen_and_red_paw_regions(img_ud, pawMask, prev_pawMask, boxCalibration, pawPref, boxRegions);
         fullMask = cell(1,2);
         for iView = 1 : 2
             fullMask{iView} = greenMask{iView} | redMask{iView} | pawMask{iView};
@@ -268,7 +282,7 @@ else    % we have points from the previous frame to look at to check motion
     end
     
 %     if ~any(shelfOverlap(:))   % paw is either entirely outside the box or entirely below the shelf
-        [greenMask,redMask] = findGreen_and_red_paw_regions(img_ud, pawMask, boxCalibration, pawPref, boxRegions);
+        [greenMask,redMask] = findGreen_and_red_paw_regions(img_ud, pawMask, prev_pawMask, boxCalibration, pawPref, boxRegions);
         fullMask = cell(1,2);
         for iView = 1 : 2
             fullMask{iView} = greenMask{iView} | redMask{iView} | pawMask{iView};

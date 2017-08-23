@@ -1,4 +1,4 @@
-function [edge3D,matchedPoints] = bordersTo3D_bothDirs(ext_pts, boxCalibration, bboxes, tangentPoints, imSize, currentFrame_ud)
+function [edge3D,matchedPoints] = bordersTo3D_bothDirs(ext_pts, boxCalibration, bboxes, tangentPoints, imSize)
 %
 %
 % NEED TO ADD IN A CHECK THAT WE DON'T IDENTIFY POINTS BELOW THE FLOOR, AND
@@ -7,7 +7,7 @@ function [edge3D,matchedPoints] = bordersTo3D_bothDirs(ext_pts, boxCalibration, 
 %
 %
 % INPUTS:
-%   masks - 2-element cell array - first index is the direct view, second
+%   ext_pts - 2-element cell array - first index is the direct view, second
 %       index is the mirror view
 %   boxCalibration - boxCalibration structure
 %   bboxes - 2 x 4 array, where each row is the bounding box for the direct
@@ -25,6 +25,7 @@ edge3D = cell(1,2);
 
 full_tanPts = zeros(2,2,2);
 tanLineCoeff = zeros(2,3);
+
 for iView = 1 : 2
 %     full_mask{iView} = false(imSize);
 %     full_mask{iView}(bboxes(iView,2):bboxes(iView,2) + bboxes(iView,4), ...
@@ -45,8 +46,10 @@ end
 % direct and mirror view blobs
 
 % direct_lineCoeff = lineCoeffFromPoints(full_tanPts);
-direct_leftRegion = segregateImage(full_tanPts, ...
-                            [round(imSize(1)/2),1], imSize);
+% direct_leftRegion = segregateImage(full_tanPts, ...
+%                             [1,round(imSize(1)/2),1], imSize);
+leftRegion = false(imSize);
+leftRegion(:,1:round(imSize(2)/2)) = true;
 % direct_rightRegion = segregateImage(full_tanPts, ...
 %                             [round(imSize(1)/2),imSize(2)], imSize);
 
@@ -57,7 +60,7 @@ direct_leftRegion = segregateImage(full_tanPts, ...
 %                             [round(imSize(1)/2),imSize(2)], imSize);
 testMask = false(imSize);
 testMask(ext_pts{2}(:,2),ext_pts{2}(:,1)) = true;
-overlapCheck = testMask & direct_leftRegion;
+overlapCheck = testMask & leftRegion;
 matchedPoints = cell(1,2);
 if any(overlapCheck(:))
 %     interiorRegion = direct_leftRegion & mirror_rightRegion;

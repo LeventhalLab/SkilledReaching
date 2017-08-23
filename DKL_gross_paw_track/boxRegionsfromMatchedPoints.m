@@ -1,6 +1,12 @@
 function [boxRegions] = boxRegionsfromMatchedPoints(session_mp, imSize)
 
 
+% ADD IN SOMETHING HERE TO FIND THE SHELF IN THE MIRROR VIEWS
+
+
+
+
+
 % mask of the front panel in both mirror views
 leftCorners_x = [session_mp.leftMirror.front_panel_top_front(1),...
                  session_mp.leftMirror.front_panel_top_back(1),...

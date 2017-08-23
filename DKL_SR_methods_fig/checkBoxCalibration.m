@@ -16,11 +16,11 @@ cb_path = '/Users/dan/Documents/Leventhal_lab_github/SkilledReaching/tattoo_trac
 
 for iarg = 1 : 2 : nargin - 6
     switch lower(varargin{iarg})
-        case 'computecamparams',
+        case 'computecamparams'
             computeCamParams = varargin{iarg};
-        case 'camparamfile',
+        case 'camparamfile'
             camParamFile = varargin{iarg};
-        case 'cbpath',
+        case 'cbpath'
             cb_path = varargin{iarg};
     end
 end
