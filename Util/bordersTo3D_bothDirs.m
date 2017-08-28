@@ -199,25 +199,10 @@ for iView = 1 : 2
 
     end
 
-    % for ii = 1 : numMirrorEdgePoints
-    %     % MATCH POINTS GOING IN BOTH DIRECTIONS THEN SOMEHOW MELD
-    %     % THE TWO TOGETHER
-    %     
-    % end
-%     direct_pts_norm = normalize_points(squeeze(matchedPoints(:,:,1)), K);
-%     mirror_pts_norm = normalize_points(squeeze(matchedPoints(:,:,2)), K);
-% 
-%     [points3d,~,~] = triangulate_DL(direct_pts_norm, ...
-%                                     mirror_pts_norm, ...
-%                                     P1, P2);
-                                
-%     if iView == 1
-        direct_pts_norm = normalize_points(squeeze(matchedPoints{iView}(:,:,1)), K);
-        mirror_pts_norm = normalize_points(squeeze(matchedPoints{iView}(:,:,2)), K);
-%     else
-%         direct_pts_norm = normalize_points(squeeze(matchedPoints(:,:,2)), K);
-%         mirror_pts_norm = normalize_points(squeeze(matchedPoints(:,:,1)), K);
-%     end
+	% normalize the direct and mirror view 2D points using the camera
+	% calibration matrix (see p. XXX, Hartley and Zisserman)
+    direct_pts_norm = normalize_points(squeeze(matchedPoints{iView}(:,:,1)), K);
+    mirror_pts_norm = normalize_points(squeeze(matchedPoints{iView}(:,:,2)), K);
     
     [points3d,~,~] = triangulate_DL(direct_pts_norm, ...
                                     mirror_pts_norm, ...

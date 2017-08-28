@@ -26,11 +26,12 @@ w = size(image_ud,2);
 % end
 hold on
 for iView = 1 : 2
-    plot(old_points2d{1}(:,1),old_points2d{1}(:,2),'color','b','marker','.','linestyle','none');
-    plot(old_points2d{2}(:,1),old_points2d{2}(:,2),'color','b','marker','.','linestyle','none');
-    
-    plot(new_points2d{1}(:,1),new_points2d{1}(:,2),'color','r','marker','.','linestyle','none');
-    plot(new_points2d{2}(:,1),new_points2d{2}(:,2),'color','r','marker','.','linestyle','none');
+    if any(old_points2d{iView}(:))
+        plot(old_points2d{iView}(:,1),old_points2d{iView}(:,2),'color','b','marker','.','linestyle','none');
+    end
+    if any(new_points2d{iView}(:))
+        plot(new_points2d{iView}(:,1),new_points2d{iView}(:,2),'color','r','marker','.','linestyle','none');
+    end
 end
 
 newDirectMask = false(h,w);

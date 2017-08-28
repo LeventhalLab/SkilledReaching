@@ -1,5 +1,5 @@
 %%
-% frameNum = 237;
+frameNum = 296;
     
 
 frameNum = frameNum + 1;
@@ -14,7 +14,7 @@ set(gca,'ydir','reverse')
 
 %%
 % filtIdx = 2;
-idx1 = q(:,1) > 360;
+idx1 = q(:,1) > 1980;
 idx2 = q(:,2) > 620;
 idx = idx1 & idx2;
 

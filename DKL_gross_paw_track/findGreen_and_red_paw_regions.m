@@ -1,17 +1,20 @@
-function [greenMask,redMask] = findGreen_and_red_paw_regions(img, pawMask, prev_pawMask, boxCalibration, pawPref, boxRegions)
+function [greenMask,redMask,fullMask] = findGreen_and_red_paw_regions(img, pawMask, prev_pawMask, boxCalibration, pawPref, boxRegions)
 projection_dilate_factor = 20;
-mask_dilate_factor = 30;
+% mask_dilate_factor = 30;
 
 F = boxCalibration.srCal.F;
 valid_red_lims_boxExt = [0.35,1;
                 0.35,1];    % min and max values of grayscale image that can be accepted in direct (first row) or indirect (second row) views
 valid_red_lims_boxInt = [0.1,1;
                 0.1,1];    % min and max values of grayscale image that can be accepted in direct (first row) or indirect (second row) views
+valid_red_lims_belowShelf = [0.5,1];
 valid_green_lims_boxExt = [0.35,1;
                            0.1,1];    % min and max values of grayscale image that can be accepted in direct (first row) or indirect (second row) views
 valid_green_lims_boxInt = [0.1,1;
                            0.1,1];
-            
+red_Pthresh_forMask = [0.8,0.8];    % direct and side views
+green_Pthresh_forMask = [0.8,0.8];    % direct and side views
+
 intMask = boxRegions.intMask;
 
 whiteThresh = [0.9,0.7];
@@ -51,28 +54,36 @@ searchRegion = zeros(2,4);
 searchRegionMask = cell(1,2);
 
 for iView = 1 : 2
-    testRegion = fullProjMask & (pawMask{iView} | prev_pawMask{iView});
+    tempPawMask = bwconvhull(pawMask{iView} | prev_pawMask{iView});
+    testRegion = fullProjMask & tempPawMask;
     s = regionprops(testRegion,'boundingbox');
-    bbox_left = round(s.BoundingBox(1)) - projection_dilate_factor;
-    bbox_right = round(s.BoundingBox(1)) + round(s.BoundingBox(3)) + projection_dilate_factor;
+    bbox_left = max(round(s.BoundingBox(1)) - projection_dilate_factor,1);
+    bbox_right = min(round(s.BoundingBox(1)) + round(s.BoundingBox(3)) + projection_dilate_factor,w);
     
     tempMask = false(h,w);
     tempMask(1:h,bbox_left:bbox_right) = true;
     
-    searchRegionMask{iView} = imdilate((tempMask & fullProjMask),strel('disk',projection_dilate_factor));
+    temp_searchRegion = bwconvhull(tempMask & fullProjMask,'union');
+    searchRegionMask{iView} = imdilate(temp_searchRegion,strel('disk',projection_dilate_factor));
     s = regionprops(searchRegionMask{iView},'boundingbox');
 %     s = regionprops(searchRegionMask,'boundingbox');
     
-    searchRegion(iView,:) = round([s.BoundingBox(1), s.BoundingBox(2),...
-                          s.BoundingBox(1)+s.BoundingBox(3),s.BoundingBox(2)+s.BoundingBox(4)]);
+    searchRegionTop = max(round(s.BoundingBox(2)),1);
+    searchRegionBot = min(round(s.BoundingBox(2)+s.BoundingBox(4)),h);
+    searchRegionLeft = max(round(s.BoundingBox(1)),1);
+    searchRegionRight = min(round(s.BoundingBox(1)+s.BoundingBox(3)),w);
+    
+%     searchRegion(iView,:) = round([s.BoundingBox(1), s.BoundingBox(2),...
+%                           s.BoundingBox(1)+s.BoundingBox(3),s.BoundingBox(2)+s.BoundingBox(4)]);
+    searchRegion(iView,:) = [searchRegionLeft,searchRegionTop,searchRegionRight,searchRegionBot];
 	img_region{iView} = img(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3),:);
                       
 end
 full_img_scaled = imadjust(img,stretchlim(img_region{1}),[]);
-full_img_decorr = decorrstretch(full_img_scaled);
-full_img_hsv = rgb2hsv(full_img_decorr);
-rdiff = full_img_scaled(:,:,1) - mean(full_img_scaled(:,:,2:3),3);
-gdiff = full_img_scaled(:,:,2) - mean(full_img_scaled(:,:,[1,3]),3);
+% full_img_decorr = decorrstretch(full_img_scaled);
+% full_img_hsv = rgb2hsv(full_img_decorr);
+% rdiff = full_img_scaled(:,:,1) - mean(full_img_scaled(:,:,2:3),3);
+% gdiff = full_img_scaled(:,:,2) - mean(full_img_scaled(:,:,[1,3]),3);
 regionProbs = zeros(size(img));
 tempRedMask = cell(1,2);
 tempGreenMask = cell(1,2);
@@ -84,6 +95,8 @@ maxRedMask = (full_img_scaled(:,:,1) > full_img_scaled(:,:,2)) & (full_img_scale
 
 testMask_int = pawMask{2} & boxRegions.intMask;
 testMask_ext = pawMask{2} & boxRegions.extMask;
+testMask_belowShelf = pawMask{1} & boxRegions.belowShelfMask;
+testMask_aboveShelf = pawMask{1} & ~boxRegions.belowShelfMask;
 
 if any(testMask_int(:))
     intMaskProj = projMaskFromTangentLines(testMask_int, dorsum_F, [1,1,h-1,w-1],[h,w]);
@@ -93,6 +106,10 @@ else
 end
 
 regionMask = cell(1,2);
+green_seed = cell(1,2);
+red_seed = cell(1,2);
+other_seed = cell(1,2);
+region_pawMask = cell(1,2);
 for iView = 1 : 2
     tempRedMask{iView} = false(h,w);
     tempGreenMask{iView} = false(h,w);
@@ -103,6 +120,8 @@ for iView = 1 : 2
     regionMask{iView} = searchRegionMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
     region_intMask = boxRegions.intMask(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
     region_extMask = boxRegions.extMask(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
+    region_pawMask{iView} = pawMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) | ...
+                            prev_pawMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
     
     max_rdiff = max(region_rdiff{iView}(:));
     max_gdiff = max(region_gdiff{iView}(:));
@@ -132,13 +151,19 @@ for iView = 1 : 2
             validGreenRegion = (squeeze(region_scaled{iView}(:,:,2)) > valid_green_lims_boxExt(iView,1)) & (squeeze(region_scaled{iView}(:,:,2)) < valid_green_lims_boxExt(iView,2));
             validRedRegion = (squeeze(region_scaled{iView}(:,:,1)) > valid_red_lims_boxExt(iView,1)) & (squeeze(region_scaled{iView}(:,:,1)) < valid_red_lims_boxExt(iView,2));
         end
+        if ~any(testMask_ext(:)) && ~any(testMask_aboveShelf(:))   % paw is entirely inside the box and below the shelf
+            % eliminate points that are the background - the floor of the
+            % box
+            validRedRegion = validRedRegion & (squeeze(region_scaled{iView}(:,:,1)) > valid_red_lims_belowShelf(1)) & (squeeze(region_scaled{iView}(:,:,1)) < valid_red_lims_belowShelf(2));
+        end
     end
     green_seed{iView} = regionMask{iView} & (region_gdiff_scaled{iView} > 0.5) & validGreenRegion;
     red_seed{iView} = regionMask{iView} & (region_rdiff_scaled{iView} > 0.5) & validRedRegion;
+%     other_seed{iView} = imerode((regionMask{iView} & (region_rdiff{iView}) < 0 & (region_gdiff{iView} < 0.00)),strel('disk',2));
+    other_seed{iView} = imerode((~green_seed{iView} & ~red_seed{iView}),strel('disk',10));
     
-    other_seed{iView} = imerode((regionMask{iView} & (region_rdiff{iView}) < 0 & (region_gdiff{iView} < 0.00)),strel('disk',2));
     temp_other = false(size(other_seed{iView}));
-    region_edge_width = round(projection_dilate_factor/2); 
+    region_edge_width = round(projection_dilate_factor / 2); 
     region_width = size(other_seed{iView},2); 
     region_height = size(other_seed{iView},1); 
     temp_other(:,1:region_edge_width) = true;
@@ -147,6 +172,13 @@ for iView = 1 : 2
     temp_other(:,region_width - region_edge_width : end) = true;
     whiteMask = mean(region_scaled{iView},3) > whiteThresh(iView);
     other_seed{iView} = other_seed{iView} | whiteMask;
+    
+    red_overlap = red_seed{iView} & imdilate(region_pawMask{iView},strel('disk',10));
+    green_overlap = green_seed{iView} & imdilate(region_pawMask{iView},strel('disk',10));
+    
+    green_seed{iView} = imreconstruct(green_overlap, green_seed{iView});
+    red_seed{iView} = imreconstruct(red_overlap, red_seed{iView});
+    
     
     final_other_seed{iView} = (other_seed{iView} & ~green_seed{iView} & ~red_seed{iView} ) | temp_other;
     final_green_seed{iView} = green_seed{iView} & ~red_seed{iView} & ~final_other_seed{iView};
@@ -157,17 +189,30 @@ for iView = 1 : 2
         final_red_seed{1} = final_red_seed{1} & ~region_shelfMask;
         final_green_seed{1} = final_green_seed{1} & ~region_shelfMask;
     end
-    if (any(shelfOverlap(:))) && iView == 1    % the paw is partially behind the shelf, don't let there be red scribble lateral to green scribble
+    if iView == 1
         excludeRedMask = false(size(final_red_seed{1}));
-        [~,x] = find(final_green_seed{1});
-        switch pawPref
-            case 'left'
-                max_green_x = max(x);
-                excludeRedMask(:,max_green_x:end) = true;
-            case 'right'
-                min_green_x = min(x);
-                excludeRedMask(:,1:min_green_x) = true;
-        end
+        [y,x] = find(final_green_seed{1});
+        max_y = max(y);
+%         if (any(shelfOverlap(:)))   % the paw is partially behind the shelf, don't let there be any red scribble lateral to green scribble
+            switch pawPref
+                case 'left'
+                    max_green_x = max(x);
+                    excludeRedMask(:,max_green_x:end) = true;
+                case 'right'
+                    min_green_x = min(x);
+                    excludeRedMask(:,1:min_green_x) = true;
+            end
+%         else   % the paw is not partially behind the shelf, don't let there be any red scribble DIRECTLY lateral to green scribble
+%             switch pawPref
+%                 case 'left'
+%                     max_green_x = max(x);
+%                     excludeRedMask(1:max_y,max_green_x:end) = true;
+%                 case 'right'
+%                     min_green_x = min(x);
+%                     excludeRedMask(1:max_y,1:min_green_x) = true;
+%             end
+%         end
+
         final_red_seed{1} = final_red_seed{1} & ~excludeRedMask;
     end
     
@@ -198,16 +243,20 @@ for iView = 1 : 2
         P(:,:,3) = P(:,:,2);
         P(:,:,2) = false(size(P,1),size(P,2));
     elseif all(~final_green_seed{iView}(:)) && any(final_red_seed{iView}(:))     % red but not green blobs visible in this view
-        
+        [~,P] = imseggeodesic(region_scaled{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
+        tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+        tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
+        P(:,:,3) = P(:,:,2);
+        P(:,:,1) = false(size(P,1),size(P,2));
     elseif all(~final_green_seed{iView}(:)) && all(~final_red_seed{iView}(:))       % neither green nor red blobs visible in this view
-        
+        P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
     end
     
     % CAN USE THE P ARRAY TO NOT TAKE POINT WITH LOWER P-VALUES IF THEY
     % OVERLAP WITH THE SHELF IN THE DIRECT OR MIRROR VIEWS
     
     regionProbs(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3),:) = P;
-        
+
     tempGreenMask{iView} = tempGreenMask{iView} & maxGreenMask;
     tempRedMask{iView} = tempRedMask{iView} & maxRedMask;
     
@@ -215,7 +264,7 @@ for iView = 1 : 2
     processed_redMask{iView} = processMask(tempRedMask{iView},'sesize',1);
     
     %only accept blobs reasonably close to the original paw mask
-    pawTest = imdilate(pawMask{iView},strel('disk',15));
+    pawTest = imdilate(pawMask{iView} | prev_pawMask{iView},strel('disk',15));
     greenOverlap = processed_greenMask{iView} & pawTest;
     redOverlap = processed_redMask{iView} & pawTest;
     
@@ -231,16 +280,20 @@ end
 viewMatchFlags = false(2,2);
 upper_testPt = false(h,w);upper_testPt(1,1) = true;
 lower_testPt = false(h,w);lower_testPt(h,w) = true;
-new_red_mask = cell(1,2);
-new_green_mask = cell(1,2);
+upper_new_red_mask = cell(1,2);
+lower_new_green_mask = cell(1,2);upper_new_red_mask = cell(1,2);
+lower_new_green_mask = cell(1,2);
 
 % eliminate anything that's too dark
 full_scaled_gray = rgb2gray(full_img_scaled);
 darkMask = (full_scaled_gray < 0.2);
 
 for iView = 1 : 2
-    new_red_mask{iView} = false(h,w);
-    new_green_mask{iView} = false(h,w);
+    upper_new_red_mask{iView} = false(h,w);
+    upper_new_green_mask{iView} = false(h,w);
+    
+    lower_new_red_mask{iView} = false(h,w);
+    lower_new_green_mask{iView} = false(h,w);
     
     processed_greenMask{iView} = processed_greenMask{iView} & ~darkMask;
     processed_redMask{iView} = processed_redMask{iView} & ~darkMask;
@@ -289,17 +342,17 @@ for iView = 1 : 2
         upperEdge = bwmorph(upperTestMask,'remove') & validEdgeMask;
 %         upperEdge = bwmorph(upperTestMask,'remove') & searchRegionMask{iView};
         Pvals = repmat(double(upperEdge),[1,1,3]) .* regionProbs;
-        new_red_mask{iView} = new_red_mask{iView} | Pvals(:,:,2) > 0.5;
-        new_green_mask{iView} = new_green_mask{iView} | Pvals(:,:,1) > 0.5;
+        upper_new_red_mask{iView} = upper_new_red_mask{iView} | Pvals(:,:,2) > red_Pthresh_forMask(iView);
+        upper_new_green_mask{iView} = upper_new_green_mask{iView} | Pvals(:,:,1) > green_Pthresh_forMask(iView);
         
         if any(shelfOverlap(:))
-            new_mask_shelf_overlap = (new_green_mask{iView} | new_red_mask{iView}) & boxRegions.shelfMask;
+            new_mask_shelf_overlap = (upper_new_green_mask{iView} | upper_new_red_mask{iView}) & boxRegions.shelfMask;
         else
             new_mask_shelf_overlap = false;
         end
                 
         
-        if (~any(new_red_mask{iView}(:)) && ~any(new_green_mask{iView}(:))) || any(new_mask_shelf_overlap(:))  % there aren't any reasonably green and/or red points along the tangent line from the other view - find the closest point OR look at the previous frame?
+        if (~any(upper_new_red_mask{iView}(:)) && ~any(upper_new_green_mask{iView}(:))) || any(new_mask_shelf_overlap(:))  % there aren't any reasonably green and/or red points along the tangent line from the other view - find the closest point OR look at the previous frame?
             
             % just find the points along the tangent line closest to the blob and add them in
             [y,x] = find(upperEdge);
@@ -334,9 +387,9 @@ for iView = 1 : 2
                 otherwise
             end
         else    % there are reasonably green and/or red points along the tangent line from the other view - keep those
-            processed_greenMask{iView} = processed_greenMask{iView} | new_green_mask{iView};
-            processed_redMask{iView} = processed_redMask{iView} | new_red_mask{iView};
-            added_pts = added_pts | new_green_mask{iView} | new_red_mask{iView};
+            processed_greenMask{iView} = processed_greenMask{iView} | upper_new_green_mask{iView};
+            processed_redMask{iView} = processed_redMask{iView} | upper_new_red_mask{iView};
+            added_pts = added_pts | upper_new_green_mask{iView} | upper_new_red_mask{iView};
         end
             
     end
@@ -347,16 +400,16 @@ for iView = 1 : 2
         lowerEdge = bwmorph(lowerTestMask,'remove') & validEdgeMask;
 %         lowerEdge = bwmorph(lowerTestMask,'remove') & searchRegionMask{iView};
         Pvals = repmat(double(lowerEdge),[1,1,3]) .* regionProbs;
-        new_red_mask{iView} = new_red_mask{iView} | Pvals(:,:,2) > 0.5;
-        new_green_mask{iView} = new_green_mask{iView} | Pvals(:,:,1) > 0.5;
+        lower_new_red_mask{iView} = lower_new_red_mask{iView} | Pvals(:,:,2) > red_Pthresh_forMask(iView);
+        lower_new_green_mask{iView} = lower_new_green_mask{iView} | Pvals(:,:,1) > green_Pthresh_forMask(iView);
         
         if any(shelfOverlap(:))
-            new_mask_shelf_overlap = (new_green_mask{iView} | new_red_mask{iView}) & boxRegions.shelfMask;
+            new_mask_shelf_overlap = (lower_new_green_mask{iView} | lower_new_red_mask{iView}) & boxRegions.shelfMask;
         else
             new_mask_shelf_overlap = false;
         end
         
-        if (~any(new_red_mask{iView}(:)) && ~any(new_green_mask{iView}(:))) || any(new_mask_shelf_overlap(:))  % there aren't any reasonably green and/or red points along the tangent line from the other view - find the closest point OR look at the previous frame?
+        if (~any(lower_new_red_mask{iView}(:)) && ~any(lower_new_green_mask{iView}(:))) || any(new_mask_shelf_overlap(:))  % there aren't any reasonably green and/or red points along the tangent line from the other view - find the closest point OR look at the previous frame?
             % just find the points along the tangent line closest to the blob and add them in
             [y,x] = find(lowerEdge);
             if any(processed_greenMask{iView}(:))
@@ -390,9 +443,9 @@ for iView = 1 : 2
                 otherwise
             end
         else
-            processed_greenMask{iView} = processed_greenMask{iView} | new_green_mask{iView};
-            processed_redMask{iView} = processed_redMask{iView} | new_red_mask{iView};
-            added_pts = added_pts | new_green_mask{iView} | new_red_mask{iView};
+            processed_greenMask{iView} = processed_greenMask{iView} | lower_new_green_mask{iView};
+            processed_redMask{iView} = processed_redMask{iView} | lower_new_red_mask{iView};
+            added_pts = added_pts | lower_new_green_mask{iView} | lower_new_red_mask{iView};
         end
             
     end
@@ -403,12 +456,14 @@ end    % for iView...
 
 % now cut off anything that's outside the projection of the new masks
 newProjMask = cell(1,2);
+fullMask = cell(1,2);
 for iView = 1 : 2
     otherView = 3 - iView;
     newProjMask{otherView} = projMaskFromTangentLines(tempFullMask{otherView}, dorsum_F, [1,1,h-1,w-1],[h,w]);
     limitMask = newProjMask{otherView} | added_pts;    % don't get rid of points we added in to make the reflection work because they're maybe just outside the projection mask
     greenMask{iView} = processed_greenMask{iView} & limitMask;
     redMask{iView} = processed_redMask{iView} & limitMask;
+    fullMask{iView} = tempFullMask{iView} & limitMask;
 end
 
 

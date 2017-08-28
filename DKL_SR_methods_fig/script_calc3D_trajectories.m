@@ -75,7 +75,11 @@ for i_rat = 2 : 4%length(sr_ratInfo)
         matList = dir('*rel_track.mat');
         if isempty(matList);continue;end
         
-        for iMat = 1 : length(matList)
+        
+        
+        
+        
+        for iMat = 1 : length(matList)   %%%%%%%% NOTE LOOP INDICES - DEBUGGING!!!!!!!
             fprintf('%s, %s, video %d of %d, %s\n', ratID, sessionDate, iMat, length(matList), matList(iMat).name);
             
             if strcmp(matList(iMat).name(1:2),'._');continue;end
@@ -107,38 +111,40 @@ for i_rat = 2 : 4%length(sr_ratInfo)
             boxCalibration = track_metadata.boxCalibration;
             cameraParams = boxCalibration.cameraParams;
             
-            switch lower(pawPref)
-                case 'right'
-                    F = squeeze(boxCalibration.srCal.F(:,:,1));
-%                     sf = sf(1);
-                case 'left'
-                    F = squeeze(boxCalibration.srCal.F(:,:,2));
-%                     sf = sf(2);
-                                                                               % looks like the columns are the view: 1 = left, 2 = right. The rows are the independent estimates for pairs of rubiks spacings. So, should take the mean across rows to estimate the scale factor in each mirror view                   
-            end
-
-            [~,epipole] = isEpipoleInImage(F,[h,w]);
+%             switch lower(pawPref)
+%                 case 'right'
+%                     F = squeeze(boxCalibration.srCal.F(:,:,1));
+% %                     sf = sf(1);
+%                 case 'left'
+%                     F = squeeze(boxCalibration.srCal.F(:,:,2));
+% %                     sf = sf(2);
+%                                                                                % looks like the columns are the view: 1 = left, 2 = right. The rows are the independent estimates for pairs of rubiks spacings. So, should take the mean across rows to estimate the scale factor in each mirror view                   
+%             end
+% 
+%             [~,epipole] = isEpipoleInImage(F,[h,w]);
             
-            numFrames = size(points2d, 2);
-            points3d = cell(numFrames,1);
-            for iFrame = 431 : numFrames
-                iFrame
-                video.CurrentTime = iFrame / video.FrameRate;
-                currentFrame = readFrame(video);
-                currentFrame_ud = undistortImage(currentFrame, cameraParams);
-                
-                if ~isempty(points2d{1,iFrame}) && ~isempty(points2d{2,iFrame})
-                    framePoints = cell(1,2);
-                    for iView = 1 : 2
-                        framePoints{iView} = points2d{iView,iFrame};
-                    end
-                    points3d{iFrame} = frame2d_to_3d_boundary(framePoints, boxCalibration, pawPref, [h,w], epipole, currentFrame_ud, 'showSilhouettes', false);
-                end
-            end
+            [points3d,new_points2d] = compute3Dtrajectory(video, points2d, track_metadata, pawPref, boxRegions );
+            
+%             numFrames = size(points2d, 2);
+%             points3d = cell(numFrames,1);
+%             for iFrame = 431 : numFrames
+%                 iFrame
+%                 video.CurrentTime = iFrame / video.FrameRate;
+%                 currentFrame = readFrame(video);
+%                 currentFrame_ud = undistortImage(currentFrame, cameraParams);
+%                 
+%                 if ~isempty(points2d{1,iFrame}) && ~isempty(points2d{2,iFrame})
+%                     framePoints = cell(1,2);
+%                     for iView = 1 : 2
+%                         framePoints{iView} = points2d{iView,iFrame};
+%                     end
+%                     points3d{iFrame} = frame2d_to_3d_boundary(framePoints, boxCalibration, pawPref, [h,w], epipole, currentFrame_ud, 'showSilhouettes', false);
+%                 end
+%             end
                 % WORKING HERE...
             points3dName = [matBaseName '_3dpoints.mat'];
             points3dName = fullfile(processedDir,points3dName);
-            save(points3dName,'points3d','points2d','isPawVisible_mirror','timeList','track_metadata');
+            save(points3dName,'points3d','points2d','new_points2d','isPawVisible_mirror','timeList','track_metadata');
             
         end
         
