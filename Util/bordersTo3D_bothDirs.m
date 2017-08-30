@@ -27,50 +27,23 @@ full_tanPts = zeros(2,2,2);
 tanLineCoeff = zeros(2,3);
 
 for iView = 1 : 2
-%     full_mask{iView} = false(imSize);
-%     full_mask{iView}(bboxes(iView,2):bboxes(iView,2) + bboxes(iView,4), ...
-%                      bboxes(iView,1):bboxes(iView,1) + bboxes(iView,3)) = masks{iView};
-%                      
-%     mask_ext{iView} = bwmorph(full_mask{iView},'remove');
-%     
-%     [y,x] = find(mask_ext{iView});
-%     s = regionprops(mask_ext{iView},'Centroid');
-%     ext_pts{iView} = sortClockWise(s.Centroid,[x,y]);
-%     ext_pts{iView} = bsxfun(@plus,ext_pts{iView}, bboxes(iView,1:2));
     full_tanPts(:,:,iView) = bsxfun(@plus,squeeze(tangentPoints(:,:,iView)),(bboxes(iView,1:2)-1));
     tanLineCoeff(iView,:) = lineCoeffFromPoints(squeeze(full_tanPts(:,:,iView)));
 end
-% ext_pts{2} = flipud(ext_pts{2});   % now these points are sorted in the clockwise direction
 
-% find the region in between the lines connecting the tangentPoints for the
-% direct and mirror view blobs
-
-% direct_lineCoeff = lineCoeffFromPoints(full_tanPts);
-% direct_leftRegion = segregateImage(full_tanPts, ...
-%                             [1,round(imSize(1)/2),1], imSize);
+% check to see if the rat is left- or right-pawed and pull out the
+% appropriate fundamental and camera matrices
 leftRegion = false(imSize);
 leftRegion(:,1:round(imSize(2)/2)) = true;
-% direct_rightRegion = segregateImage(full_tanPts, ...
-%                             [round(imSize(1)/2),imSize(2)], imSize);
-
-% mirror_lineCoeff = lineCoeffFromPoints(full_tanPts);
-% mirror_leftRegion = segregateImage(full_tanPts, ...
-%                             [round(imSize(1)/2),1], imSize);
-% mirror_rightRegion = segregateImage(full_tanPts, ...
-%                             [round(imSize(1)/2),imSize(2)], imSize);
 testMask = false(imSize);
 testMask(ext_pts{2}(:,2),ext_pts{2}(:,1)) = true;
 overlapCheck = testMask & leftRegion;
 matchedPoints = cell(1,2);
 if any(overlapCheck(:))
-%     interiorRegion = direct_leftRegion & mirror_rightRegion;
-%     exteriorRegion = direct_rightRegion | mirror_leftRegion;
     fundmat = squeeze(boxCalibration.srCal.F(:,:,1));
     P2 = squeeze(boxCalibration.srCal.P(:,:,1));
     scale3D = mean(boxCalibration.srCal.sf(:,1));
 else
-%     interiorRegion = direct_rightRegion & mirror_leftRegion;
-%     exteriorRegion = direct_leftRegion | mirror_rightRegion;
     fundmat = squeeze(boxCalibration.srCal.F(:,:,2));
     P2 = squeeze(boxCalibration.srCal.P(:,:,2));
     scale3D = mean(boxCalibration.srCal.sf(:,2));
@@ -92,12 +65,8 @@ for iView = 1 : 2
 
         lineValue = epiLines(ii,1) * ext_pts{otherView}(:,1) + ...
                     epiLines(ii,2) * ext_pts{otherView}(:,2) + epiLines(ii,3);
-    % 	lineValue_direct = epiLines(ii,1) * ext_pts{1}(:,1) + ...
-    %                 epiLines(ii,2) * ext_pts{1}(:,2) + epiLines(ii,3);
 
         [intersect_idx, isLocalExtremum] = detectCircularZeroCrossings(lineValue);
-        % WORKING HERE - JUST CHANGED DETECTZEROCROSSINGS TO THE CIRCULAR
-        % VERSION IN THE LINE ABOVE...
 
         % find location of intersection between current epipolar line and the
         % line connecting the tangent points in the mirror and direct views
@@ -120,82 +89,43 @@ for iView = 1 : 2
         % SMOOTHER, OR MATCH POINTS GOING IN BOTH DIRECTIONS THEN SOMEHOW MELD
         % THE TWO TOGETHER
 
-    %     switch length(intersect_idx)
-    %         case 0,
-            if ~any(intersect_idx)
-                % no intersections - must be one of the tangent points that
-                % match
+        if ~any(intersect_idx)
+            % no intersections - must be one of the tangent points that
+            % match
 
+            epiPts = lineToBorderPoints(epiLines(ii,:), imSize);
+            epiPts = reshape(epiPts,[2 2])';
 
-                % TO DO HERE - TRY IGNORING POINTS THAT DON'T HAVE A MATCH IN
-                % THE OTHER VIEW, AND SAVE THEM FOR LATER ONCE WE HAVE A
-                % PARTIAL 3D RECONSTRUCTION?
+            [~,nearestTanPt_idx] = findNearestPointToLine(epiPts, squeeze(full_tanPts(:,:,otherView)));
+            matchedPoints{iView}(ii,:,otherView) = full_tanPts(nearestTanPt_idx,:,otherView);
 
+        elseif all(intersect_idx & isLocalExtremum)
+            matchedPoints{iView}(ii,:,otherView) = ext_pts{otherView}(intersect_idx,:);
+        else
+            % figure out which of the two intersecting points is on the
+            % right side to match with the current direct view point
 
+            candidate_pts = ext_pts{otherView}(intersect_idx,:);
+            candidate_dist = bsxfun(@minus,candidate_pts,tangentIntersect(iView,:));
+            candidate_dist = sqrt(sum(candidate_dist.^2,2));
 
-                epiPts = lineToBorderPoints(epiLines(ii,:), imSize);
-                epiPts = reshape(epiPts,[2 2])';
-    %             dist_to_tan_points = zeros(1,2);
-    %             for itanPt = 1 : 2
-    %                 dist_to_tan_points(itanPt) = distanceToLine(epiPts(1:2), epiPts(3:4), ...
-    %                                                             squeeze(full_tanPts(itanPt,:,2)));
-    %             end
-    %             nearestTanPt_idx = (dist_to_tan_points == min(dist_to_tan_points));
-                [~,nearestTanPt_idx] = findNearestPointToLine(epiPts, squeeze(full_tanPts(:,:,otherView)));
-                matchedPoints{iView}(ii,:,otherView) = full_tanPts(nearestTanPt_idx,:,otherView);
-
-            elseif all(intersect_idx & isLocalExtremum)
-                matchedPoints{iView}(ii,:,otherView) = ext_pts{otherView}(intersect_idx,:);
+            if pt_on_near_side
+                validIdx = find(candidate_dist < tanLinesDist);
+                if isempty(validIdx)
+                    validIdx = find(candidate_dist == min(candidate_dist));
+                end
             else
-                % figure out which of the two intersecting points is on the
-                % right side to match with the current direct view point
-    %             tempMask = false(imSize);
-    %             tempMask(ext_pts{1}(ii,2),ext_pts{1}(ii,1)) = true;
-    %             overlapCheck = tempMask & interiorRegion;
-
-    %             % calculate distance from each intersection point in the mirror
-    %             % view to the index point in the direct view
-    %             candidate_pts = ext_pts{2}(intersect_idx,:);
-    %             candidate_dist = bsxfun(@minus,candidate_pts,ext_pts{1}(ii,:));
-    %             candidate_dist = sqrt(sum(candidate_dist.^2,2));
-    %             if pt_on_near_side
-    %                 % take the candidate point closest to the current point
-    %                 matched_pt_idx = find(candidate_dist == min(candidate_dist));
-    %             else
-    %                 % take the candidate point farthest from the current point
-    %                 matched_pt_idx = find(candidate_dist == max(candidate_dist));
-    %             end
-    %             matchedPoints(ii,:,2) = candidate_pts(matched_pt_idx,:);
-    %         otherwise,
-                % first, figure out which candidate points are correct side of
-                % the tangent line
-                candidate_pts = ext_pts{otherView}(intersect_idx,:);
-                candidate_dist = bsxfun(@minus,candidate_pts,tangentIntersect(iView,:));
-                candidate_dist = sqrt(sum(candidate_dist.^2,2));
-
-                if pt_on_near_side
-                    validIdx = find(candidate_dist < tanLinesDist);
-                    if isempty(validIdx)
-                        validIdx = find(candidate_dist == min(candidate_dist));
-                    end
-                else
-                    validIdx = find(candidate_dist > tanLinesDist);
-                    if isempty(validIdx)
-                        validIdx = find(candidate_dist == max(candidate_dist));
-                    end
+                validIdx = find(candidate_dist > tanLinesDist);
+                if isempty(validIdx)
+                    validIdx = find(candidate_dist == max(candidate_dist));
                 end
-
-                % the candidate point farthest from the line connecting the
-                % tangent points should be the true "edge" point
-    %             epiPts = lineToBorderPoints(epiLines(ii,:), imSize);
-    %             epiPts = reshape(epiPts,[2 2])';
-                try
-                    [~,farthestPt_idx] = findFarthestPointFromLine(squeeze(full_tanPts(:,:,otherView)), candidate_pts(validIdx,:));
-                catch
-                    keyboard
-                end
-                matchedPoints{iView}(ii,:,otherView) = candidate_pts(validIdx(farthestPt_idx),:);
             end
+
+            % the candidate point farthest from the line connecting the
+            % tangent points should be the true "edge" point
+            [~,farthestPt_idx] = findFarthestPointFromLine(squeeze(full_tanPts(:,:,otherView)), candidate_pts(validIdx,:));
+            matchedPoints{iView}(ii,:,otherView) = candidate_pts(validIdx(farthestPt_idx),:);
+        end
 
     end
 

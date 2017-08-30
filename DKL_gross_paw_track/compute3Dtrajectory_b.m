@@ -311,7 +311,7 @@ if testFrame == 0 || testFrame == size(points2d,2)     % we're at either the end
     if frameStep == 1
         isFrameCalculated(currentFrame : testFrame) = true;
     else
-        isFrameCalculated(testFrame : currentFrame) = true;
+        isFrameCalculated(1 : currentFrame) = true;
     end
     return;
 end

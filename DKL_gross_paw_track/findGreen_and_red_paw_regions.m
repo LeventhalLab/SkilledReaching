@@ -55,8 +55,9 @@ searchRegionMask = cell(1,2);
 
 for iView = 1 : 2
     tempPawMask = bwconvhull(pawMask{iView} | prev_pawMask{iView});
-    testRegion = fullProjMask & tempPawMask;
+    testRegion = bwconvhull(fullProjMask & tempPawMask,'union');
     s = regionprops(testRegion,'boundingbox');
+
     bbox_left = max(round(s.BoundingBox(1)) - projection_dilate_factor,1);
     bbox_right = min(round(s.BoundingBox(1)) + round(s.BoundingBox(3)) + projection_dilate_factor,w);
     
@@ -125,8 +126,17 @@ for iView = 1 : 2
     
     max_rdiff = max(region_rdiff{iView}(:));
     max_gdiff = max(region_gdiff{iView}(:));
-    region_rdiff_scaled{iView} = imadjust(region_rdiff{iView},[0,max_rdiff],[]);
-    region_gdiff_scaled{iView} = imadjust(region_gdiff{iView},[0,max_gdiff],[]);
+    
+    if max_rdiff > 0
+        region_rdiff_scaled{iView} = imadjust(region_rdiff{iView},[0,max_rdiff],[]);
+    else
+        region_rdiff_scaled{iView} = region_rdiff{iView};
+    end
+    if max_gdiff > 0
+        region_gdiff_scaled{iView} = imadjust(region_gdiff{iView},[0,max_gdiff],[]);
+    else
+        region_gdiff_scaled{iView} = region_gdiff{iView};
+    end
 %     region_gray{iView} = rgb2gray(region_scaled{iView});
     
     if iView == 2
@@ -233,21 +243,42 @@ for iView = 1 : 2
     end
         
     if any(final_green_seed{iView}(:)) && any(final_red_seed{iView}(:))    % red and green blobs both visible in this view
-        [~,P] = imseggeodesic(region_scaled{iView},final_green_seed{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
-        tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
-        tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,2) > Pthresh);
+        try
+            [~,P] = imseggeodesic(region_scaled{iView},final_green_seed{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,2) > Pthresh);
+        catch
+            % sometimes imseggeodesic throws an error, in which case just
+            % use the seed regions as the tempMasks
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = final_green_seed{iView};
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = final_red_seed{iView};
+            P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
+        end
+        
     elseif any(final_green_seed{iView}(:)) && all(~final_red_seed{iView}(:))    % green but not red blobs visible in this view
-        [~,P] = imseggeodesic(region_scaled{iView},final_green_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
-        tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
-        tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
-        P(:,:,3) = P(:,:,2);
-        P(:,:,2) = false(size(P,1),size(P,2));
+        try
+            [~,P] = imseggeodesic(region_scaled{iView},final_green_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+            P(:,:,3) = P(:,:,2);
+            P(:,:,2) = false(size(P,1),size(P,2));
+        catch
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = final_green_seed{iView};
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+            P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
+        end
     elseif all(~final_green_seed{iView}(:)) && any(final_red_seed{iView}(:))     % red but not green blobs visible in this view
-        [~,P] = imseggeodesic(region_scaled{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
-        tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
-        tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
-        P(:,:,3) = P(:,:,2);
-        P(:,:,1) = false(size(P,1),size(P,2));
+        try
+            [~,P] = imseggeodesic(region_scaled{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
+            P(:,:,3) = P(:,:,2);
+            P(:,:,1) = false(size(P,1),size(P,2));
+        catch
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = final_red_seed{iView};
+            P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
+        end
     elseif all(~final_green_seed{iView}(:)) && all(~final_red_seed{iView}(:))       % neither green nor red blobs visible in this view
         P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
     end
@@ -278,8 +309,8 @@ end
 % lines for the original mirror and direct blobs intersect the new mirror/direct blobs?
 
 viewMatchFlags = false(2,2);
-upper_testPt = false(h,w);upper_testPt(1,1) = true;
-lower_testPt = false(h,w);lower_testPt(h,w) = true;
+upper_testPt = false(h,w);upper_testPt(1,round(w/2)) = true;
+lower_testPt = false(h,w);lower_testPt(h,round(w/2)) = true;
 upper_new_red_mask = cell(1,2);
 lower_new_green_mask = cell(1,2);upper_new_red_mask = cell(1,2);
 lower_new_green_mask = cell(1,2);
@@ -374,18 +405,19 @@ for iView = 1 : 2
             
             min_d = [min_d_green,min_d_red,min_d_paw];
             
-            switch min(min_d)
-                case min_d_green
-                    processed_greenMask{iView}(y(ptIdx_green),x(ptIdx_green)) = true;
-                    added_pts(y(ptIdx_green),x(ptIdx_green)) = true;
-                case min_d_red
-                    processed_redMask{iView}(y(ptIdx_red),x(ptIdx_red)) = true;
-                    added_pts(y(ptIdx_red),x(ptIdx_red)) = true;
-                case min_d_paw
-                    pawMask{iView}(y(ptIdx_paw),x(ptIdx_paw)) = true;
-                    added_pts(y(ptIdx_paw),x(ptIdx_paw)) = true;
-                otherwise
-            end
+            if min(min_d) < 1000
+                switch min(min_d)
+                    case min_d_green
+                        processed_greenMask{iView}(y(ptIdx_green),x(ptIdx_green)) = true;
+                        added_pts(y(ptIdx_green),x(ptIdx_green)) = true;
+                    case min_d_red
+                        processed_redMask{iView}(y(ptIdx_red),x(ptIdx_red)) = true;
+                        added_pts(y(ptIdx_red),x(ptIdx_red)) = true;
+                    case min_d_paw
+                        pawMask{iView}(y(ptIdx_paw),x(ptIdx_paw)) = true;
+                        added_pts(y(ptIdx_paw),x(ptIdx_paw)) = true;
+                end
+            end 
         else    % there are reasonably green and/or red points along the tangent line from the other view - keep those
             processed_greenMask{iView} = processed_greenMask{iView} | upper_new_green_mask{iView};
             processed_redMask{iView} = processed_redMask{iView} | upper_new_red_mask{iView};
@@ -430,17 +462,19 @@ for iView = 1 : 2
             
             min_d = [min_d_green,min_d_red,min_d_paw];
             
-            switch min(min_d)
-                case min_d_green
-                    processed_greenMask{iView}(y(ptIdx_green),x(ptIdx_green)) = true;
-                    added_pts(y(ptIdx_green),x(ptIdx_green)) = true;
-                case min_d_red
-                    processed_redMask{iView}(y(ptIdx_red),x(ptIdx_red)) = true;
-                    added_pts(y(ptIdx_red),x(ptIdx_red)) = true;
-                case min_d_paw
-                    pawMask{iView}(y(ptIdx_paw),x(ptIdx_paw)) = true;
-                    added_pts(y(ptIdx_paw),x(ptIdx_paw)) = true;
-                otherwise
+            if min(min_d) < 1000
+                switch min(min_d)
+                    case min_d_green
+                        processed_greenMask{iView}(y(ptIdx_green),x(ptIdx_green)) = true;
+                        added_pts(y(ptIdx_green),x(ptIdx_green)) = true;
+                    case min_d_red
+                        processed_redMask{iView}(y(ptIdx_red),x(ptIdx_red)) = true;
+                        added_pts(y(ptIdx_red),x(ptIdx_red)) = true;
+                    case min_d_paw
+                        pawMask{iView}(y(ptIdx_paw),x(ptIdx_paw)) = true;
+                        added_pts(y(ptIdx_paw),x(ptIdx_paw)) = true;
+                    otherwise
+                end
             end
         else
             processed_greenMask{iView} = processed_greenMask{iView} | lower_new_green_mask{iView};

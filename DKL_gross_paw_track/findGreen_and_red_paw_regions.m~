@@ -1,6 +1,6 @@
 function [greenMask,redMask,fullMask] = findGreen_and_red_paw_regions(img, pawMask, prev_pawMask, boxCalibration, pawPref, boxRegions)
 projection_dilate_factor = 20;
-mask_dilate_factor = 30;
+% mask_dilate_factor = 30;
 
 F = boxCalibration.srCal.F;
 valid_red_lims_boxExt = [0.35,1;
@@ -55,15 +55,17 @@ searchRegionMask = cell(1,2);
 
 for iView = 1 : 2
     tempPawMask = bwconvhull(pawMask{iView} | prev_pawMask{iView});
-    testRegion = fullProjMask & tempPawMask;
+    testRegion = bwconvhull(fullProjMask & tempPawMask,'union');
     s = regionprops(testRegion,'boundingbox');
+
     bbox_left = max(round(s.BoundingBox(1)) - projection_dilate_factor,1);
     bbox_right = min(round(s.BoundingBox(1)) + round(s.BoundingBox(3)) + projection_dilate_factor,w);
     
     tempMask = false(h,w);
     tempMask(1:h,bbox_left:bbox_right) = true;
     
-    searchRegionMask{iView} = imdilate((tempMask & fullProjMask),strel('disk',projection_dilate_factor));
+    temp_searchRegion = bwconvhull(tempMask & fullProjMask,'union');
+    searchRegionMask{iView} = imdilate(temp_searchRegion,strel('disk',projection_dilate_factor));
     s = regionprops(searchRegionMask{iView},'boundingbox');
 %     s = regionprops(searchRegionMask,'boundingbox');
     
@@ -119,12 +121,22 @@ for iView = 1 : 2
     regionMask{iView} = searchRegionMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
     region_intMask = boxRegions.intMask(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
     region_extMask = boxRegions.extMask(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
-    region_pawMask{iView} = pawMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
+    region_pawMask{iView} = pawMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) | ...
+                            prev_pawMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3));
     
     max_rdiff = max(region_rdiff{iView}(:));
     max_gdiff = max(region_gdiff{iView}(:));
-    region_rdiff_scaled{iView} = imadjust(region_rdiff{iView},[0,max_rdiff],[]);
-    region_gdiff_scaled{iView} = imadjust(region_gdiff{iView},[0,max_gdiff],[]);
+    
+    if max_rdiff > 0
+        region_rdiff_scaled{iView} = imadjust(region_rdiff{iView},[0,max_rdiff],[]);
+    else
+        region_rdiff_scaled{iView} = region_rdiff{iView};
+    end
+    if max_gdiff > 0
+        region_gdiff_scaled{iView} = imadjust(region_gdiff{iView},[0,max_gdiff],[]);
+    else
+        region_gdiff_scaled{iView} = region_gdiff{iView};
+    end
 %     region_gray{iView} = rgb2gray(region_scaled{iView});
     
     if iView == 2
@@ -231,30 +243,51 @@ for iView = 1 : 2
     end
         
     if any(final_green_seed{iView}(:)) && any(final_red_seed{iView}(:))    % red and green blobs both visible in this view
-        [~,P] = imseggeodesic(region_scaled{iView},final_green_seed{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
-        tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
-        tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,2) > Pthresh);
-    elseif any(final_green_seed{iView}(:)) && all(~final_red_seed{iView}(:))    % green but not red blobs visible in this view
-        [~,P] = imseggeodesic(region_scaled{iView},final_green_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
-        tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
-        tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
-        P(:,:,3) = P(:,:,2);
-        P(:,:,2) = false(size(P,1),size(P,2));
-    elseif all(~final_green_seed{iView}(:)) && any(final_red_seed{iView}(:))     % red but not green blobs visible in this view
-        [~,P] = imseggeodesic(region_scaled{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
-        tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
-        tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
-        P(:,:,3) = P(:,:,2);
-        P(:,:,2) = false(size(P,1),size(P,2));
-    elseif all(~final_green_seed{iView}(:)) && all(~final_red_seed{iView}(:))       % neither green nor red blobs visible in this view
+        try
+            [~,P] = imseggeodesic(region_scaled{iView},final_green_seed{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,2) > Pthresh);
+        catch
+            % sometimes imseggeodesic throws an error, in which case just
+            % use the seed regions as the tempMasks
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = final_green_seed{iView};
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = final_red_seed{iView};
+            P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
+        end
         
+    elseif any(final_green_seed{iView}(:)) && all(~final_red_seed{iView}(:))    % green but not red blobs visible in this view
+        try
+            [~,P] = imseggeodesic(region_scaled{iView},final_green_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+            P(:,:,3) = P(:,:,2);
+            P(:,:,2) = false(size(P,1),size(P,2));
+        catch
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = final_green_seed{iView};
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+            P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
+        end
+    elseif all(~final_green_seed{iView}(:)) && any(final_red_seed{iView}(:))     % red but not green blobs visible in this view
+        try
+            [~,P] = imseggeodesic(region_scaled{iView},final_red_seed{iView},final_other_seed{iView},'adaptivechannelweighting',true);
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
+            P(:,:,3) = P(:,:,2);
+            P(:,:,1) = false(size(P,1),size(P,2));
+        catch
+            tempGreenMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = false;
+            tempRedMask{iView}(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3)) = (P(:,:,1) > Pthresh);
+            P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
+        end
+    elseif all(~final_green_seed{iView}(:)) && all(~final_red_seed{iView}(:))       % neither green nor red blobs visible in this view
+        P = zeros(size(region_scaled{iView},1),size(region_scaled{iView},2),3);
     end
     
     % CAN USE THE P ARRAY TO NOT TAKE POINT WITH LOWER P-VALUES IF THEY
     % OVERLAP WITH THE SHELF IN THE DIRECT OR MIRROR VIEWS
     
     regionProbs(searchRegion(iView,2):searchRegion(iView,4),searchRegion(iView,1):searchRegion(iView,3),:) = P;
-        
+
     tempGreenMask{iView} = tempGreenMask{iView} & maxGreenMask;
     tempRedMask{iView} = tempRedMask{iView} & maxRedMask;
     
@@ -262,7 +295,7 @@ for iView = 1 : 2
     processed_redMask{iView} = processMask(tempRedMask{iView},'sesize',1);
     
     %only accept blobs reasonably close to the original paw mask
-    pawTest = imdilate(pawMask{iView},strel('disk',15));
+    pawTest = imdilate(pawMask{iView} | prev_pawMask{iView},strel('disk',15));
     greenOverlap = processed_greenMask{iView} & pawTest;
     redOverlap = processed_redMask{iView} & pawTest;
     

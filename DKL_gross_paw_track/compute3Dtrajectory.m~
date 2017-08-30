@@ -1,4 +1,4 @@
-function [points3d,new_points2d] = compute3Dtrajectory_b(video, points2d, track_metadata, pawPref, boxRegions )
+function [points3d,new_points2d] = compute3Dtrajectory(video, points2d, track_metadata, pawPref, boxRegions )
 
 numFrames = size(points2d, 2);
 
@@ -98,18 +98,19 @@ while video.CurrentTime < video.Duration && video.CurrentTime >= 0
     
     if ~isFrameCalculated(currentFrame)
         [points3d{currentFrame},new_points2d,isFrameCalculated] = computeNext3Dpoints( new_points2d, points3d, currentFrame, prevFrame, video, img_ud, prev_img_ud, boxCalibration, pawPref, boxRegions, timeDirection, isFrameCalculated );
-    end
-    
+        
     % code below is for visualization purposes during debugging
     
-    old_2d{1} = old_points2d{1,currentFrame};
-    old_2d{2} = old_points2d{2,currentFrame};
-    new_2d{1} = new_points2d{1,currentFrame};
-    new_2d{2} = new_points2d{2,currentFrame};
-    showNewTracking(img_ud,old_2d,new_2d,F);
-    plot3Dpoints(points3d{currentFrame});
-    
-    prevFrame = currentFrame;
+%     old_2d{1} = old_points2d{1,currentFrame};
+%     old_2d{2} = old_points2d{2,currentFrame};
+%     new_2d{1} = new_points2d{1,currentFrame};
+%     new_2d{2} = new_points2d{2,currentFrame};
+%     showNewTracking(img_ud,old_2d,new_2d,F);
+%     plot3Dpoints(points3d{currentFrame});
+
+        prevFrame = currentFrame;
+    end
+
 end
 
 
@@ -135,7 +136,7 @@ switch pawPref
 end
 h = size(img_ud,1); w = size(img_ud,2);
 
-frame_points2d = cell(1,2);
+% frame_points2d = cell(1,2);
 % frame_points2d{1} =  new_points2d{1,currentFrame};
 % frame_points2d{2} =  new_points2d{2,currentFrame};
 
@@ -149,18 +150,36 @@ frame_points2d = cell(1,2);
 %
 %   2. the paw is only visible in one view.
 
-%   3. the paw is visible in neither view
+%   3. the paw is visible in neither view. In that case, assume we're done.
 
 bboxes = zeros(2,4);
 bboxes(1,:) = [1,1,h-1,w-1];
 bboxes(2,:) = bboxes(1,:);
+skip3Dcalc = false;
 if ~isempty(new_points2d{1, currentFrame}) && ~isempty(new_points2d{2, currentFrame})
     % paw is visible in both views
     % now, figure out if the masks line up via epipolar geometry
     new_points2d = masks2d_from_both_views( new_points2d, points3d, currentFrame, prevFrame, img_ud, prev_img_ud, boxCalibration, pawPref, boxRegions );
     isFrameCalculated(currentFrame) = true;
+elseif isempty(new_points2d{1, currentFrame}) && isempty(new_points2d{2, currentFrame})
+    % paw isn't visible in either view - assume we're done
+    switch lower(timeDirection)
+        case 'reverse'
+            isFrameCalculated(1:currentFrame) = true;
+        case 'forward'
+            isFrameCalculated(currentFrame:end) = true;
+    end
+    skip3Dcalc = true;
 else
-    new_points2d,is = masks2d_from_one_view( new_points2d, points3d, currentFrame, prevFrame, video, boxCalibration, pawPref, boxRegions, timeDirection, isFrameCalculated );
+    % only other possibility is that the paw was found in one view but not
+    % the other
+    [new_points2d,isFrameCalculated] = masks2d_from_one_view( new_points2d, points3d, currentFrame, prevFrame, video, boxCalibration, pawPref, boxRegions, timeDirection, isFrameCalculated );
+    if isempty(new_points2d{1, currentFrame}) || isempty(new_points2d{2, currentFrame})
+        % if there are no more frames where the paw is visible in both
+        % views, the masks2d_from_one_view algorithm will return 2d points
+        % for only one of the views
+        skip3Dcalc = true;
+    end
 end
     
 pawMask = cell(1,2);
@@ -168,24 +187,26 @@ tanPts = zeros(2,2,2);   % x,y,view
 
 [~,epipole] = isEpipoleInImage(F,[h,w]);
 
-ext_pts = cell(1,2);
-for iView = 1 : 2
-    try
+if ~skip3Dcalc    % don't make 3D calculations if the paw wasn't visible in either view
+    ext_pts = cell(1,2);
+    for iView = 1 : 2
         cvx_hull_idx = convhull(new_points2d{iView,currentFrame});
-    catch
-        keyboard
+
+        pawMask{iView} = poly2mask(new_points2d{iView,currentFrame}(cvx_hull_idx,1),new_points2d{iView,currentFrame}(cvx_hull_idx,2),h,w);
+        pawMask{iView} = bwconvhull(pawMask{iView},'union');
+
+        extMask = bwmorph(pawMask{iView},'remove');
+        [y,x] = find(extMask);
+        s = regionprops(extMask,'centroid');
+        ext_pts{iView} = sortClockWise(s.Centroid,[x,y]);
+        [tanPts(:,:,iView), ~] = findTangentToBlob(pawMask{iView}, epipole);
     end
-    pawMask{iView} = poly2mask(new_points2d{iView,currentFrame}(cvx_hull_idx,1),new_points2d{iView,currentFrame}(cvx_hull_idx,2),h,w);
-    pawMask{iView} = bwconvhull(pawMask{iView},'union');
 
-    extMask = bwmorph(pawMask{iView},'remove');
-    [y,x] = find(extMask);
-    s = regionprops(extMask,'centroid');
-    ext_pts{iView} = sortClockWise(s.Centroid,[x,y]);
-    [tanPts(:,:,iView), ~] = findTangentToBlob(pawMask{iView}, epipole);
+    [frame_points3D,~] = bordersTo3D_bothDirs(ext_pts, boxCalibration, bboxes, tanPts, [h,w]);
+else
+    frame_points3D{1} = [];
+    frame_points3D{2} = [];
 end
-
-[frame_points3D,~] = bordersTo3D_bothDirs(ext_pts, boxCalibration, bboxes, tanPts, [h,w]);
 
 end    % function
 
@@ -195,13 +216,13 @@ end    % function
 function new_2dpoints = masks2d_from_both_views( points2d, points3d, currentFrame, prevFrame, img_ud, prev_img_ud, boxCalibration, pawPref, boxRegions )
     
 h = size(img_ud,1);w = size(img_ud,2);
-orig_mask_dilate = 40;
+% orig_mask_dilate = 40;
 % find instances where the epipolar tangent lines  
-tanPts = zeros(2,2,2);   % x,y,view
-tanLines = zeros(2,3,2);   % x,y,view
-borderpts = zeros(2,4,2);
+% tanPts = zeros(2,2,2);   % x,y,view
+% tanLines = zeros(2,3,2);   % x,y,view
+% borderpts = zeros(2,4,2);
 pawMask = cell(1,2);
-ext_pts = cell(1,2);
+% ext_pts = cell(1,2);
 
 new_2dpoints = points2d;
 
@@ -215,16 +236,16 @@ if prevFrame > 0
     prev_points2d{2} = points2d{2,prevFrame};
 end
 
-switch lower(pawPref)
-    case 'right'
-        F = squeeze(boxCalibration.srCal.F(:,:,1));
-    case 'left'
-        F = squeeze(boxCalibration.srCal.F(:,:,2));
-end
+% switch lower(pawPref)
+%     case 'right'
+%         F = squeeze(boxCalibration.srCal.F(:,:,1));
+%     case 'left'
+%         F = squeeze(boxCalibration.srCal.F(:,:,2));
+% end
             
-[~,epipole] = isEpipoleInImage(F,[h,w]);
+% [~,epipole] = isEpipoleInImage(F,[h,w]);
 
-projMask = cell(1,2);
+% projMask = cell(1,2);
 prev_pawMask = cell(1,2);
 for iView = 1 : 2
     
@@ -274,6 +295,7 @@ pawMask = cell(1,2);
 
 new_2dpoints = points2d;
 
+
 if prevFrame > 0
     prev_points2d = cell(1,2);
     prev_points2d{1} = points2d{1,prevFrame};
@@ -288,7 +310,7 @@ switch lower(pawPref)
 end
             
 % [~,epipole] = isEpipoleInImage(F,[h,w]);
-% 
+
 % projMask = cell(1,2);
 prev_pawMask = cell(1,2);
 
@@ -300,9 +322,15 @@ end
 testFrame = currentFrame;
 while (isempty(points2d{1,testFrame}) || isempty(points2d{2,testFrame})) || testFrame == 0 || testFrame == size(points2d,2)
     testFrame = testFrame + frameStep;
+    if testFrame == 0; break; end
 end
 
 if testFrame == 0 || testFrame == size(points2d,2)     % we're at either the end or beginning of the video, no point in doing the calculations - not at an interesting part of the video
+    if frameStep == 1
+        isFrameCalculated(currentFrame : testFrame) = true;
+    else
+        isFrameCalculated(1 : currentFrame) = true;
+    end
     return;
 end
 
@@ -318,8 +346,18 @@ img_ud = double(img_ud) / 255;
 for iView = 1 : 2
 
     prev_pawMask{iView} = false(h,w);
-
+    if length(frame_points2d{iView}) < 3
+        tempMask = false(h,w);
+        for i_pt = 1 : size(frame_points2d{iView},1)
+            tempMask(frame_points2d{iView}(i_pt,2),frame_points2d{iView}(i_pt,1)) = true;
+        end
+        tempMask = imdilate(tempMask,strel('disk',1));
+    end
+try
     cvx_hull_idx = convhull(frame_points2d{iView});
+catch
+    keyboard;
+end
 
     pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
     pawMask{iView} = bwconvhull(pawMask{iView},'union');
@@ -380,7 +418,7 @@ for iFrame = currentFrame : frameStep : testFrame - frameStep
     
         % is there already a mask in this view? If so, don't change it for
         % now
-        if any(new_2dpoints{iView,iFrame})
+        if any(new_2dpoints{iView,iFrame}(:))
             frame_points2d{iView} = new_2dpoints{iView,iFrame};
         else
             
@@ -394,7 +432,21 @@ for iFrame = currentFrame : frameStep : testFrame - frameStep
                                      newRight,newBot;
                                      newLeft,newBot];
         end
+        if length(prev_points2d{iView}) == 2
+            prev_points2d{iView}(end+1,:) = [prev_points2d{iView}(1,1) + 1, prev_points2d{iView}(end,2)];
+        end
+        if isempty(prev_points2d{iView}(:))
+            % couldn't find an interpolating mask, assume we're in "garbage
+            % time" at the beginning or end of the video
+            if frameStep == 1
+                isFrameCalculated(currentFrame : testFrame) = true;
+            else
+                isFrameCalculated(1 : currentFrame) = true;
+            end
+            return;
+        end
         prev_hull_idx = convhull(prev_points2d{iView});
+
         prev_pawMask{iView} = poly2mask(prev_points2d{iView}(prev_hull_idx,1),prev_points2d{iView}(prev_hull_idx,2),h,w);
         prev_pawMask{iView} = bwconvhull(prev_pawMask{iView},'union');
         

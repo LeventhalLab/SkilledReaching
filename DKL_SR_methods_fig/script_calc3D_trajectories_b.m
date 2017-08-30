@@ -75,10 +75,7 @@ for i_rat = 3 : 4%length(sr_ratInfo)
         matList = dir('*rel_track.mat');
         if isempty(matList);continue;end
         
-        
-        
-        
-        
+
         for iMat = 1 : length(matList)   %%%%%%%% NOTE LOOP INDICES - DEBUGGING!!!!!!!
             fprintf('%s, %s, video %d of %d, %s\n', ratID, sessionDate, iMat, length(matList), matList(iMat).name);
             

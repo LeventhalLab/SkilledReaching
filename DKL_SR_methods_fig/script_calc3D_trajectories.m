@@ -86,8 +86,17 @@ for i_rat = 2 : 4%length(sr_ratInfo)
             
             trialNum = matList(iMat).name(16:18);
             
-            pawData = load(matList(iMat).name);
             matBaseName = matList(iMat).name(1:18);
+            
+            matName_3d = [matBaseName '_3dpoints.mat'];
+            matName_3d = fullfile(processedDir,matName_3d);
+            if exist(matName_3d,'file')
+                fprintf('%s already saved\n',matName_3d);
+                continue;
+            end
+            matName = fullfile(processedDir,matList(iMat).name);
+            pawData = load(matName);
+            
             
             test_vidName = [ratID '_' sessionDate '_*_' trialNum '.avi'];
             cd(rawDataDir);

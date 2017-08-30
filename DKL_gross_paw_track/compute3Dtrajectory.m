@@ -174,6 +174,12 @@ else
     % only other possibility is that the paw was found in one view but not
     % the other
     [new_points2d,isFrameCalculated] = masks2d_from_one_view( new_points2d, points3d, currentFrame, prevFrame, video, boxCalibration, pawPref, boxRegions, timeDirection, isFrameCalculated );
+    if isempty(new_points2d{1, currentFrame}) || isempty(new_points2d{2, currentFrame})
+        % if there are no more frames where the paw is visible in both
+        % views, the masks2d_from_one_view algorithm will return 2d points
+        % for only one of the views
+        skip3Dcalc = true;
+    end
 end
     
 pawMask = cell(1,2);
@@ -210,13 +216,13 @@ end    % function
 function new_2dpoints = masks2d_from_both_views( points2d, points3d, currentFrame, prevFrame, img_ud, prev_img_ud, boxCalibration, pawPref, boxRegions )
     
 h = size(img_ud,1);w = size(img_ud,2);
-orig_mask_dilate = 40;
+% orig_mask_dilate = 40;
 % find instances where the epipolar tangent lines  
-tanPts = zeros(2,2,2);   % x,y,view
-tanLines = zeros(2,3,2);   % x,y,view
-borderpts = zeros(2,4,2);
+% tanPts = zeros(2,2,2);   % x,y,view
+% tanLines = zeros(2,3,2);   % x,y,view
+% borderpts = zeros(2,4,2);
 pawMask = cell(1,2);
-ext_pts = cell(1,2);
+% ext_pts = cell(1,2);
 
 new_2dpoints = points2d;
 
@@ -230,16 +236,16 @@ if prevFrame > 0
     prev_points2d{2} = points2d{2,prevFrame};
 end
 
-switch lower(pawPref)
-    case 'right'
-        F = squeeze(boxCalibration.srCal.F(:,:,1));
-    case 'left'
-        F = squeeze(boxCalibration.srCal.F(:,:,2));
-end
+% switch lower(pawPref)
+%     case 'right'
+%         F = squeeze(boxCalibration.srCal.F(:,:,1));
+%     case 'left'
+%         F = squeeze(boxCalibration.srCal.F(:,:,2));
+% end
             
-[~,epipole] = isEpipoleInImage(F,[h,w]);
+% [~,epipole] = isEpipoleInImage(F,[h,w]);
 
-projMask = cell(1,2);
+% projMask = cell(1,2);
 prev_pawMask = cell(1,2);
 for iView = 1 : 2
     
@@ -316,13 +322,14 @@ end
 testFrame = currentFrame;
 while (isempty(points2d{1,testFrame}) || isempty(points2d{2,testFrame})) || testFrame == 0 || testFrame == size(points2d,2)
     testFrame = testFrame + frameStep;
+    if testFrame == 0; break; end
 end
 
 if testFrame == 0 || testFrame == size(points2d,2)     % we're at either the end or beginning of the video, no point in doing the calculations - not at an interesting part of the video
     if frameStep == 1
         isFrameCalculated(currentFrame : testFrame) = true;
     else
-        isFrameCalculated(testFrame : currentFrame) = true;
+        isFrameCalculated(1 : currentFrame) = true;
     end
     return;
 end
@@ -339,7 +346,15 @@ img_ud = double(img_ud) / 255;
 for iView = 1 : 2
 
     prev_pawMask{iView} = false(h,w);
-
+    if length(frame_points2d{iView}) < 3
+        tempMask = false(h,w);
+        for i_pt = 1 : size(frame_points2d{iView},1)
+            tempMask(frame_points2d{iView}(i_pt,2),frame_points2d{iView}(i_pt,1)) = true;
+        end
+        tempMask = imdilate(tempMask,strel('disk',1));
+        [y,x] = find(tempMask);
+        frame_points2d{iView} = [x,y];
+    end
     cvx_hull_idx = convhull(frame_points2d{iView});
 
     pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
@@ -401,7 +416,7 @@ for iFrame = currentFrame : frameStep : testFrame - frameStep
     
         % is there already a mask in this view? If so, don't change it for
         % now
-        if any(new_2dpoints{iView,iFrame})
+        if any(new_2dpoints{iView,iFrame}(:))
             frame_points2d{iView} = new_2dpoints{iView,iFrame};
         else
             
@@ -415,7 +430,27 @@ for iFrame = currentFrame : frameStep : testFrame - frameStep
                                      newRight,newBot;
                                      newLeft,newBot];
         end
+        if length(prev_points2d{iView}) < 3 
+            tempMask = false(h,w);
+            for i_pt = 1 : size(frame_points2d{iView},1)
+                tempMask(prev_points2d{iView}(i_pt,2),prev_points2d{iView}(i_pt,1)) = true;
+            end
+            tempMask = imdilate(tempMask,strel('disk',1));
+            [y,x] = find(tempMask);
+            prev_points2d{iView} = [x,y];
+        end
+        if isempty(prev_points2d{iView}(:))
+            % couldn't find an interpolating mask, assume we're in "garbage
+            % time" at the beginning or end of the video
+            if frameStep == 1
+                isFrameCalculated(currentFrame : testFrame) = true;
+            else
+                isFrameCalculated(1 : currentFrame) = true;
+            end
+            return;
+        end
         prev_hull_idx = convhull(prev_points2d{iView});
+
         prev_pawMask{iView} = poly2mask(prev_points2d{iView}(prev_hull_idx,1),prev_points2d{iView}(prev_hull_idx,2),h,w);
         prev_pawMask{iView} = bwconvhull(prev_pawMask{iView},'union');
         
