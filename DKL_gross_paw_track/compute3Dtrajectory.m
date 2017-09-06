@@ -227,25 +227,33 @@ pawMask = cell(1,2);
 new_2dpoints = points2d;
 
 frame_points2d = cell(1,2);
-frame_points2d{1} =  points2d{1,currentFrame};
-frame_points2d{2} =  points2d{2,currentFrame};
+prev_points2d = cell(1,2);
 
-if prevFrame > 0
-    prev_points2d = cell(1,2);
-    prev_points2d{1} = points2d{1,prevFrame};
-    prev_points2d{2} = points2d{2,prevFrame};
+for iView = 1 : 2
+    frame_points2d{iView} = points2d{iView,currentFrame};
+    if length(frame_points2d{iView}) < 3
+        tempMask = false(h,w);
+        for i_pt = 1 : size(frame_points2d{iView},1)
+            tempMask(frame_points2d{iView}(i_pt,2),frame_points2d{iView}(i_pt,1)) = true;
+        end
+        tempMask = imdilate(tempMask,strel('disk',1));
+        [y,x] = find(tempMask);
+        frame_points2d{iView} = [x,y];
+    end
+    if prevFrame > 0
+        prev_points2d{iView} = points2d{iView,prevFrame};
+        if length(prev_points2d{iView}) < 3
+            tempMask = false(h,w);
+            for i_pt = 1 : size(prev_points2d{iView},1)
+                tempMask(prev_points2d{iView}(i_pt,2),prev_points2d{iView}(i_pt,1)) = true;
+            end
+            tempMask = imdilate(tempMask,strel('disk',1));
+            [y,x] = find(tempMask);
+            prev_points2d{iView} = [x,y];
+        end
+    end
 end
 
-% switch lower(pawPref)
-%     case 'right'
-%         F = squeeze(boxCalibration.srCal.F(:,:,1));
-%     case 'left'
-%         F = squeeze(boxCalibration.srCal.F(:,:,2));
-% end
-            
-% [~,epipole] = isEpipoleInImage(F,[h,w]);
-
-% projMask = cell(1,2);
 prev_pawMask = cell(1,2);
 for iView = 1 : 2
     
@@ -256,6 +264,16 @@ for iView = 1 : 2
     else
         prev_pawMask{iView} = false(h,w);
     end
+    
+%     if length(frame_points2d{iView}) < 3
+%         tempMask = false(h,w);
+%         for i_pt = 1 : size(frame_points2d{iView},1)
+%             tempMask(frame_points2d{iView}(i_pt,2),frame_points2d{iView}(i_pt,1)) = true;
+%         end
+%         tempMask = imdilate(tempMask,strel('disk',1));
+%         [y,x] = find(tempMask);
+%         frame_points2d{iView} = [x,y];
+%     end
     
     cvx_hull_idx = convhull(frame_points2d{iView});
     pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
@@ -323,6 +341,7 @@ testFrame = currentFrame;
 while (isempty(points2d{1,testFrame}) || isempty(points2d{2,testFrame})) || testFrame == 0 || testFrame == size(points2d,2)
     testFrame = testFrame + frameStep;
     if testFrame == 0; break; end
+    if testFrame == size(points2d,2); break; end
 end
 
 if testFrame == 0 || testFrame == size(points2d,2)     % we're at either the end or beginning of the video, no point in doing the calculations - not at an interesting part of the video
@@ -358,6 +377,18 @@ for iView = 1 : 2
     cvx_hull_idx = convhull(frame_points2d{iView});
 
     pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
+    if ~any(pawMask{iView}(:))     % the mask image could be empty if identified paw points are too close together
+        tempMask = false(h,w);
+        for i_pt = 1 : size(frame_points2d{iView},1)
+            tempMask(frame_points2d{iView}(i_pt,2),frame_points2d{iView}(i_pt,1)) = true;
+        end
+        tempMask = imdilate(tempMask,strel('disk',1));
+        [y,x] = find(tempMask);
+        frame_points2d{iView} = [x,y];
+        cvx_hull_idx = convhull(frame_points2d{iView});
+        
+        pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
+    end
     pawMask{iView} = bwconvhull(pawMask{iView},'union');
 
 end
@@ -432,12 +463,21 @@ for iFrame = currentFrame : frameStep : testFrame - frameStep
         end
         if length(prev_points2d{iView}) < 3 
             tempMask = false(h,w);
-            for i_pt = 1 : size(frame_points2d{iView},1)
+            for i_pt = 1 : size(prev_points2d{iView},1)
                 tempMask(prev_points2d{iView}(i_pt,2),prev_points2d{iView}(i_pt,1)) = true;
             end
             tempMask = imdilate(tempMask,strel('disk',1));
             [y,x] = find(tempMask);
             prev_points2d{iView} = [x,y];
+        end
+        if length(frame_points2d{iView}) < 3 
+            tempMask = false(h,w);
+            for i_pt = 1 : size(frame_points2d{iView},1)
+                tempMask(frame_points2d{iView}(i_pt,2),frame_points2d{iView}(i_pt,1)) = true;
+            end
+            tempMask = imdilate(tempMask,strel('disk',1));
+            [y,x] = find(tempMask);
+            frame_points2d{iView} = [x,y];
         end
         if isempty(prev_points2d{iView}(:))
             % couldn't find an interpolating mask, assume we're in "garbage

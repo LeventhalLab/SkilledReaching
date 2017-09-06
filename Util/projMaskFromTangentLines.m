@@ -25,11 +25,16 @@ if ~any(mask(:))
     return;
 end
 
-convMask = bwconvhull(mask,'union');
-[~, tlines] = findTangentToEpipolarLine(convMask, fundMat, bbox);
+projMask = false(imSize);
+while ~any(projMask(:))
+    convMask = bwconvhull(mask,'union');
+    [~, tlines] = findTangentToEpipolarLine(convMask, fundMat, bbox);
 
-borderpts = lineToBorderPoints(tlines, imSize);
-polyPts_x = [borderpts(1,1),borderpts(1,3),borderpts(2,3),borderpts(2,1),borderpts(1,1)];
-polyPts_y = [borderpts(1,2),borderpts(1,4),borderpts(2,4),borderpts(2,2),borderpts(1,2)];
+    borderpts = lineToBorderPoints(tlines, imSize);
+    polyPts_x = [borderpts(1,1),borderpts(1,3),borderpts(2,3),borderpts(2,1),borderpts(1,1)];
+    polyPts_y = [borderpts(1,2),borderpts(1,4),borderpts(2,4),borderpts(2,2),borderpts(1,2)];
 
-projMask = poly2mask(polyPts_x,polyPts_y,imSize(1),imSize(2));
+    projMask = poly2mask(polyPts_x,polyPts_y,imSize(1),imSize(2));
+    
+    mask = imdilate(mask,strel('disk',1));    % if the original point was too small, dilate until we get an answer
+end

@@ -12,39 +12,39 @@ w_vid.FrameRate = video.FrameRate;
 open(w_vid);
 
 colList = {'red','blue'};
-
+video.CurrentTime = 1/video.FrameRate;
 while video.hasFrame
     
     iFrame = iFrame + 1;
-    
+    video.CurrentTime = iFrame / video.FrameRate;
     frm = readFrame(video);
 
     frm_ud = undistortImage(frm,cameraParams);
     
     cur_3dpoints = points3d{iFrame};
     
-    if isempty(cur_3dpoints)
-        continue;
-    end
-    if isempty(cur_3dpoints{1})
-        continue;
-    end
-    
-    for i_matchDir = 1 : 2
-        proj_pts = project3d_to_2d(cur_3dpoints{i_matchDir},boxCalibration,pawPref);
+    if ~(isempty(cur_3dpoints) || ...
+       isempty(cur_3dpoints{1}) || ...
+       isempty(cur_3dpoints{2}) || ...
+       any(isnan(cur_3dpoints{1}(:))) || ...
+       any(isnan(cur_3dpoints{2}(:))))
+   
+        for i_matchDir = 1 : 2
+            proj_pts = project3d_to_2d(cur_3dpoints{i_matchDir},boxCalibration,pawPref);
 
-        for iView = 1 : 2
+            for iView = 1 : 2
 
-            toPlot = squeeze(proj_pts(:,:,iView));
+                toPlot = squeeze(proj_pts(:,:,iView));
+                frm_ud = insertMarker(frm_ud, toPlot,'o',...
+                                      'size', markerSize, ...
+                                      'color',colList{i_matchDir});
 
-
-            frm_ud = insertMarker(frm_ud, toPlot,'o',...
-                                  'size', markerSize, ...
-                                  'color',colList{i_matchDir});
+            end
 
         end
         
     end
+    
     
     writeVideo(w_vid,frm_ud);
     
