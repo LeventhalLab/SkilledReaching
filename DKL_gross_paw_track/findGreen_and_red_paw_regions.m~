@@ -16,8 +16,7 @@ red_Pthresh_forMask = [0.8,0.8];    % direct and side views
 green_Pthresh_forMask = [0.8,0.8];    % direct and side views
 
 maxRedinGreenRegion = 0.7;    % keep green spots from being too red (whitish)
-maxGreeninRedRegion = 0.8;    % keep red spots from being too green (whitish)
-minRGdiff = 0.05;
+maxGreeninRedRegion = 0.7;    % keep red spots from being too green (whitish)
 
 intMask = boxRegions.intMask;
 
@@ -177,7 +176,6 @@ for iView = 1 : 2
     green_seed{iView} = green_seed{iView} & ~(region_scaled{iView}(:,:,1) > maxRedinGreenRegion);
     red_seed{iView} = regionMask{iView} & (region_rdiff_scaled{iView} > 0.5) & validRedRegion;
     red_seed{iView} = red_seed{iView} & ~(region_scaled{iView}(:,:,2) > maxGreeninRedRegion);
-    red_seed{iView} = red_seed{iView} & (region_rdiff{iView} > minRGdiff);
 %     other_seed{iView} = imerode((regionMask{iView} & (region_rdiff{iView}) < 0 & (region_gdiff{iView} < 0.00)),strel('disk',2));
     other_seed{iView} = imerode((~green_seed{iView} & ~red_seed{iView}),strel('disk',10));
     

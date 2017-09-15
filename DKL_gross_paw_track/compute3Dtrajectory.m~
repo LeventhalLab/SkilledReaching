@@ -232,40 +232,34 @@ prev_points2d = cell(1,2);
 for iView = 1 : 2
     frame_points2d{iView} = points2d{iView,currentFrame};
     if length(frame_points2d{iView}) < 3
-        frame_points2d{iView} = dilatePoints(frame_points2d{iView},1,[h,w]);
-    end
+        frame_poi
     cvx_hull_idx = convhull(frame_points2d{iView});
     tempMask = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
     tempMask = bwconvhull(tempMask,'union');
     
     if ~any(tempMask(:))     % length(frame_points2d{iView}) < 3
-        frame_points2d{iView} = dilatePoints(frame_points2d{iView},1,[h,w]);
-%         tempMask = false(h,w);
-%         for i_pt = 1 : size(frame_points2d{iView},1)
-%             tempMask(frame_points2d{iView}(i_pt,2),frame_points2d{iView}(i_pt,1)) = true;
-%         end
-%         tempMask = imdilate(tempMask,strel('disk',1));
-%         [y,x] = find(tempMask);
-%         frame_points2d{iView} = [x,y];
+        tempMask = false(h,w);
+        for i_pt = 1 : size(frame_points2d{iView},1)
+            tempMask(frame_points2d{iView}(i_pt,2),frame_points2d{iView}(i_pt,1)) = true;
+        end
+        tempMask = imdilate(tempMask,strel('disk',1));
+        [y,x] = find(tempMask);
+        frame_points2d{iView} = [x,y];
     end
     if prevFrame > 0
         prev_points2d{iView} = points2d{iView,prevFrame};
-        if length(prev_points2d{iView}) < 3
-            prev_points2d{iView} = dilatePoints(prev_points2d{iView},1,[h,w]);
-        end
         cvx_hull_idx = convhull(prev_points2d{iView});
         tempMask = poly2mask(prev_points2d{iView}(cvx_hull_idx,1),prev_points2d{iView}(cvx_hull_idx,2),h,w);
         tempMask = bwconvhull(tempMask,'union');
     
         if ~any(tempMask(:))     % length(prev_points2d{iView}) < 3
-            prev_points2d{iView} = dilatePoints(prev_points2d{iView},1,[h,w]);
-%             tempMask = false(h,w);
-%             for i_pt = 1 : size(prev_points2d{iView},1)
-%                 tempMask(prev_points2d{iView}(i_pt,2),prev_points2d{iView}(i_pt,1)) = true;
-%             end
-%             tempMask = imdilate(tempMask,strel('disk',1));
-%             [y,x] = find(tempMask);
-%             prev_points2d{iView} = [x,y];
+            tempMask = false(h,w);
+            for i_pt = 1 : size(prev_points2d{iView},1)
+                tempMask(prev_points2d{iView}(i_pt,2),prev_points2d{iView}(i_pt,1)) = true;
+            end
+            tempMask = imdilate(tempMask,strel('disk',1));
+            [y,x] = find(tempMask);
+            prev_points2d{iView} = [x,y];
         end
     end
 end
