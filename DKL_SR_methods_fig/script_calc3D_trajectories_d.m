@@ -20,7 +20,7 @@ markerSize = 1;
 
 h = 1086; w = 2040;
 
-for i_rat = 4 : 4%length(sr_ratInfo)
+for i_rat = 3:3%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawData_parentDir = sr_ratInfo(i_rat).directory.rawdata;

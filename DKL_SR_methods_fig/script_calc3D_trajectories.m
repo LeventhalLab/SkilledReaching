@@ -20,7 +20,7 @@ markerSize = 1;
 
 h = 1086; w = 2040;
 
-for i_rat = 2 : 4%length(sr_ratInfo)
+for i_rat = 2 : 2%length(sr_ratInfo)
     
     ratID = sr_ratInfo(i_rat).ID;
     rawData_parentDir = sr_ratInfo(i_rat).directory.rawdata;
@@ -62,6 +62,8 @@ for i_rat = 2 : 4%length(sr_ratInfo)
         else
             continue;
         end
+       
+                
         boxRegions = boxRegionsfromMatchedPoints(session_mp, [h,w]);
         session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
         
@@ -86,6 +88,11 @@ for i_rat = 2 : 4%length(sr_ratInfo)
             
             trialNum = matList(iMat).name(16:18);
             
+            if strcmp(sessionName,'20140427a') && i_rat == 2 && str2num(trialNum) > 11
+                session_mp = matchedPoints.([fullSessionName(1:end-1) 'b']);
+                session_srCal = sr_calibration_mp(session_mp,'intrinsicmatrix',K);
+                boxCalibration.srCal = session_srCal;
+            end
             matBaseName = matList(iMat).name(1:18);
             
             matName_3d = [matBaseName '_3dpoints.mat'];

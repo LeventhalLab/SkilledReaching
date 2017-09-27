@@ -104,7 +104,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             
             video = VideoReader(current_vidName);
             
-            proj_3d_vid_name = [ratID '_' sessionDate '_' trialNumStr '_3dproj.advi'];
+            proj_3d_vid_name = [ratID '_' sessionDate '_' trialNumStr '_3dproj.avi'];
             proj_3d_vid_name = fullfile(processedDir,proj_3d_vid_name);
             
             % project the 3D points onto the original video to make sure
@@ -118,10 +118,9 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             % and other relevant stats
             
             % for now, just calculate centroid of all the points
-            if ~isfield(traj3d, 'mean3Dtrajectory')
-                mean3Dtrajectory = find3DCentroids(points3d);
-                save(matName,'isPawVisible_mirror','new_points2d','points2d','points3d','timeList','track_metadata','mean3Dtrajectory');
-            end
+%             mean3Dtrajectory = find3DCentroids(points3d);
+%             
+%             save(matName,'isPawVisible_mirror','new_points2d','points2d','points3d','timeList','track_metadata','mean3Dtrajectory');
         end
         
     end

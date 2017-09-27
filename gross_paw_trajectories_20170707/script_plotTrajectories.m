@@ -95,33 +95,17 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             matName = fullfile(processedDir,matList(iMat).name);
             traj3d = load(matName);
             points3d = traj3d.points3d;
+            
+            if ~isfield(traj3d, 'mean3Dtrajectory'); continue; end
             track_metadata = traj3d.track_metadata;
+            mean3Dtrajectory = traj3d.mean3Dtrajectory;
             
             vidNameIdx = (vidListNumbers == trialNum);
             
             current_vidName = vidList(vidNameIdx).name;
             current_vidName = fullfile(rawDataDir,current_vidName);
             
-            video = VideoReader(current_vidName);
             
-            proj_3d_vid_name = [ratID '_' sessionDate '_' trialNumStr '_3dproj.advi'];
-            proj_3d_vid_name = fullfile(processedDir,proj_3d_vid_name);
-            
-            % project the 3D points onto the original video to make sure
-            % they match
-            boxCalibration = traj3d.track_metadata.boxCalibration;
-            if ~exist(proj_3d_vid_name,'file')
-                project_3dpoints_on_video(video, points3d, track_metadata,pawPref,proj_3d_vid_name)
-            end
-            
-            % calculate the 3D volume occupied by the paw, its centroid,
-            % and other relevant stats
-            
-            % for now, just calculate centroid of all the points
-            if ~isfield(traj3d, 'mean3Dtrajectory')
-                mean3Dtrajectory = find3DCentroids(points3d);
-                save(matName,'isPawVisible_mirror','new_points2d','points2d','points3d','timeList','track_metadata','mean3Dtrajectory');
-            end
         end
         
     end

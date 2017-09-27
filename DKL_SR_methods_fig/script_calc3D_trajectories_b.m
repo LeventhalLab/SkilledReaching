@@ -34,7 +34,7 @@ for i_rat = 1 : 1%length(sr_ratInfo)
     
     sessionList = sr_ratInfo(i_rat).sessionList;
     numSessions = length(sessionList);
-    for iSession = 5 : numSessions
+    for iSession = 1 : numSessions
 
         sessionName = sessionList{iSession};
         fullSessionName = [ratID '_' sessionName];

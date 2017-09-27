@@ -190,7 +190,12 @@ tanPts = zeros(2,2,2);   % x,y,view
 if ~skip3Dcalc    % don't make 3D calculations if the paw wasn't visible in either view
     ext_pts = cell(1,2);
     for iView = 1 : 2
-        cvx_hull_idx = convhull(new_points2d{iView,currentFrame});
+        try
+            cvx_hull_idx = convhull(new_points2d{iView,currentFrame});
+        catch
+            new_points2d{iView,currentFrame} = dilatePoints(new_points2d{iView,currentFrame},1,[h,w]);
+            cvx_hull_idx = convhull(new_points2d{iView,currentFrame});
+        end
 
         pawMask{iView} = poly2mask(new_points2d{iView,currentFrame}(cvx_hull_idx,1),new_points2d{iView,currentFrame}(cvx_hull_idx,2),h,w);
         pawMask{iView} = bwconvhull(pawMask{iView},'union');
@@ -234,7 +239,12 @@ for iView = 1 : 2
     if length(frame_points2d{iView}) < 3
         frame_points2d{iView} = dilatePoints(frame_points2d{iView},1,[h,w]);
     end
-    cvx_hull_idx = convhull(frame_points2d{iView});
+    try
+        cvx_hull_idx = convhull(frame_points2d{iView});
+    catch
+        frame_points2d{iView} = dilatePoints(frame_points2d{iView},1,[h,w]);
+        cvx_hull_idx = convhull(frame_points2d{iView});
+    end
     tempMask = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
     tempMask = bwconvhull(tempMask,'union');
     
@@ -253,7 +263,12 @@ for iView = 1 : 2
         if length(prev_points2d{iView}) < 3
             prev_points2d{iView} = dilatePoints(prev_points2d{iView},1,[h,w]);
         end
-        cvx_hull_idx = convhull(prev_points2d{iView});
+        try
+            cvx_hull_idx = convhull(prev_points2d{iView});
+        catch
+            prev_points2d{iView} = dilatePoints(prev_points2d{iView},1,[h,w]);
+            cvx_hull_idx = convhull(prev_points2d{iView});
+        end
         tempMask = poly2mask(prev_points2d{iView}(cvx_hull_idx,1),prev_points2d{iView}(cvx_hull_idx,2),h,w);
         tempMask = bwconvhull(tempMask,'union');
     
@@ -378,6 +393,9 @@ img = readFrame(video);
 img_ud = undistortImage(img, boxCalibration.cameraParams);
 img_ud = double(img_ud) / 255;
 
+h = video.Height;
+w = video.Width;
+
 for iView = 1 : 2
 
     prev_pawMask{iView} = false(h,w);
@@ -390,7 +408,12 @@ for iView = 1 : 2
         [y,x] = find(tempMask);
         frame_points2d{iView} = [x,y];
     end
-    cvx_hull_idx = convhull(frame_points2d{iView});
+    try
+        cvx_hull_idx = convhull(frame_points2d{iView});
+    catch
+        frame_points2d{iView} = dilatePoints(frame_points2d{iView},1,[h,w]);
+        cvx_hull_idx = convhull(frame_points2d{iView});
+    end
 
     pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
     if ~any(pawMask{iView}(:))     % the mask image could be empty if identified paw points are too close together
@@ -505,14 +528,30 @@ for iFrame = currentFrame : frameStep : testFrame - frameStep
             end
             return;
         end
-        prev_hull_idx = convhull(prev_points2d{iView});
+        try
+            prev_hull_idx = convhull(prev_points2d{iView});
+        catch
+            prev_points2d{iView} = dilatePoints(prev_points2d{iView},1,[h,w]);
+            prev_hull_idx = convhull(prev_points2d{iView});
+        end
 
         prev_pawMask{iView} = poly2mask(prev_points2d{iView}(prev_hull_idx,1),prev_points2d{iView}(prev_hull_idx,2),h,w);
         prev_pawMask{iView} = bwconvhull(prev_pawMask{iView},'union');
         
-        cvx_hull_idx = convhull(frame_points2d{iView});
+        try
+            cvx_hull_idx = convhull(frame_points2d{iView});
+        catch
+            frame_points2d{iView} = dilatePoints(frame_points2d{iView},1,[h,w]);
+            cvx_hull_idx = convhull(frame_points2d{iView});
+        end
+        
         pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
         pawMask{iView} = bwconvhull(pawMask{iView},'union');
+        if ~any(pawMask{iView}(:))
+            frame_points2d{iView} = dilatePoints(frame_points2d{iView},1,[h,w]);
+            pawMask{iView} = poly2mask(frame_points2d{iView}(cvx_hull_idx,1),frame_points2d{iView}(cvx_hull_idx,2),h,w);
+            pawMask{iView} = bwconvhull(pawMask{iView},'union');
+        end
     end
     for iView = 1 : 2
         if ~any(new_2dpoints{iView,iFrame})    % make sure we don't make the interpolated view bigger than the projection of the other view in the same frame
@@ -529,6 +568,7 @@ for iFrame = currentFrame : frameStep : testFrame - frameStep
     end 
                  
     [greenMask,redMask,fullMask] = findGreen_and_red_paw_regions(img_ud, pawMask, prev_pawMask, boxCalibration, pawPref, boxRegions);
+
     isFrameCalculated(iFrame) = true;
     for iView = 1 : 2
         edgeMask = bwmorph(fullMask{iView},'remove');
