@@ -82,29 +82,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             vidListNumbers(ii) = str2double(vidList(ii).name(25:27));
         end
         
-        for iMat = 1 : length(matList)
-            if strcmp(matList(iMat).name(1:2),'._');continue;end
-            testMat = load(matName);
-            
-            trialNumStr = matList(iMat).name(16:18);
-            trialNum = str2double(trialNumStr);
-            
-            numFrames = length(testMat.points3d);
-            
-            vidNameIdx = (vidListNumbers == trialNum);
-            
-            current_vidName = vidList(vidNameIdx).name;
-            current_vidName = fullfile(rawDataDir,current_vidName);
-            
-            video = VideoReader(current_vidName);
-            
-            frameRate = video.FrameRate;
-            break;
-        end
-        sessionTrajectories = zeros(length(matList), numFrames, 3);
-        
-        trajectories3D = NaN(length(matList),numFrames,3);
-        triggerTimes = NaN(length(matList,1));
+        sessionTrajectories = zeros(
         for iMat = 1 : length(matList)   
             fprintf('%s, %s, video %d of %d, %s\n', ratID, sessionDate, iMat, length(matList), matList(iMat).name);
             
@@ -117,18 +95,18 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             
             matName = fullfile(processedDir,matList(iMat).name);
             traj3d = load(matName);
-%             points3d = traj3d.points3d;
+            points3d = traj3d.points3d;
             
             if ~isfield(traj3d, 'mean3Dtrajectory'); continue; end
             track_metadata = traj3d.track_metadata;
-            trajectories3D(iMat,:,:) = traj3d.mean3Dtrajectory;
+            mean3Dtrajectory = traj3d.mean3Dtrajectory;
             
-            triggerTimes(iMat) = traj3d.track_metadata.triggerTime;
-        end
-        
-        smoothed_trajectories = smooth_and_align_Trajectory(trajectories3D, triggerTimes, frameRate, session_mp);
+            vidNameIdx = (vidListNumbers == trialNum);
             
-        %  WORKING HERE!!!
+            current_vidName = vidList(vidNameIdx).name;
+            current_vidName = fullfile(rawDataDir,current_vidName);
+            
+            
             
             
         end

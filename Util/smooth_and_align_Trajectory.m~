@@ -1,0 +1,11 @@
+function smooth_and_align_Trajectory(mean3Dtrajectory, triggerTime, frameRate, session_mp)
+
+% figure out where the front panel is
+
+
+% figure out where the floor is
+
+triggerFrame = triggerTime * frameRate;
+
+% set the trigger frame as frame 300
+

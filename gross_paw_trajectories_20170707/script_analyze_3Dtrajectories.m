@@ -94,6 +94,9 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             
             matName = fullfile(processedDir,matList(iMat).name);
             traj3d = load(matName);
+            
+            if isfield(traj3d, 'mean3Dtrajectory'); continue; end
+            
             points3d = traj3d.points3d;
             track_metadata = traj3d.track_metadata;
             
@@ -104,7 +107,7 @@ for i_rat = 1 : 4%length(sr_ratInfo)
             
             video = VideoReader(current_vidName);
             
-            proj_3d_vid_name = [ratID '_' sessionDate '_' trialNumStr '_3dproj.advi'];
+            proj_3d_vid_name = [ratID '_' sessionDate '_' trialNumStr '_3dproj.avi'];
             proj_3d_vid_name = fullfile(processedDir,proj_3d_vid_name);
             
             % project the 3D points onto the original video to make sure
@@ -127,5 +130,3 @@ for i_rat = 1 : 4%length(sr_ratInfo)
     end
     
 end
-            
-            

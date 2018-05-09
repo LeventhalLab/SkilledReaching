@@ -33,7 +33,7 @@ cb_spacing = 8;   % in mm
 
 for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
-        case 'cb_spacing',
+        case 'cb_spacing'
             cb_spacing = varargin{iarg + 1};
     end
 end

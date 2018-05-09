@@ -136,15 +136,6 @@ switch pawPref
 end
 h = size(img_ud,1); w = size(img_ud,2);
 
-% frame_points2d = cell(1,2);
-% frame_points2d{1} =  new_points2d{1,currentFrame};
-% frame_points2d{2} =  new_points2d{2,currentFrame};
-
-% use knowledge of where the 3D points were from the previous frame, where
-% the paw was identified in the current frame/view (if at all), the current
-% frame image, and where the paw was identified in adjacent frames to
-% estimate where it is now
-
 % 3 possibilities:
 %   1. the paw is visible in both views. In this case, 
 %
@@ -567,7 +558,11 @@ for iFrame = currentFrame : frameStep : testFrame - frameStep
         end
     end 
                  
-    [greenMask,redMask,fullMask] = findGreen_and_red_paw_regions(img_ud, pawMask, prev_pawMask, boxCalibration, pawPref, boxRegions);
+    try
+        [greenMask,redMask,fullMask] = findGreen_and_red_paw_regions(img_ud, pawMask, prev_pawMask, boxCalibration, pawPref, boxRegions);
+    catch
+        keyboard
+    end
 
     isFrameCalculated(iFrame) = true;
     for iView = 1 : 2
