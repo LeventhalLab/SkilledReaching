@@ -25,10 +25,8 @@ for iRat = 1 : numRats
         vidList = dir([ratInfo(iRat).IDstring ,'*.avi']);
         
         % pick a video at random
-        currentVidNumber = ceil(rand(1,1) * ratInfo(iRat).numVids(iSession));
-        vidName = vidList(currentVidNumber).name;
+        currentVidNumber = ceil(rand(1,1) * ratInfo(iRat).numVids
         
-        video = videoReader(vidName);
         
     end
     
