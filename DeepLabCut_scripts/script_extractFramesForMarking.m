@@ -28,7 +28,7 @@ for iRat = 1 : numRats
         currentVidNumber = ceil(rand(1,1) * ratInfo(iRat).numVids(iSession));
         vidName = vidList(currentVidNumber).name;
         
-        video = videoReader(vidName);
+        video = VideoReader(vidName);
         
     end
     
