@@ -14,7 +14,7 @@ for iarg = 1 : 2 : nargin - 1
 end
 
 fr = video.FrameRate;
-triggerFrame = round(triggerTime * fr);
+% triggerFrame = round(triggerTime * fr);
 
 randTime = rand(1,1) * range(frameTimeLimits) + frameTimeLimits(1);
 frameTime = max(triggerTime + randTime, 1);

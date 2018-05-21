@@ -70,7 +70,7 @@ for iRat = 1 : numValidRats
     numRatSessions = length(validRatInfo(iRat).sessionList);
     
     numValidSessions = 0;
-    firstTattooDate = validRatInfo(iRat).firstTattooedSession;
+    firstTattooDate = validRatInfo(iRat).firstTattooedSession);
     firstTattooDateNum = datenum(firstTattooDate,'yyyymmdd');
     validSessionList = {};
     for iRatSession = 1 : numRatSessions
@@ -112,22 +112,12 @@ for iRat = 1 : numValidRats
         % crop out bits
         cropped_img = cell(1,3);
         for iView = 1 : 3
-        	cropped_img{iView} = cur_img(ROI(iView,2) : ROI(iView,2) + ROI(iView,4), ...
-                                         ROI(iView,1) : ROI(iView,1) + ROI(iView,3), :);
-            switch iView
-                case 1
-                    cd(directViewSavePath)
-                    vidName = [validSessionList{iRatSession} '_' curFrameStr '_directView.png'];
-                case 2
-                    cd(leftViewSavePath)
-                    vidName = [validSessionList{iRatSession} '_' curFrameStr '_leftView.png'];
-                case 3
-                    cd(rightViewSavePath)
-                    vidName = [validSessionList{iRatSession} '_' curFrameStr '_rightView.png'];
-            end
-            
-            imwrite(vidName,'png');
-        end
+        	cropped_img{iView} = cur_img(ROI(iView,2) : ROI(iView2) + ROI(4), ...
+                                        
+        rightViewImg
+        
+        vidName = [validSessionList{iRatSession} '_' curFrameStr '.png'];
+        imwrite(vidName,'png');
         
     end
     
