@@ -16,8 +16,8 @@ end
 fr = video.FrameRate;
 % triggerFrame = round(triggerTime * fr);
 
-randTime = rand(1,1) * range(frameTimeLimits) + frameTimeLimits(1);
-frameTime = max(triggerTime + randTime, 1);
+randTime = rand * range(frameTimeLimits) + frameTimeLimits(1);
+frameTime = max(triggerTime + randTime, 0);
 frameTime = min(frameTime, video.Duration);
 
 video.CurrentTime = frameTime;

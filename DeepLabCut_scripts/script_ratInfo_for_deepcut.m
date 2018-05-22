@@ -25,7 +25,7 @@ for ratNum = startRatNum : endRatNum
         ratInfo(ii).sessionList{iSession} = sessionDirs(iSession).name;
         sessionDirName = fullfile(ratPathName, sessionDirs(iSession).name);
         cd(sessionDirName);
-        vidList = dir([ratInfo(iRat).IDstring ,'*.avi']);
+        vidList = dir(['R*.avi']);
         ratInfo(ii).numVids(iSession) = length(vidList);
     end
     
