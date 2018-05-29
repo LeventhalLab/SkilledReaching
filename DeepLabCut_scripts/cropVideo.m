@@ -12,19 +12,30 @@ if numROIs ~= length(destVids)
 end
 
 fr = video.FrameRate;
-video.CurrentTime = timeLimits(1);
+video.CurrentTime = timeLimits(1) + triggerTime;
 
 writeVid = cell(1,3);
 for iROI = 1 : numROIs
-    writeVID{iROI} = VideoWriter(destVids{iROI});
+    writeVid{iROI} = VideoWriter(destVids{iROI},'MPEG-4');
+    open(writeVid{iROI});
 end
 
 newFrame = cell(1,3);
-while video.CurrentTime <= timeLimits(2)
+while video.CurrentTime <= triggerTime + timeLimits(2)
     
     curFrame = readFrame(video);
     
     for iROI = 1 : numROIs
         
-        newFrame{iROI} = curFrame(ROIs(iROI,2) : ROIs(iROI,2) + ROIs(iROI,4),...
-                                  ROIs(iROI,1) : ROIs(iROI,1) + ROIs(iROI,3),:);
+        newFrame = curFrame(ROIs(iROI,2) : ROIs(iROI,2) + ROIs(iROI,4),...
+                            ROIs(iROI,1) : ROIs(iROI,1) + ROIs(iROI,3),:);
+                              
+        writeVideo(writeVid{iROI},newFrame);
+    end
+end
+
+for iROI = 1 : numROIs
+    close(writeVid{iROI});
+end
+
+clear video

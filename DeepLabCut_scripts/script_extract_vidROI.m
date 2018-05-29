@@ -45,11 +45,6 @@ ROI = [750,500,550,500;
        1,550,450,350;
        1650,550,390,350];
 
-
-% hard code coordinates for cropping direct view, left mirror, right mirror
-triggerFrame = 300;
-frameRange = [200,500];
-
 % ultimately, randomly select videos and times for cropping out images to
 % make a stack
 
@@ -63,8 +58,8 @@ for iRat = 1 : numRats
     end
 end
 
-numFramesExtracted = 0;
-while numFramesExtracted < numFramesttoExtract
+numVidsExtracted = 0;
+while numVidsExtracted < numVidsttoExtract
 
     % select a rat at random
     validRatIdx = floor(rand * numValidRats) + 1;
@@ -116,37 +111,13 @@ while numFramesExtracted < numFramesttoExtract
     currentVidNumber = floor(rand * length(vidList)) + 1;
     vidName = vidList(currentVidNumber).name;
     vidNameNumber = vidName(end-6:end-4);
-
-    video = VideoReader(vidName);
-
-    cur_img = readRandomFrame( video, 'triggertime', 1, 'frametimelimits', frameTimeLimits);
-    curFrame = round(video.CurrentTime * video.FrameRate) - 1;
-    curFrameStr = sprintf('%03d',curFrame);
-
-    clear video
-        
-    % crop out bits
-    cropped_img = cell(1,3);
-    cropBaseName = [validSessionList{validSessionIdx} '_vid' vidNameNumber '_frame' curFrameStr];
     
-    for iView = 1 : 3
-        cropped_img{iView} = cur_img(ROI(iView,2) : ROI(iView,2) + ROI(iView,4), ...
-                                     ROI(iView,1) : ROI(iView,1) + ROI(iView,3), :);
-                                 
-        switch iView
-            case 1
-                cropFrameName = fullfile(directViewSavePath,[cropBaseName '_directView.png']);
-            case 2
-                cropFrameName = fullfile(leftViewSavePath,[cropBaseName '_leftView.png']);
-            case 3
-                cropFrameName = fullfile(rightViewSavePath,[cropBaseName '_rightView.png']);
-        end
+    destVidName{1} = fullfile(directViewSavePath, [vidName(1:end-4),'_direct']);
+    destVidName{2} = fullfile(leftViewSavePath, [vidName(1:end-4),'_left']);
+    destVidName{3} = fullfile(rightViewSavePath, [vidName(1:end-4),'_right']);
 
-        imwrite(cropped_img{iView},cropFrameName,'png');
-    end
-    cd(directViewSavePath)
-    frameList = dir('*.png');
-    numFramesExtracted = length(frameList);
-%     numFramesExtracted = numFramesExtracted + 1;
+    cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
+    
+    numVidsExtracted = numVidsExtracted + 1;
 
 end

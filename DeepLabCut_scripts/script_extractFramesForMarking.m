@@ -7,7 +7,7 @@
 
 rootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 triggerTime = 1;    % seconds
-frameTimeLimits = [-1/3,1/2];    % time around trigger to extract frames
+frameTimeLimits = [-1/6,1/3];    % time around trigger to extract frames
 numFramesttoExtract = 200;
 
 % which types of videos to extract? left vs right paw, tat vs no tat

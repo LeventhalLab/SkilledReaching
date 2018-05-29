@@ -1,0 +1,6 @@
+% script to calculate calibration matrices given points labelled in Fiji
+
+% will need the camera matrix to remove distortion
+
+% 
+
