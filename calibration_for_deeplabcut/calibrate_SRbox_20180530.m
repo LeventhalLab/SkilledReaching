@@ -15,8 +15,9 @@ function [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize,v
 %           4 - right mirror
 %           5 - direct view, points visible in top mirror
 %           6 - top mirror
-%   boardSize - checkerboard size in [rows, columns]. Assume same sized
-%       board is used in the left and right views
+%   boardSize - checkerboard size in [rows, columns]. 3 x 2 array where
+%       first row is the left checkerboard, second row is the right
+%       checkerboard, and third row is the top checkerboard
 %
 % OUTPUTS:
 %   scale - scale factor by which 3D reconstruction in normalized points
@@ -110,9 +111,9 @@ t_mirror_norm = bsxfun(@rdivide,t_mirror_norm(:,1:2),t_mirror_norm(:,3));
 [wpts.top, reproj.top] = triangulate_DL(t_direct_norm, t_mirror_norm, P, P3);
 
 % calculate mean spacing between checkerboard points
-[d_horiz_left,d_vert_left] = calc_cb_spacing(wpts.left,boardSize);
-[d_horiz_right,d_vert_right] = calc_cb_spacing(wpts.right,boardSize);
-[d_horiz_top,d_vert_top] = calc_cb_spacing(wpts.top,boardSize);
+[d_horiz_left,d_vert_left] = calc_cb_spacing(wpts.left,boardSize(1,:));
+[d_horiz_right,d_vert_right] = calc_cb_spacing(wpts.right,boardSize(2,:));
+[d_horiz_top,d_vert_top] = calc_cb_spacing(wpts.top,boardSize(3,:));
 d_left = [d_horiz_left;d_vert_left];
 d_right = [d_horiz_right;d_vert_right];
 d_top = [d_horiz_top;d_vert_top];
