@@ -109,7 +109,7 @@ t_mirror_norm = bsxfun(@rdivide,t_mirror_norm(:,1:2),t_mirror_norm(:,3));
 [wpts.right, reproj.right] = triangulate_DL(r_direct_norm, r_mirror_norm, P, P2);
 [wpts.top, reproj.top] = triangulate_DL(t_direct_norm, t_mirror_norm, P, P3);
 
-% calculate mean spacing between checkerboard points     % WORKING HERE
+% calculate mean spacing between checkerboard points
 [d_horiz_left,d_vert_left] = calc_cb_spacing(wpts.left,boardSize);
 [d_horiz_right,d_vert_right] = calc_cb_spacing(wpts.right,boardSize);
 [d_horiz_top,d_vert_top] = calc_cb_spacing(wpts.top,boardSize);
@@ -121,3 +121,4 @@ d_top = [d_horiz_top;d_vert_top];
 % checkerboard points in normalized coordinates
 scale(1) = cb_spacing / mean(d_left);
 scale(2) = cb_spacing / mean(d_right);
+scale(3) = cb_spacing / mean(d_top);

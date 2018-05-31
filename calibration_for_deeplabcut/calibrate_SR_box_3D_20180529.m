@@ -111,5 +111,7 @@ for iDate = 1 : numUniqueSessions
         mp(:,:,3:4) = rightMatchedPoints;
         mp(:,:,5:6) = topMatchedPoints;
         
+        [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize,varargin)
+        
     end
 end
