@@ -100,6 +100,11 @@ for iDate = 1 : numUniqueSessions
         [ directLeftPoints, directRightPoints, directTopPoints, leftMirrorPoints, rightMirrorPoints, topMirrorPoints ] = ...
             assign_points_to_checkerboards(calibration_points, directViewLeftIdx, directViewRightIdx, directViewTopIdx, leftMirrorIdx, rightMirrorIdx, topMirrorIdx);
         
+        boardSize = zeros(3,2);
+        boardSize(1,:) = determineCheckerboardSize(directLeftPoints);
+        boardSize(2,:) = determineCheckerboardSize(directRightPoints);
+        boardSize(3,:) = determineCheckerboardSize(directTopPoints);
+        
         % match points between views
         leftMatchedPoints = matchMirrorPoints(directLeftPoints, leftMirrorPoints, 'left');
         rightMatchedPoints = matchMirrorPoints(directRightPoints, rightMirrorPoints, 'right');
@@ -111,7 +116,22 @@ for iDate = 1 : numUniqueSessions
         mp(:,:,3:4) = rightMatchedPoints;
         mp(:,:,5:6) = topMatchedPoints;
         
-        [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize,varargin)
+        [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize);
+        
+        % check that points project correctly onto the calibration image
+        % MAKE SURE POINTS ARE UNDISTORTED EARLY ON
+        % read in the .png
+        calImg = imread(pngName,'png');
+        figure
+        imshow(calImg)
+        hold on
+        
+        for iView = 1 : 2
+            left_reprojPoints(:,:,iView) = unnormalize_points(squeeze(reproj.left(:,:,iView)), K);
+            right_reprojPoints(:,:,iView) = unnormalize_points(squeeze(reproj.right(:,:,iView)), K);
+            top_reprojPoints(:,:,iView) = unnormalize_points(squeeze(reproj.top(:,:,iView)), K);
+            
+            scatter(left_pro
         
     end
 end

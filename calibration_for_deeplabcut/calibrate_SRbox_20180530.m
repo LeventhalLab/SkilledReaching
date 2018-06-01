@@ -110,10 +110,12 @@ t_mirror_norm = bsxfun(@rdivide,t_mirror_norm(:,1:2),t_mirror_norm(:,3));
 [wpts.right, reproj.right] = triangulate_DL(r_direct_norm, r_mirror_norm, P, P2);
 [wpts.top, reproj.top] = triangulate_DL(t_direct_norm, t_mirror_norm, P, P3);
 
-% calculate mean spacing between checkerboard points
-[d_horiz_left,d_vert_left] = calc_cb_spacing(wpts.left,boardSize(1,:));
-[d_horiz_right,d_vert_right] = calc_cb_spacing(wpts.right,boardSize(2,:));
-[d_horiz_top,d_vert_top] = calc_cb_spacing(wpts.top,boardSize(3,:));
+% calculate mean spacing between checkerboard points. Note subtracting one
+% from boardSize because boardSize gives number of squares but
+% calc_cb_spacing expects number of points
+[d_horiz_left,d_vert_left] = calc_cb_spacing(wpts.left,boardSize(1,:)-1);
+[d_horiz_right,d_vert_right] = calc_cb_spacing(wpts.right,boardSize(2,:)-1);
+[d_horiz_top,d_vert_top] = calc_cb_spacing(wpts.top,boardSize(3,:)-1);
 d_left = [d_horiz_left;d_vert_left];
 d_right = [d_horiz_right;d_vert_right];
 d_top = [d_horiz_top;d_vert_top];

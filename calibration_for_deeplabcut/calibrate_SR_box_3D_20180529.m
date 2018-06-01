@@ -116,7 +116,26 @@ for iDate = 1 : numUniqueSessions
         mp(:,:,3:4) = rightMatchedPoints;
         mp(:,:,5:6) = topMatchedPoints;
         
-        [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize,varargin);
+        [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize);
+        
+        % check that points project correctly onto the calibration image
+        % MAKE SURE POINTS ARE UNDISTORTED EARLY ON
+        % read in the .png
+        calImg = imread(pngName,'png');
+        figure(1)
+        set(gcf,'name',pngName);
+        imshow(calImg)
+        hold on
+        
+        for iView = 1 : 2
+            left_reprojPoints(:,:,iView) = unnormalize_points(squeeze(reproj.left(:,:,iView)), K);
+            right_reprojPoints(:,:,iView) = unnormalize_points(squeeze(reproj.right(:,:,iView)), K);
+            top_reprojPoints(:,:,iView) = unnormalize_points(squeeze(reproj.top(:,:,iView)), K);
+            
+            scatter(squeeze(left_reprojPoints(:,1,iView)),squeeze(left_reprojPoints(:,2,iView)))
+            scatter(squeeze(right_reprojPoints(:,1,iView)),squeeze(right_reprojPoints(:,2,iView)))
+            scatter(squeeze(top_reprojPoints(:,1,iView)),squeeze(top_reprojPoints(:,2,iView)))
+        end
         
     end
 end
