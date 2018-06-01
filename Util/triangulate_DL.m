@@ -14,8 +14,11 @@ function [points3d,reprojectedPoints,errors] = triangulate_DL(mp1, mp2, P1, P2, 
 % VARARGs:
 %
 % OUTPUTS:
-%   points3d - 
-%   reprojectedPoints -
+%   points3d - m x 3 array where each row is an [x,y,z] triple. Answer is
+%       in world coordinates with the origin at the camera (positive x is
+%       to the right, positive y is down, positive z is away from the
+%       camera)
+%   reprojectedPoints - reprojection of points3d onto the original image
 %   errors -
 
 refine_estimates = true;

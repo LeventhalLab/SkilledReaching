@@ -2,12 +2,26 @@
 % these are distorted images, so all points need to be undistorted using
 % the camera matrix before calculating 3D transformations
 
+% given a set of matched points in mirror views, the following will
+% calculate the world points:
+%   [points3d,reprojectedPoints,errors] = triangulate_DL(mp1, mp2, P1, P2, varargin)
+% where mp1, mp2 are arrays of matched points in the 2 views (direct and
+% mirror, respectively), P1 is the direct view camera matrix, P2 is the
+% mirror view camera matrix (calculated below)
+% 
+% to get the world points in real coordinates (origin at the camera),
+% multiply the world points by the scale factor (currently set up to give
+% an answer in mm)
+
 % will need the camera matrix to remove distortion
 computeCamParams = false;
 cal_imgFolder = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';   % cube images in the box
 % cal_imgFolder = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 camParamFile = 'cameraParameters.mat';
 camParamFile = fullfile(cal_imgFolder, camParamFile);
+
+cb_spacing = 4;   % real world spacing between calibration checkerboard vertices, in mm
+
 % camParamFile = '/Users/dan/Documents/Leventhal_lab_github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 % cb_path = '/Users/dan/Documents/Leventhal_lab_github/SkilledReaching/tattoo_track_testing/intrinsics calibration images';
 % cb_path is to checkerboard patterns for computing the camera parameters
@@ -29,9 +43,8 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 
 
 calibrationFileLabel = 'GridCalibration';   % all calibration file names should begin with this string
-m_checkerboard = 4;   % number of rows in each checkerboard
-n_checkerboard = 5;   % number of columns in each checkerboard
-checkSpacing = 8;     % checkerboard spacing in mm
+% m_checkerboard = 4;   % number of rows in each checkerboard
+% n_checkerboard = 5;   % number of columns in each checkerboard
 
 % first, load in the marked points
 
@@ -94,21 +107,22 @@ for iDate = 1 : numUniqueSessions
         pngName = strrep(csvName,'csv','png');
         
         % read in .csv file from Fiji with marked checkerboard points
-        calibration_points = readFIJI_csv(csvName);
+        calibration_points_ud = readFIJI_csv(csvName);
+        calibration_points = undistortPoints(calibration_points_ud, cameraParams);
         
         % separate the points into the checkerboard images for each view
         [ directLeftPoints, directRightPoints, directTopPoints, leftMirrorPoints, rightMirrorPoints, topMirrorPoints ] = ...
             assign_points_to_checkerboards(calibration_points, directViewLeftIdx, directViewRightIdx, directViewTopIdx, leftMirrorIdx, rightMirrorIdx, topMirrorIdx);
         
-        boardSize = zeros(3,2);
-        boardSize(1,:) = determineCheckerboardSize(directLeftPoints);
-        boardSize(2,:) = determineCheckerboardSize(directRightPoints);
-        boardSize(3,:) = determineCheckerboardSize(directTopPoints);
-        
         % match points between views
         leftMatchedPoints = matchMirrorPoints(directLeftPoints, leftMirrorPoints, 'left');
         rightMatchedPoints = matchMirrorPoints(directRightPoints, rightMirrorPoints, 'right');
         topMatchedPoints = matchMirrorPoints(directTopPoints, topMirrorPoints, 'top');
+        
+        boardSize = zeros(3,2);
+        boardSize(1,:) = determineCheckerboardSize(leftMatchedPoints(:,:,1));
+        boardSize(2,:) = determineCheckerboardSize(rightMatchedPoints(:,:,1));
+        boardSize(3,:) = determineCheckerboardSize(topMatchedPoints(:,:,1));
         
         % now have matched points. Calculate fundamental matrices, scale
         % factors, camera matrices
@@ -116,12 +130,15 @@ for iDate = 1 : numUniqueSessions
         mp(:,:,3:4) = rightMatchedPoints;
         mp(:,:,5:6) = topMatchedPoints;
         
-        [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize);
+        [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize,'cb_spacing',cb_spacing);
+        % scale(1) - left mirror, scale(2) - right mirror, scale(3) - top
+        % mirror
         
         % check that points project correctly onto the calibration image
         % MAKE SURE POINTS ARE UNDISTORTED EARLY ON
         % read in the .png
-        calImg = imread(pngName,'png');
+        calImg_ud = imread(pngName,'png');
+        calImg = undistortImage(calImg_ud, cameraParams);
         figure(1)
         set(gcf,'name',pngName);
         imshow(calImg)

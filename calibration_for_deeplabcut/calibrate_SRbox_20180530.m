@@ -1,6 +1,6 @@
 function [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize,varargin)
 % V2: changed order of mp array
-
+%
 % usage: 
 %
 % INPUTS:
@@ -22,17 +22,18 @@ function [scale,F,P1,P2,wpts,reproj] = calibrate_SRbox_20180530(K,mp,boardSize,v
 % OUTPUTS:
 %   scale - scale factor by which 3D reconstruction in normalized points
 %       must be multiplied to get coordinates in mm w.r.t. to the camera
-%       center. 2-element vector; scale(1) is for the left mirror and
-%       scale(2) is for the right mirror.
+%       center. 3-element vector; scale(1) is for the left mirror, 
+%       scale(2) is for the right mirror, scale(3) is for the top mirror.
 %   F - structure containing fundamental matrices going from direct views
-%       to mirror views. Elements are F.left and F.right for the left and
-%       right mirrors, respectively
+%       to mirror views. Elements are F.left, F.right, and F.top for the
+%       left, right, and top mirrors, respectively
 %   P1 - camera matrix for the left mirror
 %   P2 - camera matrix for the right mirror
-%       NOTE: both camera matrices above assume the direct view camera
+%   P3 - camera matrix for the top mirror
+%       NOTE: camera matrices above assume the direct view camera
 %       matrix is eye(4,3)
 
-cb_spacing = 8;   % in mm
+cb_spacing = 4;   % in mm
 
 for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
