@@ -1,7 +1,7 @@
-function [meanHSV, stdHSV] = calcHSVstats(paw_hsv, digitMask)
+function [meanHSV, stdHSV] = calcHSVstats(img_hsv, digitMask)
 %
 % INPUTS:
-%   paw_hsv - m x n x 3 array containing an hsv image
+%   img_hsv - m x n x 3 array containing an hsv image
 %   digitMask - binary mask of the digit (or other object)
 %
 % OUTPUTS:
@@ -13,7 +13,7 @@ function [meanHSV, stdHSV] = calcHSVstats(paw_hsv, digitMask)
     idx = squeeze(digitMask);
     idx = idx(:);
     for jj = 1 : 3
-        colPlane = squeeze(paw_hsv(:,:,jj));
+        colPlane = squeeze(img_hsv(:,:,jj));
         colPlane = colPlane(:);
         if jj == 1
             meanAngle = wrapTo2Pi(circ_mean(colPlane(idx)*2*pi));

@@ -1,15 +1,14 @@
 function HSVdist = calcHSVdist(im_hsv, targetVal)
 %
 %   calculate the distance in hsv color space between each pixel in an hsv
-%   image and targetVal (absolute values)
+%   image and targetVal
 %
 % INPUTS
 %   im_hsv = image in hsv color space
 %   targetVal - hsv triple
 %
 % OUTPUTS
-%   HSVdist - h x w x 3 array containing the distance from each pixel in
-%       im_hsv to targetVal in HSV space
+%   HSVdist - dis
 
 HSVdist = zeros(size(im_hsv));
 
