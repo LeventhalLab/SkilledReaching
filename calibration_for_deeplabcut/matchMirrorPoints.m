@@ -7,10 +7,8 @@ function matchedPoints = matchMirrorPoints(directPoints, mirrorPoints, mirrorVie
 %   m - number of checkerboard rows
 %   n - number of checkerboard columns
 
-% I think for both left and right views, can just order points from top to
-% bottom to match them. Do we need to know which rows they're in too?
 
-squareSize = 8;    % mm
+squareSize = 4;    % mm
 
 if size(mirrorPoints,1) ~= size(directPoints,1)
     error('mirrorPoints and directPoints must have the same number of rows')

@@ -7,8 +7,8 @@ hsvThresh = [0,0.1,0.5,1,0.5,1;
              0.33,0.1,0.3,1,0.5,1;
              0.66,0.1,0.3,1,0.5,1];
 
-
-
+anticipatedBoardSize = [4 5];
+minCheckArea = 250;
 
 imgList = dir('GridCalibration_*.png');
 % load test image
@@ -18,8 +18,8 @@ h = size(A,1); w = size(A,2);
 % third row left mirror, fourth row right mirror
 rightMirrorLeftEdge = 1700;
 ROIs = [700,375,650,600;
-        
         750,1,600,400;
+        1,400,350,500;
         rightMirrorLeftEdge,400,w-rightMirrorLeftEdge,500];
    
 cd(calImageDir);
@@ -30,6 +30,7 @@ for iImg = 1 : length(imgList)
     curImgName = imgList(iImg).name;
     
     A = imread(curImgName);
+    Ahsv = rgb2hsv(A);
     
     figure(1)
     imshow(A)
@@ -37,6 +38,83 @@ for iImg = 1 : length(imgList)
 
     borderMask = findColoredBorder(Ahsv, hsvThresh, ROIs);
     
-    figure(3);imshow(Amask);
+    % now find the checkerboard points
+    checkBoardMask = false(h,w,6);
+    for iMask = 1 : 6
+        checkBoardMask(:,:,iMask) = imfill(squeeze(borderMask(:,:,iMask)),'holes') & ~squeeze(borderMask(:,:,iMask));
+%         checkBoardMask(:,:,iMask) = imdilate(squeeze(checkBoardMask(:,:,iMask)), strel('disk',5));
+        
+        % find the bounding box for the current checkerboard
+        bboxstats = regionprops(squeeze(checkBoardMask(:,:,iMask)),'boundingbox');
+        bbox = round(bboxstats.BoundingBox);
+        
+        testImg = A .* repmat(uint8(squeeze(checkBoardMask(:,:,iMask))),1,1,3);
+        testRegion = testImg(bbox(2):bbox(2)+bbox(4),bbox(1):bbox(1)+bbox(3),:);
+        testRegion = imsharpen(testRegion);
+        
+        % now detect this checkerboard
+        testRegionGray = rgb2gray(testRegion);
+        checkThresh = graythresh(testRegionGray);
+        check_bw = double(testRegionGray)/255 > checkThresh;
+        check_bw = imopen(check_bw,strel('disk',3));
+        
+        [isolated_checks, eroded_checks, ~] = isolateCheckerboardSquares(check_bw,anticipatedBoardSize,'minarea',minCheckArea);
+        isolated_checks_white = isolated_checks | eroded_checks;
+        
+        check_bw = double(testRegionGray)/255 < checkThresh & double(testRegionGray)/255 > 0;
+        check_bw = imopen(check_bw,strel('disk',3));
+        [isolated_checks, eroded_checks, ~] = isolateCheckerboardSquares(check_bw,anticipatedBoardSize,'minarea',minCheckArea);
+        isolated_checks_black = isolated_checks | eroded_checks;
+
+        % find the centroids for the white and black squares
+        white_check_props = regionprops(isolated_checks_white,'Centroid');
+        black_check_props = regionprops(isolated_checks_black,'Centroid');
+        
+        numWhiteChecks = length(white_check_props);
+        numBlackChecks = length(black_check_props);
+        numChecks = numWhiteChecks + numBlackChecks;
+        checkCenters = zeros(numChecks,2);
+        for iCheck = 1 : numChecks
+            if iCheck <= numWhiteChecks
+                checkCenters(iCheck,:) = white_check_props(iCheck).Centroid;
+            else
+                checkCenters(iCheck,:) = black_check_props(iCheck - numWhiteChecks).Centroid;
+            end
+        end
+        
+%         figure(3);
+%         hold off
+%         imshow(testRegion)
+%         
+%         foundValidCorners = false;
+%         iCount = 0;
+%         while ~foundValidCorners
+%             [imagePoints,boardSize] = detectCheckerboardPoints(isolated_checks);
+%             if all(boardSize == anticipatedBoardSize) || all(boardSize == fliplr(anticipatedBoardSize))
+%                 foundValidCorners = true;
+%             end
+%             check_bw = imdilate(check_bw,strel('disk',1));
+%             iCount = iCount + 1;
+%             if iCount > 10
+%                 keyboard
+%             end
+%         end
+%         [imagePoints,boardSize] = detectCheckerboardPoints(testRegion);
+%         hold on
+%         scatter(checkCenters(:,1),checkCenters(:,2),50,'b','filled')
+
+    end
+    dispMask = false(h,w);
+    for iMask = 1 : 6
+        dispMask = dispMask | squeeze(checkBoardMask(:,:,iMask));
+    end
+    masked_img = A .* repmat(uint8(dispMask),1,1,3);
+    
+    figure(2)
+    hold off
+    imshow(masked_img)
+    hold on
+    for iMask = 1 : 
+    
 end
 
