@@ -170,6 +170,7 @@ for iImg = 1 : length(imgList)
         try
             all_check_centers(:,1,iMask) = checkCenters(:,1)+bbox(1)-1;
         catch
+            keyboard
         end
         
         all_check_centers(:,2,iMask) = checkCenters(:,2)+bbox(2)-1;

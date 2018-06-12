@@ -6,6 +6,8 @@ calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibr
 hsvThresh = [0,0.1,0.5,1,0.5,1;
              0.33,0.1,0.3,1,0.5,1;
              0.66,0.1,0.3,1,0.5,1];
+         
+RGBdistThresh = 0.15;
 
 anticipatedBoardSize = [4 5];
 minCheckArea = 200;
@@ -25,7 +27,7 @@ ROIs = [700,375,650,600;
 cd(calImageDir);
 
 
-for iImg = 9 : length(imgList)
+for iImg = 1 : length(imgList)
     
     curImgName = imgList(iImg).name;
     
@@ -53,7 +55,8 @@ for iImg = 9 : length(imgList)
         
         % find the bounding box for the current checkerboard
         bboxstats = regionprops(squeeze(borderMask(:,:,iMask)),'boundingbox');
-        bbox = round(bboxstats.BoundingBox);
+        
+        bbox = floor(bboxstats.BoundingBox);
         
         testImg = A .* repmat(uint8(squeeze(checkBoardMask(:,:,iMask))),1,1,3);
 %         testImg_withBorder = A .* repmat(uint8(squeeze(fullRegionMask(:,:,iMask))),1,1,3);
@@ -102,17 +105,43 @@ for iImg = 9 : length(imgList)
         blackCheckDist = zeros(size(testRegionFull));
         whiteCheckDist = zeros(size(testRegionFull));
         borderDist = zeros(size(testRegionFull));
-        blackCheckDist(:,:,1) = double(testRegionFull(:,:,1)) / 255 - mean_black_checks_R;
-        blackCheckDist(:,:,2) = double(testRegionFull(:,:,2)) / 255 - mean_black_checks_G;
-        blackCheckDist(:,:,3) = double(testRegionFull(:,:,3)) / 255 - mean_black_checks_B;
+        blackCheckDist(:,:,1) = abs(double(testRegionFull(:,:,1)) / 255 - mean_black_checks_R);
+        blackCheckDist(:,:,2) = abs(double(testRegionFull(:,:,2)) / 255 - mean_black_checks_G);
+        blackCheckDist(:,:,3) = abs(double(testRegionFull(:,:,3)) / 255 - mean_black_checks_B);
         
-        whiteCheckDist(:,:,1) = double(testRegionFull(:,:,1)) / 255 - mean_white_checks_R;
-        whiteCheckDist(:,:,2) = double(testRegionFull(:,:,2)) / 255 - mean_white_checks_G;
-        whiteCheckDist(:,:,3) = double(testRegionFull(:,:,3)) / 255 - mean_white_checks_B;
+        whiteCheckDist(:,:,1) = abs(double(testRegionFull(:,:,1)) / 255 - mean_white_checks_R);
+        whiteCheckDist(:,:,2) = abs(double(testRegionFull(:,:,2)) / 255 - mean_white_checks_G);
+        whiteCheckDist(:,:,3) = abs(double(testRegionFull(:,:,3)) / 255 - mean_white_checks_B);
         
-        borderDist(:,:,1) = double(testRegionFull(:,:,1)) / 255 - mean_border_R;
-        borderDist(:,:,2) = double(testRegionFull(:,:,2)) / 255 - mean_border_G;
-        borderDist(:,:,3) = double(testRegionFull(:,:,3)) / 255 - mean_border_B;
+%         borderDist(:,:,1) = abs(double(testRegionFull(:,:,1)) / 255 - mean_border_R);
+%         borderDist(:,:,2) = abs(double(testRegionFull(:,:,2)) / 255 - mean_border_G);
+%         borderDist(:,:,3) = abs(double(testRegionFull(:,:,3)) / 255 - mean_border_B);
+        
+        newBlackCheckMask = blackCheckDist(:,:,1) < RGBdistThresh & ...
+                            blackCheckDist(:,:,2) < RGBdistThresh & ...
+                            blackCheckDist(:,:,3) < RGBdistThresh;
+        newWhiteCheckMask = whiteCheckDist(:,:,1) < RGBdistThresh & ...
+                            whiteCheckDist(:,:,2) < RGBdistThresh & ...
+                            whiteCheckDist(:,:,3) < RGBdistThresh;
+                        
+        finalBlackCheckMask = false(size(newBlackCheckMask));
+        L = bwlabel(isolated_checks_black);
+        for i_L = 1 : length(L)
+            finalBlackCheckMask = finalBlackCheckMask | imreconstruct(L==i_L, newBlackCheckMask);
+        end
+        finalBlackCheckMask = isolateCheckerboardSquares(finalBlackCheckMask,anticipatedBoardSize,'minarea',minCheckArea);
+        
+        finalWhiteCheckMask = false(size(newWhiteCheckMask));
+        L = bwlabel(isolated_checks_white);
+        for i_L = 1 : length(L)
+            finalWhiteCheckMask = finalWhiteCheckMask | imreconstruct(L==i_L, newWhiteCheckMask);
+        end
+        finalWhiteCheckMask = isolateCheckerboardSquares(finalWhiteCheckMask,anticipatedBoardSize,'minarea',minCheckArea);
+%         newBorderMask = borderDist(:,:,1) < RGBdistThresh & ...
+%                             borderDist(:,:,2) < RGBdistThresh & ...
+%                             borderDist(:,:,3) < RGBdistThresh;
+                        
+                        
         
 %         meanRGB_white_checks = 
 
@@ -139,7 +168,12 @@ for iImg = 9 : length(imgList)
             end
         end
         
-        all_check_centers(:,1,iMask) = checkCenters(:,1)+bbox(1)-1;
+        try
+            all_check_centers(:,1,iMask) = checkCenters(:,1)+bbox(1)-1;
+        catch
+            keyboard
+        end
+        
         all_check_centers(:,2,iMask) = checkCenters(:,2)+bbox(2)-1;
 
     end
@@ -149,13 +183,13 @@ for iImg = 9 : length(imgList)
     end
     masked_img = A .* repmat(uint8(dispMask),1,1,3);
     
-%     figure(2)
-%     hold off
-%     imshow(masked_img)
-%     hold on
-%     for iMask = 1 : 6
-%         scatter(squeeze(all_check_centers(:,1,iMask)),squeeze(all_check_centers(:,2,iMask)),50,'b','filled')
-%     end
+    figure(2)
+    hold off
+    imshow(masked_img)
+    hold on
+    for iMask = 1 : 6
+        scatter(squeeze(all_check_centers(:,1,iMask)),squeeze(all_check_centers(:,2,iMask)),50,'b','filled')
+    end
 
     calPtsName = strrep(imgList(iImg).name,'png','mat');
     calPtsName = fullfile(calImageDir,calPtsName);
