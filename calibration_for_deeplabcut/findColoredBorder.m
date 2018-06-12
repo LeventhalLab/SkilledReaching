@@ -1,9 +1,12 @@
-function [ imgMask ] = findColoredBorder( img_hsv, HSVlimits, ROIs )
+function [ initBorderMask, imgMask ] = findColoredBorder( img_hsv, HSVlimits, ROIs )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
 % INPUTS
-
+%   img_hsv
+%   HSVlimits
+%   ROIs
+%
 % OUTPUTS
 %   imgMask - mask images - h x w x 6 stored in the following order:
 %       1 - direct view red
@@ -34,11 +37,13 @@ mirrorView_hsv = zeros(h,w,3,3);
 for iView = 1 : numMirrors
     mirrorMasks(ROIs(iView+1,2):ROIs(iView+1,2)+ROIs(iView+1,4)-1, ROIs(iView+1,1):ROIs(iView+1,1)+ROIs(iView+1,3)-1,iView) = true;
     mirrorView_hsv(:,:,:,iView) = img_hsv .* repmat(double(squeeze(mirrorMasks(:,:,iView))),1,1,3);
+    mirrorOnlyMasks(:,:,iView) = mirrorMasks(:,:,iView);
     mirrorMasks(:,:,iView) = directMask | squeeze(mirrorMasks(:,:,iView));
 end
     
 % find seed regions
 initSeedMasks = false(h,w,3);
+initBorderMask = false(h,w,6);
 denoisedMasks = false(h,w,3);
 meanHSV = zeros(3,2,3);    % 3 colors by 2 regions by 3 values
 stdHSV = zeros(3,2,3);
@@ -56,8 +61,11 @@ for iColor = 1 : 3
     denoisedMasks(:,:,iColor) = imclose(squeeze(denoisedMasks(:,:,iColor)), SE);
     
     % find stats for colors inside the mask region
-    mirrorBorderMask = squeeze(denoisedMasks(:,:,iColor)) & squeeze(mirrorMasks(:,:,iColor));
+    mirrorBorderMask = squeeze(denoisedMasks(:,:,iColor)) & squeeze(mirrorOnlyMasks(:,:,iColor));
     directBorderMask = squeeze(denoisedMasks(:,:,iColor)) & directMask;
+    initBorderMask(:,:,2*iColor-1) = directBorderMask;
+    initBorderMask(:,:,2*iColor) = mirrorBorderMask;
+
     [meanHSV(iColor,1,:),stdHSV(iColor,1,:)] = calcHSVstats(img_hsv, directBorderMask);
     [meanHSV(iColor,2,:),stdHSV(iColor,2,:)] = calcHSVstats(img_hsv, mirrorBorderMask);
     
