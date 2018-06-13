@@ -27,7 +27,7 @@ ROIs = [700,375,650,600;
 cd(calImageDir);
 
 
-for iImg = 1 : length(imgList)
+for iImg = 9 : length(imgList)
     
     curImgName = imgList(iImg).name;
     
@@ -37,7 +37,7 @@ for iImg = 1 : length(imgList)
 %     figure(1)
 %     imshow(A)
     
-    [initBorderMask, borderMask] = findColoredBorder(Ahsv, hsvThresh, ROIs);
+    [initBorderMask, borderMask] = findColoredBorder(Ahsv, hsvThresh, ROIs, anticipatedBoardSize);
     
     % now find the checkerboard points
     checkBoardMask = false(h,w,6);
@@ -55,6 +55,7 @@ for iImg = 1 : length(imgList)
         
         % find the bounding box for the current checkerboard
         bboxstats = regionprops(squeeze(borderMask(:,:,iMask)),'boundingbox');
+        
         bbox = floor(bboxstats.BoundingBox);
         
         testImg = A .* repmat(uint8(squeeze(checkBoardMask(:,:,iMask))),1,1,3);
