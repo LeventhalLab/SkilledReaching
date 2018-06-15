@@ -71,17 +71,17 @@ for iMask = 1 : 6
 end
 masked_img = A .* repmat(uint8(dispMask),1,1,3);
 
-% figure(1)
-% hold off
-% imshow(A)
-% hold on
-% for iMask = 1 : 6
-%     scatter(squeeze(all_check_centers(:,1,iMask)),squeeze(all_check_centers(:,2,iMask)),50,'b','filled')
-% end
+figure(1)
+hold off
+imshow(A)
+hold on
+for iMask = 1 : 6
+    scatter(squeeze(all_check_centers(:,1,iMask)),squeeze(all_check_centers(:,2,iMask)),50,'b','filled')
+end
 
 calPtsName = strrep(imgList(iImg).name,'png','mat');
 calPtsName = fullfile(calImageDir,calPtsName);
-save(calPtsName,'all_check_centers');
+% save(calPtsName,'all_check_centers');
 
 
 end

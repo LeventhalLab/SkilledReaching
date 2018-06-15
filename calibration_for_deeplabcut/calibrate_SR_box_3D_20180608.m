@@ -1,4 +1,5 @@
 % script to calculate calibration matrices given points labelled in Fiji
+% (or anywhere else)
 % these are distorted images, so all points need to be undistorted using
 % the camera matrix before calculating 3D transformations
 
@@ -64,13 +65,13 @@ calibrationFileLabel = 'GridCalibration';   % all calibration file names should 
 % 77-80: top direct view outline
 % 81-84: right direct view outline
 
-numCheckPts = 12;
-directViewLeftIdx = 1 : numCheckPts;
-directViewTopIdx = directViewLeftIdx(end) + 1 : numCheckPts * 2;
-directViewRightIdx = directViewTopIdx(end) + 1 : numCheckPts * 3;
-leftMirrorIdx = directViewRightIdx(end) + 1 : numCheckPts * 4;
-topMirrorIdx = leftMirrorIdx(end) + 1 : numCheckPts * 5;
-rightMirrorIdx = topMirrorIdx(end) + 1 : numCheckPts * 6;
+% numCheckPts = 12;
+% directViewLeftIdx = 1 : numCheckPts;
+% directViewTopIdx = directViewLeftIdx(end) + 1 : numCheckPts * 2;
+% directViewRightIdx = directViewTopIdx(end) + 1 : numCheckPts * 3;
+% leftMirrorIdx = directViewRightIdx(end) + 1 : numCheckPts * 4;
+% topMirrorIdx = leftMirrorIdx(end) + 1 : numCheckPts * 5;
+% rightMirrorIdx = topMirrorIdx(end) + 1 : numCheckPts * 6;
 
 cd(cal_imgFolder);
 cal_imgList = dir([calibrationFileLabel '_*.png']);
@@ -98,22 +99,43 @@ for iDate = 1 : numUniqueSessions
 
     sessionMATlist = dir(test_MAT_string);
     
-%     num_csv = length(sessionCSVlist);
+    num_mat = length(sessionMATlist);
     
-    mp = zeros(numCheckPts,2,6);
-    for i_mat = 1 : num_csv
+    
+    for i_mat = 1 : num_mat
         
-        matName = sessionCSVlist(i_csv).name;
-        pngName = strrep(csvName,'csv','png');
+        matName = sessionMATlist(i_mat).name;
+        pngName = strrep(matName,'mat','png');
         
-        % read in .csv file from Fiji with marked checkerboard points
-        calibration_points_ud = readFIJI_csv(csvName);
-        calibration_points = undistortPoints(calibration_points_ud, cameraParams);
+        % read in .mat file with identified points
+        load(matName);
+        
+        % check that points project correctly onto the calibration image
+        % MAKE SURE POINTS ARE UNDISTORTED EARLY ON
+        % read in the .png
+        calImg = imread(pngName,'png');
+        calImg_ud = undistortImage(calImg, cameraParams);
+        figure(1)
+        set(gcf,'name',pngName);
+        imshow(calImg_ud)
+        hold on
+        
+        
+        calibration_points = zeros(size(all_check_centers));
+        for iMask = 1 : 6
+            calibration_points(:,:,iMask) = undistortPoints(squeeze(all_check_centers(:,:,iMask)), cameraParams);
+        end
         
         % separate the points into the checkerboard images for each view
-        [ directLeftPoints, directRightPoints, directTopPoints, leftMirrorPoints, rightMirrorPoints, topMirrorPoints ] = ...
-            assign_points_to_checkerboards(calibration_points, directViewLeftIdx, directViewRightIdx, directViewTopIdx, leftMirrorIdx, rightMirrorIdx, topMirrorIdx);
+%         [ directLeftPoints, directRightPoints, directTopPoints, leftMirrorPoints, rightMirrorPoints, topMirrorPoints ] = ...
+%             assign_points_to_checkerboards(calibration_points, directViewLeftIdx, directViewRightIdx, directViewTopIdx, leftMirrorIdx, rightMirrorIdx, topMirrorIdx);
         
+        directTopPoints = calibration_points(:,:,1);
+        topMirrorPoints = calibration_points(:,:,2);
+        directLeftPoints = calibration_points(:,:,3);
+        leftMirrorPoints = calibration_points(:,:,4);
+        directRightPoints = calibration_points(:,:,5);
+        rightMirrorPoints = calibration_points(:,:,6);
         % match points between views
         leftMatchedPoints = matchMirrorPoints(directLeftPoints, leftMirrorPoints, 'left');
         rightMatchedPoints = matchMirrorPoints(directRightPoints, rightMirrorPoints, 'right');
@@ -124,8 +146,9 @@ for iDate = 1 : numUniqueSessions
         boardSize(2,:) = determineCheckerboardSize(rightMatchedPoints(:,:,1));
         boardSize(3,:) = determineCheckerboardSize(topMatchedPoints(:,:,1));
         
-        % now have matched points. Calculate fundamental matrices, scale
-        % factors, camera matrices
+        % now have matched poidfafsfnts. Calculate fundamental matrices, scale
+        % factors, camera mscratrices
+        mp = zeros(size(calibration_points));
         mp(:,:,1:2) = leftMatchedPoints;
         mp(:,:,3:4) = rightMatchedPoints;
         mp(:,:,5:6) = topMatchedPoints;
@@ -134,15 +157,7 @@ for iDate = 1 : numUniqueSessions
         % scale(1) - left mirror, scale(2) - right mirror, scale(3) - top
         % mirror
         
-        % check that points project correctly onto the calibration image
-        % MAKE SURE POINTS ARE UNDISTORTED EARLY ON
-        % read in the .png
-        calImg_ud = imread(pngName,'png');
-        calImg = undistortImage(calImg_ud, cameraParams);
-        figure(1)
-        set(gcf,'name',pngName);
-        imshow(calImg)
-        hold on
+
         
         for iView = 1 : 2
             left_reprojPoints(:,:,iView) = unnormalize_points(squeeze(reproj.left(:,:,iView)), K);

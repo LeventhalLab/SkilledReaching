@@ -5,7 +5,7 @@ function [newMask, erodedMask, numIterations] = isolateCheckerboardSquares(oldMa
 % OUTPUTS
 %   newMask = binary image with checkerboard points separated
 
-minArea = 500;   % pixels
+minArea = 150;   % pixels
 minSolidity = 0.9;
 
 for iarg = 1 : 2 : nargin - 2
@@ -29,7 +29,7 @@ for iObj = 1 : length(rstats)
 end
 
 cur_L = bwlabel(curMask);
-numRegions = max(L(:));
+numRegions = max(cur_L(:));
 numIterations = 0;
 erodedMask = false(size(curMask));
 while numRegions < prod(boardSize) / 2

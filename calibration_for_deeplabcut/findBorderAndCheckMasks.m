@@ -201,18 +201,39 @@ cvHull = bwconvhull(tempMask);
 ROI_hsv = img_hsv(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
 img_rgb = hsv2rgb(ROI_hsv);
 img_gray = rgb2gray(img_rgb);
+img_sharp = imsharpen(img_gray,'radius',3,'amount',1.20);
+img_gray = adapthisteq(img_gray);
 % img_r = squeeze(img_rgb(:,:,1)); img_r = img_r(:);
 % img_g = squeeze(img_rgb(:,:,2)); img_g = img_g(:);
 % img_b = squeeze(img_rgb(:,:,3)); img_b = img_b(:);
 
-testGray = img_gray .* double(cvHull);
-checkThresh = graythresh(testGray);
+% testGray = img_gray .* double(cvHull);
+% checks_white = imbinarize(img_gray,'adaptive');
+testGray = img_sharp(:);
+testGray = testGray(cvHull(:));
 
-checks_white = testGray > checkThresh;
-[isolated_checks_white, ~, ~] = isolateCheckerboardSquares(checks_white,anticipatedBoardSize,'minarea',minCheckArea);
+% checkEdges = edge(img_gray,'canny',[0.1,0.2]);
 
-checks_black = testGray < checkThresh & testGray > 0;
-[isolated_checks_black, ~, ~] = isolateCheckerboardSquares(checks_black,anticipatedBoardSize,'minarea',minCheckArea);
+% checkThresh = graythresh(testGray);
+checkThresh = multithresh(testGray,2);
+checkThresh(1) = checkThresh(1) + 0.1;
+checkThresh(2) = max(checkThresh(2) - 0.1, checkThresh(1));
+checks = imquantize(img_sharp, checkThresh);
+
+% checks_white = imbinarize(img_gray, checkThresh);
+checks_white = checks == 1;
+checks_white = checks_white & cvHull;% & ~checkEdges;
+% checks_white = imopen(checks_white,strel('disk',3));
+% checks_white = imclose(checks_white,strel('disk',3));
+[isolated_checks_white, eroded_white, ~] = isolateCheckerboardSquares(checks_white,anticipatedBoardSize,'minarea',minCheckArea);
+
+% checks_black = img_gray < checkThresh;
+checks_black = checks == 3;
+% checks_black = ~imbinarize(img_gray,'adaptive');
+checks_black = checks_black & cvHull;% & ~checkEdges;
+% checks_black = imopen(checks_black,strel('disk',3));
+% checks_black = imclose(checks_black,strel('disk',3));
+[isolated_checks_black, eroded_black, ~] = isolateCheckerboardSquares(checks_black,anticipatedBoardSize,'minarea',minCheckArea);
 
 
 % meanRGB = cell(1,3);
@@ -261,10 +282,10 @@ black_checks = black_checks & fullBorder;
 white_checks = white_checks | isolated_checks_white;
 black_checks = black_checks | isolated_checks_black;
 
-white_checks = imopen(white_checks,strel('disk',3));
-white_checks = imclose(white_checks,strel('disk',3));
-black_checks = imopen(black_checks,strel('disk',3));
-black_checks = imclose(black_checks,strel('disk',3));
+% white_checks = imopen(white_checks,strel('disk',3));
+% white_checks = imclose(white_checks,strel('disk',3));
+% black_checks = imopen(black_checks,strel('disk',3));
+% black_checks = imclose(black_checks,strel('disk',3));
 
 white_check_interior_overlap = white_checks & borderInterior;
 black_check_interior_overlap = black_checks & borderInterior;
