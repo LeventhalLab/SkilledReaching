@@ -1,4 +1,4 @@
-function [newMask, erodedMask, numIterations] = isolateCheckerboardSquares(oldMask, boardSize, varargin)
+function [newMask, erodedMask, numIterations] = isolateCheckerboardSquares(oldMask, boardSize, regionMask, varargin)
 %
 % INPUTS
 %
@@ -8,7 +8,7 @@ function [newMask, erodedMask, numIterations] = isolateCheckerboardSquares(oldMa
 minArea = 150;   % pixels
 minSolidity = 0.9;
 
-for iarg = 1 : 2 : nargin - 2
+for iarg = 1 : 2 : nargin - 3
     switch lower(varargin{iarg})
         case 'minarea'
             minArea = varargin{iarg + 1};

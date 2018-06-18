@@ -1,6 +1,7 @@
 % detect checkerboard calibration images, 20180605
 
 calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+cd(calImageDir)
 
 % first row red, second row green, third row blue
 hsvThresh = [0,0.1,0.5,1,0.5,1;
