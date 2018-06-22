@@ -166,7 +166,7 @@ function [final_border,final_white,final_black] = cleanUpBorder(img_hsv, iMask, 
 closeSize = 50;
 openSize = 5;
 maxMorphOperator = max(closeSize, openSize);
-minCheckArea = 200;
+minCheckArea = 50;
 
 for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
@@ -202,7 +202,8 @@ ROI_hsv = img_hsv(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
 img_rgb = hsv2rgb(ROI_hsv);
 img_gray = rgb2gray(img_rgb);
 img_sharp = imsharpen(img_gray,'radius',3,'amount',1.20);
-img_adj = imadjust(img_sharp);
+% img_adj = imadjust(img_sharp);
+
 % img_gray = adapthisteq(img_gray);
 % img_r = squeeze(img_rgb(:,:,1)); img_r = img_r(:);
 % img_g = squeeze(img_rgb(:,:,2)); img_g = img_g(:);
@@ -235,7 +236,7 @@ img_adj = imadjust(img_sharp);
 % checks_black = imopen(checks_black,strel('disk',3));
 % checks_black = imclose(checks_black,strel('disk',3));
 % [isolated_checks_black, eroded_black, ~] = isolateCheckerboardSquares(checks_black,anticipatedBoardSize,cvHull,'minarea',minCheckArea);
-[isolated_checks_white,isolated_checks_black] = isolateCheckerboardSquares_20180618(img_adj,cvHull,anticipatedBoardSize,...
+[isolated_checks_white,isolated_checks_black] = isolateCheckerboardSquares_20180618(img_gray,cvHull,anticipatedBoardSize,...
                                                                                     'minarea',minCheckArea);
 
 % meanRGB = cell(1,3);
@@ -274,12 +275,15 @@ end
 [~,minIndices] = min(distMapsHSV,[],3);
 
 border = minIndices == 3;
+
+border2 = imopen(border,strel('disk',3));
+border2 = imclose(border2,strel('disk',3));
 % white_checks = minIndices == 1;
 % black_checks = minIndices == 2;
 
 border = border & borderMask;
 interiorMask = imfill(border,'holes') & ~border;
-[isolated_checks_white,isolated_checks_black] = isolateCheckerboardSquares_20180618(img_adj,interiorMask,anticipatedBoardSize,...
+[isolated_checks_white,isolated_checks_black] = isolateCheckerboardSquares_20180618(img_gray,interiorMask,anticipatedBoardSize,...
                                                                                     'minarea',minCheckArea);
 % white_checks = white_checks & fullBorder;
 % black_checks = black_checks & fullBorder;

@@ -1,4 +1,4 @@
-function [ initBorderMask, borderMask, whiteCheckMask, blackCheckMask ] = findBorderAndCheckMasks( img_hsv, HSVlimits, ROIs, anticipatedBoardSize )
+function [ initBorderMask, borderMask, whiteCheckMask, blackCheckMask, errorFlag ] = findBorderAndCheckMasks( img_hsv, HSVlimits, ROIs, anticipatedBoardSize )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -151,7 +151,7 @@ for iColor = 1 : 3
 
     end
     % now clean up the edges
-    [borderMask(:,:,2*iColor),whiteCheckMask(:,:,2*iColor),blackCheckMask(:,:,2*iColor)] = ...
+    [borderMask(:,:,2*iColor),whiteCheckMask(:,:,2*iColor),blackCheckMask(:,:,2*iColor), errorFlag] = ...
         cleanUpBorder(img_hsv, 2*iColor, mirrorBorder, anticipatedBoardSize);
 
 end
@@ -162,11 +162,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [final_border,final_white,final_black] = cleanUpBorder(img_hsv, iMask, borderMask, anticipatedBoardSize, varargin)
+function [final_border,final_white,final_black, errorFlag] = cleanUpBorder(img_hsv, iMask, borderMask, anticipatedBoardSize, varargin)
 closeSize = 50;
 openSize = 5;
 maxMorphOperator = max(closeSize, openSize);
-minCheckArea = 100;
+minCheckArea = 50;
 
 for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
@@ -236,7 +236,7 @@ img_sharp = imsharpen(img_gray,'radius',3,'amount',1.20);
 % checks_black = imopen(checks_black,strel('disk',3));
 % checks_black = imclose(checks_black,strel('disk',3));
 % [isolated_checks_black, eroded_black, ~] = isolateCheckerboardSquares(checks_black,anticipatedBoardSize,cvHull,'minarea',minCheckArea);
-[isolated_checks_white,isolated_checks_black] = isolateCheckerboardSquares_20180618(img_gray,cvHull,anticipatedBoardSize,...
+[isolated_checks_white,isolated_checks_black, ~] = isolateCheckerboardSquares_20180618(img_gray,cvHull,anticipatedBoardSize,...
                                                                                     'minarea',minCheckArea);
 
 % meanRGB = cell(1,3);
@@ -275,12 +275,21 @@ end
 [~,minIndices] = min(distMapsHSV,[],3);
 
 border = minIndices == 3;
+
+border2 = imopen(border,strel('disk',3));
+border2 = imclose(border2,strel('disk',3));
+tempMask = cvHull | (border2 & borderMask);
+tempMask_filled = imfill(tempMask,'holes');
+interiorMask = tempMask_filled & ~(border2 & borderMask);
+
+interiorMask = imopen(interiorMask,strel('disk',5));
+interiorMask = imclose(interiorMask,strel('disk',5));
 % white_checks = minIndices == 1;
 % black_checks = minIndices == 2;
 
-border = border & borderMask;
-interiorMask = imfill(border,'holes') & ~border;
-[isolated_checks_white,isolated_checks_black] = isolateCheckerboardSquares_20180618(img_gray,interiorMask,anticipatedBoardSize,...
+% border = border & borderMask;
+% interiorMask = imfill(border,'holes') & ~border;
+[isolated_checks_white,isolated_checks_black, errorFlag] = isolateCheckerboardSquares_20180618(img_gray,interiorMask,anticipatedBoardSize,...
                                                                                     'minarea',minCheckArea);
 % white_checks = white_checks & fullBorder;
 % black_checks = black_checks & fullBorder;

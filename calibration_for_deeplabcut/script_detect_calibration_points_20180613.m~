@@ -97,9 +97,8 @@ for iMask = 1 : 6
 %     scatter(squeeze(all_check_centers(:,1,iMask)),squeeze(all_check_centers(:,2,iMask)),50,'b','filled')
     q = squeeze(round(all_check_centers(:,:,iMask)));
     for ii = 1 : size(q,1)
-        if all(q(ii,:) > 0)
-            ptsMask(q(ii,2),q(ii,1)) = true;
-        end
+        if 
+        ptsMask(q(ii,2),q(ii,1)) = true;
     end
 end
 ptsMask = imdilate(ptsMask,strel('disk',4));
