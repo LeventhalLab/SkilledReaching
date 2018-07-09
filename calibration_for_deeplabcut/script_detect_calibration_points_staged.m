@@ -30,8 +30,8 @@ ROIs = [700,375,650,600;
 cd(calImageDir);
 
 
-for iImg = 30 : length(imgList)
-    
+for iImg = 1 : length(imgList)
+    iImg
     if ~isempty(strfind(imgList(iImg).name,'marked'))
         continue;
     end
@@ -48,16 +48,16 @@ for iImg = 30 : length(imgList)
 
 
     directBorderMask = findDirectBorders(A, direct_hsvThresh, ROIs);
-    directBorderChecks = findDirectCheckerboards(A, directBorderMask, boardSize);
-    mirrorBorderMask = findMirrorCheckerboards(A, directBorderMask, mirror_hsvThresh, ROIs);
+    directBorderChecks = findDirectCheckerboards(A, directBorderMask, directBorderChecks, boardSize);
+%     mirrorBorderMask = findMirrorCheckerboards(A, directBorderMask, mirror_hsvThresh, ROIs);
 %     borderMask = findColoredBorder(A, hsvThresh, ROIs);
-    dispMask = false(h,w);
-    for iMask = 1 : 6
-        dispMask = dispMask | squeeze(borderMask(:,:,iMask));
-    end
-    
-    figure(2)
-    imshow(dispMask)
+%     dispMask = false(h,w);
+%     for iMask = 1 : 6
+%         dispMask = dispMask | squeeze(borderMask(:,:,iMask));
+%     end
+%     
+%     figure(2)
+%     imshow(dispMask)
     
 end
 

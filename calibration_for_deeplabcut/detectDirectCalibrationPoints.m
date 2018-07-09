@@ -1,6 +1,6 @@
 function [pts, numIterations] = detectDirectCalibrationPoints(img, boardMask, anticipatedSize)
 
-detectedSize = [0 0];
+% detectedSize = [0 0];
 mincornermetric = 0.05;
 numIterations = 0;
 maxIterations = 10;
@@ -25,8 +25,7 @@ while ~exitFlag
     % other
     centroidSep = vecnorm(cvProps.Centroid - boardProps.Centroid);
     areaRatio = cvProps.Area / boardProps.Area;
-    
-   
+
     
     if (all(detectedSize == anticipatedSize) || ...
         all(detectedSize == fliplr(anticipatedSize))) && ...
@@ -51,3 +50,4 @@ end
 
 
 % something went wrong and it didn't find the corners properly
+end

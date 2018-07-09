@@ -26,8 +26,6 @@ w = size(img,2);
 
 img_stretch = decorrstretch(img);
 
-figure(1); imshow(img_stretch);
-
 img_hsv = rgb2hsv(img_stretch);
 
 directMask = false(h,w);
