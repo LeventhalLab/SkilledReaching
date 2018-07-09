@@ -1,4 +1,4 @@
-function [ initBorderMask, borderMask, whiteCheckMask, blackCheckMask, errorFlag ] = findBorderAndCheckMasks( img_hsv, HSVlimits, ROIs, anticipatedBoardSize )
+function [ initBorderMask, borderMask, whiteCheckMask, blackCheckMask, errorFlag ] = findBorderAndCheckMasks( img, HSVlimits, ROIs, anticipatedBoardSize )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -20,10 +20,13 @@ SEsize = 3;
 SE = strel('disk',SEsize);
 minCheckerboardArea = 5000;
 maxCheckerboardArea = 20000;
+maxThresh = 0.3;
 
 diffThresh = 0.1;
 threshStepSize = 0.01;
 
+img_stretch = decorrstretch(img);
+img_hsv = rgb2hsv(img_stretch);
 h = size(img_hsv,1);
 w = size(img_hsv,2);
 numMirrors = size(ROIs,1) - 1;
@@ -64,6 +67,22 @@ for iColor = 1 : 3
     
     % find stats for colors inside the mask region
     mirrorBorderMask = squeeze(denoisedMasks(:,:,iColor)) & squeeze(mirrorOnlyMasks(:,:,iColor));
+    newHSVlimit = HSVlimits(iColor,:);
+    while sum(mirrorBorderMask(:)) < 10 && newHSVlimit(5) > 0  % found < 10 pixels that meet criteria
+        % most common reason is that the region is too dark, so expand the
+        % "V" range that's acceptable
+        newHSVlimit(5) = newHSVlimit(5) - 0.1;
+        initSeedMask = HSVthreshold(img_hsv, newHSVlimit) & squeeze(mirrorMasks(:,:,iColor));
+        denoisedMask = imopen(initSeedMask, SE);
+        denoisedMask = imclose(denoisedMask, SE);
+        
+        mirrorBorderMask = denoisedMask & squeeze(mirrorOnlyMasks(:,:,iColor));
+    end
+    
+    if newHSVlimit(5) < 0
+        keyboard;
+    end
+        
     directBorderMask = squeeze(denoisedMasks(:,:,iColor)) & directMask;
     initBorderMask(:,:,2*iColor-1) = directBorderMask;
     initBorderMask(:,:,2*iColor) = mirrorBorderMask;
@@ -85,7 +104,7 @@ for iColor = 1 : 3
     % iterate until we find a border region with a single hole 
     currentThresh = diffThresh;
     foundValidBorder = false;
-    while ~foundValidBorder
+    while ~foundValidBorder && currentThresh <= maxThresh
         directBorder = directViewGray < currentThresh;
         directBorder = imopen(directBorder, SE);
         directBorder = imclose(directBorder, SE);
@@ -114,14 +133,17 @@ for iColor = 1 : 3
         currentThresh = currentThresh + threshStepSize;
 
     end
-    [borderMask(:,:,2*iColor-1),whiteCheckMask(:,:,2*iColor-1),blackCheckMask(:,:,2*iColor-1)] = ...
-        cleanUpBorder(img_hsv, 2*iColor-1, directBorder, anticipatedBoardSize);
+    if currentThresh <= maxThresh
+        % found a valid border
+        [borderMask(:,:,2*iColor-1),whiteCheckMask(:,:,2*iColor-1),blackCheckMask(:,:,2*iColor-1)] = ...
+            cleanUpBorder(img_hsv, 2*iColor-1, directBorder, anticipatedBoardSize);
+    end
         
         
     % iterate until we find a border region with a single hole 
     currentThresh = diffThresh;
     foundValidBorder = false;
-    while ~foundValidBorder
+    while ~foundValidBorder && currentThresh <= maxThresh
         mirrorBorder = mirrorViewGray < currentThresh;
         mirrorBorder = imopen(mirrorBorder, SE);
         mirrorBorder = imclose(mirrorBorder, SE);
@@ -151,8 +173,13 @@ for iColor = 1 : 3
 
     end
     % now clean up the edges
-    [borderMask(:,:,2*iColor),whiteCheckMask(:,:,2*iColor),blackCheckMask(:,:,2*iColor), errorFlag] = ...
-        cleanUpBorder(img_hsv, 2*iColor, mirrorBorder, anticipatedBoardSize);
+    
+    if currentThresh <= maxThresh
+        % found a valid border
+        [borderMask(:,:,2*iColor),whiteCheckMask(:,:,2*iColor),blackCheckMask(:,:,2*iColor), errorFlag] = ...
+            cleanUpBorder(img_hsv, 2*iColor, mirrorBorder, anticipatedBoardSize);
+    end
+
 
 end
 
@@ -180,6 +207,7 @@ w = size(img_hsv,2);
 
 q = regionprops(borderMask,'boundingbox');
 ROI = floor(q.BoundingBox);
+ROI(ROI==0) = 1;
 
 borderMask = borderMask(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3));
 fullBorder = imfill(borderMask,'holes');
@@ -199,79 +227,21 @@ cvHull = bwconvhull(tempMask);
 % newBorder = borderMask & ~cvHull;
 
 ROI_hsv = img_hsv(ROI(2):ROI(2)+ROI(4),ROI(1):ROI(1)+ROI(3),:);
-img_rgb = hsv2rgb(ROI_hsv);
-img_gray = rgb2gray(img_rgb);
+img_gray = rgb2gray(img);
 img_sharp = imsharpen(img_gray,'radius',3,'amount',1.20);
-% img_adj = imadjust(img_sharp);
 
-% img_gray = adapthisteq(img_gray);
-% img_r = squeeze(img_rgb(:,:,1)); img_r = img_r(:);
-% img_g = squeeze(img_rgb(:,:,2)); img_g = img_g(:);
-% img_b = squeeze(img_rgb(:,:,3)); img_b = img_b(:);
-
-% testGray = img_gray .* double(cvHull);
-% checks_white = imbinarize(img_gray,'adaptive');
-% testGray = img_sharp(:);
-% testGray = testGray(cvHull(:));
-
-% checkEdges = edge(img_gray,'canny',[0.1,0.2]);
-
-% checkThresh = graythresh(testGray);
-% checkThresh = multithresh(testGray,2);
-% checkThresh(1) = checkThresh(1) + 0.1;
-% checkThresh(2) = max(checkThresh(2) - 0.1, checkThresh(1));
-% checks = imquantize(img_sharp, checkThresh);
-
-% checks_white = imbinarize(img_gray, checkThresh);
-% checks_white = checks == 1;
-% checks_white = checks_white & cvHull;% & ~checkEdges;
-% checks_white = imopen(checks_white,strel('disk',3));
-% checks_white = imclose(checks_white,strel('disk',3));
-% [isolated_checks_white, eroded_white, ~] = isolateCheckerboardSquares(checks_white,anticipatedBoardSize,cvHull,'minarea',minCheckArea);
-
-% checks_black = img_gray < checkThresh;
-% checks_black = checks == 3;
-% checks_black = ~imbinarize(img_gray,'adaptive');
-% checks_black = checks_black & cvHull;% & ~checkEdges;
-% checks_black = imopen(checks_black,strel('disk',3));
-% checks_black = imclose(checks_black,strel('disk',3));
-% [isolated_checks_black, eroded_black, ~] = isolateCheckerboardSquares(checks_black,anticipatedBoardSize,cvHull,'minarea',minCheckArea);
 [isolated_checks_white,isolated_checks_black, ~] = isolateCheckerboardSquares_20180618(img_gray,cvHull,anticipatedBoardSize,...
                                                                                     'minarea',minCheckArea);
-
-% meanRGB = cell(1,3);
 meanHSV = cell(1,3);
 meanHSV{1} = calcHSVstats(ROI_hsv, isolated_checks_white);
 meanHSV{2} = calcHSVstats(ROI_hsv, isolated_checks_black);
 meanHSV{3} = calcHSVstats(ROI_hsv, borderMask);
 
-% white checks
-% meanRGB{1}(1) = mean(img_r(isolated_checks_white(:)));
-% meanRGB{1}(2) = mean(img_g(isolated_checks_white(:)));
-% meanRGB{1}(3) = mean(img_b(isolated_checks_white(:)));
-% 
-% % black checks
-% meanRGB{2}(1) = mean(img_r(isolated_checks_black(:)));
-% meanRGB{2}(2) = mean(img_g(isolated_checks_black(:)));
-% meanRGB{2}(3) = mean(img_b(isolated_checks_black(:)));
-% 
-% 
-% % border
-% meanRGB{3}(1) = mean(img_r(initBorderMask(:)));
-% meanRGB{3}(2) = mean(img_g(initBorderMask(:)));
-% meanRGB{3}(3) = mean(img_b(initBorderMask(:)));
-
-% distMapsRGB = zeros(size(img_rgb,1), size(img_rgb,2),3);
-distMapsHSV = zeros(size(img_rgb,1), size(img_rgb,2),3);
+distMapsHSV = zeros(size(img,1), size(img,2),3);
 for iFeature = 1 : 3
-%     distMapsRGB(:,:,iFeature) = sqrt((img_rgb(:,:,1) - meanRGB{iFeature}(1)).^2 + ...
-%                               (img_rgb(:,:,2) - meanRGB{iFeature}(2)).^2 + ...
-%                               (img_rgb(:,:,3) - meanRGB{iFeature}(3)).^2);
     HSVdist = calcHSVdist(ROI_hsv, meanHSV{iFeature});
-    distMapsHSV(:,:,iFeature) = sqrt(sum(HSVdist.^2,3));
-	
+    distMapsHSV(:,:,iFeature) = sqrt(sum(HSVdist.^2,3));	
 end
-% [~,minIndicesRGB] = min(distMapsRGB,[],3);
 [~,minIndices] = min(distMapsHSV,[],3);
 
 border = minIndices == 3;

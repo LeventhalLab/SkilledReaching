@@ -4,9 +4,9 @@ calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibr
 cd(calImageDir)
 
 % first row red, second row green, third row blue
-hsvThresh = [0,0.1,0.5,1,0.5,1;
-             0.33,0.1,0.3,1,0.5,1;
-             0.66,0.1,0.3,1,0.5,1];
+hsvThresh = [0,0.1,0.8,1,0.6,1;
+             0.33,0.1,0.8,1,0.6,1;
+             0.66,0.1,0.8,1,0.6,1];
          
 RGBdistThresh = 0.15;
 
