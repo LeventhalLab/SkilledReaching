@@ -1,14 +1,18 @@
 % detect checkerboard calibration images, 20180605
 
-calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 
 % first row red, second row green, third row blue
-hsvThresh = [0,0.1,0.5,1,0.5,1;
-             0.33,0.1,0.3,1,0.5,1;
-             0.66,0.1,0.3,1,0.5,1];
+direct_hsvThresh = [0,0.1,0.8,1,0.5,1;
+                    0.33,0.1,0.8,1,0.5,1;
+                    0.66,0.1,0.8,1,0.5,1];
 
+mirror_hsvThresh = [0,0.1,0.5,1,0.5,1;
+                    0.33,0.1,0.5,1,0.5,1;
+                    0.66,0.1,0.5,1,0.5,1];
 
-
+boardSize = [4 5];
+cd(calImageDir)
 
 imgList = dir('GridCalibration_*.png');
 % load test image
@@ -25,18 +29,27 @@ ROIs = [700,375,650,600;
 cd(calImageDir);
 
 
-for iImg = 1 : length(imgList)
+for iImg = 30 : length(imgList)
+    
+    if ~isempty(strfind(imgList(iImg).name,'marked'))
+        continue;
+    end
     
     curImgName = imgList(iImg).name;
-    
+%     
     A = imread(curImgName);
-    Ahsv = rgb2hsv(A);
-    
-    figure(1)
-    imshow(A)
+%     Ahsv = rgb2hsv(A);
+%     
+%     figure(1)
+%     imshow(A)
     
 
-    borderMask = findColoredBorder(Ahsv, hsvThresh, ROIs);
+
+
+    directBorderMask = findDirectBorders(A, direct_hsvThresh, ROIs);
+    directBorderChecks = findDirectCheckerboards(A, directBorderMask, boardSize);
+    mirrorBorderMask = findMirrorCheckerboards(A, directBorderMask, mirror_hsvThresh, ROIs);
+%     borderMask = findColoredBorder(A, hsvThresh, ROIs);
     dispMask = false(h,w);
     for iMask = 1 : 6
         dispMask = dispMask | squeeze(borderMask(:,:,iMask));
