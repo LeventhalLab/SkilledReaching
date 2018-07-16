@@ -26,6 +26,11 @@ w = size(img,2);
 
 img_stretch = decorrstretch(img);
 
+<<<<<<< HEAD
+figure(1); imshow(img_stretch);
+
+=======
+>>>>>>> 363fc4784b2116b41dc66594009feea8f6b6fff5
 img_hsv = rgb2hsv(img_stretch);
 
 directMask = false(h,w);
