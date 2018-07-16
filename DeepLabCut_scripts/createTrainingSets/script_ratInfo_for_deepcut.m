@@ -2,17 +2,22 @@
 
 rootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 
-startRatNum = 216;
+startRatNum = 186;
 endRatNum = 229;
 
 ii = 0;
 for ratNum = startRatNum : endRatNum
-    if ratNum == 224; continue; end
-    ii = ii + 1;
-    ratInfo(ii).ratID = ratNum;
-    ratInfo(ii).IDstring = sprintf('R%04d',ratNum);
+
     
-    ratPathName = fullfile(rootPath,ratInfo(ii).IDstring);
+    IDstring = sprintf('R%04d',ratNum);
+    ratPathName = fullfile(rootPath,IDstring);
+    if ~isfolder(ratPathName);continue;end
+    
+    ii = ii + 1;
+    
+    ratInfo(ii).ratID = ratNum;
+    ratInfo(ii).IDstring = IDstring;
+    
     cd(ratPathName);
     
     % get the session names for this rat
@@ -25,11 +30,29 @@ for ratNum = startRatNum : endRatNum
         ratInfo(ii).sessionList{iSession} = sessionDirs(iSession).name;
         sessionDirName = fullfile(ratPathName, sessionDirs(iSession).name);
         cd(sessionDirName);
-        vidList = dir(['R*.avi']);
+        vidList = dir('R*.avi');
         ratInfo(ii).numVids(iSession) = length(vidList);
     end
     
     switch ratNum
+        case 186
+            ratInfo(ii).pawPref = 'right';
+            ratInfo(ii).firstTattooedSession = '20170813';   % actually earlier, but first session we're looking at for now
+        case 187
+            ratInfo(ii).pawPref = 'right';
+            ratInfo(ii).firstTattooedSession = '20170918';   % actually earlier, but first session we're looking at for now
+        case 189
+            ratInfo(ii).pawPref = 'right';
+            ratInfo(ii).firstTattooedSession = '20171014';
+        case 191
+            ratInfo(ii).pawPref = 'left';
+            ratInfo(ii).firstTattooedSession = '20171014';
+        case 193
+            ratInfo(ii).pawPref = 'right';
+            ratInfo(ii).firstTattooedSession = '20170916';   % actually earlier, but first session we're looking at for now
+        case 195
+            ratInfo(ii).pawPref = 'right';
+            ratInfo(ii).firstTattooedSession = '20171014';   % actually earlier, but first session we're looking at for now
         case 216
             ratInfo(ii).pawPref = 'right';
             ratInfo(ii).firstTattooedSession = '20180201';

@@ -12,26 +12,30 @@ numFramesttoExtract = 200;
 
 % which types of videos to extract? left vs right paw, tat vs no tat
 selectPawPref = 'left';
-selectTattoo = 'no';
+selectTattoo = 'yes';
 
 savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_training_frames',[selectPawPref, '_paw_', selectTattoo, '_tattoo']);
 % if ~exist(savePath,'dir')
 %     mkdir(savePath);
 % end
 
-leftViewSavePath = fullfile(savePath, 'left_view');
-directViewSavePath = fullfile(savePath, 'direct_view');
-rightViewSavePath = fullfile(savePath, 'right_view');
-if ~exist(leftViewSavePath,'dir')
-    mkdir(leftViewSavePath);
-end
-if ~exist(directViewSavePath,'dir')
-    mkdir(directViewSavePath);
-end
-if ~exist(rightViewSavePath,'dir')
-    mkdir(rightViewSavePath);
+viewList = {'left_view','direct_view','right_view'};
+
+viewSavePath = cell(1,length(viewList));
+
+numFramesExtracted = zeros(1, length(viewList));
+for iView = 1 : length(viewList)
+    viewSavePath{iView} = fullfile(savePath, viewList{iView});
+    if ~exist(viewSavePath{iView},'dir')
+        mkdir(viewSavePath{iView});
+    else
+        cd(viewSavePath{iView});
+        frameList = dir('*.png');
+        numFramesExtracted(iView) = length(frameList);
+    end
 end
 
+if all(numFramesExtracted == numFramesExtracted(1
 script_ratInfo_for_deepcut;
 numRats = length(ratInfo);
 
@@ -40,8 +44,8 @@ numRats = length(ratInfo);
 % (width,height)
 
 ROI = [750,500,550,500;
-       1,550,450,350;
-       1650,550,390,350];
+       1,500,450,400;
+       1650,500,390,400];
 
 
 % hard code coordinates for cropping direct view, left mirror, right mirror
@@ -136,20 +140,44 @@ while numFramesExtracted < numFramesttoExtract
         cropped_img{iView} = cur_img(ROI(iView,2) : ROI(iView,2) + ROI(iView,4), ...
                                      ROI(iView,1) : ROI(iView,1) + ROI(iView,3), :);
                                  
-        switch iView
-            case 1
-                cropFrameName = fullfile(directViewSavePath,[cropBaseName '_directView.png']);
-            case 2
-                cropFrameName = fullfile(leftViewSavePath,[cropBaseName '_leftView.png']);
-            case 3
-                cropFrameName = fullfile(rightViewSavePath,[cropBaseName '_rightView.png']);
-        end
-
+        cropFrameName = fullfile(viewSavePath{iView},[cropBaseName '_' viewList{iView} '.png']);
         imwrite(cropped_img{iView},cropFrameName,'png');
     end
-    cd(directViewSavePath)
+    cd(viewSavePath{iView})
     frameList = dir('*.png');
     numFramesExtracted = length(frameList);
-%     numFramesExtracted = numFramesExtracted + 1;
 
+end
+
+% now rename the images to 001, 002, etc.
+for iView = 1 : length(viewSavePath)
+    rootpath = viewSavePath{iView};
+
+    cd(rootpath)
+
+    pngList = dir('*.png');
+    metadata_name = [selectPawPref, '_paw_', selectTattoo, '_tattoo_metadata.mat'];
+    renameStartIdx = 1;
+    if exist(metadata_name,'file')
+        old_metadata = load(metadata_name);
+        oldPngList = old_metadata.pngList;
+        pngList(1:length(oldPngList)) = oldPngList;
+        renameStartIdx = length(oldPngList) + 1;
+        % this should preserve the file names if new files are added for
+        % additional training
+    end
+    
+    save(metadata_name,'pngList','ROI','viewList');
+    % will be needed to reconstruct the points in the full image for 3D
+    % reconstruction later
+
+    for ii = renameStartIdx : length(pngList)
+        
+        % files previously renamed should still be in the right order
+        newName = sprintf('%03d.png',ii);
+        oldName = pngList(ii).name;
+
+        movefile(oldName,newName);
+    end
+    
 end

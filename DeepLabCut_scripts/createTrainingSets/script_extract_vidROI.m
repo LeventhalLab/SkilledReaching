@@ -9,12 +9,12 @@
 
 rootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 triggerTime = 1;    % seconds
-frameTimeLimits = [-1/3,1/2];    % time around trigger to extract frames
-numVidsttoExtract = 10;
+frameTimeLimits = [-1/2,1];    % time around trigger to extract frames
+numVidsttoExtract = 30;
 
 % which types of videos to extract? left vs right paw, tat vs no tat
 selectPawPref = 'left';
-selectTattoo = 'no';
+selectTattoo = 'yes';
 
 savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_testing_vids',[selectPawPref, '_paw_', selectTattoo, '_tattoo']);
 % if ~exist(savePath,'dir')

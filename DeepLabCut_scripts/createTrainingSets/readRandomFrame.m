@@ -1,6 +1,17 @@
 function [ img ] = readRandomFrame( video, varargin )
-%UNTITLED4 Summary of this function goes here
-%   Detailed explanation goes here
+% function to read in a randomly selected video frame from a video.
+%
+% INPUTS:
+%   video - a VideoReader object
+%
+% VARARGS:
+%   frametimelimits - 1 x 2 vector containing start and end times relative
+%       to tigger time (in seconds)
+%   triggertime - time at which video was triggered (set to zero if just
+%       want frametimelimits to count from the start of the video
+%
+% OUTPUTS:
+%   img - the extracted frame
 
 frameTimeLimits = [-1,1];   %
 triggerTime = 1;
