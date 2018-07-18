@@ -46,10 +46,10 @@ for ratNum = startRatNum : endRatNum
             ratInfo(ii).firstTattooedSession = '20171014';
         case 191
             ratInfo(ii).pawPref = 'left';
-            ratInfo(ii).firstTattooedSession = '20171014';
+            ratInfo(ii).firstTattooedSession = '20170916';
         case 193
             ratInfo(ii).pawPref = 'right';
-            ratInfo(ii).firstTattooedSession = '20170916';   % actually earlier, but first session we're looking at for now
+            ratInfo(ii).firstTattooedSession = '20171014';   % actually earlier, but first session we're looking at for now
         case 195
             ratInfo(ii).pawPref = 'right';
             ratInfo(ii).firstTattooedSession = '20171014';   % actually earlier, but first session we're looking at for now

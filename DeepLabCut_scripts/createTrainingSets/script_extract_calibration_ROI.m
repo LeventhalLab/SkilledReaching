@@ -43,9 +43,9 @@ end
 A = imread(calImgs(1).name,'png');
 h = size(A,1); w = size(A,2);
 rightMirrorLeftEdge = 1700;
-ROIs = [700,375,650,600;
-        750,1,600,400;
-        1,400,350,500;
+ROIs = [700,200,650,775;
+        750,1,600,350;
+        1,350,350,550;
         rightMirrorLeftEdge,400,w-rightMirrorLeftEdge,500];
     
 for iView = 1 : 4
