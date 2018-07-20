@@ -4,10 +4,24 @@ function [bodyparts,parts_loc,p] = read_DLC_csv(fname,varargin)
 %   row 1: "scorer" followed by a scorer label in each column
 %   row 2: "bodyparts" followed by the same label in 3 consecutive columns
 %       before switching to a new bodypart label
-
+%
 % INPUTS:
-%   fname - name of .csv file containing x,y,likelihood data from 
+%   fname - name of .csv file containing x,y,likelihood data from
+%
+% VARARGs:
+%
+%
+%
 % OUTPUTS:
+%   bodyparts - cell array containing strings describing the labeled body
+%       parts
+%   parts_loc - m x n x 2 array where m is the number of body parts, n is
+%       the number of frames in the video. each bodypart-frame entry is an
+%       x,y coordinate pair
+%   p - m x n array where m is the number of body parts, and n is
+%       the number of frames in the video. contains the likelihood score
+%       from DeepLabCut. A likelihood of 1 appears to indicate high
+%       confidence, 0 is low confidence
 
 
 numHeaderLines = 3;
@@ -37,7 +51,7 @@ for i_bodypart = 1 : num_bodyparts
     yCol = i_bodypart*3 - 1;
     pCol = i_bodypart*3;
     parts_loc(i_bodypart,:,:) = csvData(:,xCol:yCol); 
-    p = csvData(:,pCol);
+    p(i_bodypart,:) = csvData(:,pCol);
 end
 
 
