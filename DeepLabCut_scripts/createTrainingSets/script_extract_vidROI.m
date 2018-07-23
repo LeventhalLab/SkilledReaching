@@ -6,7 +6,7 @@
 
 % need to set up a destination folder to put the stacks of videos of each
 % type - left vs right pawed, tattooed vs not
-
+%%
 rootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1/2,1];    % time around trigger to extract frames
@@ -21,17 +21,13 @@ savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_testing
 %     mkdir(savePath);
 % end
 
-leftViewSavePath = fullfile(savePath, 'left_view');
-directViewSavePath = fullfile(savePath, 'direct_view');
-rightViewSavePath = fullfile(savePath, 'right_view');
-if ~exist(leftViewSavePath,'dir')
-    mkdir(leftViewSavePath);
-end
-if ~exist(directViewSavePath,'dir')
-    mkdir(directViewSavePath);
-end
-if ~exist(rightViewSavePath,'dir')
-    mkdir(rightViewSavePath);
+viewList = {'left','direct','right'};
+viewSavePath = cell(1,3);
+for iView = 1 : length(viewList)
+    viewSavePath{iView} = fullfile(savePath, [viewList{iView} '_view']);
+    if ~isfolder(viewSavePath{iView})
+        mkdir(viewSavePath{iView});
+    end
 end
 
 script_ratInfo_for_deepcut;
@@ -58,6 +54,7 @@ for iRat = 1 : numRats
     end
 end
 
+%%
 numVidsExtracted = 0;
 while numVidsExtracted < numVidsttoExtract
 
@@ -111,13 +108,20 @@ while numVidsExtracted < numVidsttoExtract
     currentVidNumber = floor(rand * length(vidList)) + 1;
     vidName = vidList(currentVidNumber).name;
     vidNameNumber = vidName(end-6:end-4);
-    
-    destVidName{1} = fullfile(directViewSavePath, [vidName(1:end-4),'_direct']);
-    destVidName{2} = fullfile(leftViewSavePath, [vidName(1:end-4),'_left']);
-    destVidName{3} = fullfile(rightViewSavePath, [vidName(1:end-4),'_right']);
+    destVidName = cell(1,length(viewSavePath));
+    for iView = 1 : length(viewSavePath)
+        destVidName{iView} = fullfile(viewSavePath, [vidName(1:end-4),'_',viewList{iView}]);
+    end
 
     cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
     
     numVidsExtracted = numVidsExtracted + 1;
 
+end
+%%
+% save metadata files
+fname = [selectPawPref, '_paw_', selectTattoo, '_tattoo_metadata.mat'];
+for i_vidDest = 1 : length(viewSavePath)
+    cd(viewSavePath{iView});
+    save(fname,'triggerTime','frameTimeLimits','viewList','ROI');
 end

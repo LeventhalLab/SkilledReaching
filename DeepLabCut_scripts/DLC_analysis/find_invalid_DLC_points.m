@@ -1,4 +1,4 @@
-function invalidPoints = find_invalid_DLC_points(parts_loc, p, varargin)
+function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, varargin)
 %
 % function to find points that are likely to be invalid in DLC output.
 % Strategy is to 1) find points with 
@@ -9,18 +9,21 @@ function invalidPoints = find_invalid_DLC_points(parts_loc, p, varargin)
 %       x,y coordinate pair
 %
 % OUTPUTS:
+%   invalidPoints - 
 
 maxDistPerFrame = 20;
 min_valid_p = 0.8;
 min_certain_p = 0.95;
+%maxNeighborSeparation = 30;   % to be used to make sure points that should
+%be near each other are near each other
 
 for iarg = 1 : nargin - 2
     switch lower(varargin{iarg})
-        case maxdistperframe
+        case 'maxdistperframe'
             maxDistPerFrame = varargin{iarg + 1};
-        case min_valid_p
+        case 'min_valid_p'
             min_valid_p = varargin{iarg + 1};   % p values below this are considered to indicate poorly determined points (and exclude from subsequent analysis)
-        case min_certain_p
+        case 'min_certain_p'
             min_certain_p = varargin{iarg + 1};   % p values above this are considered to be well-determined points (and include in subsequent analysis)
     end
 end
@@ -30,6 +33,7 @@ num_frames = size(parts_loc, 2);
 num_bodyparts = size(parts_loc, 1);
 
 invalidPoints = p < min_valid_p;   % first pass - anything with p-value too small, ignore
+certainPoints = p > min_certain_p;
 
 diff_per_frame = zeros(num_bodyparts, num_frames-1);
 poss_too_far = false(num_bodyparts,num_frames);
@@ -46,13 +50,13 @@ for iBodyPart = 1 : num_bodyparts
     % logic is that either the point before or point after could be the bad
     % point if there was too big a location jump between frames
     
-    poss_too_far(iBodyPart,:) = poss_too_far(iBodyPart,:) | isnan(diff_per_frame(iBodyPart,:));
+    poss_too_far(iBodyPart,:) = poss_too_far(iBodyPart,:) | isnan(invalidPoints(iBodyPart,:));
     % also, any NaNs from low probability parts should be included as
     % potentially too big a jump
 
     % any poss_too_far points that have very high certainty should be
     % considered to be accurate
-    poss_too_far(iBodyPart, p > min_certain_p) = false;
+    poss_too_far(iBodyPart, certainPoints(iBodyPart,:)) = false;
     % keep any points with p > min_certain_p even if it apparently traveled
     % too far in one frame
     

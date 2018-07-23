@@ -34,6 +34,8 @@ bodyparts = textscan(temp{1}{2},'%s','delimiter',',');
 bodyparts = {bodyparts{1}{2:end}};
 bodyparts = unique(bodyparts,'stable');   % 'stable' keeps the unique function from sorting the results
 
+fclose(fid);
+
 num_bodyparts = length(bodyparts);
 
 % assume variables are stored as x,y,likelihood; may need modification if
