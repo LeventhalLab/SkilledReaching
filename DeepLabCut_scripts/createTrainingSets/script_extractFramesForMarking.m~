@@ -5,9 +5,122 @@
 % need to set up a destination folder to put the stacks of videos of each
 % type - left vs right pawed, tattooed vs not
 
-script_ratInfo_for_deepcut;
-
 selectRandomFrames = false;
+
+% hard code list of frames to use if not selecting at random
+if exist('frameList','var')
+    clear frameList
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% list of frames to specifically extract if selectRandomFrames = false
+if ~selectRandomFrames
+    ii = 1;
+    frameList(ii).ratID = 'R0191';
+    frameList(ii).session = '20171003a';
+    frameList(ii).vidNum = '021';
+    frameList(ii).frameNum = 346;
+
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0221';
+    frameList(ii).session = '20180416a';
+    frameList(ii).vidNum = '036';
+    frameList(ii).frameNum = 320;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0221';
+    frameList(ii).session = '20180416a';
+    frameList(ii).vidNum = '036';
+    frameList(ii).frameNum = 336;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0219';
+    frameList(ii).session = '20180306a';
+    frameList(ii).vidNum = '015';
+    frameList(ii).frameNum = 314;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0222';
+    frameList(ii).session = '20180319a';
+    frameList(ii).vidNum = '014';
+    frameList(ii).frameNum = 311;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0222';
+    frameList(ii).session = '20180319a';
+    frameList(ii).vidNum = '014';
+    frameList(ii).frameNum = 408;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0222';
+    frameList(ii).session = '20180319a';
+    frameList(ii).vidNum = '041';
+    frameList(ii).frameNum = 323;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0222';
+    frameList(ii).session = '20180319a';
+    frameList(ii).vidNum = '041';
+    frameList(ii).frameNum = 480;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0222';
+    frameList(ii).session = '20180319a';
+    frameList(ii).vidNum = '041';
+    frameList(ii).frameNum = 550;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0217';
+    frameList(ii).session = '20180303a';
+    frameList(ii).vidNum = '012';
+    frameList(ii).frameNum = 335;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0217';
+    frameList(ii).session = '20180303a';
+    frameList(ii).vidNum = '073';
+    frameList(ii).frameNum = 361;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0217';
+    frameList(ii).session = '20180303a';
+    frameList(ii).vidNum = '073';
+    frameList(ii).frameNum = 474;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = 'R0222';
+    frameList(ii).session = '20180319a';
+    frameList(ii).vidNum = '034';
+    frameList(ii).frameNum = 579;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = '191';
+    frameList(ii).session = '20170930a';
+    frameList(ii).vidNum = '012';
+    frameList(ii).frameNum = 432;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = '191';
+    frameList(ii).session = '20170925a';
+    frameList(ii).vidNum = '009';
+    frameList(ii).frameNum = 386;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = '191';
+    frameList(ii).session = '20170918a';
+    frameList(ii).vidNum = '017';
+    frameList(ii).frameNum = 482;
+    
+    ii = ii + 1;
+    frameList(ii).ratID = '191';
+    frameList(ii).session = '20170918a';
+    frameList(ii).vidNum = '017';
+    frameList(ii).frameNum = 303;
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 rootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 triggerTime = 1;    % seconds
@@ -19,122 +132,6 @@ selectPawPref = 'left';
 selectTattoo = 'yes';
 
 savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_training_frames',[selectPawPref, '_paw_', selectTattoo, '_tattoo']);
-
-% hard code list of frames to use if not selecting at random
-if exist('framesToExtract','var')
-    clear framesToExtract
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% list of frames to specifically extract if selectRandomFrames = false
-if ~selectRandomFrames
-    ii = 1;
-    framesToExtract(ii).ratID = 'R0191';
-    framesToExtract(ii).session = '20171003a';
-    framesToExtract(ii).vidNum = '021';
-    framesToExtract(ii).frameNum = 346;
-
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0221';
-    framesToExtract(ii).session = '20180416a';
-    framesToExtract(ii).vidNum = '036';
-    framesToExtract(ii).frameNum = 320;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0221';
-    framesToExtract(ii).session = '20180416a';
-    framesToExtract(ii).vidNum = '036';
-    framesToExtract(ii).frameNum = 336;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0219';
-    framesToExtract(ii).session = '20180306a';
-    framesToExtract(ii).vidNum = '015';
-    framesToExtract(ii).frameNum = 314;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0222';
-    framesToExtract(ii).session = '20180319a';
-    framesToExtract(ii).vidNum = '014';
-    framesToExtract(ii).frameNum = 311;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0222';
-    framesToExtract(ii).session = '20180319a';
-    framesToExtract(ii).vidNum = '014';
-    framesToExtract(ii).frameNum = 408;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0222';
-    framesToExtract(ii).session = '20180319a';
-    framesToExtract(ii).vidNum = '041';
-    framesToExtract(ii).frameNum = 323;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0222';
-    framesToExtract(ii).session = '20180319a';
-    framesToExtract(ii).vidNum = '041';
-    framesToExtract(ii).frameNum = 480;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0222';
-    framesToExtract(ii).session = '20180319a';
-    framesToExtract(ii).vidNum = '041';
-    framesToExtract(ii).frameNum = 550;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0217';
-    framesToExtract(ii).session = '20180303a';
-    framesToExtract(ii).vidNum = '012';
-    framesToExtract(ii).frameNum = 335;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0217';
-    framesToExtract(ii).session = '20180303a';
-    framesToExtract(ii).vidNum = '073';
-    framesToExtract(ii).frameNum = 361;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0217';
-    framesToExtract(ii).session = '20180303a';
-    framesToExtract(ii).vidNum = '073';
-    framesToExtract(ii).frameNum = 474;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0222';
-    framesToExtract(ii).session = '20180319a';
-    framesToExtract(ii).vidNum = '034';
-    framesToExtract(ii).frameNum = 579;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0191';
-    framesToExtract(ii).session = '20170930a';
-    framesToExtract(ii).vidNum = '012';
-    framesToExtract(ii).frameNum = 432;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0191';
-    framesToExtract(ii).session = '20170925a';
-    framesToExtract(ii).vidNum = '009';
-    framesToExtract(ii).frameNum = 386;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0191';
-    framesToExtract(ii).session = '20170918a';
-    framesToExtract(ii).vidNum = '017';
-    framesToExtract(ii).frameNum = 482;
-    
-    ii = ii + 1;
-    framesToExtract(ii).ratID = 'R0191';
-    framesToExtract(ii).session = '20170918a';
-    framesToExtract(ii).vidNum = '017';
-    framesToExtract(ii).frameNum = 303;
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
 % if ~exist(savePath,'dir')
 %     mkdir(savePath);
 % end
@@ -161,16 +158,16 @@ if ~all(numFramesExtracted == numFramesExtracted(1))
     return;
 end
 
-
+script_ratInfo_for_deepcut;
 numRats = length(ratInfo);
 
 % first row for direct view, second row left view, third row right view
 % format [a,b,c,d] where (a,b) is the upper left corner and (c,d) is
 % (width,height)
 
-ROI = [750,500,550,500;     % direct view rectangle [left,top,width,height]
-       1,500,450,400;       % left view rectangle [left,top,width,height]
-       1650,500,390,400];   % right view rectangle [left,top,width,height]
+ROI = [750,500,550,500;
+       1,500,450,400;
+       1650,500,390,400];
 
 
 % hard code coordinates for cropping direct view, left mirror, right mirror
@@ -277,19 +274,19 @@ if selectRandomFrames
     end
 else    % use a specified list of frames
     
-    for iFrame = 1 : length(framesToExtract)
+    for iFrame = 1 : length(frameList)
         
-        ratSessionFolder = fullfile(rootPath,framesToExtract(iFrame).ratID,[framesToExtract(iFrame).ratID '_' framesToExtract(iFrame).session]);
+        ratSessionFolder = fullfile(rootPath,frameList(iFrame).ratID,[frameList(iFrame).ratID '_' frameList(iFrame).session]);
         cd(ratSessionFolder);
         
-        vidList = dir([framesToExtract(iFrame).ratID '_*_' framesToExtract(iFrame).vidNum '.avi']);
+        vidList = dir([frameList(iFrame).ratID '_*_' frameList(iFrame).vidNum '.avi']);
         if isempty(vidList); continue; end
         
         vidName = vidList.name;
         
         video = VideoReader(vidName);
         fr = video.FrameRate;
-        frameTime = framesToExtract(iFrame).frameNum / fr;
+        frameTime = frameList(iFrame).frameNum / fr;
         video.CurrentTime = frameTime;
         
         cur_img = readFrame(video);
@@ -298,10 +295,11 @@ else    % use a specified list of frames
         
         % crop out bits
         cropped_img = cell(1,3);
-        cropBaseName = sprintf('%s_%s_vid%s_frame%03d', framesToExtract(iFrame).ratID,...
-                                                        framesToExtract(iFrame).session,...
-                                                        framesToExtract(iFrame).vidNum,...
-                                                        framesToExtract(iFrame).frameNum);
+        cropBaseName = sprintf('%s_%s_vid', [frameList(iFrame).ratID,...
+                                         frameList(iFrame).session
+            
+        '_' frameList(iFrame).session], ...
+            [validSessionList{validSessionIdx} '_vid' vidNameNumber '_frame' curFrameStr];
 
         for iView = 1 : 3
             cropped_img{iView} = cur_img(ROI(iView,2) : ROI(iView,2) + ROI(iView,4), ...
@@ -311,8 +309,8 @@ else    % use a specified list of frames
             imwrite(cropped_img{iView},cropFrameName,'png');
         end
         cd(viewSavePath{iView})
-%         frameList = dir('*.png');
-%         numFramesExtracted = length(frameList);
+        frameList = dir('*.png');
+        numFramesExtracted = length(frameList);
         
     end
     
