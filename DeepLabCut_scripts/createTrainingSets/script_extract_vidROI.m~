@@ -15,15 +15,10 @@ numVidsttoExtract = 30;
 % which types of videos to extract? left vs right paw, tat vs no tat
 selectPawPref = 'left';
 selectTattoo = 'yes';
-digitColors = 'gpybr';   % order of colors on the digits (digits 1-4 and dorsum of paw).
-                         % g = green, p = purple, b = blue, y = yellow, r = red
+colorOrder = 'gpybr';   % order of colors on the digits (digits 1-4 and dorsum of paw).
+                        % g = green, p = purple, b = blue, y = yellow, r = red
 
-if strcmpi(selectTattoo,'yes')
-    savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_testing_vids',[selectPawPref, '_paw_tattooed_', digitColors]);
-else
-    savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_testing_vids',[selectPawPref, '_paw_markerless']);
-end
-
+savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_testing_vids',[selectPawPref, '_paw_', selectTattoo, '_tattoo']);
 % if ~exist(savePath,'dir')
 %     mkdir(savePath);
 % end
@@ -55,8 +50,8 @@ ROI = [750,450,550,550;
 
 numValidRats = 0;
 for iRat = 1 : numRats
-    if strcmpi(ratInfo(iRat).pawPref, selectPawPref) && ...
-       strcmpi(ratInfo(iRat).digitColors, digitColors)
+    if strcmpi(ratInfo(iRat).pawPref, selectPawPref) &&
+       strcmpi(ratInfo(iRat).digitColors, colorO
         numValidRats = numValidRats + 1;
         validRatInfo(numValidRats) = ratInfo(iRat);
     end
@@ -128,11 +123,7 @@ while numVidsExtracted < numVidsttoExtract
 end
 %%
 % save metadata files
-if strcmpi(selectTattoo,'yes')
-    fname = [selectPawPref, '_paw_tattooed_', digitColors, '_metadata.mat'];
-else
-    fname = [selectPawPref, '_paw_markerless_metadata.mat'];
-end
+fname = [selectPawPref, '_paw_', selectTattoo, '_tattoo_metadata.mat'];
 for i_vidDest = 1 : length(viewSavePath)
     cd(viewSavePath{iView});
     save(fname,'triggerTime','frameTimeLimits','viewList','ROI');

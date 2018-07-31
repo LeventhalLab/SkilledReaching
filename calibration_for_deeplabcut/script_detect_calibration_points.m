@@ -1,6 +1,6 @@
 % detect checkerboard calibration images, 20180605
 
-calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 
 % first row red, second row green, third row blue
 direct_hsvThresh = [0,0.1,0.8,1,0.5,1;

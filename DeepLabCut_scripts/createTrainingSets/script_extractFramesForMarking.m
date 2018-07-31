@@ -4,21 +4,30 @@
 
 % need to set up a destination folder to put the stacks of videos of each
 % type - left vs right pawed, tattooed vs not
+if exist('validRatInfo','var')
+    clear validRatInfo
+end
 
 script_ratInfo_for_deepcut;
 
-selectRandomFrames = false;
+selectRandomFrames = true;
 
 rootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 triggerTime = 1;    % seconds
-frameTimeLimits = [0,1];    % time around trigger to extract frames
-numFramesttoExtract = 300;
+frameTimeLimits = [-0.5,1];    % time around trigger to extract frames
+numFramesttoExtract = 200;
 
 % which types of videos to extract? left vs right paw, tat vs no tat
 selectPawPref = 'left';
 selectTattoo = 'yes';
+digitColors = 'gpybr';   % order of colors on the digits (digits 1-4 and dorsum of paw).
+                         % g = green, p = purple, b = blue, y = yellow, r = red
 
-savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_training_frames',[selectPawPref, '_paw_', selectTattoo, '_tattoo']);
+if strcmpi(selectTattoo,'yes')
+    savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_training_frames',[selectPawPref, '_paw_tattooed_', digitColors]);
+else
+    savePath = fullfile('/Volumes','Tbolt_01','Skilled Reaching','deepLabCut_training_frames',[selectPawPref, '_paw_markerless']);
+end
 
 % hard code list of frames to use if not selecting at random
 if exist('framesToExtract','var')
@@ -168,7 +177,7 @@ numRats = length(ratInfo);
 % format [a,b,c,d] where (a,b) is the upper left corner and (c,d) is
 % (width,height)
 
-ROI = [750,500,550,500;     % direct view rectangle [left,top,width,height]
+ROI = [750,450,550,550;     % direct view rectangle [left,top,width,height]
        1,500,450,400;       % left view rectangle [left,top,width,height]
        1650,500,390,400];   % right view rectangle [left,top,width,height]
 
@@ -189,7 +198,8 @@ frameStack_notat_right = cell(1,3);
 
 numValidRats = 0;
 for iRat = 1 : numRats
-    if strcmpi(ratInfo(iRat).pawPref, selectPawPref)
+    if strcmpi(ratInfo(iRat).pawPref, selectPawPref) && ...
+       strcmpi(ratInfo(iRat).digitColors, digitColors)
         numValidRats = numValidRats + 1;
         validRatInfo(numValidRats) = ratInfo(iRat);
     end
