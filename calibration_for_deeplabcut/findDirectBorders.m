@@ -7,11 +7,8 @@ function [ imgMask ] = findDirectBorders( img, HSVlimits, ROIs )
 % OUTPUTS
 %   imgMask - mask images - h x w x 6 stored in the following order:
 %       1 - direct view red
-%       2 - mirror view red
-%       3 - direct view green
-%       4 - mirror view green
-%       5 - direct view blue
-%       6 - mirror view blue
+%       2 - direct view green
+%       3 - direct view blue
 
 SEsize = 3;
 SE = strel('disk',SEsize);
@@ -26,11 +23,8 @@ w = size(img,2);
 
 img_stretch = decorrstretch(img);
 
-<<<<<<< HEAD
-figure(1); imshow(img_stretch);
+% figure(1); imshow(img_stretch);
 
-=======
->>>>>>> 363fc4784b2116b41dc66594009feea8f6b6fff5
 img_hsv = rgb2hsv(img_stretch);
 
 directMask = false(h,w);
@@ -122,61 +116,4 @@ end
 
 end
 
-
-    % iterate until we find a border region with a single hole 
-%     currentThresh = diffThresh;
-%     foundValidBorder = false;
-%     while ~foundValidBorder
-%         mirrorBorder = mirrorViewGray < currentThresh;
-%         mirrorBorder = imopen(mirrorBorder, SE);
-%         mirrorBorder = imclose(mirrorBorder, SE);
-%         
-%         L = bwlabel(mirrorBorder);
-%         if ~any(L(:))   % if nothing detected
-%             currentThresh = currentThresh + threshStepSize;
-%             continue;
-%         end
-%         
-%         for iObj = 1 : max(L(:))
-%             regionstats = regionprops(L == iObj,'euler');
-%             if regionstats.EulerNumber == 0   % a candidate border - there is one hole
-%                 mirrorBorder_filled = imfill(mirrorBorder,'holes');
-%                 testImg = mirrorBorder_filled & ~mirrorBorder;   % where the checkerboard should be
-%                 teststats = regionprops(testImg,'area');
-%                 A = teststats.Area;
-%                 
-%                 if A > minCheckerboardArea && A < maxCheckerboardArea
-%                     foundValidBorder = true;
-%                     mirrorBorder = (L == iObj);
-%                     break;
-%                 end
-%             end
-%         end
-%         currentThresh = currentThresh + threshStepSize;
-% 
-%     end
-%     imgMask(:,:,2*iColor) = mirrorBorder;
-% 
-% end
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% function newMasks = cleanUpBorder(img, oldBorder)
-% 
-% newMasks = false(size(oldBorder));
-% img_hsv = rgb2hsv(img);
-% 
-% for iMask = 1 : size(oldBorder, 6)
-%     
-%     
-%     
-%     
-% end    % end for iMask...
-% 
-% 
-% 
-% end
     

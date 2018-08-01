@@ -10,6 +10,9 @@ end
 
 script_ratInfo_for_deepcut;
 
+% select frames at random (set to true) or pick specific frames (false)?
+% if specific frames, set these frames in the if ~selectRandomFrames
+% section
 selectRandomFrames = true;
 
 rootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');

@@ -38,13 +38,6 @@ for iImg = 30 : length(imgList)
     curImgName = imgList(iImg).name;
 %     
     A = imread(curImgName);
-%     Ahsv = rgb2hsv(A);
-%     
-%     figure(1)
-%     imshow(A)
-    
-
-
 
     directBorderMask = findDirectBorders(A, direct_hsvThresh, ROIs);
     directBorderChecks = findDirectCheckerboards(A, directBorderMask, boardSize);
