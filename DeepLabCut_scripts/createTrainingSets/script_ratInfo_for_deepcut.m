@@ -1,5 +1,6 @@
 % script to hard code rat information for purposes of trying out deeplabcut
 
+%comment
 rootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 
 startRatNum = 186;
