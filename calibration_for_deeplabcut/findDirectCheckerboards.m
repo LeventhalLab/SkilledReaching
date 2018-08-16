@@ -3,20 +3,38 @@ function [boardPoints] = findDirectCheckerboards(img,directBorderMask,anticipate
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
+% INPUTS
+% OUTPUTS
+
+hullOverlapThresh = 0.8;
+minCornerStep = 0.01;
+minCornerMetric = 0.15;   % algorithm default
+maxDetectAttempts = 10;
+
+strelSize = 15;
+
 numBoards = size(directBorderMask,3);
 img_gray = rgb2gray(img);
 
 gradientThresh = 0.1;
 h = size(img,1);
 w = size(img,2);
-for iBoard = 1 : numBoards
+for iBoard = 3 : numBoards
     
     curBoardMask = imfill(directBorderMask(:,:,iBoard),'holes') & ~directBorderMask(:,:,iBoard);
+    curBoardMask = imclose(curBoardMask,strel('disk',strelSize));
+    curBoardMask = imopen(curBoardMask,strel('disk',strelSize));
+    
+    numBoardMaskPoints = sum(curBoardMask(:));
+    
     curBoardImg = img .* repmat(uint8(curBoardMask),1,1,3);
     
     foundValidPoints = false;
-    while ~foundValidPoints
-        [imagePoints,boardSize] = detectCheckerboardPoints(curBoardImg);
+    numCheckDetectAttempts = 0;
+    while ~foundValidPoints && (numCheckDetectAttempts <= maxDetectAttempts)
+%         [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,...
+%             'mincornermetric',minCornerMetric);
+        [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg);
     
         % check that these are valid image points
         % first, does boardSize match anticipatedBoardSize?
@@ -24,8 +42,14 @@ for iBoard = 1 : numBoards
              all(anticipatedBoardSize == fliplr(boardSize)))
             % anticipatedBoardSize does NOT match boardSize
             
-            % do something here to update how it will look for checkerboard
-            % points
+            % adjust so the algorithm is more or less sensitive as needed            
+            if prod(boardSize) > prod(anticipatedBoardSize)
+                % detected too many points
+                minCornerMetric = minCornerMetric - minCornerStep;
+            else
+                minCornerMetric = minCornerMetric + minCornerStep;
+            end
+            numCheckDetectAttempts = numCheckDetectAttempts + 1;
             continue;
         end
         
@@ -34,18 +58,38 @@ for iBoard = 1 : numBoards
         % to the borders
         
         % find the convex hull of the identified checkerboard points
-        cvHull = convhull(imagePoints(:,1),imagePoints(:,2));
-        hullMask = poly2mask(imagePoints(cvHull,1),imagePoints(cvHull,2),h,w);
+        cvHull = convhull(boardPoints(:,1),boardPoints(:,2));
+        hullMask = poly2mask(boardPoints(cvHull,1),boardPoints(cvHull,2),h,w);
         
+        smoothedHull = imclose(hullMask,strel('disk',strelSize));
+        smoothedHull = imopen(smoothedHull,strel('disk',strelSize));
         % now check to see if the convex hull of the checkerboard points is
         % more or less evenly spaced from the inner edge of the border
+        thickenedHull = thickenToEdge(smoothedHull, curBoardMask);
+        
+        % "thickenedHull" should closely match with curBoardMask if the
+        % convex hull of checkerboard points is evenly spaced from the
+        % inner edge of the border
+        testMask = thickenedHull & curBoardMask;
+        numOverlapPoints = sum(testMask(:));
+        
+        testRatio = numOverlapPoints / numBoardMaskPoints;
+        
+        if testRatio < hullOverlapThresh
+            % try increasing mincornermetric - too many false positives?
+            minCornerMetric = minCornerMetric + minCornerStep;
+            numCheckDetectAttempts = numCheckDetectAttempts + 1;
+            continue;
+        end
+        
+        foundValidPoints = true;
         
     end
             
     
-    figure;imshow(curBoardImg);
+    figure(1);imshow(curBoardImg);
     hold on
-    scatter(imagePoints(:,1),imagePoints(:,2));
+    scatter(boardPoints(:,1),boardPoints(:,2));
     
     validPix = curBoardMask(:);
     curBoardImg = img .* repmat(uint8(curBoardMask),1,1,3);
