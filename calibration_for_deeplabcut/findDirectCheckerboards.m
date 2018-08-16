@@ -1,4 +1,4 @@
-function [boardPoints] = findDirectCheckerboards(img,directBorderMask,anticipatedBoardSize)
+function [boardPoints,foundValidPoints] = findDirectCheckerboards(img,directBorderMask,anticipatedBoardSize)
 
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
@@ -6,20 +6,24 @@ function [boardPoints] = findDirectCheckerboards(img,directBorderMask,anticipate
 % INPUTS
 % OUTPUTS
 
-hullOverlapThresh = 0.8;
+% hullOverlapThresh = 0.8;
 minCornerStep = 0.01;
 minCornerMetric = 0.15;   % algorithm default
 maxDetectAttempts = 10;
+minCheckerboardFract = prod(anticipatedBoardSize-2)/prod(anticipatedBoardSize) - 0.05;%0.25;
+% assuming all checks are the same size, the ratio of the area of the
+% detected board (which excludes the outer checks)
 
 strelSize = 15;
 
 numBoards = size(directBorderMask,3);
-img_gray = rgb2gray(img);
+% img_gray = rgb2gray(img);
 
-gradientThresh = 0.1;
+% gradientThresh = 0.1;
 h = size(img,1);
 w = size(img,2);
-for iBoard = 3 : numBoards
+foundValidPoints = false(1,numBoards);
+for iBoard = 1 : numBoards
     
     curBoardMask = imfill(directBorderMask(:,:,iBoard),'holes') & ~directBorderMask(:,:,iBoard);
     curBoardMask = imclose(curBoardMask,strel('disk',strelSize));
@@ -29,9 +33,8 @@ for iBoard = 3 : numBoards
     
     curBoardImg = img .* repmat(uint8(curBoardMask),1,1,3);
     
-    foundValidPoints = false;
     numCheckDetectAttempts = 0;
-    while ~foundValidPoints && (numCheckDetectAttempts <= maxDetectAttempts)
+    while ~foundValidPoints(iBoard) && (numCheckDetectAttempts <= maxDetectAttempts)
 %         [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,...
 %             'mincornermetric',minCornerMetric);
         [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg);
@@ -60,51 +63,53 @@ for iBoard = 3 : numBoards
         % find the convex hull of the identified checkerboard points
         cvHull = convhull(boardPoints(:,1),boardPoints(:,2));
         hullMask = poly2mask(boardPoints(cvHull,1),boardPoints(cvHull,2),h,w);
+        hullSize = sum(hullMask(:));
         
-        smoothedHull = imclose(hullMask,strel('disk',strelSize));
-        smoothedHull = imopen(smoothedHull,strel('disk',strelSize));
+%         smoothedHull = imclose(hullMask,strel('disk',strelSize));
+%         smoothedHull = imopen(smoothedHull,strel('disk',strelSize));
         % now check to see if the convex hull of the checkerboard points is
         % more or less evenly spaced from the inner edge of the border
-        thickenedHull = thickenToEdge(smoothedHull, curBoardMask);
+%         thickenedHull = thickenToEdge(smoothedHull, curBoardMask);
         
         % "thickenedHull" should closely match with curBoardMask if the
         % convex hull of checkerboard points is evenly spaced from the
         % inner edge of the border
-        testMask = thickenedHull & curBoardMask;
-        numOverlapPoints = sum(testMask(:));
+%         testMask = thickenedHull & curBoardMask;
+%         numOverlapPoints = sum(testMask(:));
         
-        testRatio = numOverlapPoints / numBoardMaskPoints;
+        testRatio = hullSize / numBoardMaskPoints;
+        % assuming all checks are the same size, should be 
         
-        if testRatio < hullOverlapThresh
+        if testRatio < minCheckerboardFract
             % try increasing mincornermetric - too many false positives?
             minCornerMetric = minCornerMetric + minCornerStep;
             numCheckDetectAttempts = numCheckDetectAttempts + 1;
             continue;
         end
         
-        foundValidPoints = true;
+        foundValidPoints(iBoard) = true;
         
     end
             
-    
-    figure(1);imshow(curBoardImg);
-    hold on
-    scatter(boardPoints(:,1),boardPoints(:,2));
-    
-    validPix = curBoardMask(:);
-    curBoardImg = img .* repmat(uint8(curBoardMask),1,1,3);
-    
-    checkPix = img_gray(validPix);
-    checkThresh = graythresh(checkPix);
-    
-    whiteChecks = (double(img_gray)/255 > checkThresh) & curBoardMask;
-    blackChecks = (double(img_gray)/255 < checkThresh) & curBoardMask;
-    
-    checkGradient = gradientweight(img_gray) .* double(curBoardMask);
-    checkBorders = (checkGradient < gradientThresh) & curBoardMask;
-    
-    whiteChecks = whiteChecks & ~checkBorders;
-    blackChecks = blackChecks & ~checkBorders;
+%     
+%     figure(1);imshow(curBoardImg);
+%     hold on
+%     scatter(boardPoints(:,1),boardPoints(:,2));
+%     
+%     validPix = curBoardMask(:);
+%     curBoardImg = img .* repmat(uint8(curBoardMask),1,1,3);
+%     
+%     checkPix = img_gray(validPix);
+%     checkThresh = graythresh(checkPix);
+%     
+%     whiteChecks = (double(img_gray)/255 > checkThresh) & curBoardMask;
+%     blackChecks = (double(img_gray)/255 < checkThresh) & curBoardMask;
+%     
+%     checkGradient = gradientweight(img_gray) .* double(curBoardMask);
+%     checkBorders = (checkGradient < gradientThresh) & curBoardMask;
+%     
+%     whiteChecks = whiteChecks & ~checkBorders;
+%     blackChecks = blackChecks & ~checkBorders;
     
 end
 % boardPoints = zeros(prod(anticipatedBoardSize-1),2,numBoards);
