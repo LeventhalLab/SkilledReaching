@@ -14,7 +14,7 @@ minCheckerboardFract = prod(anticipatedBoardSize-2)/prod(anticipatedBoardSize) -
 % assuming all checks are the same size, the ratio of the area of the
 % detected board (which excludes the outer checks)
 
-strelSize = 15;
+% strelSize = 15;
 
 numBoards = size(directBorderMask,3);
 % img_gray = rgb2gray(img);
@@ -26,8 +26,8 @@ foundValidPoints = false(1,numBoards);
 for iBoard = 1 : numBoards
     
     curBoardMask = imfill(directBorderMask(:,:,iBoard),'holes') & ~directBorderMask(:,:,iBoard);
-    curBoardMask = imclose(curBoardMask,strel('disk',strelSize));
-    curBoardMask = imopen(curBoardMask,strel('disk',strelSize));
+%     curBoardMask = imclose(curBoardMask,strel('disk',strelSize));
+%     curBoardMask = imopen(curBoardMask,strel('disk',strelSize));
     
     numBoardMaskPoints = sum(curBoardMask(:));
     

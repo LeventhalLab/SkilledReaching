@@ -33,16 +33,7 @@ for iBoard = 1 : numBoards
                ROIs(iBoard+1,1):ROIs(iBoard+1,1)+ROIs(iBoard+1,3)-1) = true;
     mirrorView_hsv = img_hsv .* repmat(double(mirrorMask),1,1,3);
     
-    initSeedMasks(:,:,iBoard) = HSVthreshold(img_hsv, mirror_hsvThresh(iBoard,:)) & mirrorMask;
-    denoisedMasks(:,:,iBoard) = imopen(squeeze(initSeedMasks(:,:,iBoard)), SE);
-    denoisedMasks(:,:,iBoard) = imclose(squeeze(denoisedMasks(:,:,iBoard)), SE);
-    
-    mirrorBorderMask = squeeze(denoisedMasks(:,:,iBoard));
-    [meanHSV(iBoard,1,:),stdHSV(iBoard,1,:)] = calcHSVstats(img_hsv, mirrorBorderMask);
-    
-    mirrorView_hsvDist = calcHSVdist(mirrorView_hsv, squeeze(meanHSV(iBoard,1,:)));
-    
-    mirrorViewGray = mean(mirrorView_hsvDist(:,:,1:2),3);
+    initSeedMasks(:,:,iBoard) = HSVthreshold(img_hsv, HSVlimits(iBoard,:)) & mirrorMask;
     
 end
 

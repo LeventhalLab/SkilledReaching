@@ -45,7 +45,7 @@ for iImg = 30 : length(imgList)
 
     directBorderMask = findDirectBorders(A, direct_hsvThresh, ROIs);
     [directBorderChecks,dir_foundValidPoints] = findDirectCheckerboards(A, directBorderMask, boardSize);
-    mirrorBorderMask = findMirrorCheckerboards(A, directBorderMask, mirror_hsvThresh, ROIs);
+    mirrorBorderMask = findMirrorCheckerboards(A, directBorderMask, directBorderChecks, mirror_hsvThresh, boardSize, ROIs);
 %     borderMask = findColoredBorder(A, hsvThresh, ROIs);
     dispMask = false(h,w);
     for iMask = 1 : 6
