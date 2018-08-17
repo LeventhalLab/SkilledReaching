@@ -1,9 +1,11 @@
-function mirrorChecks = findMirrorCheckerboards(img, directBorderMask, directBorderChecks, mirror_hsvThresh, anticipatedBoardSize, ROIs)
+function mirrorChecks = findMirrorCheckerboards(img, directBorderMask, directBorderChecks, mirror_hsvThresh, anticipatedBoardSize, ROIs, cameraParams)
+%
+% INPUTS:
+%   cameraParams - camera parameters structure
 
 minCornerStep = 0.01;
 minCornerMetric = 0.15;   % algorithm default
 maxDetectAttempts = 10;
-minCheckerboardFract = prod(anticipatedBoardSize-2)/prod(anticipatedBoardSize) - 0.05;
 
 diffThresh = 0.1;
 threshStepSize = 0.01;
@@ -85,7 +87,7 @@ for iBoard = 1 : numBoards
 	curBoardImg = img .* repmat(uint8(curBoardMask),1,1,3);
     numCheckDetectAttempts = 0;
     number_of_points_match = false;
-    while ~foundValidPoints(iBoard) && (numCheckDetectAttempts <= maxDetectAttempts)
+    while ~number_of_points_match && (numCheckDetectAttempts <= maxDetectAttempts)
 %         [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,...
 %             'mincornermetric',minCornerMetric);
         [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg);
@@ -107,9 +109,27 @@ for iBoard = 1 : numBoards
             continue;
         end
         
+        number_of_points_match = true;
+        
+    end
+    if ~number_of_points_match
+        continue
     end
     
-    %
+    % match the found points with direct checkerboard points (if found)
+    direct_undistorted = undistortPoints(squeeze(directBorderChecks(:,:,iBoard)),cameraParams);
+    mirror_undistorted = undistortPoints(boardPoints,cameraParams);
+    
+    switch iBoard
+        case 1
+            mirrorView = 'top';
+        case 2
+            mirrorView = 'left';
+        case 3
+            mirrorView = 'right';
+    end
+    initMatchIdx = findInitMatches(direct_undistorted, mirror_undistorted, mirrorView);
+    matchedPoints = matchMirrorPointsFromInitMatch(pointsToMatch, initMatchIdx)
     
     if foundValidPoints(iBoard)
         mirrorBoardPoints(:,:,iBoard) = boardPoints;

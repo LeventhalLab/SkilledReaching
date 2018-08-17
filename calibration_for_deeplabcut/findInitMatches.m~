@@ -1,39 +1,11 @@
-function matchedPoints = matchMirrorPoints(directPoints, mirrorPoints, imSize, mirrorView)
+function initMatchIdx = findInitMatches(directPoints, mirrorPoints, mirrorView)
 
 % INPUTS
 %   mirrorPoints - m x 2 array of (x,y) points in the mirror view
 %   directPoints - m x 2 array of (x,y) points in the direct view
 %   mirrorView - 'left','right', or 'top'
-%   m - number of checkerboard rows
-%   n - number of checkerboard columns
 
-% I think for both left and right views, can just order points from top to
-% bottom to match them. Do we need to know which rows they're in too?
-
-% squareSize = 8;    % mm
-% for iarg = 1 : 2 : nargin - 3
-%     switch lower(varargin{iarg})
-%         case 'squaresize'
-%             squareSize = varargin{iarg + 1};
-%     end
-% end
-
-if size(mirrorPoints,1) ~= size(directPoints,1)
-    error('mirrorPoints and directPoints must have the same number of rows')
-end
-
-h = imSize(1);
-w = imSize(2);
-num_points = size(mirrorPoints,1);
-if num_points ~= size(directPoints,1)
-    error('directPoints and mirrorPoints must have the same number of rows')
-end
-
-matchedPoints = zeros(num_points,2,2);
-testMatch = zeros(num_points,2,2);
-
-% there are num_points*(num_points-1) possible matches. The right one
-% should converge on the same epipolar point that is outside the image
+initMatchIdx = zeros(2,2);
 switch mirrorView
     case {'left','right'}
         % left-most and right-most points should be inverted (but may not
@@ -49,7 +21,7 @@ switch mirrorView
 %         testMatch(2,:,2) = mirrorPoints(mirror_ltIdx,:);
         
         % the top and bottom points should match
-        direct_topIdx = directPoints(:,2) == min(directPoints(:,2));
+        initMatchIdx(1, = directPoints(:,2) == min(directPoints(:,2));
         direct_botIdx = directPoints(:,2) == max(directPoints(:,2));
         mirror_topIdx = mirrorPoints(:,2) == min(mirrorPoints(:,2));
         mirror_botIdx = mirrorPoints(:,2) == max(mirrorPoints(:,2));

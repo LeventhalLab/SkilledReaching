@@ -128,7 +128,12 @@ for iBoard = 1 : numBoards
         case 3
             mirrorView = 'right';
     end
-    matchedPoints = matchMirrorPoints(direct_undistorted,mirror_undistorted,mirrorView);
+    initMatchIdx = findInitMatches(direct_undistorted, mirror_undistorted, mirrorView);
+    matchedPoints = matchMirrorPointsFromInitMatch(direct_undistorted, mirror_undistorted, initMatchIdx);
+    
+    % WORKING HERE...
+    
+    
     
     if foundValidPoints(iBoard)
         mirrorBoardPoints(:,:,iBoard) = boardPoints;

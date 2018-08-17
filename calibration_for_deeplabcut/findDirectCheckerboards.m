@@ -4,6 +4,12 @@ function [directBoardPoints,foundValidPoints] = findDirectCheckerboards(img,dire
 %   Detailed explanation goes here
 
 % INPUTS
+%   img - full calibration image
+%   directBorderMask - 
+%   anticipatedBoardSize - 2 x 1 vector containing the anticipated
+%       checkerboard size INCLUDING the outer edge (recall that
+%       detectCheckerboardPoints will find the interior points but returns
+%       boardSize that includes the outer edge)
 % OUTPUTS
 
 % hullOverlapThresh = 0.8;

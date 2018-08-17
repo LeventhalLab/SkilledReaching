@@ -96,10 +96,6 @@ epiPt = findIntersection(testLines(1,:),testLines(2,:));
 
 %%%%%%%
 testPts = lineToBorderPoints(testLines,imSize);
-figure(1)
-hold on
-line(testPts(1,[1,3]),testPts(1,[2,4]))
-line(testPts(2,[1,3]),testPts(2,[2,4]))
 
 
 % find the convex hull of the direct and mirror points
