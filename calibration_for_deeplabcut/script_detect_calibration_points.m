@@ -3,14 +3,17 @@
 calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 % calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 
-% first row red, second row green, third row blue
-direct_hsvThresh = [0,0.1,0.8,1,0.5,1;
-                    0.33,0.1,0.8,1,0.5,1;
-                    0.66,0.1,0.8,1,0.5,1];
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+load(camParamFile);
 
-mirror_hsvThresh = [0,0.1,0.5,1,0.5,1;
-                    0.33,0.1,0.5,1,0.5,1;
-                    0.66,0.1,0.5,1,0.5,1];
+% first row red, second row green, third row blue
+direct_hsvThresh = [0,0.1,0.8,1,0.8,1;
+                    0.33,0.1,0.8,1,0.8,1;
+                    0.66,0.1,0.8,1,0.8,1];
+
+mirror_hsvThresh = [0,0.1,0.5,1,0.8,1;
+                    0.33,0.1,0.5,1,0.8,1;
+                    0.66,0.1,0.5,1,0.8,1];
 
 boardSize = [4 5];
 cd(calImageDir)
@@ -45,7 +48,7 @@ for iImg = 30 : length(imgList)
 
     directBorderMask = findDirectBorders(A, direct_hsvThresh, ROIs);
     [directBorderChecks,dir_foundValidPoints] = findDirectCheckerboards(A, directBorderMask, boardSize);
-    mirrorBorderMask = findMirrorCheckerboards(A, directBorderMask, directBorderChecks, mirror_hsvThresh, boardSize, ROIs);
+    mirrorBorderMask = findMirrorCheckerboards(A, directBorderMask, directBorderChecks, mirror_hsvThresh, boardSize, ROIs, cameraParams);
 %     borderMask = findColoredBorder(A, hsvThresh, ROIs);
     dispMask = false(h,w);
     for iMask = 1 : 6
