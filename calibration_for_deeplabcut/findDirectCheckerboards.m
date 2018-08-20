@@ -70,6 +70,18 @@ for iBoard = 1 : numBoards
         % find the convex hull of the identified checkerboard points
         cvHull = convhull(boardPoints(:,1),boardPoints(:,2));
         hullMask = poly2mask(boardPoints(cvHull,1),boardPoints(cvHull,2),h,w);
+        
+        % check that hullMask is contained entirely within curBoardMask
+        testMask = curBoardMask & ~hullMask;
+        testStat = regionprops(testMask,'eulernumber');
+        
+        % euler number should be 0
+        if testStat.EulerNumber ~= 0
+            minCornerMetric = minCornerMetric - minCornerStep;
+            numCheckDetectAttempts = numCheckDetectAttempts + 1;
+            continue;
+        end
+        
         hullSize = sum(hullMask(:));
         
 %         smoothedHull = imclose(hullMask,strel('disk',strelSize));

@@ -1,9 +1,10 @@
 % detect checkerboard calibration images, 20180605
 
-calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+% camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
 
 % first row red, second row green, third row blue
@@ -33,7 +34,7 @@ ROIs = [700,375,650,600;
 cd(calImageDir);
 
 
-for iImg = 30 : length(imgList)
+for iImg = 1 : length(imgList)
     
     if ~isempty(strfind(imgList(iImg).name,'marked'))
         continue;

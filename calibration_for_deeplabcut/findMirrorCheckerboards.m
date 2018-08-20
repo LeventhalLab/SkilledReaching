@@ -1,4 +1,4 @@
-function mirrorChecks = findMirrorCheckerboards(img, directBorderMask, directBorderChecks, mirror_hsvThresh, anticipatedBoardSize, ROIs, cameraParams)
+function matchedPoints = findMirrorCheckerboards(img, directBorderMask, directBorderChecks, mirror_hsvThresh, anticipatedBoardSize, ROIs, cameraParams)
 %
 % INPUTS:
 %   cameraParams - camera parameters structure
@@ -128,16 +128,15 @@ for iBoard = 1 : numBoards
         case 3
             mirrorView = 'right';
     end
-    initMatchIdx = findInitMatches(direct_undistorted, mirror_undistorted, mirrorView);
-    matchedPoints = matchMirrorPointsFromInitMatch(direct_undistorted, mirror_undistorted, initMatchIdx);
     
-    % WORKING HERE...
-    
-    
-    
-    if foundValidPoints(iBoard)
-        mirrorBoardPoints(:,:,iBoard) = boardPoints;
+    if number_of_points_match
+        initMatchIdx = findInitMatches(direct_undistorted, mirror_undistorted, mirrorView);
+        matchedPoints = matchMirrorPointsFromInitMatch(direct_undistorted, mirror_undistorted, initMatchIdx);
     end
+        
+    % are these points valid?
+    % WORKING HERE...
+
 end
 
 
