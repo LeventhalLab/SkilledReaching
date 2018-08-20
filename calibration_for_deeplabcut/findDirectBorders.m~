@@ -15,12 +15,12 @@ if isa(img,'uint8')
 end
 im_eq = adapthisteq(rgb2gray(img));
 im_hsv = rgb2hsv(img);
-hsv_eq = im_hsv;
-hsv_eq(:,:,3) = im_eq;
-rgb_eq = hsv2rgb(hsv_eq);
+im_hsv_eq = im_hsv;
+im_hsv_eq(:,:,3) = im_eq;
 
-img_stretch = decorrstretch(rgb_eq);
-
+im_tr = hsv2rgb(im_hsv_eq);
+im_stretch = decorrstretch(im_tr);
+    
 SEsize = 3;
 SE = strel('disk',SEsize);
 minCheckerboardArea = 5000;
@@ -32,7 +32,7 @@ threshStepSize = 0.01;
 h = size(img,1);
 w = size(img,2);
 
-
+img_stretch = decorrstretch(img);
 
 % figure(1); imshow(img_stretch);
 
@@ -118,8 +118,8 @@ for iColor = 1 : 3
 
     end
     % smooth it
-%     imgMask(:,:,iColor) = imopen(directBorder,strel('disk',3));
-%     imgMask(:,:,iColor) = imclose(imgMask(:,:,iColor),strel('disk',3));
+    imgMask(:,:,iColor) = imopen(directBorder,strel('disk',3));
+    imgMask(:,:,iColor) = imclose(imgMask(:,:,iColor),strel('disk',3));
     imgMask(:,:,iColor) = directBorder;
         
 end

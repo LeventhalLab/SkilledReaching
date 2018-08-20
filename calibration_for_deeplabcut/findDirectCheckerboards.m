@@ -44,7 +44,12 @@ for iBoard = 1 : numBoards
     while ~foundValidPoints(iBoard) && (numCheckDetectAttempts <= maxDetectAttempts)
 %         [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,...
 %             'mincornermetric',minCornerMetric);
-        [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg);
+        [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,'mincornermetric',minCornerMetric);
+        
+        figure(2)
+        imshow(img);
+        hold on
+        scatter(boardPoints(:,1),boardPoints(:,2));
     
         % check that these are valid image points
         % first, does boardSize match anticipatedBoardSize?
@@ -112,6 +117,8 @@ for iBoard = 1 : numBoards
             
     if foundValidPoints(iBoard)
         directBoardPoints(:,:,iBoard) = boardPoints;
+    else
+        keyboard
     end
 end
 
