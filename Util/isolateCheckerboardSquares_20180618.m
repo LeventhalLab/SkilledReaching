@@ -22,6 +22,9 @@ for iarg = 1 : 2 : nargin - 3
 end
 num_antic_regions = prod(anticipatedBoardSize) / 2;
 
+if isa(testGray,'uint8')
+    testGray = double(testGray) / 255;
+end
 % testGray = img_sharp .* double(cvHull);
 % testGray_inv = (1 - img_sharp) .* double(cvHull);
 % 

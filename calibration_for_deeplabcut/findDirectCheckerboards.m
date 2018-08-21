@@ -46,7 +46,7 @@ for iBoard = 1 : numBoards
 %             'mincornermetric',minCornerMetric);
         [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,'mincornermetric',minCornerMetric);
         
-        figure(2)
+        figure(4)
         imshow(img);
         hold on
         scatter(boardPoints(:,1),boardPoints(:,2));
