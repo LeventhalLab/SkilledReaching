@@ -54,8 +54,8 @@ for iImg = 1 : num_img
         denoisedMasks(:,:,iMirror,iImg) = imclose(squeeze(denoisedMasks(:,:,iMirror,iImg)), SE);
 
         % get rid of little "satellite blobs" too far from the main blob
-        mainBlob = bwareafilt(denoisedMasks(:,:,iColor,iImg),1);
-        denoisedMasks(:,:,iColor,iImg) = removeDistantBlobs(mainBlob, denoisedMasks(:,:,iColor,iImg), maxDistFromMainBlob);        
+        mainBlob = bwareafilt(denoisedMasks(:,:,iMirror,iImg),1);
+        denoisedMasks(:,:,iColor,iImg) = removeDistantBlobs(mainBlob, denoisedMasks(:,:,iMirror,iImg), maxDistFromMainBlob);        
         
         mirrorBorderMask = squeeze(denoisedMasks(:,:,iMirror,iImg));
         [meanHSV(iMirror,1,:),stdHSV(iMirror,1,:)] = calcHSVstats(img_hsv, mirrorBorderMask);
