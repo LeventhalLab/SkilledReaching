@@ -4,7 +4,6 @@ function [ imgMask, denoisedMasks ] = findMirrorBorders(img, HSVlimits, ROIs)
 diffThresh = 0.1;
 threshStepSize = 0.01;
 maxThresh = 0.2;
-maxDistFromMainBlob = 200;
 
 if iscell(img)
     num_img = length(img);
@@ -53,10 +52,6 @@ for iImg = 1 : num_img
         denoisedMasks(:,:,iMirror,iImg) = imopen(squeeze(initSeedMasks(:,:,iMirror,iImg)), SE);
         denoisedMasks(:,:,iMirror,iImg) = imclose(squeeze(denoisedMasks(:,:,iMirror,iImg)), SE);
 
-        % get rid of little "satellite blobs" too far from the main blob
-        mainBlob = bwareafilt(denoisedMasks(:,:,iColor,iImg),1);
-        denoisedMasks(:,:,iColor,iImg) = removeDistantBlobs(mainBlob, denoisedMasks(:,:,iColor,iImg), maxDistFromMainBlob);        
-        
         mirrorBorderMask = squeeze(denoisedMasks(:,:,iMirror,iImg));
         [meanHSV(iMirror,1,:),stdHSV(iMirror,1,:)] = calcHSVstats(img_hsv, mirrorBorderMask);
 
@@ -75,7 +70,6 @@ for iImg = 1 : num_img
             else
                 mirrorBorder = mirrorViewGray < currentThresh;
             end
-            mirrorBorder = bwmorph(mirrorBorder,'clean');
             % saturation and intensity have to be high to accept pixels
     %         mirrorBorder = mirrorBorder & (mirrorView_hsv(:,:,2) > HSVlimits(iMirror,3)) & ...
     %             (mirrorView_hsv(:,:,3) > HSVlimits(iMirror,5));

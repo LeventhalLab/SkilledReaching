@@ -1,4 +1,4 @@
-function matchIdx = matchCheckerboardPoints(directChecks, mirrorChecks, mirrorOrientation)
+function matchIdx = matchCheckerboardPoints(directChecks, mirrorChecks, mirrorOrientation, cameraParams)
 %
 % INPUTS:
 %   directChecks, mirrorChecks - m x 2 arrays containing the checkerboard
@@ -10,17 +10,16 @@ function matchIdx = matchCheckerboardPoints(directChecks, mirrorChecks, mirrorOr
 %   matchIdx
 
 
-%%%%%%%%%%take out these lines later - for debugging
-% h=1024;
-% w=2040;
-%%%%%%%%%%take out these lines later - for debugging
-
 num_points = size(mirrorChecks,1);
 if num_points ~= size(directChecks,1)
     error('directChecks and mirrorChecks must have the same number of rows')
 end
 
-matchIdx = zeros(num_points,2);
+directChecks_ud = undistortPoints(directChecks, cameraParams);
+mirrorChecks_ud = undistortPoints(mirrorChecks, cameraParams);
+
+matchedPoints = zeros(num_points,2,2);
+matchIdx = uint8(num_points,2);
 testMatch = zeros(num_points,2,2);
 assignedPoints = false(num_points, 2);
 % if the top mirror, the left- and right-most points should match up
@@ -28,45 +27,37 @@ assignedPoints = false(num_points, 2);
 switch mirrorOrientation
 
     case 'top'
-        direct_ltIdx = directChecks(:,1) == min(directChecks(:,1));
-        direct_rtIdx = directChecks(:,1) == max(directChecks(:,1));
-        mirror_ltIdx = mirrorChecks(:,1) == min(mirrorChecks(:,1));
-        mirror_rtIdx = mirrorChecks(:,1) == max(mirrorChecks(:,1));
+        direct_ltIdx = directChecks_ud(:,1) == min(directChecks_ud(:,1));
+        direct_rtIdx = directChecks_ud(:,1) == max(directChecks_ud(:,1));
+        mirror_ltIdx = mirrorChecks_ud(:,1) == min(mirrorChecks_ud(:,1));
+        mirror_rtIdx = mirrorChecks_ud(:,1) == max(mirrorChecks_ud(:,1));
         
-        testMatch(1,:,1) = directChecks(direct_ltIdx,:);
-        testMatch(2,:,1) = directChecks(direct_rtIdx,:);
-        testMatch(1,:,2) = mirrorChecks(mirror_ltIdx,:);
-        testMatch(2,:,2) = mirrorChecks(mirror_rtIdx,:);
+        testMatch(1,:,1) = directChecks_ud(direct_ltIdx,:);
+        testMatch(2,:,1) = directChecks_ud(direct_rtIdx,:);
+        testMatch(1,:,2) = mirrorChecks_ud(mirror_ltIdx,:);
+        testMatch(2,:,2) = mirrorChecks_ud(mirror_rtIdx,:);
         
         assignedPoints(direct_ltIdx,1) = true;
         assignedPoints(direct_rtIdx,1) = true;
         assignedPoints(mirror_ltIdx,2) = true;
         assignedPoints(mirror_rtIdx,2) = true;
         
-        matchIdx(1,1) = find(direct_ltIdx);
-        matchIdx(2,1) = find(direct_rtIdx);
-        matchIdx(1,2) = find(mirror_ltIdx);
-        matchIdx(2,2) = find(mirror_rtIdx);
+        matchIdx(1,1) = 
     case {'left','right'}
-        direct_topIdx = directChecks(:,2) == min(directChecks(:,2));
-        direct_botIdx = directChecks(:,2) == max(directChecks(:,2));
-        mirror_topIdx = mirrorChecks(:,2) == min(mirrorChecks(:,2));
-        mirror_botIdx = mirrorChecks(:,2) == max(mirrorChecks(:,2));
+        direct_topIdx = directChecks_ud(:,2) == min(directChecks_ud(:,2));
+        direct_botIdx = directChecks_ud(:,2) == max(directChecks_ud(:,2));
+        mirror_topIdx = mirrorChecks_ud(:,2) == min(mirrorChecks_ud(:,2));
+        mirror_botIdx = mirrorChecks_ud(:,2) == max(mirrorChecks_ud(:,2));
         
-        testMatch(1,:,1) = directChecks(direct_topIdx,:);
-        testMatch(2,:,1) = directChecks(direct_botIdx,:);
-        testMatch(1,:,2) = mirrorChecks(mirror_topIdx,:);
-        testMatch(2,:,2) = mirrorChecks(mirror_botIdx,:);
+        testMatch(1,:,1) = directChecks_ud(direct_topIdx,:);
+        testMatch(2,:,1) = directChecks_ud(direct_botIdx,:);
+        testMatch(1,:,2) = mirrorChecks_ud(mirror_topIdx,:);
+        testMatch(2,:,2) = mirrorChecks_ud(mirror_botIdx,:);
         
-        assignedPoints(direct_topIdx,1) = true;
         assignedPoints(direct_botIdx,1) = true;
+        assignedPoints(direct_topIdx,1) = true;
         assignedPoints(mirror_topIdx,2) = true;
         assignedPoints(mirror_botIdx,2) = true;
-        
-        matchIdx(1,1) = find(direct_topIdx);
-        matchIdx(2,1) = find(direct_botIdx);
-        matchIdx(1,2) = find(mirror_topIdx);
-        matchIdx(2,2) = find(mirror_botIdx);
 end
 numMatchedPts = 2;
 
@@ -78,8 +69,6 @@ for ii = 1 : size(testLines,1)
     linePoints(2,:) = squeeze(testMatch(ii,:,2));   % mirror view
     
     testLines(ii,:) = lineCoeffFromPoints(linePoints);
-%     pts = lineToBorderPoints(testLines(ii,:),[h,w]);
-%     line(pts([1,3]),pts([2,4]));
 end
 epiPt = findIntersection(testLines(1,:),testLines(2,:));
 
@@ -89,18 +78,16 @@ for i_directCheck = 1 : num_points
         % this point has already been assigned a match
         continue;
     end
-    curDirectPt = directChecks(i_directCheck,:);
+    curDirectPt = directChecks_ud(i_directCheck,:);
     % construct a line from the current point to the epipole
     linePoints(1,:) = epiPt;
-    linePoints(2,:) = directChecks(i_directCheck,:);
-%     testLine = lineCoeffFromPoints(linePoints);
-%     pts = lineToBorderPoints(testLine,[h,w]);
-%     line(pts([1,3]),pts([2,4]));
+    linePoints(2,:) = directChecks_ud(i_directCheck,:);
+    testLine = lineCoeffFromPoints(linePoints);
     
     % calculate the distance from each mirror point to the line
     distFromLine = NaN(num_points,1);
     for i_mirrorCheck = 1 : num_points
-        testMirrorPoint = mirrorChecks(i_mirrorCheck,:);
+        testMirrorPoint = mirrorChecks_ud(i_mirrorCheck,:);
         distFromLine(i_mirrorCheck) = distanceToLine(curDirectPt, epiPt, testMirrorPoint);
     end
     
@@ -110,6 +97,4 @@ for i_directCheck = 1 : num_points
     minDistIdx = find(distFromLine == min(distFromLine));
     matchIdx(numMatchedPts,2) = minDistIdx;
     
-end
-
 end

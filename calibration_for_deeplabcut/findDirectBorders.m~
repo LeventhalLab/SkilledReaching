@@ -14,7 +14,7 @@ threshStepSize = 0.01;
 diffThresh = 0.1;
 maxThresh = 0.2;
 
-maxDistFromMainBlob = 200;
+maxDistFromMainBlob = 100;
 if iscell(img)
     num_img = length(img);
 else
@@ -81,9 +81,8 @@ for iImg = 1 : num_img
         denoisedMasks(:,:,iColor,iImg) = imopen(squeeze(initSeedMasks(:,:,iColor,iImg)), SE);
         denoisedMasks(:,:,iColor,iImg) = imclose(squeeze(denoisedMasks(:,:,iColor,iImg)), SE);
         
-        % get rid of little "satellite blobs" too far from the main blob
         mainBlob = bwareafilt(denoisedMasks(:,:,iColor,iImg),1);
-        denoisedMasks(:,:,iColor,iImg) = removeDistantBlobs(mainBlob, denoisedMasks(:,:,iColor,iImg), maxDistFromMainBlob);        
+
         % find stats for colors inside the mask region
     %     mirrorBorderMask = squeeze(denoisedMasks(:,:,iColor)) & squeeze(mirrorMasks(:,:,iColor));
         directBorderMask = squeeze(denoisedMasks(:,:,iColor,iImg));

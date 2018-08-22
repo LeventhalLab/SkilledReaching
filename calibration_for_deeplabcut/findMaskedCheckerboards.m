@@ -1,34 +1,38 @@
-function [directBoardPoints,foundValidPoints] = findDirectCheckerboards(img,directBorderMask,initDirBorderMask,anticipatedBoardSize)
+function [final_boardPoints,foundValidPoints] = findMaskedCheckerboards(img,borderMask,initBorderMask,anticipatedBoardSize, cameraParams)
 
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 
 % INPUTS
 %   img - full calibration image
-%   directBorderMask - 
+%   borderMask - 
 %   anticipatedBoardSize - 2 x 1 vector containing the anticipated
 %       checkerboard size INCLUDING the outer edge (recall that
 %       detectCheckerboardPoints will find the interior points but returns
 %       boardSize that includes the outer edge)
 % OUTPUTS
+%   final_boardPoints - 
+%   foundValidPoints - number of views x number of images array where a
+%       true entry indicates that a likely valid checkerboard was found.
+%       For example, "true" at (2,1) indicates that a valid checkerboard
+%       was found for view 2 in image 1
 
 if iscell(img)
     num_img = length(img);
 else
     num_img = 1;
-    img{1} = img;
+    img = {img};
 end
 
-if iscell(directBorderMask)
-    numBoards = length(directBorderMask);
+if iscell(borderMask)
+    numBoards = length(borderMask);
 else
     numBoards = 1;
-    directBorderMask{1} = directBorderMask;
+    borderMask{1} = borderMask;
 end
 % hullOverlapThresh = 0.8;
 strelSize = 5;
 minCornerStep = 0.01;
-minCornerMetric = 0.15;   % algorithm default
 maxDetectAttempts = 10;
 minCheckerboardFract = prod(anticipatedBoardSize-2)/prod(anticipatedBoardSize) - 0.05;%0.25;
 % assuming all checks are the same size, the ratio of the area of the
@@ -38,7 +42,7 @@ minCheckerboardFract = prod(anticipatedBoardSize-2)/prod(anticipatedBoardSize) -
 h = size(img{1},1);
 w = size(img{1},2);
 foundValidPoints = false(numBoards, num_img);
-directBoardPoints = NaN(prod(anticipatedBoardSize-1), 2, numBoards, num_img);
+final_boardPoints = NaN(prod(anticipatedBoardSize-1), 2, numBoards, num_img);
 
 for iImg = 1 : num_img
     
@@ -53,13 +57,13 @@ for iImg = 1 : num_img
     
     for iBoard = 1 : numBoards
 
-        initBoardMask = imfill(directBorderMask{iImg}(:,:,iBoard),'holes') & ~directBorderMask{iImg}(:,:,iBoard);
-        curBoardMask = imfill(initBoardMask | initDirBorderMask(:,:,iBoard,iImg),'holes');
-        curBoardMask = curBoardMask & ~initDirBorderMask(:,:,iBoard,iImg);
+        initBoardMask = imfill(borderMask{iImg}(:,:,iBoard),'holes') & ~borderMask{iImg}(:,:,iBoard);
+        validInitBorder = initBorderMask(:,:,iBoard,iImg) & borderMask{iImg}(:,:,iBoard);
+%         curBoardMask = imfill(initBoardMask | initBorderMask(:,:,iBoard,iImg),'holes');
+        curBoardMask = imfill(initBoardMask | validInitBorder,'holes');
+        curBoardMask = curBoardMask & ~initBorderMask(:,:,iBoard,iImg);
         curBoardMask = imclose(curBoardMask,strel('disk',strelSize));
         curBoardMask = imopen(curBoardMask,strel('disk',strelSize));
-        
-        curBoardMask = imerode(curBoardMask,strel('disk',5));
 
         numBoardMaskPixels = sum(curBoardMask(:));
 
@@ -67,17 +71,10 @@ for iImg = 1 : num_img
         curBoardImg = rgb_eq .* repmat(double(curBoardMask),1,1,3);
 
         numCheckDetectAttempts = 0;
+        minCornerMetric = 0.15;   % algorithm default
         while ~foundValidPoints(iBoard,iImg) && (numCheckDetectAttempts <= maxDetectAttempts)
-    %         [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,...
-    %             'mincornermetric',minCornerMetric);
+    
             [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,'mincornermetric',minCornerMetric);
-
-            figure(4)
-            imshow(img{iImg});
-            hold on
-            if ~isempty(boardPoints)
-                scatter(boardPoints(:,1),boardPoints(:,2));
-            end
 
             % check that these are valid image points
             % first, does boardSize match anticipatedBoardSize?
@@ -110,6 +107,7 @@ for iImg = 1 : num_img
 
             % euler number should be 0, but could be > 0 if there's a
             % second tiny hole (noise) in the hull
+
             if testStat.EulerNumber > 0
                 minCornerMetric = minCornerMetric - minCornerStep;
                 numCheckDetectAttempts = numCheckDetectAttempts + 1;
@@ -144,7 +142,7 @@ for iImg = 1 : num_img
         end
 
         if foundValidPoints(iBoard,iImg)
-            directBoardPoints(:,:,iBoard,iImg) = boardPoints;
+            final_boardPoints(:,:,iBoard,iImg) = undistortPoints(boardPoints,cameraParams);
         end
     end
 

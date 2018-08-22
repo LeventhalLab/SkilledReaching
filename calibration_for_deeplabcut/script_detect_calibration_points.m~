@@ -10,7 +10,7 @@ load(camParamFile);
 
 saveMarkedImages = true;
 markRadius = 5;
-colorList = {'red','green','blue'};
+colorList = ['r','g','b'];
 markOpacity = 1;
 
 % first row red, second row green, third row blue
@@ -113,19 +113,19 @@ for iDate = 1 : numDates
                 
                 if dir_foundValidPoints(iBoard,iImg)
                     curChecks = squeeze(directChecks(:,:,iBoard,iImg));
-                    for i_pt = 1 : size(curChecks,1)
+                    for i_pt = 1 : size(curDirectChecks,1)
                         newImg = insertShape(newImg,'filledcircle',...
                             [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
-                            'color',colorList{iBoard},'opacity',markOpacity);
+                            'color',colorList(iBoard),'opacity',markOpacity);
                     end
                 end
                 
                 if mir_foundValidPoints(iBoard,iImg)
                     curChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
-                    for i_pt = 1 : size(curChecks,1)
+                    for i_pt = 1 : size(curDirectChecks,1)
                         newImg = insertShape(newImg,'filledcircle',...
                             [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
-                            'color',colorList{iBoard},'opacity',markOpacity);
+                            'color',colorList(iBoard),'opacity',markOpacity);
                     end
                 end 
             end
