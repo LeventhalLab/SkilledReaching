@@ -7,6 +7,7 @@ function [bodyparts,parts_loc,p] = read_DLC_csv(fname,varargin)
 %
 % INPUTS:
 %   fname - name of .csv file containing x,y,likelihood data from
+%       deeplabcut
 %
 % VARARGs:
 %
