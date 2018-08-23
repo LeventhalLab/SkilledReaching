@@ -25,9 +25,9 @@ else
 end
 
 if iscell(borderMask)
-    numBoards = length(borderMask);
+    numBoards = size(borderMask{1},3);
 else
-    numBoards = 1;
+    numBoards = size(borderMask,3);
     borderMask{1} = borderMask;
 end
 % hullOverlapThresh = 0.8;
@@ -64,6 +64,8 @@ for iImg = 1 : num_img
         curBoardMask = curBoardMask & ~initBorderMask(:,:,iBoard,iImg);
         curBoardMask = imclose(curBoardMask,strel('disk',strelSize));
         curBoardMask = imopen(curBoardMask,strel('disk',strelSize));
+        
+        curBoardMask = bwareafilt(curBoardMask,1);
 
         numBoardMaskPixels = sum(curBoardMask(:));
 
@@ -103,11 +105,15 @@ for iImg = 1 : num_img
 
             % check that hullMask is contained entirely within curBoardMask
             testMask = curBoardMask & ~hullMask;
+            testMask = bwareafilt(testMask,1);
             testStat = regionprops(testMask,'eulernumber');
 
             % euler number should be 0, but could be > 0 if there's a
             % second tiny hole (noise) in the hull
-
+            try testStat.EulerNumber > 0;
+            catch
+                keyboard
+            end
             if testStat.EulerNumber > 0
                 minCornerMetric = minCornerMetric - minCornerStep;
                 numCheckDetectAttempts = numCheckDetectAttempts + 1;

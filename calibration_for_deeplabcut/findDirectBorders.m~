@@ -209,14 +209,11 @@ for iImg = 1 : num_img
                 foundValidBorder(iColor) = indValidBorder;
                 fullBorder = false(h,w);
                 fullBorder(bBox(2):bBox(2) + bBox(4),bBox(1):bBox(1) + bBox(3)) = ...
-                    denoisedMask;
-                denoisedMasks(:,:,iColor,iImg) = fullBorder;
-                if foundValidBorder(iColor)
-                    fullBorder = false(h,w);
-                    fullBorder(bBox(2):bBox(2) + bBox(4),bBox(1):bBox(1) + bBox(3)) = ...
                     directBorder;
+                if foundValidBorder(iColor)
                     imgMask{iImg}(:,:,iColor) = fullBorder;
                 end
+                    
             end
         end
     end

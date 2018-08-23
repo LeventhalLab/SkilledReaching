@@ -36,7 +36,7 @@ h = size(A,1); w = size(A,2);
 % [x,y,w,h]. first row is for direct cube view, second row tpp mirror,
 % third row left mirror, fourth row right mirror
 rightMirrorLeftEdge = 1700;
-ROIs = [700,375,650,600;
+ROIs = [700,270,650,705;
         750,1,600,400;
         1,400,350,500;
         rightMirrorLeftEdge,400,w-rightMirrorLeftEdge,500];

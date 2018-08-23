@@ -1,11 +1,11 @@
 % detect checkerboard calibration images, 20180605
 
 % calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
-% camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
 
 saveMarkedImages = true;
@@ -37,7 +37,7 @@ h = size(A,1); w = size(A,2);
 % [x,y,w,h]. first row is for direct cube view, second row tpp mirror,
 % third row left mirror, fourth row right mirror
 rightMirrorLeftEdge = 1700;
-ROIs = [700,375,650,600;
+ROIs = [700,270,650,705;
         750,1,600,400;
         1,400,350,500;
         rightMirrorLeftEdge,400,w-rightMirrorLeftEdge,500];
