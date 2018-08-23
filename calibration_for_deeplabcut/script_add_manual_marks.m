@@ -1,11 +1,11 @@
 % detect checkerboard calibration images, 20180605
 
 % calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+% calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
+% camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
 
 saveMarkedImages = true;
@@ -30,6 +30,7 @@ cd(calImageDir)
 anticipatedBoardSize = [4 5];
 
 imgList = dir('GridCalibration_*.png');
+csvList = dir('GridCalibration_*.csv');
 % load test image
 A = imread(imgList(1).name,'png');
 h = size(A,1); w = size(A,2);
@@ -47,26 +48,42 @@ mirrorOrientation = {'top','left','right'};
    
 cd(calImageDir);
 
-[imFiles_from_same_date, dateList] = groupCalibrationImagesbyDate(imgList);
-numDates = length(dateList);
+[imFiles_from_same_date, img_dateList] = groupCalibrationImagesbyDate(imgList);
+[csvFiles_from_same_date, csv_dateList] = group_csv_files_by_date(csvList);
+numDates = length(csv_dateList);
 
 for iDate = 1 : numDates
     
-    numFilesPerDate = length(imFiles_from_same_date{iDate});
-    img = cell(1, numFilesPerDate);
-    for iImg = 1 : numFilesPerDate
-
-        curImgName = imFiles_from_same_date{iDate}{iImg};
+    curDate = csv_dateList{iDate};
+    num_csvPerDate = length(csvFiles_from_same_date{iDate});
+    
+    % find this date in the img_dateList
+    img_date_idx = find(strcmp(img_dateList, curDate));
+    
+    numImgPerDate = length(imFiles_from_same_date{img_date_idx});
+    img = cell(1, numImgPerDate);
+    
+    imgNumList = zeros(1,numImgPerDate);
+    for iImg = 1 : numImgPerDate
+        curImgName = imFiles_from_same_date{img_date_idx}{iImg};
+        C = textscan(curImgName,['GridCalibration_' curDate '_%d.png']);
+        imgNumList(iImg) = C{1};
         img{iImg} = imread(curImgName);
-        
     end
-%         if ~isempty(strfind(imgList(iImg).name,'marked'))
-%             continue;
-%         end
-
-%         dImg = A(ROIs(1,2):ROIs(1,2)+ROIs(1,4),ROIs(1,1):ROIs(1,1)+ROIs(1,3),:);
-%         lImg = A(ROIs(3,2):ROIs(3,2)+ROIs(3,4),ROIs(3,1):ROIs(3,1)+ROIs(3,3),:);
-%         rImg = A(ROIs(4,2):ROIs(4,2)+ROIs(4,4),ROIs(4,1):ROIs(4,1)+ROIs(4,3),:);
+    csvData = cell(1,num_csvPerDate);
+    csvNumList = zeros(1,num_csvPerDate);
+    for i_csv = 1 : num_csvPerDate
+        cur_csvName = csvFiles_from_same_date{iDate}{i_csv};
+        C = textscan(cur_csvName,['GridCalibration_' curDate '_%d.csv']);
+        csvNumList(iImg) = C{1};
+        csvData{i_csv} = readFIJI_csv(cur_csvName);
+    end
+    
+    % read in corresponding .mat file if it exists
+    matFileName = ['GridCalibration_' csv_dateList{iDate} '_auto.mat'];
+    if exist(matFileName,'file')
+        load(matFileName);
+    end
     
     [directBorderMask, initDirBorderMask] = findDirectBorders(img, direct_hsvThresh, ROIs);
     [mirrorBorderMask, initMirBorderMask] = findMirrorBorders(img, mirror_hsvThresh, ROIs);
@@ -103,7 +120,7 @@ for iDate = 1 : numDates
     
     matFileName = ['GridCalibration_' dateList{iDate} '_auto.mat'];
     imFileList = imFiles_from_same_date{iDate};
-    save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','dir_foundValidPoints','mir_foundValidPoints','imFileList','cameraParams');
+    save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','dir_foundValidPoints','mir_foundValidPoints','cameraParams');
     
     if saveMarkedImages
         for iImg = 1 : 3
