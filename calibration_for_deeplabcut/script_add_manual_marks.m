@@ -63,21 +63,33 @@ for iDate = 1 : numDates
     numImgPerDate = length(imFiles_from_same_date{img_date_idx});
     img = cell(1, numImgPerDate);
     
-    imgNumList = zeros(1,numImgPerDate);
-    for iImg = 1 : numImgPerDate
-        curImgName = imFiles_from_same_date{img_date_idx}{iImg};
-        C = textscan(curImgName,['GridCalibration_' curDate '_%d.png']);
-        imgNumList(iImg) = C{1};
-        img{iImg} = imread(curImgName);
-    end
     csvData = cell(1,num_csvPerDate);
     csvNumList = zeros(1,num_csvPerDate);
     for i_csv = 1 : num_csvPerDate
         cur_csvName = csvFiles_from_same_date{iDate}{i_csv};
         C = textscan(cur_csvName,['GridCalibration_' curDate '_%d.csv']);
-        csvNumList(iImg) = C{1};
+        csvNumList(i_csv) = C{1};
         csvData{i_csv} = readFIJI_csv(cur_csvName);
     end
+    
+    % load images, but only ones for which there is a .csv file
+    imgNumList = zeros(1,numImgPerDate);
+    numImgLoaded = 0;
+    if exist('img','var')
+        clear img
+    end
+    for iImg = 1 : numImgPerDate
+        curImgName = imFiles_from_same_date{img_date_idx}{iImg};
+        C = textscan(curImgName,['GridCalibration_' curDate '_%d.png']);
+        imageNumber = C{1};
+        if any(csvNumList == imageNumber)
+            % load this image
+            numImgLoaded = numImgLoaded + 1;
+            img{numImgLoaded} = imread(curImgName);
+            imgNumList(numImgLoaded) = imageNumber;
+        end
+    end
+
     
     % read in corresponding .mat file if it exists
     matFileName = ['GridCalibration_' csv_dateList{iDate} '_auto.mat'];
@@ -85,8 +97,24 @@ for iDate = 1 : numDates
         load(matFileName);
     end
     
+    
     [directBorderMask, initDirBorderMask] = findDirectBorders(img, direct_hsvThresh, ROIs);
     [mirrorBorderMask, initMirBorderMask] = findMirrorBorders(img, mirror_hsvThresh, ROIs);
+    
+    % now loop through .csv files
+    for i_csv = 1 : num_csvPerDate
+        
+        % figure out what image index to use
+        img_idx = find(imgNumList == csvNumList(i_csv));
+        
+        % fill out the directChecks and mirrorChecks arrays. Assume that
+        % the image number is the correct index to use
+        [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboards(directBorderMask{img_idx}, mirrorBorderMask{img_idx}, csvData{i_csv});
+    
+        
+        
+    end
+   %     final_boardPoints = NaN(prod(anticipatedBoardSize-1), 2, numBoards, num_img);
     
     [directChecks,dir_foundValidPoints] = findMaskedCheckerboards(img, directBorderMask, initDirBorderMask, boardSize, cameraParams);
     [mirrorChecks,mir_foundValidPoints] = findMaskedCheckerboards(img, mirrorBorderMask, initMirBorderMask, boardSize, cameraParams);
