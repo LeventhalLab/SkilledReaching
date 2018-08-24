@@ -52,6 +52,7 @@ numDates = length(dateList);
 
 for iDate = 1 : numDates
     
+    fprintf('processing %s\n',dateList{iDate});
     numFilesPerDate = length(imFiles_from_same_date{iDate});
     img = cell(1, numFilesPerDate);
     for iImg = 1 : numFilesPerDate
@@ -106,7 +107,7 @@ for iDate = 1 : numDates
     save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','dir_foundValidPoints','mir_foundValidPoints','imFileList','cameraParams');
     
     if saveMarkedImages
-        for iImg = 1 : 3
+        for iImg = 1 : numFilesPerDate
             
             newImg = undistortImage(img{iImg},cameraParams);
             
@@ -135,124 +136,4 @@ for iDate = 1 : numDates
             imwrite(newImg,newImgName,'png');
         end       
     end
-end
-    
-    % now should have identified matched points in any views in which the
-    % checkerboards were "easy" to detect
-    
-    % go back and see if we can find any additional points now that we can
-    % estimate the fundamental matrix for each mirror and look for matched
-    % points along epipolar lines defined by checkerboard points that were
-    % identified on the first pass but didn't have a match
-%     for iBoard = 1 : numBoards
-%         if all(matchedCheckerboards(iBoard,:))
-%             % already identified checkerboard points in every image
-%             continue;
-%         end
-%         % estimate the fundamental matrix from the known matches
-%         mp1 = squeeze(allMatchedPoints(:,:,1,iBoard));
-%         mp2 = squeeze(allMatchedPoints(:,:,2,iBoard));
-%         mp1 = mp1(~isnan(mp1(:,1)),:);
-%         mp2 = mp2(~isnan(mp2(:,1)),:);
-% 
-%         F = fundMatrix_mirror(mp1,mp2);
-%         [~,epiPt] = isEpipoleInImage(F,[h,w]);
-%         
-%         for iImg = 1 : numFilesPerDate
-%             if matchedCheckerboards(iBoard,iImg)
-%                 % already have matches for this view in this image
-%                 continue;
-%             end
-%             
-%             if ~dir_foundValidPoints(iBoard,iImg) && ~mir_foundValidPoints(iBoard,iImg)
-%                 % didn't find points in the direct or mirror view for this
-%                 % combination, so additional efforts are futile
-%                 continue;
-%             end
-%             
-%             img_ud = undistortImage(img{iImg},cameraParams);
-% 
-%             % which view did we already find the checkerboard points in?
-%             if dir_foundValidPoints(iBoard,iImg)
-%                 % found direct view checkerboard points earlier
-%                 knownPts = squeeze(directChecks(:,:,iBoard,iImg));
-%                 ROI = ROIs(iBoard+1,:);
-%                 initMask = squeeze(initMirBorderMask(:,:,iBoard,iImg));
-%             else
-%                 % found mirror view checkerboard points earlier
-%                 knownPts = squeeze(mirrorChecks(:,:,iBoard,iImg));
-%                 ROI = ROIs(1,:);
-%                 initMask = squeeze(initDirBorderMask(:,:,iBoard,iImg));
-%             end
-%             knownPts = undistortPoints(knownPts, cameraParams);
-%             newBoardPts = detectMatchingCheckerboard(img_ud, epiPt, ROI, knownPts);
-%                 
-%         end
-%     end
-    %%
-%     numViews = size(directBorderMask{1},3);
-% %     direct_whiteMask = false(h,w,numViews, numFilesPerDate);
-% %     direct_blackMask = false(h,w,numViews, numFilesPerDate);
-% %     mirror_whiteMask = false(h,w,numViews, numFilesPerDate);
-% %     mirror_blackMask = false(h,w,numViews, numFilesPerDate);
-%     
-%     for iImg = 1 : numFilesPerDate
-%         testGray = adapthisteq(rgb2gray(img{iImg}));
-%         for iView = 1 : 3
-%             borderMask = directBorderMask{iImg}(:,:,iView);
-%             boardMask = imfill(borderMask,'holes') & ~borderMask;
-% %             boardMask = bwconvhull(boardMask);
-%             boardMask = imclose(boardMask,strel('disk',5));
-%             boardMask = imopen(boardMask,strel('disk',5));
-% 
-% %             [direct_whiteMask(:,:,iView,iImg), direct_blackMask(:,:,iView,iImg), errorFlag] = isolateCheckerboardSquares_20180618(testGray, boardMask, anticipatedBoardSize);
-%             
-% %             figure(iView*2-1)
-% %             imshow(whiteMask | blackMask)
-% %             set(gcf,'name','direct')
-%             
-%             borderMask = mirrorBorderMask{iImg}(:,:,iView);
-%             boardMask = imfill(borderMask,'holes') & ~borderMask;
-%             boardMask = bwconvhull(boardMask);
-%             
-%             boardMask = imclose(boardMask,strel('disk',5));
-%             boardMask = imopen(boardMask,strel('disk',5));
-% 
-%             [mirror_whiteMask(:,:,iView,iImg), mirror_blackMask(:,:,iView,iImg), errorFlag] = isolateCheckerboardSquares_20180618(testGray, boardMask, anticipatedBoardSize);
-%             
-%             matchIdx = matchCheckerboardPoints(direct_whiteMask(:,:,iView,iImg),mirror_whiteMask(:,:,iView,iImg),mirrorOrientation{iView});
-% %             figure(iView * 2)
-% %             imshow(whiteMask | blackMask)
-% %             set(gcf,'name','mirror')
-%         end
-%         
-%     end
-%     
-%     registerCheckerBoards(img, directBorderMask, mirrorBorderMask, mirrorOrientation);
-% 
-% 
-%         
-% 
-%         figure(1)
-%         imshow(directBorderMask(:,:,1) | directBorderMask(:,:,2) | directBorderMask(:,:,3))
-% 
-%         figure(2)
-%         imshow(mirrorBorderMask(:,:,1) | mirrorBorderMask(:,:,2) | mirrorBorderMask(:,:,3))
-% 
-%         figure(3)
-%         imshow(A);
-%         hold on
-%         scatter(directBorderChecks(:,1,1),directBorderChecks(:,2,1));
-%         scatter(directBorderChecks(:,1,2),directBorderChecks(:,2,2));
-%         scatter(directBorderChecks(:,1,3),directBorderChecks(:,2,3));
-% 
-%     %     mirrorBorderMask = findMirrorCheckerboards(A, directBorderMask, directBorderChecks, mirror_hsvThresh, boardSize, ROIs, cameraParams);
-%     % %     borderMask = findColoredBorder(A, hsvThresh, ROIs);
-%     %     dispMask = false(h,w);
-%     %     for iMask = 1 : 6
-%     %         dispMask = dispMask | squeeze(borderMask(:,:,iMask));
-%     %     end
-%     %     
-% 
-% 
-% end
+end 

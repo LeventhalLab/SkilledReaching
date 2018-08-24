@@ -151,8 +151,6 @@ for iDate = 1 : numDates
 %             end
 %         end
         % update directChecks and mirrorChecks arrays
-        old_directChecks = directChecks;
-        old_mirrorChecks = mirrorChecks;
         for iBoard = 1 : size(new_directChecks,3)
             testPoints = squeeze(new_directChecks(:,:,iBoard));
             if all(isnan(testPoints(:)))
@@ -207,15 +205,14 @@ for iDate = 1 : numDates
     
     matSaveFileName = ['GridCalibration_' dateList{iDate} '_all.mat'];
     imFileList = imFiles_from_same_date{iDate};
-    save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList');
+    save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams');
     
     if saveMarkedImages
         for iImg = 1 : numImgPerDate
             
-            % was there a previously marked image?
-            curImgName = imFileList{iImg};
-            oldImg = imread(curImgName,'png');
-            newImg = undistortImage(oldImg,cameraParams);
+            % if there was a previously marked image
+            markedImgName = strrep(curImgName,'.png','_marked.png');
+            newImg = undistortImage(img{iImg},cameraParams);
             
             for iBoard = 1 : numBoards
                 

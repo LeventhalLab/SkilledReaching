@@ -54,7 +54,7 @@ for iImg = 1 : num_img
 
     directMask = false(h,w);
     directMask(ROIs(1,2):ROIs(1,2)+ROIs(1,4)-1, ROIs(1,1):ROIs(1,1)+ROIs(1,3)-1) = true;
-    directView_hsv = img_hsv .* repmat(double(directMask),1,1,3);
+%     directView_hsv = img_hsv .* repmat(double(directMask),1,1,3);
 
     % mirrorMasks = false(h,w,3);
     % mirrorView_hsv = zeros(h,w,3,3);
@@ -66,8 +66,8 @@ for iImg = 1 : num_img
 
     % find seed regions
 
-    meanHSV = zeros(numColors,2,3);    % 3 colors by 2 regions by 3 values
-    stdHSV = zeros(numColors,2,3);
+%     meanHSV = zeros(numColors,2,3);    % 3 colors by 2 regions by 3 values
+%     stdHSV = zeros(numColors,2,3);
 
     imgMask{iImg} = false(h,w,numColors);
     foundValidBorder = false(1,numColors);

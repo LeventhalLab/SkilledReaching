@@ -48,6 +48,7 @@ for iBoard = 1 : numMirrorBoards
 end
 
 % which directBorderMasks were found?
+directBorderMask(:,:,1) = false(size(directBorderMask,1),size(directBorderMask,1));
 foundDirectMask = false(1, numDirectBoards);
 for iBoard = 1 : numDirectBoards
     tempMask = squeeze(directBorderMask(:,:,iBoard));
@@ -119,13 +120,13 @@ for i_pt = 1 : num_newPoints
     knownMaskString = mirrorOrientation{foundDirectMask};
     knownMask = squeeze(directBorderMask(:,:,foundDirectMask));
     [y,x] = find(knownMask);
-    bot_y = max(y);
-    bot_x = x(find(y == bot_y, 1));
     switch knownMaskString
         case 'top'
             % find the lowest point in the top mask. anything to the left
             % of this point should be in the left checkerboard; anything to
             % the right should be in the right checkerboard
+            bot_y = max(y);
+            bot_x = x(find(y == bot_y, 1));
             if testPoint(1) < bot_x
                 directBoardIdx = find(strcmp(mirrorOrientation,'left'));
             else
@@ -134,29 +135,18 @@ for i_pt = 1 : num_newPoints
 
         case 'left'
             top_y = min(y);
-            top_x = x(find(y == top_y, 1));
+            top_x = x(find(y == bot_y, 1));
             
-            topDist = norm(testPoint - [top_x,top_y]);
-            botDist = norm(testPoint - [bot_x,bot_y]);
-            
-            if topDist > botDist
-                directBoardIdx = find(strcmp(mirrorOrientation,'top'));
-            else
-                directBoardIdx = find(strcmp(mirrorOrientation,'right'));
-            end
-
+            [~,nnidx] = findNearestNeighbor(testPoint, [x,y]);
+            imshow(knownMask)
+            hold on
+            scatter(x(nnidx),y(
+%             right_x = max(x);
+%             right_y = 
         case 'right'
             top_y = min(y);
-            top_x = x(find(y == top_y, 1));
+            top_x = x(find(y == bot_y, 1));
             
-            topDist = norm(testPoint - [top_x,top_y]);
-            botDist = norm(testPoint - [bot_x,bot_y]);
-            
-            if topDist > botDist
-                directBoardIdx = find(strcmp(mirrorOrientation,'top'));
-            else
-                directBoardIdx = find(strcmp(mirrorOrientation,'left'));
-            end
     end
     num_newChecks(directBoardIdx,1) = num_newChecks(directBoardIdx,1) + 1;
     new_directChecks(num_newChecks(iBoard,1), 1, directBoardIdx) = testPoint(1);
