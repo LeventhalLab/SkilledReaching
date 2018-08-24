@@ -117,7 +117,8 @@ for iDate = 1 : numDates
         directChecks = NaN(prod(boardSize-1),2,size(directBorderMask{1},3),numImgPerDate);
         mirrorChecks = NaN(prod(boardSize-1),2,size(mirrorBorderMask{1},3),numImgPerDate);
     end
-    
+    old_directChecks = directChecks;
+    old_mirrorChecks = mirrorChecks;
     % now loop through .csv files
     for i_csv = 1 : num_csvPerDate
         
@@ -151,8 +152,6 @@ for iDate = 1 : numDates
 %             end
 %         end
         % update directChecks and mirrorChecks arrays
-        old_directChecks = directChecks;
-        old_mirrorChecks = mirrorChecks;
         for iBoard = 1 : size(new_directChecks,3)
             testPoints = squeeze(new_directChecks(:,:,iBoard));
             if all(isnan(testPoints(:)))
@@ -191,7 +190,7 @@ for iDate = 1 : numDates
             curDirectChecks = squeeze(directChecks(:,:,iBoard,iImg));
             curMirrorChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
             
-            if all(isnan(directChecks(:))) || all(isnan(mirrorChecks(:)))
+            if all(isnan(curDirectChecks(:))) || all(isnan(curMirrorChecks(:)))
                 % don't have matching points for the direct and mirror view
                 continue;
             end 
@@ -205,9 +204,9 @@ for iDate = 1 : numDates
         end
     end
     
-    matSaveFileName = ['GridCalibration_' dateList{iDate} '_all.mat'];
+    matSaveFileName = ['GridCalibration_' csv_dateList{iDate} '_all.mat'];
     imFileList = imFiles_from_same_date{iDate};
-    save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList');
+    save(matSaveFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList');
     
     if saveMarkedImages
         for iImg = 1 : numImgPerDate
@@ -219,26 +218,43 @@ for iDate = 1 : numDates
             
             for iBoard = 1 : numBoards
                 
-                if dir_foundValidPoints(iBoard,iImg)
-                    curChecks = squeeze(directChecks(:,:,iBoard,iImg));
-                    for i_pt = 1 : size(curChecks,1)
-                        newImg = insertShape(newImg,'filledcircle',...
-                            [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
-                            'color',colorList{iBoard},'opacity',markOpacity);
-                    end
+                curChecks = squeeze(directChecks(:,:,iBoard,iImg));
+                for i_pt = 1 : size(curChecks,1)
+                    if isnan(curChecks(i_pt,1)); continue; end
+                    newImg = insertShape(newImg,'rectangle',...
+                        [curChecks(i_pt,1),curChecks(i_pt,2),2*markRadius,2*markRadius],...
+                        'color',colorList{iBoard},'opacity',markOpacity);
                 end
                 
-                if mir_foundValidPoints(iBoard,iImg)
-                    curChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
-                    for i_pt = 1 : size(curChecks,1)
-                        newImg = insertShape(newImg,'filledcircle',...
-                            [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
-                            'color',colorList{iBoard},'opacity',markOpacity);
-                    end
-                end 
+                curChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
+                for i_pt = 1 : size(curChecks,1)
+                    if isnan(curChecks(i_pt,1)); continue; end
+                    newImg = insertShape(newImg,'rectangle',...
+                        [curChecks(i_pt,1),curChecks(i_pt,2),2*markRadius,2*markRadius],...
+                        'color',colorList{iBoard},'opacity',markOpacity);
+                end
+                
+                % plot points that had been detected automatically
+                curChecks = squeeze(old_directChecks(:,:,iBoard,iImg));
+                for i_pt = 1 : size(curChecks,1)
+                    if isnan(curChecks(i_pt,1)); continue; end
+                    newImg = insertShape(newImg,'circle',...
+                        [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
+                        'color',colorList{iBoard},'opacity',markOpacity);
+                end
+                
+                curChecks = squeeze(old_mirrorChecks(:,:,iBoard,iImg));
+                for i_pt = 1 : size(curChecks,1)
+                    if isnan(curChecks(i_pt,1)); continue; end
+                    newImg = insertShape(newImg,'circle',...
+                        [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
+                        'color',colorList{iBoard},'opacity',markOpacity);
+                end
+                
             end
-            curImgName = imFiles_from_same_date{iDate}{iImg};
-            newImgName = strrep(curImgName,'.png','_marked.png');
+            figure(1)
+            imshow(newImg);
+            newImgName = strrep(curImgName,'.png','_all_marked.png');
             imwrite(newImg,newImgName,'png');
         end       
     end
