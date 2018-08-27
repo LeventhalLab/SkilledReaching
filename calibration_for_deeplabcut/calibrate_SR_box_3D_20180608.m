@@ -146,7 +146,7 @@ for iDate = 1 : numUniqueSessions
         boardSize(2,:) = determineCheckerboardSize(rightMatchedPoints(:,:,1));
         boardSize(3,:) = determineCheckerboardSize(topMatchedPoints(:,:,1));
         
-        % now have matched poidfafsfnts. Calculate fundamental matrices, scale
+        % now have matched points. Calculate fundamental matrices, scale
         % factors, camera mscratrices
         mp = zeros(size(calibration_points));
         mp(:,:,1:2) = leftMatchedPoints;

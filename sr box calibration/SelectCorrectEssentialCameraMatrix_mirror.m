@@ -66,10 +66,10 @@ elseif(depth(3,1)>0 && depth(3,2)<0)
     correct = 3;
 elseif(depth(4,1)>0 && depth(4,2)<0)
     correct = 4;
-end;
+end
 
 if ~correct
-    error('No projection matrix have all triangulated points in front of them.')
+    error('No projection matrix has all triangulated points in front of it.')
 end
 
 % return the selected solution

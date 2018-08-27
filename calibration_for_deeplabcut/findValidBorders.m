@@ -1,4 +1,4 @@
-function [borderMask,denoisedMask,foundValidBorder] = findValidBorders(img_hsv, HSVlimits, viewMask)
+function [borderMask,denoisedMask,foundValidBorder] = findValidBorders(img_hsv, HSVlimits, viewMask, varargin)
 
 diffThresh = 0.1;
 threshStepSize = 0.01;
@@ -6,13 +6,33 @@ maxThresh = 0.2;
 maxDistFromMainBlob = 200;
 
 minCheckerboardArea = 5000;
-maxCheckerboardArea = 20000;
+maxCheckerboardArea = 25000;
 
 minSolidity = 0.8;
     
 SEsize = 3;
+
+for iarg = 1 : 2 : nargin - 3
+    switch lower(varargin{iarg})
+        case 'diffthresh'
+            diffThresh = varargin{iarg + 1};
+        case 'threshstepsize'
+            threshStepSize = varargin{iarg + 1};
+        case 'maxthresh'
+            maxThresh = varargin{iarg + 1};
+        case 'maxdistfrommainblob'
+            maxDistFromMainBlob = varargin{iarg + 1};
+        case 'mincheckerboardarea'
+            minCheckerboardArea = varargin{iarg + 1};
+        case 'maxcheckerboardarea'
+            maxCheckerboardArea = varargin{iarg + 1};
+        case 'sesize'
+            SEsize = varargin{iarg + 1};
+        case 'minsolidity'
+            minSolidity = varargin{iarg + 1};
+    end
+end
 SE = strel('disk',SEsize);
-% can make the above values varargins...
 
 view_hsv = img_hsv .* repmat(double(viewMask),1,1,3);
 
@@ -75,8 +95,10 @@ while ~foundValidBorder && currentThresh < maxThresh
     
     % what if we have the right border but there are multiple holes in
     % it?
-    borderPlusHoles = imfill(borderMask,'holes');
-    borderHoles = borderPlusHoles & ~borderMask;
+    % dilate the border so that if it's almost closed, it seals up
+    dil_borderMask = imdilate(borderMask,SE);
+    borderPlusHoles = imfill(dil_borderMask,'holes');
+    borderHoles = borderPlusHoles & ~dil_borderMask;
     L = bwlabel(borderHoles);
     for iObj = 1 : max(L(:))
         teststats = regionprops(L == iObj,'area','solidity');
@@ -84,9 +106,16 @@ while ~foundValidBorder && currentThresh < maxThresh
 
         if A > minCheckerboardArea && A < maxCheckerboardArea && ...
                 teststats.Solidity > minSolidity
-            foundValidBorder = true;
-            borderMask = borderPlusHoles & ~(L == iObj);
-            break;
+            
+            % make sure the entire region (holes and borders) is solid -
+            % occasionally two sides bleed together
+            testObj = imreconstruct(L == iObj, borderPlusHoles);
+            new_ts = regionprops(testObj,'solidity');
+            if new_ts.Solidity > minSolidity
+                foundValidBorder = true;
+                borderMask = testObj & ~(L == iObj);
+                break;
+            end
         end
     end
     

@@ -139,7 +139,7 @@ for i_pt = 1 : num_newPoints
             topDist = norm(testPoint - [top_x,top_y]);
             botDist = norm(testPoint - [bot_x,bot_y]);
             
-            if topDist > botDist
+            if topDist < botDist
                 directBoardIdx = find(strcmp(mirrorOrientation,'top'));
             else
                 directBoardIdx = find(strcmp(mirrorOrientation,'right'));
@@ -152,7 +152,7 @@ for i_pt = 1 : num_newPoints
             topDist = norm(testPoint - [top_x,top_y]);
             botDist = norm(testPoint - [bot_x,bot_y]);
             
-            if topDist > botDist
+            if topDist < botDist
                 directBoardIdx = find(strcmp(mirrorOrientation,'top'));
             else
                 directBoardIdx = find(strcmp(mirrorOrientation,'left'));

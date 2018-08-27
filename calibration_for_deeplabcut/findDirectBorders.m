@@ -1,4 +1,4 @@
-function [ imgMask, denoisedMasks ] = findDirectBorders( img, HSVlimits, ROIs )
+function [ imgMask, denoisedMasks ] = findDirectBorders( img, HSVlimits, ROIs, varargin )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -14,7 +14,33 @@ threshStepSize = 0.01;
 diffThresh = 0.1;
 maxThresh = 0.2;
 
-maxDistFromMainBlob = 200;
+minCheckerboardArea = 5000;
+maxCheckerboardArea = 25000;
+    
+maxDistFromMainBlob = 200;    
+minSolidity = 0.8;
+SEsize = 3;
+for iarg = 1 : 2 : nargin - 3
+    switch lower(varargin{iarg})
+        case 'diffthresh'
+            diffThresh = varargin{iarg + 1};
+        case 'threshstepsize'
+            threshStepSize = varargin{iarg + 1};
+        case 'maxthresh'
+            maxThresh = varargin{iarg + 1};
+        case 'maxdistfrommainblob'
+            maxDistFromMainBlob = varargin{iarg + 1};
+        case 'mincheckerboardarea'
+            minCheckerboardArea = varargin{iarg + 1};
+        case 'maxcheckerboardarea'
+            maxCheckerboardArea = varargin{iarg + 1};
+        case 'sesize'
+            SEsize = varargin{iarg + 1};
+        case 'minsolidity'
+            minSolidity = varargin{iarg + 1};
+    end
+end
+
 if iscell(img)
     num_img = length(img);
 else
@@ -28,12 +54,7 @@ numColors = size(ROIs,1) - 1;
 h = size(img{1},1);
 w = size(img{1},2);
     
-initSeedMasks = false(h,w,numColors,num_img);
 denoisedMasks = false(h,w,numColors,num_img);
-    
-SEsize = 3;
-SE = strel('disk',SEsize);
-
 for iImg = 1 : num_img
     
     if isa(img{iImg},'uint8')
@@ -46,9 +67,6 @@ for iImg = 1 : num_img
     rgb_eq = hsv2rgb(hsv_eq);
 
     img_stretch = decorrstretch(rgb_eq);
-
-    minCheckerboardArea = 5000;
-    maxCheckerboardArea = 20000;
 
     img_hsv = rgb2hsv(img_stretch);
 
@@ -73,7 +91,10 @@ for iImg = 1 : num_img
     foundValidBorder = false(1,numColors);
     for iColor = 1 : numColors
         
-        [directBorder,denoisedMask,indValidBorder] = findValidBorders(img_hsv, HSVlimits(iColor,:), directMask);
+        [directBorder,denoisedMask,indValidBorder] = findValidBorders(img_hsv, HSVlimits(iColor,:), directMask, ...
+            'diffthresh', diffThresh, 'threshstepsize', threshStepSize, 'maxthresh', maxThresh, ...
+            'maxdistfrommainblob', maxDistFromMainBlob, 'mincheckerboardarea', minCheckerboardArea, ...
+            'maxcheckerboardarea', maxCheckerboardArea, 'sesize', SEsize, 'minsolidity', minSolidity);
         denoisedMasks(:,:,iColor,iImg) = denoisedMask;
         foundValidBorder(iColor) = indValidBorder;
 %         initSeedMasks(:,:,iColor,iImg) = HSVthreshold(img_hsv, HSVlimits(iColor,:)) & directMask;
@@ -205,7 +226,10 @@ for iImg = 1 : num_img
             if ~foundValidBorder(iColor)
                 testMask = true(bBox(4)+1,bBox(3)+1);
                 testMask = testMask & ~otherBorderMask_cropped;
-                [directBorder,denoisedMask,indValidBorder] = findValidBorders(cropped_hsv, HSVlimits(iColor,:), testMask);
+                [directBorder,denoisedMask,indValidBorder] = findValidBorders(cropped_hsv, HSVlimits(iColor,:), testMask, ...
+                    'diffthresh', diffThresh, 'threshstepsize', threshStepSize, 'maxthresh', maxThresh, ...
+                    'maxdistfrommainblob', maxDistFromMainBlob, 'mincheckerboardarea', minCheckerboardArea, ...
+                    'maxcheckerboardarea', maxCheckerboardArea, 'sesize', SEsize, 'minsolidity', minSolidity);
                 foundValidBorder(iColor) = indValidBorder;
                 fullBorder = false(h,w);
                 fullBorder(bBox(2):bBox(2) + bBox(4),bBox(1):bBox(1) + bBox(3)) = ...
