@@ -33,7 +33,11 @@ switch mirrorOrientation
         mirror_ltIdx = mirrorChecks(:,1) == min(mirrorChecks(:,1));
         mirror_rtIdx = mirrorChecks(:,1) == max(mirrorChecks(:,1));
         
+        try
         testMatch(1,:,1) = directChecks(direct_ltIdx,:);
+        catch
+            keyboard
+        end
         testMatch(2,:,1) = directChecks(direct_rtIdx,:);
         testMatch(1,:,2) = mirrorChecks(mirror_ltIdx,:);
         testMatch(2,:,2) = mirrorChecks(mirror_rtIdx,:);

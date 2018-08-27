@@ -110,8 +110,8 @@ for i_pt = 1 : num_newPoints
     if missingOneDirectMask
         % point must belong to the one direct mask that wasn't found
         num_newChecks(missingDirectMask,1) = num_newChecks(missingDirectMask,1) + 1;
-        new_directChecks(num_newChecks(iBoard,1), 1, missingDirectMask) = testPoint(1);
-        new_directChecks(num_newChecks(iBoard,1), 2, missingDirectMask) = testPoint(2);
+        new_directChecks(num_newChecks(missingDirectMask,1), 1, missingDirectMask) = testPoint(1);
+        new_directChecks(num_newChecks(missingDirectMask,1), 2, missingDirectMask) = testPoint(2);
         continue;
     end
     
@@ -159,8 +159,8 @@ for i_pt = 1 : num_newPoints
             end
     end
     num_newChecks(directBoardIdx,1) = num_newChecks(directBoardIdx,1) + 1;
-    new_directChecks(num_newChecks(iBoard,1), 1, directBoardIdx) = testPoint(1);
-    new_directChecks(num_newChecks(iBoard,1), 2, directBoardIdx) = testPoint(2);
+    new_directChecks(num_newChecks(directBoardIdx,1), 1, directBoardIdx) = testPoint(1);
+    new_directChecks(num_newChecks(directBoardIdx,1), 2, directBoardIdx) = testPoint(2);
     
 end
 
