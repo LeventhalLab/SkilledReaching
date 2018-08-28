@@ -52,7 +52,8 @@ numDates = length(dateList);
 
 for iDate = 1 : numDates
     
-    fprintf('processing %s\n',dateList{iDate});
+    curDate = dateList{iDate};
+    fprintf('processing %s\n',curDate);
     numFilesPerDate = length(imFiles_from_same_date{iDate});
     img = cell(1, numFilesPerDate);
     for iImg = 1 : numFilesPerDate
@@ -104,7 +105,7 @@ for iDate = 1 : numDates
     
     matFileName = ['GridCalibration_' dateList{iDate} '_auto.mat'];
     imFileList = imFiles_from_same_date{iDate};
-    save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','dir_foundValidPoints','mir_foundValidPoints','imFileList','cameraParams');
+    save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','dir_foundValidPoints','mir_foundValidPoints','imFileList','cameraParams','curDate');
     
     if saveMarkedImages
         for iImg = 1 : numFilesPerDate

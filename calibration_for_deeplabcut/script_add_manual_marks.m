@@ -202,7 +202,7 @@ for iDate = 1 : numDates
     
     matSaveFileName = ['GridCalibration_' csv_dateList{iDate} '_all.mat'];
     imFileList = imFiles_from_same_date{iDate};
-    save(matSaveFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList');
+    save(matSaveFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList','curDate');
     
     if saveMarkedImages
         for iImg = 1 : numImgPerDate
