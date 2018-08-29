@@ -104,8 +104,8 @@ for iMat = 1 : length(all_pt_matList)
     end
     
     % write box calibration information to disk
-    calibrationFileName = ['SR_boxCalibration_' curDate '_.mat'];
-    save(calibrationFileName,'P','Pn','F','E','scaleFactor');
+    calibrationFileName = ['SR_boxCalibration_' curDate '.mat'];
+    save(calibrationFileName,'P','Pn','F','E','scaleFactor','directChecks','mirrorChecks','cameraParams','curDate','imFileList');
     
     % comment in below to draw lines between matching points
     

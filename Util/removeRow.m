@@ -14,7 +14,7 @@ new_array = old_array;
 for ii = 1 : length(row_idx_to_remove)
     
     switch row_idx_to_remove(ii)
-        case 1,
+        case 1
         
             if size(new_array,1) > 1
                 new_array = new_array(2:end,:);
@@ -25,11 +25,11 @@ for ii = 1 : length(row_idx_to_remove)
                 row_idx_to_remove(ii+1:end) = row_idx_to_remove(ii+1:end) - 1;
             end
         
-        case size(new_array,1),
+        case size(new_array,1)
         
             new_array = new_array(1:end-1,:);
         
-        otherwise,
+        otherwise
             
             temp1 = new_array(1:row_idx_to_remove(ii)-1,:);
             temp2 = new_array(row_idx_to_remove(ii)+1:end,:);

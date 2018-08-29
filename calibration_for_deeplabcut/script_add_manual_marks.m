@@ -187,7 +187,7 @@ for iDate = 1 : numDates
                 % don't have matching points for the direct and mirror view
                 continue;
             end 
-            matchIdx = matchCheckerboardPoints(curDirectChecks, curMirrorChecks, mirrorOrientation{iBoard});
+            matchIdx = matchCheckerboardPoints(curDirectChecks, curMirrorChecks);
 
             matchStartIdx = (iImg-1) * points_per_board + 1;
             matchEndIdx = (iImg) * points_per_board;

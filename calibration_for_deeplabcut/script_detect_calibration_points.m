@@ -91,7 +91,7 @@ for iDate = 1 : numDates
 %                 curDirectChecks = undistortPoints(curDirectChecks, cameraParams);
 %                 curMirrorChecks = undistortPoints(curMirrorChecks, cameraParams);
                 
-                matchIdx = matchCheckerboardPoints(curDirectChecks, curMirrorChecks, mirrorOrientation{iBoard});
+                matchIdx = matchCheckerboardPoints(curDirectChecks, curMirrorChecks);
                 
                 matchStartIdx = (iImg-1) * points_per_board + 1;
                 matchEndIdx = (iImg) * points_per_board;
