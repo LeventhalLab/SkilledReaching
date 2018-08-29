@@ -32,6 +32,22 @@ remaining_directChecks = directChecks;
 remaining_mirrorChecks = mirrorChecks;
 numMatches = 0;
 while ~isempty(remaining_directChecks)
+    
+    if size(remaining_directChecks,1) == 1
+        % only one point left
+        numMatches = numMatches + 1;
+        mirRow = find(findMatchingRows(remaining_mirrorChecks, mirrorChecks));
+        dirRow = find(findMatchingRows(remaining_directChecks, directChecks));
+        
+        matchIdx(numMatches,1) = dirRow;
+        matchIdx(numMatches,2) = mirRow;
+        
+        remaining_directChecks = [];
+        remaining_mirrorChecks = [];
+        
+        continue;
+    end
+            
     supporting_lines = supportingLines(remaining_directChecks, remaining_mirrorChecks);
     
     for iLine = 1 : 2
