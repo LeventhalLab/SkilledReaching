@@ -13,6 +13,10 @@ dirViewFolder = fullfile(rootVidFolder,'direct_view');
 % calImageDir = '/Users/dleventh/Documents/deeplabcut images/cal images to review';
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
+% change this if the videos were cropped at different coordinates
+vidROI = [750,450,550,550;
+          1,450,450,400;
+          1650,435,390,400];
 
 cd(dirViewFolder)
 direct_csvList = dir('R*.csv');
@@ -80,7 +84,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     cd(calImageDir);
     calibrationFileName = ['SR_boxCalibration_' directVidDate{i_directcsv} '.mat'];
     if exist(calibrationFileName,'file')
-        load(calibrationFileName);
+        boxCal = load(calibrationFileName);
     else
         error(sprintf('no calibration file for %s\n',directVidDate{i_directcsv}));
     end
@@ -92,6 +96,10 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
         fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
     end
     
+    [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
+    [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
+    
+    pawTrajectory = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_bp, mirror_bp, ROIs, boxCal)
     
 end
 

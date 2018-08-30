@@ -10,8 +10,10 @@ function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, 
 %
 % OUTPUTS:
 %   invalidPoints - 
+%   diff_per_frame - num_bodyparts x numframes-1 array containing the
+%       distance (in pixels) that a point moved on each frame
 
-maxDistPerFrame = 20;
+maxDistPerFrame = 30;
 min_valid_p = 0.8;
 min_certain_p = 0.95;
 %maxNeighborSeparation = 30;   % to be used to make sure points that should

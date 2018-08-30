@@ -21,6 +21,7 @@ for iMat = 1 : length(matList)
     points3d = NaN(size(directChecks,1),3,size(directChecks,3),size(directChecks,4));
     scaled_points3d = NaN(size(points3d));
     mean_sf = mean(scaleFactor,2);   % single scale factor for each board, averaged across images
+    close all
     for iBoard = 1 : numBoards
         
         for iImg = 1 : numImg
@@ -39,13 +40,15 @@ for iMat = 1 : length(matList)
             [points3d(:,:,iBoard,iImg),reprojectedPoints,errors] = triangulate_DL(curDirectChecks_norm, curMirrorChecks_norm, P, curP);
             scaled_points3d(:,:,iBoard,iImg) = points3d(:,:,iBoard,iImg) * mean_sf(iBoard);
             
-            figure(iImg)
+            h_fig(iImg) = figure(iImg);
+            set(h_fig(iImg),'position',[iImg*450,600,400,400])
             hold on
             toPlot = squeeze(scaled_points3d(:,:,iBoard,iImg));
-            scatter3(toPlot(:,1),toPlot(:,2),toPlot(:,3),colList(iBoard))
+            scatter3(toPlot(:,1),toPlot(:,3),toPlot(:,2),colList(iBoard))
             xlabel('x')
-            ylabel('y')
-            zlabel('z')
+            ylabel('z')
+            zlabel('y')
+            view(15,45)
         end
     end
 end

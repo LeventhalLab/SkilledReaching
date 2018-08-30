@@ -19,10 +19,9 @@ cd(calImageDir)
 
 all_pt_matList = dir('*_all.mat');
 P = eye(4,3);
-for iMat = 1 : length(all_pt_matList)
+for iMat = 4 : length(all_pt_matList)
     
     load(all_pt_matList(iMat).name);
-    fprintf('working on %s\n',curDate);
     % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each
     %   totalNumPts x 2 subarray contains (x,y) points for each matched
     %   point in a mirror view across calibration images.
@@ -57,7 +56,7 @@ for iMat = 1 : length(all_pt_matList)
         end
         F(:,:,iBoard) = fundMatrix_mirror(valid_mp_direct, valid_mp_mirror);
         
-        E(:,:,iBoard) = K * squeeze(F(:,:,iBoard)) * K';
+        E(:,:,iBoard) = K * squeeze(F(:,:,iBoard)) *K';
         
         cur_E = squeeze(E(:,:,iBoard));
         [rot,t] = EssentialMatrixToCameraMatrix(cur_E);

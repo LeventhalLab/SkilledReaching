@@ -15,8 +15,8 @@ function matchIdx = matchCheckerboardPoints(directChecks, mirrorChecks)
 % w=2040;
 %%%%%%%%%%take out these lines later - for debugging
 
-mirror_maxDistFromLine = 2;   % if a point is farther than this from an epipolar line, it can't be considered a match
-direct_maxDistFromLine = 2;   % if a point is farther than this from an epipolar line, it can't be considered a match
+mirror_maxDistFromLine = 3;   % if a point is farther than this from an epipolar line, it can't be considered a match
+direct_maxDistFromLine = 5;   % if a point is farther than this from an epipolar line, it can't be considered a match
 
 num_points = size(mirrorChecks,1);
 if num_points ~= size(directChecks,1)
