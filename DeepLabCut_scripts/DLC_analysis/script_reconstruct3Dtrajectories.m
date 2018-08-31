@@ -1,5 +1,9 @@
 % script to perform 3D reconstruction on videos
 
+% hard-coded in info about each rat including handedness
+script_ratInfo_for_deepcut;
+ratInfo_IDs = [ratInfo.ratID];
+
 labeledVidsFolder = '/Volumes/Tbolt_01/Skilled Reaching/Labeled Videos';
 vidType = 'left_paw_gpybr';
 vidView = {'direct_view','right_view','left_view'};
@@ -75,6 +79,12 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     if ~foundMatch
         continue;
     end
+    ratInfo_idx = find(ratInfo_IDs == C{1});
+    if isempty(ratInfo_idx)
+        error('no entry in ratInfo structure for rat %d\n',C{1});
+    end
+    pawPref = ratInfo(ratInfo_idx).pawPref;
+
     cd(mirViewFolder)
     [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
     cd(dirViewFolder)
@@ -86,7 +96,19 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     if exist(calibrationFileName,'file')
         boxCal = load(calibrationFileName);
     else
-        error(sprintf('no calibration file for %s\n',directVidDate{i_directcsv}));
+        error('no calibration file for %s\n',directVidDate{i_directcsv});
+    end
+    K = boxCal.cameraParams.IntrinsicMatrix;
+    
+    switch pawPref
+        case 'right'
+            ROIs = vidROI(1:2,:);
+            Pn = squeeze(boxCal.Pn(:,:,2));
+            sf = mean(boxCal.scaleFactor(2,:));
+        case 'left'
+            ROIs = vidROI([1,3],:);
+            Pn = squeeze(boxCal.Pn(:,:,3));
+            sf = mean(boxCal.scaleFactor(3,:));
     end
     
     numDirectFrames = size(direct_p,1);
@@ -99,7 +121,9 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
     [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
     
-    pawTrajectory = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_bp, mirror_bp, ROIs, boxCal)
+    pawTrajectory = calc3D_DLC_trajectory(direct_pts, mirror_pts, ...
+        direct_bp, mirror_bp, ...
+        direct_p, mirror_p, ROIs, K, Pn, sf);
     
 end
 

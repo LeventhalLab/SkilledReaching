@@ -39,8 +39,12 @@ reprojectedPoints = zeros(numPoints, 2, 2, 'like', points2d);
 % reprojectionErrors = zeros(numPoints, 1, 'like', points2d);
 
 for iPoint = 1 : numPoints
+    curPts = squeeze(points2d(iPoint, :, :))';
+    if any(isnan(curPts(:)))
+        continue;
+    end
     [points3d(iPoint, :), reprojection, errors] = ...
-        triangulateOnePoint_DL(cameraMatrices, squeeze(points2d(iPoint, :, :))',refine_estimates);
+        triangulateOnePoint_DL(cameraMatrices, curPts, refine_estimates);
 %     reprojectionErrors(iPoint) = mean(hypot(errors(:, 1), errors(:, 2)));
     reprojectedPoints(iPoint,:,1) = reprojection(1,:);
     reprojectedPoints(iPoint,:,2) = reprojection(2,:);

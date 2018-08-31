@@ -42,6 +42,8 @@ poss_too_far = false(num_bodyparts,num_frames);
 
 for iBodyPart = 1 : num_bodyparts
     
+%     invalidPoints_bp = squeeze(invalidPoints(iBodyPart,:,:));
+    
     individual_part_loc = squeeze(parts_loc(iBodyPart,:,:));
     individual_part_loc(invalidPoints(iBodyPart,:)',:) = NaN;
     
@@ -63,6 +65,8 @@ for iBodyPart = 1 : num_bodyparts
     % too far in one frame
     
 end
+
+invalidPoints = invalidPoints | poss_too_far;
 
 % could also add a check to see if points that should be near each other
 % are near each other
