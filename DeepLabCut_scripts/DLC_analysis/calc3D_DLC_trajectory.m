@@ -34,23 +34,28 @@ function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_p
 numFrames = size(direct_pts, 2);
 
 % match body parts between direct and mirror views
-mirror_bpMatch_idx = zeros(length(direct_bp),1);
+mirror_bpMatch_idx = [];
+direct_bpMatch_idx = [];
 num_direct_bp = length(direct_bp);
+numValid_bp = 0;
+bodyparts = {};
 for i_bp = 1 : num_direct_bp
     
     if isempty(strcmpi(mirror_bp, direct_bp{i_bp}))
         continue;
     end
-    mirror_bpMatch_idx(i_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
-    
+    numValid_bp = numValid_bp + 1;
+    mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
+    direct_bpMatch_idx(numValid_bp) = i_bp;
+    bodyparts{numValid_bp} = direct_bp{i_bp};
 end
 
-[mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
-[direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
+% [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
+% [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
 
-pawTrajectory = zeros(numFrames, 3, num_direct_bp);
+pawTrajectory = zeros(numFrames, 3, numValid_bp);
 P = eye(4,3);
-for i_direct_bp = 1 : num_direct_bp
+for i_bp = 1 : numValid_bp
         
 %     if direct_invalid_points(i_direct_bp) || ...
 %        mirror_invalid_points(mirror_bpMatch_idx(i_direct_bp))
@@ -60,8 +65,8 @@ for i_direct_bp = 1 : num_direct_bp
 %         continue;
 %     end
 
-    cur_direct_pts = squeeze(direct_pts(i_direct_bp, :, :));
-    cur_mirror_pts = squeeze(mirror_pts(mirror_bpMatch_idx(i_direct_bp), :, :));
+    cur_direct_pts = squeeze(direct_pts(direct_bpMatch_idx(i_bp), :, :));
+    cur_mirror_pts = squeeze(mirror_pts(mirror_bpMatch_idx(i_bp), :, :));
 
     % adjust for the region of interest from which the cropped videos
     % were pulled
@@ -80,5 +85,5 @@ for i_direct_bp = 1 : num_direct_bp
 
     [wpts, ~]  = triangulate_DL(direct_norm, mirror_norm, P, Pn);
     
-    pawTrajectory(:, :, i_direct_bp) = wpts * scaleFactor;
+    pawTrajectory(:, :, i_bp) = wpts * scaleFactor;
 end
