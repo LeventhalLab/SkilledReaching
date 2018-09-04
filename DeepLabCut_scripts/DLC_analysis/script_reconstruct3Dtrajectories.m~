@@ -127,9 +127,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     
     cd(rootVidFolder)
     
-    trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory.mat', directVid_ratID(i_directcsv),...
-        directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
-    save(trajName, 'pawTrajectory', 'bodyparts');
+    trajName = [ratInfo(ratInfo_idx).
     
 end
 
