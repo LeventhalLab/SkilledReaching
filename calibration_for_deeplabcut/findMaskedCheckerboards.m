@@ -76,6 +76,7 @@ for iImg = 1 : num_img
         minCornerMetric = 0.15;   % algorithm default
         while ~foundValidPoints(iBoard,iImg) && (numCheckDetectAttempts <= maxDetectAttempts)
     
+%             [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg);
             [boardPoints,boardSize] = detectCheckerboardPoints(curBoardImg,'mincornermetric',minCornerMetric);
 
             % check that these are valid image points

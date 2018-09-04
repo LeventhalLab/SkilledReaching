@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_bp, mirror_bp, direct_p, mirror_p, ROIs, K, Pn, scaleFactor)
+function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_bp, mirror_bp, ROIs, K, Pn, scaleFactor)
 %
 % INPUTS:
 %   direct_pts, mirror_pts - number of body parts x number of frames x 2
@@ -27,7 +27,10 @@ function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_p
 %       .curDate - YYYYMMDD format date the data were collected
 %       
 % OUTPUTS:
-%
+%   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
+%       matrix contains x,y,z points for each bodypart
+%   bodyparts - cell array containing strings describing each bodypart in
+%       the same order as in the pawTrajectory array
 
 % assume that direct and mirror body part labels are the same
 

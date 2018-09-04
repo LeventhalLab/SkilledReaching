@@ -123,7 +123,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     
     [pawTrajectory,bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_pts, ...
         direct_bp, mirror_bp, ...
-        direct_p, mirror_p, ROIs, K, Pn, sf);
+        ROIs, K, Pn, sf);
     
 end
 
