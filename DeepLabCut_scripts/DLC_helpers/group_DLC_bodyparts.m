@@ -1,9 +1,11 @@
 function [mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_idx] = group_DLC_bodyparts(bodyparts)
 %
 % INPUTS
+%   bodyparts - cell array containing strings describing each bodypart in
+%       the same order as in the pawTrajectory array
 %
 % OUTPUTS
-%
+%   mcp_idx - 
 
 numDigits = 4;
 mcp_idx = zeros(numDigits,1);
@@ -29,23 +31,6 @@ for ii = 1 : length(poss_paw_idx)
         otherpaw_idx = poss_paw_idx(ii);
         break;
     end
-end
-
-end
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function match_idx = findStringMatchinCellArray(cell_array, str_fragment)
-
-stringSearch = strfind(cell_array,str_fragment);
-
-match_idx = zeros(length(stringSearch),1);
-for ii = 1 : length(stringSearch)
-    
-    match_idx = ~isempty(stringSearch{ii});
-    
 end
 
 end
