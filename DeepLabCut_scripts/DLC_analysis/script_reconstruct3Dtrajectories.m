@@ -48,6 +48,17 @@ for ii = 1 : numMarkedVids
     end
 end
 
+% find the list of calibration files
+cd(calImageDir);
+calFileList = dir('SR_boxCalibration_*.mat');
+calDateList = cell(1,length(calFileList));
+calDateNums = zeros(length(calFileList),1);
+for iFile = 1 : length(calFileList)
+    C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
+    calDateList{iFile} = C{1};
+    calDateNums(iFile) = str2double(calDateList{iFile});
+end
+
 cd(rootVidFolder);
 for iView = 1 : numViews
     
@@ -92,11 +103,21 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     
     % find the calibration file
     cd(calImageDir);
-    calibrationFileName = ['SR_boxCalibration_' directVidDate{i_directcsv} '.mat'];
+    curDateNum = str2double(directVidDate{i_directcsv});
+    dateDiff = curDateNum - calDateNums;
+    
+    % find the most recent date compared to the current file for which a
+    % calibration file exists. Later, write code so files are stored by
+    % date so that this file can be found before entering the loop through
+    % DLC csv files
+    lastValidCalDate = min(dateDiff(dateDiff >= 0));
+    calFileIdx = find(dateDiff == lastValidCalDate);
+%     calibrationFileName = ['SR_boxCalibration_' directVidDate{i_directcsv} '.mat'];
+    calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
     if exist(calibrationFileName,'file')
         boxCal = load(calibrationFileName);
     else
-        error('no calibration file for %s\n',directVidDate{i_directcsv});
+        error('no calibration file found on or prior to %s\n',directVidDate{i_directcsv});
     end
     K = boxCal.cameraParams.IntrinsicMatrix;
     
@@ -121,6 +142,14 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
     [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
     
+    direct_pts_toPlot = zeros(size(direct_pts));
+    mirror_pts_toPlot = zeros(size(mirror_pts));
+    for i_coord = 1 : 2
+        direct_pts_toPlot(:,:,i_coord) = direct_pts(:,:,i_coord) .* double(~direct_invalid_points);
+        mirror_pts_toPlot(:,:,i_coord) = mirror_pts(:,:,i_coord) .* double(~mirror_invalid_points);
+    end
+    direct_pts_toPlot(direct_pts_toPlot==0) = NaN;
+    mirror_pts_toPlot(mirror_pts_toPlot==0) = NaN;
     [pawTrajectory,bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_pts, ...
         direct_bp, mirror_bp, ...
         ROIs, K, Pn, sf);
