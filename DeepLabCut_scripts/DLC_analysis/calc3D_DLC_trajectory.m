@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_bp, mirror_bp, ROIs, K, Pn, scaleFactor)
+function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_bp, mirror_bp, ROIs, cameraParams, Pn, scaleFactor)
 %
 % INPUTS:
 %   direct_pts, mirror_pts - number of body parts x number of frames x 2
@@ -33,6 +33,9 @@ function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_p
 %       the same order as in the pawTrajectory array
 
 % assume that direct and mirror body part labels are the same
+
+points_still_distorted = true;   % set to false if vids were undistorted prior to running through deeplabcut
+K = cameraParams.IntrinsicMatrix;
 
 numFrames = size(direct_pts, 2);
 
@@ -77,6 +80,10 @@ for i_bp = 1 : numValid_bp
     cur_direct_pts(:,2) = cur_direct_pts(:,2) + ROIs(1,2) - 1;
     cur_mirror_pts(:,1) = cur_mirror_pts(:,1) + ROIs(2,1) - 1;
     cur_mirror_pts(:,2) = cur_mirror_pts(:,2) + ROIs(2,2) - 1;
+    
+    % undistort points
+    if points_still_distorted
+        cur_direct_pts = undistortPoints(
 
     direct_hom = [cur_direct_pts, ones(size(cur_direct_pts,1),1)];
     direct_norm = (K' \ direct_hom')';
