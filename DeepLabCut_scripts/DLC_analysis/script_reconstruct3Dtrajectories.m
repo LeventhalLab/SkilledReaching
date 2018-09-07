@@ -119,7 +119,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     else
         error('no calibration file found on or prior to %s\n',directVidDate{i_directcsv});
     end
-    K = boxCal.cameraParams.IntrinsicMatrix;
+%     K = boxCal.cameraParams.IntrinsicMatrix;
     
     switch pawPref
         case 'right'
@@ -152,7 +152,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     mirror_pts_toPlot(mirror_pts_toPlot==0) = NaN;
     [pawTrajectory,bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_pts, ...
         direct_bp, mirror_bp, ...
-        ROIs, K, Pn, sf);
+        ROIs, boxCal.cameraParams, Pn, sf);
     
     cd(rootVidFolder)
     

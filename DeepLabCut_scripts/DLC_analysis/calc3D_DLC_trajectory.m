@@ -83,7 +83,9 @@ for i_bp = 1 : numValid_bp
     
     % undistort points
     if points_still_distorted
-        cur_direct_pts = undistortPoints(
+        cur_direct_pts = undistortPoints(cur_direct_pts,cameraParams);
+        cur_mirror_pts = undistortPoints(cur_mirror_pts,cameraParams);
+    end
 
     direct_hom = [cur_direct_pts, ones(size(cur_direct_pts,1),1)];
     direct_norm = (K' \ direct_hom')';
