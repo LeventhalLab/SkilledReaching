@@ -3,7 +3,7 @@ function [cRot,cT,correct] = SelectCorrectEssentialCameraMatrix_mirror(rot,t,x1,
 % camera matrix for the direct view, pick out the one that keeps
 % triangulated points in front of both the real camera and virtual mirror
 % camera. Note, if we had 2 cameras, we would want depth to be positive for
-% both camers. However, since one of our views is a mirror and the
+% both cameras. However, since one of our views is a mirror and the
 % identified points have not been reversed, the triangulated points should
 % actually appear BEHIND the mirror but in front of the real camera. Assume
 % the second "camera" is the mirror view

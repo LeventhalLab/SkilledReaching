@@ -1,4 +1,4 @@
-function h_fig = visualizePawTrajectory(pawTrajectory, bodyparts, parts_to_show, varargin)
+function h_fig = visualizePawTrajectory(pawTrajectory, bodyparts, parts_to_show, pawPref, varargin)
 %
 % INPUTS
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
@@ -11,12 +11,39 @@ function h_fig = visualizePawTrajectory(pawTrajectory, bodyparts, parts_to_show,
 % VARARGS
 %
 % OUTPUTS
-%
+%   h_fig - figure handle containing the trajectory reconstruction
+
+if ~iscell(bodyparts)
+    bodyparts = {bodyparts};
+end
+if ~iscell(parts_to_show)
+    parts_to_show = {parts_to_show};
+end
 
 markerSize = 3;
 
+xlim = [-15 20];
+ylim = [5 50];
+zlim = [150 250];
+
+
+
+
+for iarg = 1 : 2 : nargin - 4
+    switch lower(varargin{iarg})
+        case 'markersize'
+            markerSize = varargin{iarg + 1};
+        case 'xlim'
+            xlim = varargin{iarg + 1};
+        case 'ylim'
+            ylim = varargin{iarg + 1};
+        case 'zlim'
+            zlim = varargin{iarg + 1};
+    end
+end
+
 [mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_idx] = ...
-    group_DLC_bodyparts(bodyparts);
+    group_DLC_bodyparts(bodyparts,pawPref);
 
 numFrames = size(pawTrajectory,1);
 
@@ -35,6 +62,7 @@ bodypartColor.nose = [0 0 0];
 h_fig = figure;
 
 markerAlpha = linspace(0,1,numFrames);
+% markerAlpha = ones(numFrames,1);
 
 for i_part_to_show = 1 : length(parts_to_show)
     
@@ -58,7 +86,7 @@ for i_part_to_show = 1 : length(parts_to_show)
             digitNum = str2num(curPart(end));
             baseColor = bodypartColor.dig(digitNum,:) * 1;
             trajIdx = digit_idx(digitNum);
-        elseif any(strfind(curPart,'pawdorsum'))
+        elseif any(strfind(curPart,[pawPref 'pawdorsum']))
             baseColor = bodypartColor.paw_dorsum;
             trajIdx = pawdorsum_idx;
         elseif any(strfind(curPart,'nose'))
@@ -91,5 +119,6 @@ for i_part_to_show = 1 : length(parts_to_show)
     zlabel('z');
     set(gca,'zdir','reverse');
     set(gca,'ydir','reverse');
+    set(gca,'xlim',xlim,'ylim',ylim,'zlim',zlim)
     
 end

@@ -38,10 +38,6 @@ for iMat = 1 : length(matList)
             curDirectChecks = squeeze(directChecks(:,:,iBoard,iImg));
             curMirrorChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
             
-            figure(iImg + numImg)
-            scatter(curDirectChecks(1,1),curDirectChecks(1,2));
-            scatter(curMirrorChecks(1,1),curMirrorChecks(1,2));
-            
             if any(isnan(curDirectChecks(:))) || any(isnan(curMirrorChecks(:)))
                 continue;
             end

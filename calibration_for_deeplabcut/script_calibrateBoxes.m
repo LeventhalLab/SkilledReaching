@@ -17,7 +17,7 @@ anticipatedBoardSize = [4,5];
 
 cd(calImageDir)
 
-all_pt_matList = dir('*_all.mat');
+all_pt_matList = dir('Grid*_all.mat');
 P = eye(4,3);
 for iMat = 1 : length(all_pt_matList)
     
