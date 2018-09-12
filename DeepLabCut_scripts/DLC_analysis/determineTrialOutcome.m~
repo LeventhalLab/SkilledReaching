@@ -10,8 +10,7 @@ time_to_average_prior_to_reach = 0.1;
 
 % figure out the trigger frame
 triggerFrame = round((triggerTime + frameTimeLimits(1)) * frameRate);
-preTriggerFrame = triggerFrame - round(time_to_average_prior_to_reach * frameRate);
-
+preTriggerFrame = triggerFrame - round(time_to_average_prior_to_reach * frameRate
 pelletIdx3D = strcmpi(bodyparts,'pellet');
 pelletIdx_direct = strcmpi(direct_bp,'pellet');
 
@@ -20,9 +19,8 @@ pelletDirectPts = squeeze(direct_pts(pelletIdx_direct,:,:));
 
 pellet_p = squeeze(direct_p(pelletIdx_direct,:));
 
-pelletFrames = find(pellet_p > p_cutoff);
-validPreTriggerFrames = pelletFrames(pelletFrames > preTriggerFrame & pelletFrames < triggerFrame);
+pelletFrames = pellet_p > p_cutoff;
 
-preReach_pellet_locations = pelletDirectPts(validPreTriggerFrames,:);
+preReach_pellet_locations = pelletDirectPts(pelletFrames(1:triggerFrame),:);
 
 end
