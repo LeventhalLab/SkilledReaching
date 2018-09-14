@@ -56,6 +56,7 @@ for i_rat = 1 : numRatFolders
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
+            d = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits,triggerTime);
             
         end
         

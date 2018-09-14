@@ -1,7 +1,11 @@
 function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, varargin)
 %
 % function to find points that are likely to be invalid in DLC output.
-% Strategy is to 1) find points with 
+% Strategy is to 1) find points with p-values that are very high and are
+% certainly correct IDs, 2) find points with p-values that are very low and
+% are certainly incorrect IDs, and 3) find points with intermediate
+% p-values that made large spatial jumps between frames (and are likely
+% therefore misidentified in at least one of the frames)
 %
 % INPUTS:
 %   parts_loc - m x n x 2 array where m is the number of body parts, n is

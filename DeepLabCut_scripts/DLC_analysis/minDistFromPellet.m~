@@ -1,5 +1,0 @@
-function [minDist, frameIdx] = minDistFromPellet(pawTrajectory, bodyparts,pawPref)
-
-% hard code strings that only occur in bodyparts that are part of the
-% reaching paw
-reachingPawParts = {
