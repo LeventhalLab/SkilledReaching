@@ -40,9 +40,8 @@ for iFrame = 1 : numFrames
     end
         
     farthestDIGidx(iFrame,:) = findFarthestDigits(digIdx,~invalidPoints(:,iFrame));
-    if all(farthestMCPidx(iFrame,:) > 0)
+    if all(farthestDIGidx(iFrame,:) > 0)
         DIGpts = squeeze(direct_pts(farthestDIGidx(iFrame,:),iFrame,:));
-        
         % need to keep in mind that angles will be different for right and
         % left paws
         digitAngle(iFrame) = pointsAngle(DIGpts);

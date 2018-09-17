@@ -1,0 +1,3 @@
+function direct_ap = directAperture(direct_pts,direct_p,bodyparts)
+
+% function to calculate apertu
