@@ -1,12 +1,12 @@
-function directPawOrientation = determineDirectPawOrientation(direct_pts,direct_bp,direct_p,pawPref)
+function [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,direct_p,pawPref)
 %
 % function to determine the angle of the paw in the direct view with
 % respect to horizontal (vertical?)
 
-[invalidPoints,diff_per_frame] = find_invalid_DLC_points(direct_pts, direct_p);
+[invalidPoints,~] = find_invalid_DLC_points(direct_pts, direct_p);
 % hard code strings that only occur in bodyparts that are part of the
 % reaching paw
-[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(direct_bp,pawPref);
+[mcpIdx,pipIdx,digIdx,~] = findReachingPawParts(direct_bp,pawPref);
 
 % calculate paw orientation at each time point based on mcp, pip, and digit
 % markers
@@ -25,8 +25,27 @@ for iFrame = 1 : numFrames
     if all(farthestMCPidx(iFrame,:) > 0)
         MCPpts = squeeze(direct_pts(farthestMCPidx(iFrame,:),iFrame,:));
         
-        % need to define what positive angles are for left vs right paws
+        % need to keep in mind that angles will be different for right and
+        % left paws
         mcpAngle(iFrame) = pointsAngle(MCPpts);
+    end
+    
+    farthestPIPidx(iFrame,:) = findFarthestDigits(pipIdx,~invalidPoints(:,iFrame));
+    if all(farthestPIPidx(iFrame,:) > 0)
+        PIPpts = squeeze(direct_pts(farthestPIPidx(iFrame,:),iFrame,:));
+        
+        % need to keep in mind that angles will be different for right and
+        % left paws
+        pipAngle(iFrame) = pointsAngle(PIPpts);
+    end
+        
+    farthestDIGidx(iFrame,:) = findFarthestDigits(digIdx,~invalidPoints(:,iFrame));
+    if all(farthestMCPidx(iFrame,:) > 0)
+        DIGpts = squeeze(direct_pts(farthestDIGidx(iFrame,:),iFrame,:));
+        
+        % need to keep in mind that angles will be different for right and
+        % left paws
+        digitAngle(iFrame) = pointsAngle(DIGpts);
     end
 
 end
@@ -49,6 +68,7 @@ validDigIdx = validPoints(digitIdx);
 if sum(validDigIdx) < 2
     % not enough points to determine an angle
     ptsIdx = [0,0];
+    return
 end
 
 ptsIdx(1) = digitIdx(find(validDigIdx,1,'first'));
