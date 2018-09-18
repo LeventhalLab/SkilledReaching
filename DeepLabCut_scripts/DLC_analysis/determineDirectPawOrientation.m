@@ -2,6 +2,12 @@ function [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_p
 %
 % function to determine the angle of the paw in the direct view with
 % respect to horizontal (vertical?)
+%
+% INPUTS
+%   direct_pts
+%   direct_bp
+%   direct_p
+%   pawPref - 'left' or 'right' indicating the preferred reaching paw
 
 [invalidPoints,~] = find_invalid_DLC_points(direct_pts, direct_p);
 % hard code strings that only occur in bodyparts that are part of the

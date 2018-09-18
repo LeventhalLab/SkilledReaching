@@ -4,6 +4,9 @@ function v = pawVelocity(pawTrajectory,frameRate)
 % pellet
 %
 % INPUTS:
+%   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
+%       matrix contains x,y,z points for each bodypart
+%   frameRate - frame rate in frames per second
 %
 % OUTPUTS:
 %   v - numFrames x numBodyparts x 3 array containing the velocity (or

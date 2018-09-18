@@ -64,12 +64,14 @@ for i_rat = 1 : numRatFolders
         all_mcpAngle = zeros(size(pawTrajectory,1),numTrials);
         all_pipAngle = zeros(size(pawTrajectory,1),numTrials);
         all_digitAngle = zeros(size(pawTrajectory,1),numTrials);
+        allTrajectories = NaN(size(pawTrajectory,1),size(pawTrajectory,2),size(pawTrajectory,3),numTrials);
         
         vidNum = zeros(numTrials,1);
         
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
+            pawPref = thisRatInfo.pawPref;
             
             dist_from_pellet = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits,triggerTime);
             all_dist_from_pellet(:,:,iTrial) = dist_from_pellet;
@@ -86,12 +88,16 @@ for i_rat = 1 : numRatFolders
             all_mcpAngle(:,iTrial) = mcpAngle;
             all_pipAngle(:,iTrial) = pipAngle;
             all_digitAngle(:,iTrial) = digitAngle;
+            
+            allTrajectories(:,:,:,iTrial) = pawTrajectory;
         
             save(pawTrajectoryList(iTrial).name,'dist_from_pellet','v','a','mcpAngle','pipAngle','digitAngle','-append');
         end
         
         mean_v = zeros(size(all_v,1),size(all_v,2),size(all_v,3));
         mean_a = zeros(size(all_a,1),size(all_a,2),size(all_a,3));
+        
+        allTrajectories(allTrajectories == 0) = NaN;
 %         mean_mcpAngle = zeros(size(pawTrajectory,1),1);
 %         mean_pipAngle = zeros(size(pawTrajectory,1),1);
 %         mean_digAngle = zeros(size(pawTrajectory,1),1);
@@ -101,12 +107,17 @@ for i_rat = 1 : numRatFolders
             
             a_bp = squeeze(all_a(:,:,i_bp,:));
             mean_a(:,:,i_bp) = nanmean(a_bp,3);
-            
-            mean_mcpAngle = NaNcircMean(all_mcpAngle,-pi,pi,2);
-            mean_pipAngle = NaNcircMean(all_pipAngle,-pi,pi,2);
-            mean_digAngle = NaNcircMean(all_digitAngle,-pi,pi,2);
+                        
         end
+        
+        mean_mcpAngle = NaNcircMean(all_mcpAngle,-pi,pi,2);
+        mean_pipAngle = NaNcircMean(all_pipAngle,-pi,pi,2);
+        mean_digAngle = NaNcircMean(all_digitAngle,-pi,pi,2);
+        meanTrajectory = nanmean(allTrajectories,4);
+
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
+        
+%         save(sessionSummaryName,'bodyparts','meanTrajectory','mean_v','mean_a','mean_mcpAngle','mean_pipAngle','mean_digAngle')
         
     end
     

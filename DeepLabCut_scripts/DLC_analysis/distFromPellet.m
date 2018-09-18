@@ -4,6 +4,10 @@ function d = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits,tr
 % pellet
 %
 % INPUTS:
+%   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
+%       matrix contains x,y,z points for each bodypart
+%   bodyparts - cell array containing strings describing each bodypart in
+%       the same order as in the pawTrajectory array
 %
 % OUTPUTS:
 %   d - numFrames x numBodyparts array containing the euclidean distance of

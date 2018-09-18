@@ -64,7 +64,7 @@ for i_rat = 1 : numRatFolders
         all_mcpAngle = zeros(size(pawTrajectory,1),numTrials);
         all_pipAngle = zeros(size(pawTrajectory,1),numTrials);
         all_digitAngle = zeros(size(pawTrajectory,1),numTrials);
-        
+        allTrajectories = zeros(size(pawTrajectory,1),size(pa
         vidNum = zeros(numTrials,1);
         
         for iTrial = 1 : numTrials
@@ -105,8 +105,12 @@ for i_rat = 1 : numRatFolders
             mean_mcpAngle = NaNcircMean(all_mcpAngle,-pi,pi,2);
             mean_pipAngle = NaNcircMean(all_pipAngle,-pi,pi,2);
             mean_digAngle = NaNcircMean(all_digitAngle,-pi,pi,2);
+            
+            meanTrajectory = 
         end
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
+        
+        save(sessionSummaryName,'bodyparts'
         
     end
     
