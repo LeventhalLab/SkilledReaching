@@ -14,8 +14,10 @@ vidROI = [750,450,550,550;
           1,450,450,400;
           1650,435,390,400];
 triggerTime = 1;    % seconds
-frameTimeLimits = [-1/2,1];    % time around trigger to extract frames
+frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
 frameRate = 300;
+% would be nice to have these parameters stored with DLC output so they can
+% be read in directly. Might they be in the .h files?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
 cd(labeledBodypartsFolder)
@@ -104,6 +106,7 @@ for i_rat = 1 : numRatFolders
         directVidNum = zeros(numMarkedVids,1);
 
         % find all the direct view videos that are available
+        uniqueDateList = {};
         for ii = 1 : numMarkedVids
             C = textscan(direct_csvList(ii).name,'R%04d_%8c_%8c_%03d');
 

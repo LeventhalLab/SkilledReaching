@@ -74,10 +74,11 @@ for i_rat = 1 : numRatFolders
             dist_from_pellet = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits,triggerTime);
             all_dist_from_pellet(:,:,iTrial) = dist_from_pellet;
             
-            % should velocity be calculated
+            % should velocity be calculated based on smoothed position?
             v = pawVelocity(pawTrajectory,frameRate);
             all_v(:,:,:,iTrial) = v;
             
+            % should acceleration be calculated based on smoothed velocity?
             a = pawVelocity(v,frameRate);
             all_a(:,:,:,iTrial) = a;
             
@@ -91,12 +92,19 @@ for i_rat = 1 : numRatFolders
         
         mean_v = zeros(size(all_v,1),size(all_v,2),size(all_v,3));
         mean_a = zeros(size(all_a,1),size(all_a,2),size(all_a,3));
-%         mean_mcpAngle = 
-%         mean_pipAngle = 
-%         mean_digAngle = 
+%         mean_mcpAngle = zeros(size(pawTrajectory,1),1);
+%         mean_pipAngle = zeros(size(pawTrajectory,1),1);
+%         mean_digAngle = zeros(size(pawTrajectory,1),1);
         for i_bp = 1 : size(mean_v,3)
             v_bp = squeeze(all_v(:,:,i_bp,:));
             mean_v(:,:,i_bp) = nanmean(v_bp,3);
+            
+            a_bp = squeeze(all_a(:,:,i_bp,:));
+            mean_a(:,:,i_bp) = nanmean(a_bp,3);
+            
+            mean_mcpAngle = NaNcircMean(all_mcpAngle,-pi,pi,2);
+            mean_pipAngle = NaNcircMean(all_pipAngle,-pi,pi,2);
+            mean_digAngle = NaNcircMean(all_digitAngle,-pi,pi,2);
         end
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         

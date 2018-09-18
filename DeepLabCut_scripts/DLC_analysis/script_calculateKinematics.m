@@ -102,7 +102,9 @@ for i_rat = 1 : numRatFolders
             a_bp = squeeze(all_a(:,:,i_bp,:));
             mean_a(:,:,i_bp) = nanmean(a_bp,3);
             
-            mean_mcpAngle = circmean
+            mean_mcpAngle = NaNcircMean(all_mcpAngle,-pi,pi,2);
+            mean_pipAngle = NaNcircMean(all_pipAngle,-pi,pi,2);
+            mean_digAngle = NaNcircMean(all_digitAngle,-pi,pi,2);
         end
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         
