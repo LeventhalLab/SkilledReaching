@@ -1,4 +1,4 @@
-function initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits,triggerTime, varargin)
+function initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits, varargin)
 %
 % determine the 3D location of the pellet on the pedestal - i.e., the reach
 % target
@@ -14,8 +14,6 @@ function initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,fra
 %       Use negative times to indicate times before the trigger event
 %       (e.g., the first entry should be negative if the first frame is
 %       before the trigger event)
-%   triggerTime - time in seconds at which the trigger event occurs in the
-%       original video
 %
 % VARARGS:
 %   'timepriortoreach' - length of time to average the pellet position
@@ -27,7 +25,7 @@ function initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,fra
 
 time_to_average_prior_to_reach = 0.1;
 
-for iarg = 1 : 2 : nargin - 5
+for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
         case 'timepriortoreach'
             time_to_average_prior_to_reach = varargin{iarg + 1};

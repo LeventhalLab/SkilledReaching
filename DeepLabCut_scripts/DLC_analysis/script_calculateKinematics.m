@@ -73,7 +73,7 @@ for i_rat = 1 : numRatFolders
             load(pawTrajectoryList(iTrial).name);
             pawPref = thisRatInfo.pawPref;
             
-            dist_from_pellet = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits,triggerTime);
+            dist_from_pellet = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
             all_dist_from_pellet(:,:,iTrial) = dist_from_pellet;
             
             % should velocity be calculated based on smoothed position?
@@ -90,8 +90,12 @@ for i_rat = 1 : numRatFolders
             all_digitAngle(:,iTrial) = digitAngle;
             
             allTrajectories(:,:,:,iTrial) = pawTrajectory;
+            
+            [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
         
-            save(pawTrajectoryList(iTrial).name,'dist_from_pellet','v','a','mcpAngle','pipAngle','digitAngle','-append');
+            save(pawTrajectoryList(iTrial).name,'dist_from_pellet',...
+                'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
+                'partEndPtFrame','endPts','endPtFrame','pawPartsList','-append');
         end
         
         mean_v = zeros(size(all_v,1),size(all_v,2),size(all_v,3));

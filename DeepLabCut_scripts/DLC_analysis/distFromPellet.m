@@ -1,4 +1,4 @@
-function d = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits,triggerTime)
+function d = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits)
 %
 % find the closest distance between any point on the paw and the sugar
 % pellet
@@ -16,7 +16,7 @@ function d = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits,tr
 % hard code strings that only occur in bodyparts that are part of the
 % reaching paw
 % reachingPawParts = {'mcp','pip','digit',[pawPref 'dorsum']};
-initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits,triggerTime);
+initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
 
 d = NaN(size(pawTrajectory,1),size(pawTrajectory,3));
 if isempty(initPellet3D)

@@ -38,7 +38,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 1 : numRatFolders
+for i_rat = 2 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -54,12 +54,14 @@ for i_rat = 1 : numRatFolders
     
     cd(ratRootFolder);
     
-    sessionDirectories = dir([ratID '_*']);
+%     sessionDirectories = dir([ratID '_*']);
+    sessionDirectories = listFolders([ratID '_*']);
     numSessions = length(sessionDirectories);
     
     for iSession = 1 : numSessions
         
-        C = textscan(sessionDirectories(iSession).name,[ratID '_%8c']);
+%         C = textscan(sessionDirectories(iSession).name,[ratID '_%8c']);
+        C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
         
         % find the calibration file for this date
@@ -93,10 +95,12 @@ for i_rat = 1 : numRatFolders
                 sf = mean(boxCal.scaleFactor(3,:));
         end
     
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name);
+%         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name);
+        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         cd(fullSessionDir);
         
-        directViewDir = fullfile(fullSessionDir, [sessionDirectories(iSession).name '_direct']);
+%         directViewDir = fullfile(fullSessionDir, [sessionDirectories(iSession).name '_direct']);
+        directViewDir = fullfile(fullSessionDir, [sessionDirectories{iSession} '_direct']);
         
         cd(directViewDir);
         direct_csvList = dir('R*.csv');
@@ -122,10 +126,12 @@ for i_rat = 1 : numRatFolders
             end
         end
     
-        sessionViewDirs = dir([sessionDirectories(iSession).name '_*']);
+%         sessionViewDirs = dir([sessionDirectories(iSession).name '_*']);
+%         sessionViewDirs = listFolders([sessionDirectories{iSession} '_*']);
         cd(fullSessionDir);
         for iView = 1 : numViews
-            possibleMirrorDir = [sessionDirectories(iSession).name '_' vidView{iView}];
+%             possibleMirrorDir = [sessionDirectories(iSession).name '_' vidView{iView}];
+            possibleMirrorDir = [sessionDirectories{iSession} '_' vidView{iView}];
             if ~exist(possibleMirrorDir,'dir') || ~isempty(strfind(lower(possibleMirrorDir),'direct'))
                 % if this view doesn't exist or if it's the direct view, skip
                 % forward (already found the direct view files)
