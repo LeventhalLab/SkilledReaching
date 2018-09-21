@@ -9,6 +9,8 @@ function h_fig = visualizePawTrajectory(pawTrajectory, bodyparts, parts_to_show,
 %       show in the plot
 %
 % VARARGS
+%   markersize - size of the markers used in the plots
+%   xlim, ylim, zlim - 2-element vectors containing x,y, or z axis limits
 %
 % OUTPUTS
 %   h_fig - figure handle containing the trajectory reconstruction

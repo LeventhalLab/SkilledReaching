@@ -46,10 +46,14 @@ for i_rat = 1 : numRatFolders
         
         matList = dir([ratID '_*_3dtrajectory.mat']);
         
+        iFrame = 1;   % counting frames that were input to DLC, not frames in the original video
         for iVid = 1 : length(matList)
             
             load(matList(iVid).name);
             vidStartTime = triggerTime + frameTimeLimits(1);
+            
+            [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
+            [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
             
             vidName = [matList(iVid).name(1:27) '.avi'];
             fullVidName = fullfile(vidDirectory,vidName);
@@ -59,6 +63,19 @@ for i_rat = 1 : numRatFolders
             
             curFrame = readFrame(video);
             
+            % need to undistort video frames and points to mark
+            curFrame_ud = undistortImage(curFrame, boxCal.cameraParams);
+            
+            points3D = squeeze(pawTrajectory(iFrame,:,:))';
+            direct_pt = squeeze(direct_pts(:,iFrame,:));
+            mirror_pt = squeeze(mirror_pts(:,iFrame,:));
+            frame_direct_p = squeeze(direct_p(:,iFrame));
+            frame_mirror_p = squeeze(mirror_p(:,iFrame));
+            isPointValid = 
+            curFrame_out = overlayDLCreconstruction(curFrame_ud, points3D, ...
+                direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
+                direct_bp, mirror_bp, bodyparts, isPointValid, ROIs, ...
+                boxCal, pawPref);
             % WORKING HERE...
             
         end
