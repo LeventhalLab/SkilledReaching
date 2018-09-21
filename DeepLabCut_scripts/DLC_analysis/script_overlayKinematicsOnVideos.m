@@ -13,6 +13,8 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
+isPointValid = cell(1,2);
+
 for i_rat = 1 : numRatFolders
     
     ratID = ratFolders(i_rat).name;
@@ -71,7 +73,8 @@ for i_rat = 1 : numRatFolders
             mirror_pt = squeeze(mirror_pts(:,iFrame,:));
             frame_direct_p = squeeze(direct_p(:,iFrame));
             frame_mirror_p = squeeze(mirror_p(:,iFrame));
-            isPointValid = 
+            isPointValid{1} = ~direct_invalid_points(:,iFrame);
+            isPointValid{2} = ~mirror_invalid_points(:,iFrame);
             curFrame_out = overlayDLCreconstruction(curFrame_ud, points3D, ...
                 direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
                 direct_bp, mirror_bp, bodyparts, isPointValid, ROIs, ...
