@@ -44,6 +44,7 @@ DLC_validMarkerType = 'o';
 DLC_invalidMarkerType = 's';
 DLC_highProbMarkerType = '*';
 DLC_lowProbMarkerType = '+';
+DLC_reprojMarkerType = 
 
 if isa(img_in,'uint8')
     img_out = double(img_in) / 255;
@@ -107,6 +108,14 @@ for i_mirrorBP = 1 : num_mirror_bp
     end
 end
 
+switch pawPref
+    case 'right'
+        Pn = squeeze(boxCal.Pn(:,:,2));
+        sf = mean(boxCal.scaleFactor(2,:));
+    case 'left'
+        Pn = squeeze(boxCal.Pn(:,:,3));
+        sf = mean(boxCal.scaleFactor(3,:));
+end
 for i_bp = 1 : num_3D_bp
     currentPt = points3D(i_bp,:);
     if all(currentPt==0)
@@ -114,12 +123,18 @@ for i_bp = 1 : num_3D_bp
         continue;
     end
     
+    currentPt = currentPt / sf;
     % reproject this point into the direct view
-    
-    
+    currPt_direct = projectPoints_DL(currentPt, boxCal.P);
+    currPt_direct = unnormalize_points(currPt_direct,K);
+    img_out = insertMarker(img_out, currPt_direct, DLC_reprojMarkerType,...
+        'color',markerColor,'size',markerSize);
+        
     % reproject this point into the mirror view
-    
-    
+    currPt_mirror = projectPoints_DL(currentPt, Pn);
+    currPt_mirror = unnormalize_points(currPt_mirror,K);
+    img_out = insertMarker(img_out, currPt_mirror, DLC_reprojMarkerType,...
+        'color',markerColor,'size',markerSize);
 end
 
 end

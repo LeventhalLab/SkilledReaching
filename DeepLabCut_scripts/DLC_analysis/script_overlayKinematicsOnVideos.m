@@ -48,7 +48,6 @@ for i_rat = 1 : numRatFolders
         
         matList = dir([ratID '_*_3dtrajectory.mat']);
         
-        iFrame = 1;   % counting frames that were input to DLC, not frames in the original video
         for iVid = 1 : length(matList)
             
             load(matList(iVid).name);
@@ -59,27 +58,40 @@ for i_rat = 1 : numRatFolders
             
             vidName = [matList(iVid).name(1:27) '.avi'];
             fullVidName = fullfile(vidDirectory,vidName);
-            video = VideoReader(fullVidName);
+            vidOutName = [matList(iVid).name(1:27) '_marked'];
+            fullVidOutName = fullfile(fullSessionDir, vidOutName);
             
-            video.CurrentTime = vidStartTime;
+            vidIn = VideoReader(fullVidName);
+            vidOut = VideoWriter(fullVidOutName);
+            vidOut.FrameRate = vidIn.FrameRate;
             
-            curFrame = readFrame(video);
+            vidIn.CurrentTime = vidStartTime;
             
-            % need to undistort video frames and points to mark
-            curFrame_ud = undistortImage(curFrame, boxCal.cameraParams);
-            
-            points3D = squeeze(pawTrajectory(iFrame,:,:))';
-            direct_pt = squeeze(direct_pts(:,iFrame,:));
-            mirror_pt = squeeze(mirror_pts(:,iFrame,:));
-            frame_direct_p = squeeze(direct_p(:,iFrame));
-            frame_mirror_p = squeeze(mirror_p(:,iFrame));
-            isPointValid{1} = ~direct_invalid_points(:,iFrame);
-            isPointValid{2} = ~mirror_invalid_points(:,iFrame);
-            curFrame_out = overlayDLCreconstruction(curFrame_ud, points3D, ...
-                direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
-                direct_bp, mirror_bp, bodyparts, isPointValid, ROIs, ...
-                boxCal, pawPref);
-            % WORKING HERE...
+            iFrame = 1;
+            while hasFrame(vidIn)
+                curFrame = readFrame(vidIn);
+
+                % need to undistort vidIn frames and points to mark
+                curFrame_ud = undistortImage(curFrame, boxCal.cameraParams);
+
+                points3D = squeeze(pawTrajectory(iFrame,:,:))';
+                direct_pt = squeeze(direct_pts(:,iFrame,:));
+                mirror_pt = squeeze(mirror_pts(:,iFrame,:));
+                frame_direct_p = squeeze(direct_p(:,iFrame));
+                frame_mirror_p = squeeze(mirror_p(:,iFrame));
+                isPointValid{1} = ~direct_invalid_points(:,iFrame);
+                isPointValid{2} = ~mirror_invalid_points(:,iFrame);
+
+                curFrame_out = overlayDLCreconstruction(curFrame_ud, points3D, ...
+                    direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
+                    direct_bp, mirror_bp, bodyparts, isPointValid, ROIs, ...
+                    boxCal, pawPref);
+                
+                writeVideo(vidOut,curFrame_out);
+                
+                iFrame = iFrame + 1; 
+            end
+            close(vidOut);
             
         end
         
