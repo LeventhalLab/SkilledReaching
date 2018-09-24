@@ -62,8 +62,9 @@ for i_rat = 1 : numRatFolders
             fullVidOutName = fullfile(fullSessionDir, vidOutName);
             
             vidIn = VideoReader(fullVidName);
-            vidOut = VideoWriter(fullVidOutName);
-            vidOut.FrameRate = vidIn.FrameRate;
+%             vidOut = VideoWriter(fullVidOutName);
+%             vidOut.FrameRate = vidIn.FrameRate;
+%             open(vidOut);
             
             vidIn.CurrentTime = vidStartTime;
             
@@ -87,7 +88,10 @@ for i_rat = 1 : numRatFolders
                     direct_bp, mirror_bp, bodyparts, isPointValid, ROIs, ...
                     boxCal, pawPref);
                 
-                writeVideo(vidOut,curFrame_out);
+                % summarize how many times high probability points are
+                % declared invalid
+                
+%                 writeVideo(vidOut,curFrame_out);
                 
                 iFrame = iFrame + 1; 
             end

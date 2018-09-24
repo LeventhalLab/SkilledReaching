@@ -1,6 +1,24 @@
 function [supporting_lines] = supportingLines(pts1, pts2)
 %
 % function to find the supporting lines for 2 blobs/collections of points
+%
+% algorithm first creates the convex hull of all points in pts1 and pts2.
+% It then finds adjacent points in this convex hull that belong to 
+% different blobs. These 2 points define one of the supporting lines.
+%
+% see Hu, Brown, and Nelson "Multiple-view 3D reconstruction using a
+%   mirror", University of Rochester Technical Report 863, 2005
+%
+% INPUTS
+%   pts1, pts2 - points that define blob 1 and blob 2, respectively. They
+%       can be given either as m1 x 2 and m2 x 2 arrays of x,y pairs or as
+%       boolean image masks of the blobs
+%
+% OUTPUTS
+%   supporting_lines - 2 x 2 x 2 array where each (:,:,p) array contains
+%   [x1,y1;x2,y2] coordinates that define the endpoints of a supporting 
+%   line
+%
 if islogical(pts1)
     edgePts = bwmorph(pts1,'remove');
     [y,x] = find(edgePts);

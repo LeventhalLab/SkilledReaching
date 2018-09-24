@@ -1,5 +1,7 @@
 function matchIdx = matchCheckerboardPoints(directChecks, mirrorChecks)
 %
+% function to match checkerboard points in the direct and mirror views.
+% 
 % INPUTS:
 %   directChecks, mirrorChecks - m x 2 arrays containing the checkerboard
 %       points
@@ -7,7 +9,7 @@ function matchIdx = matchCheckerboardPoints(directChecks, mirrorChecks)
 %       "right"
 %
 % OUTPUTS:
-%   matchIdx
+%   matchIdx - 
 
 
 %%%%%%%%%%take out these lines later - for debugging
@@ -146,168 +148,3 @@ while ~isempty(remaining_directChecks)
         remaining_mirrorChecks = removeRow(remaining_mirrorChecks, mirror_rows_to_remove);
     end
 end
-%     
-% 
-% % find epipole based on these supporting lines
-% testLines = zeros(2,3);
-% for ii = 1 : size(testLines,1)
-% %     linePoints(1,:) = squeeze(testMatch(ii,:,1));   % direct view
-% %     linePoints(2,:) = squeeze(testMatch(ii,:,2));   % mirror view
-%     
-%     testLines(ii,:) = lineCoeffFromPoints(squeeze(supporting_lines(:,:,ii)));
-% %     pts = lineToBorderPoints(testLines(ii,:),[h,w]);
-% %     line(pts([1,3]),pts([2,4]));
-% end
-% epiPt = findIntersection(testLines(1,:),testLines(2,:));
-% 
-% % switch mirrorOrientation
-% % 
-% %     case 'top'
-% %         direct_ltIdx = directChecks(:,1) == min(directChecks(:,1));
-% %         direct_rtIdx = directChecks(:,1) == max(directChecks(:,1));
-% %         mirror_ltIdx = mirrorChecks(:,1) == min(mirrorChecks(:,1));
-% %         mirror_rtIdx = mirrorChecks(:,1) == max(mirrorChecks(:,1));
-% %         
-% %         try
-% %         testMatch(1,:,1) = directChecks(direct_ltIdx,:);
-% %         catch
-% %             keyboard
-% %         end
-% %         testMatch(2,:,1) = directChecks(direct_rtIdx,:);
-% %         testMatch(1,:,2) = mirrorChecks(mirror_ltIdx,:);
-% %         testMatch(2,:,2) = mirrorChecks(mirror_rtIdx,:);
-% %         
-% %         assignedPoints(direct_ltIdx,1) = true;
-% %         assignedPoints(direct_rtIdx,1) = true;
-% %         assignedPoints(mirror_ltIdx,2) = true;
-% %         assignedPoints(mirror_rtIdx,2) = true;
-% %         
-% %         matchIdx(1,1) = find(direct_ltIdx);
-% %         matchIdx(2,1) = find(direct_rtIdx);
-% %         matchIdx(1,2) = find(mirror_ltIdx);
-% %         matchIdx(2,2) = find(mirror_rtIdx);
-% %     case {'left','right'}
-% %         direct_topIdx = directChecks(:,2) == min(directChecks(:,2));
-% %         direct_botIdx = directChecks(:,2) == max(directChecks(:,2));
-% %         mirror_topIdx = mirrorChecks(:,2) == min(mirrorChecks(:,2));
-% %         mirror_botIdx = mirrorChecks(:,2) == max(mirrorChecks(:,2));
-% %         
-% %         testMatch(1,:,1) = directChecks(direct_topIdx,:);
-% %         testMatch(2,:,1) = directChecks(direct_botIdx,:);
-% %         testMatch(1,:,2) = mirrorChecks(mirror_topIdx,:);
-% %         testMatch(2,:,2) = mirrorChecks(mirror_botIdx,:);
-% %         
-% %         assignedPoints(direct_topIdx,1) = true;
-% %         assignedPoints(direct_botIdx,1) = true;
-% %         assignedPoints(mirror_topIdx,2) = true;
-% %         assignedPoints(mirror_botIdx,2) = true;
-% %         
-% %         matchIdx(1,1) = find(direct_topIdx);
-% %         matchIdx(2,1) = find(direct_botIdx);
-% %         matchIdx(1,2) = find(mirror_topIdx);
-% %         matchIdx(2,2) = find(mirror_botIdx);
-% % end
-% % numMatchedPts = 2;
-% % 
-% % % find epipole based on these matched points
-% % testLines = zeros(2,3);
-% % linePoints = zeros(2,2);
-% % for ii = 1 : size(testLines,1)
-% %     linePoints(1,:) = squeeze(testMatch(ii,:,1));   % direct view
-% %     linePoints(2,:) = squeeze(testMatch(ii,:,2));   % mirror view
-% %     
-% %     testLines(ii,:) = lineCoeffFromPoints(linePoints);
-% % %     pts = lineToBorderPoints(testLines(ii,:),[h,w]);
-% % %     line(pts([1,3]),pts([2,4]));
-% % end
-% % epiPt = findIntersection(testLines(1,:),testLines(2,:));
-% 
-% numMatchedPts = 0;
-% for i_directCheck = 1 : num_points
-% 
-%     if assignedPoints(i_directCheck, 1)
-%         % this point has already been assigned a match
-%         continue;
-%     end
-%     curDirectPt = directChecks(i_directCheck,:);
-%     % construct a line from the current point to the epipole
-%     linePoints(1,:) = epiPt;
-%     linePoints(2,:) = directChecks(i_directCheck,:);
-% %     testLine = lineCoeffFromPoints(linePoints);
-% %     pts = lineToBorderPoints(testLine,[h,w]);
-% %     line(pts([1,3]),pts([2,4]));
-%     
-%     % calculate the distance from each mirror point to the line
-%     mirror_distFromLine = NaN(num_points,1);
-%     direct_distFromLine = NaN(num_points,1);
-%     for i_check = 1 : num_points
-%         testMirrorPoint = mirrorChecks(i_check,:);
-%         testDirectPoint = directChecks(i_check,:);
-%         mirror_distFromLine(i_check) = distanceToLine(curDirectPt, epiPt, testMirrorPoint);
-%         direct_distFromLine(i_check) = distanceToLine(curDirectPt, epiPt, testDirectPoint);
-%     end
-%     
-%     % find all candidate direct and mirror points to lie on this epipolar
-%     % line
-%     mirror_pt_idx = find(mirror_distFromLine < mirror_maxDistFromLine);
-%     direct_pt_idx = find(direct_distFromLine < direct_maxDistFromLine);
-%     
-%     if (length(mirror_pt_idx) ~= length(direct_pt_idx)) || ...
-%             isempty(mirror_pt_idx) || ...
-%             length(mirror_pt_idx) == 1
-%         % didn't find the same number of potential matches in both views or
-%         % didn't find any potential matches or there was only one potential
-%         % match. Take the closest point to the line and hope for the best
-%         minDistIdx = find(mirror_distFromLine == min(mirror_distFromLine));
-%         numMatchedPts = numMatchedPts + 1;
-%         matchIdx(numMatchedPts,1) = i_directCheck;
-%         matchIdx(numMatchedPts,2) = minDistIdx;
-%         assignedPoints(i_directCheck, 1) = true;
-%         assignedPoints(minDistIdx, 2) = true;
-%         continue;
-%     end
-%     numPossMatches = length(mirror_pt_idx);
-%     mirrorDirectDistance = zeros(numPossMatches);
-%     for i_dirPt = 1 : numPossMatches
-%         for i_mirPt = 1 : numPossMatches
-%             mirrorDirectDistance(i_dirPt,i_mirPt) = norm(directChecks(direct_pt_idx(i_dirPt),:) - mirrorChecks(mirror_pt_idx(i_mirPt),:));
-%         end
-%     end
-%     for iMatch = 1 : numPossMatches
-%         % which direct/mirror points are closest together? (they're a match
-%         % due to mirror symmetry). Then second closest, third closest, etc.
-%         [m,n] = find(mirrorDirectDistance == min(min(mirrorDirectDistance)));
-%         if ~assignedPoints(direct_pt_idx(m))
-%             % make sure this point hasn't already been assigned a match
-%             numMatchedPts = numMatchedPts + 1;
-%             matchIdx(numMatchedPts,1) = direct_pt_idx(m);
-%             matchIdx(numMatchedPts,2) = mirror_pt_idx(n);
-%             assignedPoints(direct_pt_idx(m), 1) = true;
-%             assignedPoints(mirror_pt_idx(n), 2) = true;
-%         end
-%         
-%         % eliminate points that have already been assigned a match from the
-%         % distance/index matrices
-%         keepRows = true(size(mirrorDirectDistance,1),1);
-%         keepRows(m) = false;
-%         keepCols = true(1,size(mirrorDirectDistance,2));
-%         keepCols(n) = false;
-%         direct_pt_idx = direct_pt_idx(keepRows);
-%         mirror_pt_idx = mirror_pt_idx(keepCols);
-%         
-%         mirrorDirectDistance = mirrorDirectDistance(keepRows,:);
-%         mirrorDirectDistance = mirrorDirectDistance(:, keepCols);
-%     end
-%         
-%         
-%         
-%         
-% %     numMatchedPts = numMatchedPts + 1;
-% %     matchIdx(numMatchedPts,1) = i_directCheck;
-% %     
-% %     minDistIdx = find(mirror_distFromLine == min(mirror_distFromLine));
-% %     matchIdx(numMatchedPts,2) = minDistIdx;
-%     
-% end
-% 
-% end
