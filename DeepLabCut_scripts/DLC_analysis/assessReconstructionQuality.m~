@@ -32,15 +32,7 @@ function [reproj_error,high_p_invalid] = assessReconstructionQuality(pawTrajecto
 %   pcutoff - p-value to use as a cutoff for high vs low probability points
 %
 % OUTPUTS:
-%   reproj_error - num_bodyparts x numFrames x 2 x 2 array where
-%       reproj_error(bodypart,frame,:,1) is the difference in x,y
-%       coordinates between the reprojected 3D point and originally
-%       measured direct view poiint. reproj_error(bodypart,frame,:,2) is
-%       the same for the mirror view
-%   high_p_invalid - num_bodyparts x numFrames x 2 boolean array where true
-%       entries indicate that DLC thought the point was identified with
-%       high probability but the find_invalid_DLC_points function declared
-%       it invalid
+%   reproj_error - structure with the following fields:
 
 % calculate percentage of high probability points in mirror/direct views
 % labeled invalid
@@ -49,18 +41,16 @@ high_p_direct = direct_p > p_cutoff;
 high_p_mirror = mirror_p > p_cutoff;
 
 K = boxCal.cameraParams.IntrinsicMatrix;
-numFrames = size(pawTrajectory, 1);
 
 [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
 [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
             
-high_p_invalid = false(length(bodyparts), numFrames, 2);
-high_p_invalid(:,:,1) = high_p_direct & direct_invalid_points;
-high_p_invalid(:,:,2) = high_p_mirror & mirror_invalid_points;
+high_p_direct_invalid = high_p_direct & direct_invalid_points;
+high_p_mirror_invalid = high_p_mirror & mirror_invalid_points;
 
 % calculate distance between reconstructed points and originally identified
 % points in the direct and mirror views
-
+numFrames = size(pawTrajectory, 1);
 
 switch pawPref
     case 'right'
@@ -101,11 +91,9 @@ for i_bodypart = 1 : length(bodyparts)
         % extract the DLC test videos
         measured_direct_pt = squeeze(direct_pts(direct_bp_idx,iFrame,:))';
         measured_direct_pt = measured_direct_pt + ROIs(1,1:2) - 1;
-        measured_direct_pt = undistortPoints(measured_direct_pt, boxCal.cameraParams);
         
         measured_mirror_pt = squeeze(mirror_pts(mirror_bp_idx,iFrame,:))';
         measured_mirror_pt = measured_mirror_pt + ROIs(2,1:2) - 1;
-        measured_mirror_pt = undistortPoints(measured_mirror_pt, boxCal.cameraParams);
         
         reproj_error(i_bodypart, iFrame,:,1) = currPt_direct - measured_direct_pt;
         reproj_error(i_bodypart, iFrame,:,2) = currPt_mirror - measured_mirror_pt;
