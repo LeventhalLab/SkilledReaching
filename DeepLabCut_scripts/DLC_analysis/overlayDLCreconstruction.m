@@ -26,6 +26,7 @@ function img_out = overlayDLCreconstruction(img_in, points3D, direct_pt, mirror_
 % VARARGS:
 %   markersize - size of individual markers
 %   pcutoff - p-value to use as a cutoff for high vs low probability points
+%   parts_to_show - indices of bodyparts cell array to show
 %
 % OUTPUTS:
 %   img_out - undistorted RGB image with overlay marks added on defined by
@@ -51,6 +52,9 @@ textColor = 'black';
 
 markerSize = 6;
 p_cutoff = 0.9;
+
+parts_to_show = 1 : length(bodyparts);
+
 for iarg = 1 : 2 : nargin - 13
     switch lower(varargin{iarg})
         case 'markersize'
@@ -61,6 +65,8 @@ for iarg = 1 : 2 : nargin - 13
             p_cutoff = varargin{iarg + 1};
         case 'bodypartcolor'
             bodypartColor = varargin{iarg + 1};
+        case 'parts_to_show'
+            parts_to_show = varargin{iarg + 1};
     end
 end
 
@@ -84,7 +90,10 @@ num_3D_bp = size(direct_pt,1);
 K = boxCal.cameraParams.IntrinsicMatrix;
 % need to set colors for each of the point types
 
-for i_directBP = 1 : num_direct_bp
+for i_bp = 1 : length(parts_to_show)
+    
+    i_directBP = find(strcmpi(direct_bp, bodyparts{parts_to_show(i_bp)}));
+% for i_directBP = 1 : num_direct_bp
     
     currentPt = direct_pt(i_directBP,:) + ROIs(1,1:2) - 1;
     currentPt = undistortPoints(currentPt, boxCal.cameraParams);
@@ -109,8 +118,11 @@ for i_directBP = 1 : num_direct_bp
         
 end
 
-for i_mirrorBP = 1 : num_mirror_bp
+for i_bp = 1 : length(parts_to_show)
+% for i_mirrorBP = 1 : num_mirror_bp
     
+    i_mirrorBP = find(strcmpi(direct_bp, bodyparts{parts_to_show(i_bp)}));
+
     currentPt = mirror_pt(i_mirrorBP,:) + ROIs(2,1:2) - 1;
     currentPt = undistortPoints(currentPt, boxCal.cameraParams);
     
@@ -141,8 +153,8 @@ switch pawPref
         Pn = squeeze(boxCal.Pn(:,:,3));
         sf = mean(boxCal.scaleFactor(3,:));
 end
-for i_bp = 1 : num_3D_bp
-    currentPt = points3D(i_bp,:);
+for i_bp = 1 : length(parts_to_show)
+    currentPt = points3D(parts_to_show(i_bp),:);
     if all(currentPt==0)
         % 3D point wasn't computed for this body part
         continue;
