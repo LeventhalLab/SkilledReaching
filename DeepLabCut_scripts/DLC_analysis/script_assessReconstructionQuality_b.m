@@ -77,18 +77,29 @@ for i_rat = 1 : numRatFolders
             % reprojErrorThresh in this video?
             for i_bp = 1 : size(reproj_error,1)
                 largeErrorIdx = false(size(reproj_error,2),1);
-                invalidErrorIdx = false(size(reproj_error,2),1);   % WORKING HERE - NEED TO FIGURE OUT HOW TO ARCHIVE PLACES WHERE HIGH_P POINTS WERE MARKED INVALID
+                invalidErrorIdx = false(size(reproj_error,2),1);   
                 for iView = 1 : 2
                     testErrors = squeeze(reproj_error(i_bp,:,:,iView));
                     errorDist = sqrt(sum(testErrors.^2,2));
                     
                     largeErrorIdx = largeErrorIdx | (errorDist > reprojErrorThresh);
-                        
+                    invalidErrorIdx = invalidErrorIdx | squeeze(high_p_invalid(i_bp,:,iView))';
                 end
-                    reproj_errors_idx{iVid}{i_bp} = find(largeErrorIdx);   % make note of frames in which this bodypart may be inaccurately localized
+                reproj_errors_idx{iVid}{i_bp} = find(largeErrorIdx);   % make note of frames in which this bodypart may be inaccurately localized
+                invalidPointError{iVid}{i_bp} = find(invalidErrorIdx);
             end
             vidName = [matList(iVid).name(1:27) '.avi'];
             fullVidName = fullfile(vidDirectory,vidName);
+            video = VideoReader(fullVidName);
+            
+            % WORKING HERE - FIND THE FRAME WHERE A MISTAKE WAS MADE AND
+            % MARK THE "MISSED" POINTS
+            
+            % THE OTHER QUESTION IS ARE THERE OTHER TYPES OF ERRORS - LIKE
+            % FRAMES WHERE POINTS SUDDENLY DISAPPEAR THAT NEED TO BE
+            % ACCOUNTED FOR? OR CREATE INTERPOLATION FOR MISSING POINTS AND
+            % SEE HOW THAT WORKS?
+            
             vidOutName = [matList(iVid).name(1:27) '_marked'];
             fullVidOutName = fullfile(fullSessionDir, vidOutName);
             
