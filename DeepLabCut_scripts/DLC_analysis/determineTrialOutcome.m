@@ -12,6 +12,9 @@ function trialOutcome = determineTrialOutcome(pawTrajectory,bodyparts,direct_pts
 %   direct_p - number of body parts x number of frames array
 %       containing p-values for how confident DLC is that a body part was
 %       correctly identified
+%   ROIs - 2 x 4 array where each row defines a region of interest as:
+%       [left,top,width,height]. First row is for the direct view, second
+%       row is for the mirror view (which mirror depends on paw preference)
 %
 % OUTPUTS
 %   trialOutcome reflecting Alex's scoring algorithm
