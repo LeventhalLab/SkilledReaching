@@ -53,20 +53,16 @@ for i_rat = 1 : numRatFolders
             load(matList(iVid).name);
             vidStartTime = triggerTime + frameTimeLimits(1);
             
-            [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
-            [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
+            if ~exist('reproj_error','var')
+                pawPref = thisRatInfo.pawPref;
+                [reproj_error,high_p_invalid] = assessReconstructionQuality(pawTrajectory, direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, bodyparts, ROIs, boxCal, pawPref);
+                save(matList(iVid).name,'reproj_error','high_p_invalid','-append');
+            end
             
             vidName = [matList(iVid).name(1:27) '.avi'];
             fullVidName = fullfile(vidDirectory,vidName);
             vidOutName = [matList(iVid).name(1:27) '_marked'];
             fullVidOutName = fullfile(fullSessionDir, vidOutName);
-            
-            vidIn = VideoReader(fullVidName);
-%             vidOut = VideoWriter(fullVidOutName);
-%             vidOut.FrameRate = vidIn.FrameRate;
-%             open(vidOut);
-            
-            vidIn.CurrentTime = vidStartTime;
             
             iFrame = 1;
             while hasFrame(vidIn)
@@ -95,6 +91,7 @@ for i_rat = 1 : numRatFolders
                 
                 iFrame = iFrame + 1; 
             end
+
             close(vidOut);
             
         end

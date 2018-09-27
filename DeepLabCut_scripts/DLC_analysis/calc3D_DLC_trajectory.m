@@ -11,20 +11,10 @@ function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_p
 %   ROIs - 2 x 4 array where each row is a [left,top,width,height] vector
 %       defining a rectangular region of interest. First row is the direct
 %       view, second row is the mirror view
-%   K
+%   cameraParams - matlab camera parameters structure
 %   Pn
 %   scaleFactor
 %
-%   boxCal - box calibration structure with the following fields:
-%       .E - essential matrix (3 x 3 x numViews) array where numViews is
-%           the number of different mirror views (3 for now)
-%       .F - fundamental matrix (3 x 3 x numViews) array where numViews is
-%           the number of different mirror views (3 for now)
-%       .Pn - camera matrices assuming the direct view is eye(4,3). 4 x 3 x
-%           numViews array
-%       .P - direct camera matrix (eye(4,3))
-%       .cameraParams
-%       .curDate - YYYYMMDD format date the data were collected
 %       
 % OUTPUTS:
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
