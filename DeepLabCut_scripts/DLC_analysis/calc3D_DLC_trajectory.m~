@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts, dist_from_epipole] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_bp, mirror_bp, ROIs, cameraParams, Pn, F, imSize, scaleFactor, varargin)
+function [pawTrajectory, bodyparts] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_bp, mirror_bp, ROIs, cameraParams, Pn, scaleFactor, varargin)
 %
 % INPUTS:
 %   direct_pts, mirror_pts - number of body parts x number of frames x 2
@@ -13,8 +13,6 @@ function [pawTrajectory, bodyparts, dist_from_epipole] = calc3D_DLC_trajectory(d
 %       view, second row is the mirror view
 %   cameraParams - matlab camera parameters structure
 %   Pn - camera matrix for the mirror view that shows the paw dorsum
-%   F - the fundamental matrix for the mirror view that shows the paw
-%       dorsum
 %   scaleFactor - mean computed scaling factor for the mirror view that
 %       shows the paw dorsum
 %
@@ -32,20 +30,11 @@ K = cameraParams.IntrinsicMatrix;
 
 numFrames = size(direct_pts, 2);
 
-maxDistFromEpipole = 10;   % how far away from the epipole can the line
-                           % connecting the matched direct and mirror
-                           % points be before the algorithm says there must
-                           % be a mismatch?
+maxDistFromEpipole = 10;
 
-for iarg = 1 : 2 : nargin - 10
+for iarg = 1 : 2 : nargin - 8
     switch lower(varargin{iarg})
         case 'maxdistfromepipole'
-            maxDistFromEpipole = varargin{iarg + 1};
-    end
-end
-
-[~,epipole] = isEpipoleInImage(F,imSize);
-
 % match body parts between direct and mirror views
 mirror_bpMatch_idx = [];
 direct_bpMatch_idx = [];
@@ -64,7 +53,6 @@ for i_bp = 1 : num_direct_bp
 end
 
 pawTrajectory = zeros(numFrames, 3, numValid_bp);
-dist_from_epipole = zeros(numFrames, numValid_bp);
 P = eye(4,3);
 for i_bp = 1 : numValid_bp
 
@@ -89,8 +77,6 @@ for i_bp = 1 : numValid_bp
             end
         end
     end
-    
-    dist_from_epipole(:,i_bp) = distanceToLine(cur_direct_pts,cur_mirror_pts,epipole);
 
     direct_hom = [cur_direct_pts, ones(size(cur_direct_pts,1),1)];
     direct_norm = (K' \ direct_hom')';

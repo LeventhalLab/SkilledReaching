@@ -16,6 +16,8 @@ vidROI = [750,450,550,550;
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
 frameRate = 300;
+
+imSize = [1024,2040];
 % would be nice to have these parameters stored with DLC output so they can
 % be read in directly. Might they be in the .h files?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,10 +91,12 @@ for i_rat = 1 : numRatFolders
                 ROIs = vidROI(1:2,:);
                 Pn = squeeze(boxCal.Pn(:,:,2));
                 sf = mean(boxCal.scaleFactor(2,:));
+                F = squeeze(boxCal.F(:,:,2));
             case 'left'
                 ROIs = vidROI([1,3],:);
                 Pn = squeeze(boxCal.Pn(:,:,3));
                 sf = mean(boxCal.scaleFactor(3,:));
+                F = squeeze(boxCal.F(:,:,3));
         end
     
 %         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name);
@@ -185,15 +189,15 @@ for i_rat = 1 : numRatFolders
             end
             direct_pts_toPlot(direct_pts_toPlot==0) = NaN;
             mirror_pts_toPlot(mirror_pts_toPlot==0) = NaN;
-            [pawTrajectory,bodyparts] = calc3D_DLC_trajectory(direct_pts_toPlot, mirror_pts_toPlot, ...
-                direct_bp, mirror_bp, ...
-                ROIs, boxCal.cameraParams, Pn, sf);
+            [pawTrajectory,bodyparts,dist_from_epipole] = calc3D_DLC_trajectory(direct_pts_toPlot, ...
+                mirror_pts_toPlot, direct_bp, mirror_bp, ...
+                ROIs, boxCal.cameraParams, Pn, F, imSize, sf);
 
             cd(fullSessionDir)
 
             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory.mat', directVid_ratID(i_directcsv),...
                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
-            save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p');
+            save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','-append');
             
         end
         

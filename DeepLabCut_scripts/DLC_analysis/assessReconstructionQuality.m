@@ -1,4 +1,4 @@
-function [reproj_error,high_p_invalid] = assessReconstructionQuality(pawTrajectory, direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, bodyparts, ROIs, boxCal, pawPref)
+function [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, bodyparts, ROIs, boxCal, pawPref)
 %
 % INPUTS:
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
@@ -41,6 +41,10 @@ function [reproj_error,high_p_invalid] = assessReconstructionQuality(pawTrajecto
 %       entries indicate that DLC thought the point was identified with
 %       high probability but the find_invalid_DLC_points function declared
 %       it invalid
+%   low_p_valid - num_bodyparts x numFrames x 2 boolean array where true
+%       entries indicate that DLC thought the point was identified with
+%       low probability but the find_invalid_DLC_points function declared
+%       it valid
 
 % calculate percentage of high probability points in mirror/direct views
 % labeled invalid
@@ -57,6 +61,10 @@ numFrames = size(pawTrajectory, 1);
 high_p_invalid = false(length(bodyparts), numFrames, 2);
 high_p_invalid(:,:,1) = high_p_direct & direct_invalid_points;
 high_p_invalid(:,:,2) = high_p_mirror & mirror_invalid_points;
+
+low_p_valid = false(length(bodyparts), numFrames, 2);
+low_p_valid(:,:,1) = ~high_p_direct & ~direct_invalid_points;
+low_p_valid(:,:,2) = ~high_p_mirror & ~mirror_invalid_points;
 
 % calculate distance between reconstructed points and originally identified
 % points in the direct and mirror views

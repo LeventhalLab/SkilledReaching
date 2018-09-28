@@ -52,17 +52,18 @@ for i_rat = 1 : numRatFolders
 
         for iVid = 1 : length(matList)
             
-            if exist('reproj_error','var')
+            if exist('low_p_valid','var')
                 clear reproj_error
                 clear high_p_invalid
+                clear low_p_valid
             end
-            load(matList(iVid).name);
+            load(matList(iVid).name); 
             vidStartTime = triggerTime + frameTimeLimits(1);
             
-            if ~exist('reproj_error','var')
+            if ~exist('low_p_valid','var')
                 pawPref = thisRatInfo.pawPref;
-                [reproj_error,high_p_invalid] = assessReconstructionQuality(pawTrajectory, direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, bodyparts, ROIs, boxCal, pawPref);
-                save(matList(iVid).name,'reproj_error','high_p_invalid','-append');
+                [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, bodyparts, ROIs, boxCal, pawPref);
+                save(matList(iVid).name,'reproj_error','high_p_invalid','low_p_valid','-append');
             end
             
         end

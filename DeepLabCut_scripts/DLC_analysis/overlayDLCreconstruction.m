@@ -55,6 +55,13 @@ p_cutoff = 0.9;
 
 parts_to_show = 1 : length(bodyparts);
 
+DLC_validMarkerType = 'o';
+DLC_invalidMarkerType = 'square';
+DLC_highProbMarkerType = '*';
+DLC_lowProbMarkerType = '+';
+DLC_reprojMarkerType = 'x';
+
+
 for iarg = 1 : 2 : nargin - 13
     switch lower(varargin{iarg})
         case 'markersize'
@@ -70,22 +77,15 @@ for iarg = 1 : 2 : nargin - 13
     end
 end
 
-
-DLC_validMarkerType = 'o';
-DLC_invalidMarkerType = 'square';
-DLC_highProbMarkerType = '*';
-DLC_lowProbMarkerType = '+';
-DLC_reprojMarkerType = 'x';
-
 if isa(img_in,'uint8')
     img_out = double(img_in) / 255;
 else
     img_out = img_in;
 end
 
-num_direct_bp = size(direct_pt,1);
-num_mirror_bp = size(mirror_pt,1);
-num_3D_bp = size(direct_pt,1);
+% num_direct_bp = size(direct_pt,1);
+% num_mirror_bp = size(mirror_pt,1);
+% num_3D_bp = size(direct_pt,1);
 
 K = boxCal.cameraParams.IntrinsicMatrix;
 % need to set colors for each of the point types
