@@ -42,11 +42,7 @@ for i_rat = 1 : numRatFolders
     cd(ratRootFolder);
     DLCstatsFolder = fullfile(ratRootFolder,[ratID '_DLCstats']);
     
-    if ~exist(DLCstatsFolder,'dir')
-        mkdir(DLCstatsFolder);
-    end
-    
-    sessionDirectories = listFolders([ratID '_2*']);   % all were recorded after the year 2000
+    sessionDirectories = listFolders([ratID '_*']);
     numSessions = length(sessionDirectories);
     
     numRatPages = 0;
@@ -106,7 +102,7 @@ for i_rat = 1 : numRatFolders
             title('mirror view');
         end
         
-        if rowNum == mean_p_figProps.m || iSession == numSessions
+        if rowNum == mean_p_figProps.n || iSession == numSessions
             textString{1} = 'mean p-values for DLC point detection';
             textString{2} = sprintf('sessions: %s', currentSessionList{1});
             for ii = 2 : rowNum
@@ -120,14 +116,7 @@ for i_rat = 1 : numRatFolders
             
             mean_p_summaryName = sprintf('%s_mean_p_heatmaps_%02d',ratID,numRatPages);
             
-            mean_p_summaryName = fullfile(DLCstatsFolder,mean_p_summaryName);
-            mean_p_figName = [mean_p_summaryName '.fig'];
-            mean_p_pdfName = [mean_p_summaryName '.pdf'];
-            
-            print(mean_p_pdfName, '-dpdf');
-            savefig(mean_p_figName);
-            
-            close(h_fig);
+            DLCstatsFolder
         end
 %         set(gca,'ytick',1:16,'yticklabel',bodyparts);
 

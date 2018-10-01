@@ -23,7 +23,7 @@ imSize = [1024,2040];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
 cd(labeledBodypartsFolder)
-ratFolders = dir('R*');
+ratFolders = dir('R*_2');
 numRatFolders = length(ratFolders);
 
 vidView = {'direct','right','left'};
@@ -113,6 +113,8 @@ for i_rat = 1 : numRatFolders
         directVidTime = cell(1, numMarkedVids);
         directVidNum = zeros(numMarkedVids,1);
 
+        
+
         % find all the direct view videos that are available
         uniqueDateList = {};
         for ii = 1 : numMarkedVids
@@ -166,6 +168,14 @@ for i_rat = 1 : numRatFolders
                 continue;
             end
 
+            trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory.mat', directVid_ratID(i_directcsv),...
+                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
+            fullTrajName = fullfile(fullSessionDir, trajName);
+            if exist(fullTrajName,'file')
+                % already did this calculation
+                continue;
+            end
+            
             cd(mirViewFolder)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
             cd(directViewDir)
@@ -195,8 +205,6 @@ for i_rat = 1 : numRatFolders
 
             cd(fullSessionDir)
 
-            trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory.mat', directVid_ratID(i_directcsv),...
-                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
             save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','-append');
             
         end
