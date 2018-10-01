@@ -62,7 +62,11 @@ for i_rat = 1 : numRatFolders
         matList = dir([ratID '_*_3dtrajectory.mat']);
         numTrials = length(matList);
         
+        try
         load(matList(1).name);
+        catch
+            keyboard
+        end
         t = linspace(frameTimeLimits(1),frameTimeLimits(2), size(pawTrajectory,1));
         all_p_direct = zeros(size(direct_p,1),size(direct_p,2),numTrials);
         all_p_mirror = zeros(size(mirror_p,1),size(mirror_p,2),numTrials);

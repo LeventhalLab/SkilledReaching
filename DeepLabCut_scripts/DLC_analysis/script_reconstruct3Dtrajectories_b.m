@@ -23,7 +23,7 @@ imSize = [1024,2040];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
 cd(labeledBodypartsFolder)
-ratFolders = dir('R*_2');
+ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
 vidView = {'direct','right','left'};
@@ -57,14 +57,17 @@ for i_rat = 1 : numRatFolders
     cd(ratRootFolder);
     
 %     sessionDirectories = dir([ratID '_*']);
-    sessionDirectories = listFolders([ratID '_*']);
+    sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
     for iSession = 1 : numSessions
         
+        
 %         C = textscan(sessionDirectories(iSession).name,[ratID '_%8c']);
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
+        
+        fprintf('working on session %s_%s\n',ratID,sessionDate);
         
         % find the calibration file for this date
         % find the calibration file
@@ -78,6 +81,7 @@ for i_rat = 1 : numRatFolders
         % DLC csv files
         lastValidCalDate = min(dateDiff(dateDiff >= 0));
         calFileIdx = find(dateDiff == lastValidCalDate);
+
     %     calibrationFileName = ['SR_boxCalibration_' directVidDate{i_directcsv} '.mat'];
         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
         if exist(calibrationFileName,'file')
@@ -171,10 +175,12 @@ for i_rat = 1 : numRatFolders
             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory.mat', directVid_ratID(i_directcsv),...
                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
             fullTrajName = fullfile(fullSessionDir, trajName);
-            if exist(fullTrajName,'file')
-                % already did this calculation
-                continue;
-            end
+            
+            % COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
+%             if exist(fullTrajName,'file')
+%                 % already did this calculation
+%                 continue;
+%             end
             
             cd(mirViewFolder)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
