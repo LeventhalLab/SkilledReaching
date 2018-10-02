@@ -97,8 +97,6 @@ for i_rat = 1 : numRatFolders
             
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
         
-            all_endPts(:,:,iTrial) = partEndPts;
-            
             save(pawTrajectoryList(iTrial).name,'dist_from_pellet',...
                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
                 'partEndPtFrame','endPts','endPtFrame','pawPartsList','-append');
@@ -124,12 +122,10 @@ for i_rat = 1 : numRatFolders
         mean_pipAngle = NaNcircMean(all_pipAngle,-pi,pi,2);
         mean_digAngle = NaNcircMean(all_digitAngle,-pi,pi,2);
         meanTrajectory = nanmean(allTrajectories,4);
-        
-%         mean_endPts = nanmean(all_endPts,3);
 
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         
-        save(sessionSummaryName,'bodyparts','meanTrajectory','mean_v','mean_a','mean_mcpAngle','mean_pipAngle','mean_digAngle','all_endPts')
+        save(sessionSummaryName,'bodyparts','meanTrajectory','mean_v','mean_a','mean_mcpAngle','mean_pipAngle','mean_digAngle')
         
     end
     
