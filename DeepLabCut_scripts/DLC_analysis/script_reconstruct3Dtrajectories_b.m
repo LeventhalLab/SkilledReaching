@@ -176,11 +176,11 @@ for i_rat = 1 : numRatFolders
                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
             fullTrajName = fullfile(fullSessionDir, trajName);
             
-            % COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-%             if exist(fullTrajName,'file')
-%                 % already did this calculation
-%                 continue;
-%             end
+%             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
+            if exist(fullTrajName,'file')
+                % already did this calculation
+                continue;
+            end
             
             cd(mirViewFolder)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
@@ -210,8 +210,12 @@ for i_rat = 1 : numRatFolders
                 ROIs, boxCal.cameraParams, Pn, F, imSize, sf);
 
             cd(fullSessionDir)
-
-            save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','-append');
+            
+            if exist(trajName,'file')
+                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','-append');
+            else
+                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole');
+            end
             
         end
         

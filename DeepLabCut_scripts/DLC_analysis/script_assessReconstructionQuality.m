@@ -31,7 +31,7 @@ for i_rat = 1 : numRatFolders
     
     cd(ratRootFolder);
     
-    sessionDirectories = listFolders([ratID '_*']);
+    sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
     ratVidPath = fullfile(vidRootPath,ratID);   % root path for the original videos
