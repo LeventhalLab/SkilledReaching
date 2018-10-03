@@ -90,12 +90,17 @@ end
 % frames because why not? Could also try the mode or mean
 endPtFrame = round(nanmedian(partEndPtFrame));
 endPts = zeros(numPawParts,3);
-for iPart = 1 : numPawParts
-    if all(squeeze(xyz_coords(endPtFrame,:,iPart))==0)
-        endPts(iPart,:) = NaN(1,3);
-    else
-        endPts(iPart,:) = squeeze(xyz_coords(endPtFrame,:,iPart));
+
+if ~isnan(endPtFrame)
+    for iPart = 1 : numPawParts
+        if all(squeeze(xyz_coords(endPtFrame,:,iPart))==0)
+            endPts(iPart,:) = NaN(1,3);
+        else
+            endPts(iPart,:) = squeeze(xyz_coords(endPtFrame,:,iPart));
+        end
     end
+else
+    endPts(iPart,:) = zeros(1,3);
 end
 
 end

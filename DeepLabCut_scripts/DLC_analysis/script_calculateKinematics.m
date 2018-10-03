@@ -38,7 +38,7 @@ for i_rat = 1 : numRatFolders
     
     cd(ratRootFolder);
     
-    sessionDirectories = dir([ratID '_*']);
+    sessionDirectories = dir([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
     for iSession = 1 : numSessions
