@@ -8,7 +8,7 @@ labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
 
-ratInfo = ratInfoFromExcel(xlfname, 'well learned');
+ratInfo = readExcelDB(xlfname, 'well learned');
 ratInfo_IDs = [ratInfo.ratID];
 
 cd(labeledBodypartsFolder)
@@ -19,3 +19,26 @@ for i_rat = 1 : numRatFolders
     
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
+    
+    ratInfo_idx = find(ratInfo_IDs == ratIDnum);
+    
+    if isempty(ratInfo_idx)
+        error('no entry in ratInfo structure for rat %d\n',C{1});
+    end
+    thisRatInfo = ratInfo(ratInfo_idx);
+    pawPref = thisRatInfo.pawPref;
+    
+    ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    
+    cd(ratRootFolder);
+    
+    sessionDirectories = listFolders([ratID '_2*']);
+    numSessions = length(sessionDirectories);
+    
+    for iSession = 1 : numSessions
+    
+        fprintf('working on session %s\n', sessionDirectories{iSession});
+        C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
+        sessionDate = C{1};
+        
+        

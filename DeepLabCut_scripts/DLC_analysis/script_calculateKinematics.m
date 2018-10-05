@@ -18,6 +18,12 @@ labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 % files
 % calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
+xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+
+ratInfo = readExcelDB(xlfname, 'well learned');
+ratInfo_IDs = [ratInfo.ratID];
+
 cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
@@ -27,12 +33,12 @@ for i_rat = 1 : numRatFolders
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
     
-%     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
-%     if isempty(ratInfo_idx)
-%         error('no entry in ratInfo structure for rat %d\n',C{1});
-%     end
-%     thisRatInfo = ratInfo(ratInfo_idx);
-%     pawPref = thisRatInfo.pawPref;
+    ratInfo_idx = find(ratInfo_IDs == ratIDnum);
+    if isempty(ratInfo_idx)
+        error('no entry in ratInfo structure for rat %d\n',C{1});
+    end
+    thisRatInfo = ratInfo(ratInfo_idx);
+    pawPref = thisRatInfo.pawPref;
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     
@@ -75,9 +81,9 @@ for i_rat = 1 : numRatFolders
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
-            pawPref = thisRatInfo.pawPref;
             
             dist_from_pellet = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
+            initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
             all_dist_from_pellet(:,:,iTrial) = dist_from_pellet;
             
             % should velocity be calculated based on smoothed position?
@@ -101,7 +107,7 @@ for i_rat = 1 : numRatFolders
             
             save(pawTrajectoryList(iTrial).name,'dist_from_pellet',...
                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
-                'partEndPtFrame','endPts','endPtFrame','pawPartsList','-append');
+                'partEndPtFrame','endPts','endPtFrame','pawPartsList','initPellet3D','-append');
         end
         
         mean_v = zeros(size(all_v,1),size(all_v,2),size(all_v,3));

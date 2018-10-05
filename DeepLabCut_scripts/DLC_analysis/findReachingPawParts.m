@@ -1,5 +1,9 @@
 function [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref,varargin)
-
+%
+% INPUTS
+%
+% OUTPUTS
+%
 
 mcpString = 'mcp';
 pipString = 'pip';

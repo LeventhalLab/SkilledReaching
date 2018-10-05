@@ -6,7 +6,10 @@ vidRootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 % files
 % calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
-script_ratInfo_for_deepcut;
+xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+
+ratInfo = readExcelDB(xlfname, 'well learned');
 ratInfo_IDs = [ratInfo.ratID];
 
 cd(labeledBodypartsFolder)
