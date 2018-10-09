@@ -38,11 +38,9 @@ for i_rat = 1 : numRatFolders
         fprintf('no session database file for %s\n',ratID);
         continue;
     elseif length(sessionDBfile) > 1
-        fprintf('more than one session database file for %s\n',ratID);
-        continue
+        fprintf('no session database file for %s\n',ratID);
     end
-    sessionInfo = readExcelDB(sessionDBfile.name,sessionDBfile.name);
-    
+    sessions = readExcelDB(sessionDBfile.name
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
@@ -51,9 +49,5 @@ for i_rat = 1 : numRatFolders
         fprintf('working on session %s\n', sessionDirectories{iSession});
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
-        
-    end
-    
-end
         
         

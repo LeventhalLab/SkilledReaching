@@ -60,6 +60,10 @@ for i_rat = 1 : numRatFolders
         
         % find the pawTrajectory files
         pawTrajectoryList = dir('R*3dtrajectory.mat');
+        if isempty(pawTrajectoryList)
+            continue
+        end
+        
         numTrials = length(pawTrajectoryList);
         
         load(pawTrajectoryList(1).name);
