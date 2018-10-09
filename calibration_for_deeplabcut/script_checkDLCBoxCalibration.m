@@ -54,7 +54,7 @@ for iMat = 1 : length(matList)
             scaled_points3d(:,:,iBoard,iImg) = points3d(:,:,iBoard,iImg) * mean_sf(iBoard);
             
             h_fig(iImg) = figure(iImg);
-            set(h_fig(iImg),'position',[iImg*450,600,400,400])
+            set(h_fig(iImg),'position',[100+(iImg-1)*450,100,400,400])
             hold on
             toPlot = squeeze(scaled_points3d(:,:,iBoard,iImg));
             scatter3(toPlot(:,1),toPlot(:,2),toPlot(:,3),colList(iBoard))
@@ -64,8 +64,11 @@ for iMat = 1 : length(matList)
             ylabel('y')
             zlabel('z')
             set(gca,'zdir','reverse','ydir','reverse')
+            figName = sprintf('%s, image %d',matList(iMat).name,iImg);
+            set(gcf,'name',figName)
             view(15,45)
         end
     end
     keyboard
+    close all
 end

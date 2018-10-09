@@ -75,7 +75,11 @@ for iMat = 1 : length(all_pt_matList)
             if all(isnan(mp_direct(:))) || all(isnan(mp_mirror(:)))
                 % either didn't have marks for these images or the marks
                 % weren't assigned to the correct boards/images
+                try
                 fprintf('no matched points on board %d, image %s\n',iBoard,imFileList{iImg});
+                catch
+                    keyboard
+                end
                 continue;
             end
         

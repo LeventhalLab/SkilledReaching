@@ -14,6 +14,13 @@ function [ A ] = readFIJI_csv( filename )
 % (first row is column headers)
 % (X,Y) pairs are in columns 
 
+fileInfo = dir(filename);
+if fileInfo.bytes == 0
+    % empty csv file
+    A = [];
+    return;
+end
+
 A = csvread(filename,1,5);   % skips first row and first 5 columns
 
 end

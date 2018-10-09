@@ -10,12 +10,21 @@ function [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboar
 %       border
 %   newPoints - m x 2 array where each row is an (x,y) pair for a marked
 %       point
+%
+% OUTPUTS
+%   new_directChecks, new_mirrorChecks
 
 num_newPoints = size(newPoints, 1);
 numDirectBoards = size(directBorderMask,3);   % this is one binary array instead of the cell structure that holds one array for each different image
 new_directChecks = NaN(prod(anticipatedBoardSize-1), 2, numDirectBoards);
 numMirrorBoards = size(mirrorBorderMask,3);
 new_mirrorChecks = NaN(prod(anticipatedBoardSize-1), 2, numMirrorBoards);
+
+if isempty(newPoints)
+    % no new points identified, leave new_directChecks and new_mirrorChecks
+    % as all NaN's, which will 
+    return;
+end
 
 num_newChecks = zeros(max(numDirectBoards,numMirrorBoards), 2); 
 % for counting up how many points have been found for each checkerboard for
