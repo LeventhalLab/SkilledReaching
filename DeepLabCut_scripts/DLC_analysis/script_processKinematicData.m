@@ -41,7 +41,13 @@ for i_rat = 1 : numRatFolders
         fprintf('more than one session database file for %s\n',ratID);
         continue
     end
-    sessionInfo = readExcelDB(sessionDBfile.name,sessionDBfile.name);
+    sessionInfo = readtable(sessionDBfile.name);
+    sessionInfo.ratID = categorical(sessionInfo.ratID);
+    sessionInfo.trainingStage = categorical(sessionInfo.trainingStage);
+    sessionInfo.laserStim = categorical(sessionInfo.laserStim);
+    sessionInfo.experimenter = categorical(sessionInfo.experimenter);
+    sessionInfo.laserOnTiming = categorical(sessionInfo.laserOnTiming);
+    sessionInfo.laserOffTiming = categorical(sessionInfo.laserOffTiming);
     
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
@@ -51,6 +57,20 @@ for i_rat = 1 : numRatFolders
         fprintf('working on session %s\n', sessionDirectories{iSession});
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
+        
+        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        
+        cd(fullSessionDir);
+        % load the kinematics summary
+        sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
+        
+        if ~exist(sessionSummaryName,'file')
+            fprintf('no session summary kinematics found for %s\n',sessionDirectories{iSession});
+            continue;
+        end
+        load(sessionSummaryName);
+        
+        % WORKING HERE...
         
     end
     
