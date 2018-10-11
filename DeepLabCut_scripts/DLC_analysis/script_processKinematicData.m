@@ -45,6 +45,7 @@ for i_rat = 1 : numRatFolders
     sessionInfo.ratID = categorical(sessionInfo.ratID);
     sessionInfo.trainingStage = categorical(sessionInfo.trainingStage);
     sessionInfo.laserStim = categorical(sessionInfo.laserStim);
+    sessionInfo.laserTrialSetting = categorical(sessionInfo.laserTrialSetting);
     sessionInfo.experimenter = categorical(sessionInfo.experimenter);
     sessionInfo.laserOnTiming = categorical(sessionInfo.laserOnTiming);
     sessionInfo.laserOffTiming = categorical(sessionInfo.laserOffTiming);

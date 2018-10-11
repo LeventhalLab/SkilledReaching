@@ -11,7 +11,7 @@ numRats = length(ratInfo);
 
 vidRootPath = '/Volumes/RecordingsLeventhal04/SkilledReaching';
 
-colHeaders = {'ratID','date','trainingStage','totalSessions','session_in_block','laserStim','laserOnTiming','laserOffTiming','frameRate','preTriggerFrames','postTriggerFrames','experimenter'};
+colHeaders = {'ratID','date','trainingStage','totalSessions','session_in_block','laserStim','laserTrialSetting','laserProbability','laserOnTiming','laserOffTiming','frameRate','preTriggerFrames','postTriggerFrames','experimenter','notes'};
 
 % trainingStage:
 %   paw-preferencing
@@ -19,11 +19,11 @@ colHeaders = {'ratID','date','trainingStage','totalSessions','session_in_block',
 %   training - training to proficiency once they understand the task
 %   re-training - rat retraining after sugery (fiber implant)
 %   testing
-%   
-% laserStim
-%   none
-%   on
-%   occlude
+% 
+% laserStim - "none", "on", or "occlude"
+% laserTrialSetting - "alternate" or "probability"
+% laserProbability - probability that the laser fires on any given trial
+%
 %
 % laserOnTiming: e.g., "beambreak", "vidTrigger", "noseIn"
 % laserOffTiming: e.g, "beambreak", "vidTrigger", "noseIn"
@@ -136,6 +136,23 @@ for iRat = 1 : numRats
         else
             frameRate = 300;
         end
+        
+        if isfield(logData,'LaserTrialSetting')
+            switch logData.LaserTrialSetting
+                case 0
+                    LaserTrialSetting = 'probability';
+                case 1
+                    LaserTrialSetting = 'alternate';
+            end
+        else
+            LaserTrialSetting = 'probability';
+        end
+        
+        if isfield(logData,'laserProb')
+            laserProbability = logData.laserProb;
+        else
+            laserProbability = 100;
+        end
     
         if ~strcmpi(laserStim,'none')
             switch lower(ratInfo(iRat).laserTiming)
@@ -164,12 +181,14 @@ for iRat = 1 : numRats
         end
 
         % write next row to table
-        fprintf(fid,'%d,%s,%s,%d,%d,%s,%s,%s,%d,%d,%d,\n',ratInfo(iRat).ratID,...
+        fprintf(fid,'%d,%s,%s,%d,%d,%s,%s,%d,%s,%s,%d,%d,%d,,\n',ratInfo(iRat).ratID,...
                                 logData.date,...
                                 trainingStage,...
                                 iSession,...
                                 session_day,...
                                 laserStim,...
+                                LaserTrialSetting,...
+                                laserProbability,...
                                 laserOnTiming,...
                                 laserOffTiming,...
                                 frameRate,...

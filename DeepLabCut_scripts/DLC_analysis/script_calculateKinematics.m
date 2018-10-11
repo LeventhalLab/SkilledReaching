@@ -79,6 +79,7 @@ for i_rat = 1 : numRatFolders
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
         numReachingPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
         all_endPts = zeros(numReachingPawParts, 3, numTrials);
+        all_initPellet3D = zeros(numTrials, 3);
         
         vidNum = zeros(numTrials,1);
         
@@ -108,6 +109,13 @@ for i_rat = 1 : numRatFolders
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
         
             all_endPts(:,:,iTrial) = partEndPts;
+            if isempty(initPellet3D)
+                % most likely, pellet wasn't brought up by the delivery arm
+                % on this trial
+                all_initPellet3D(iTrial,:) = NaN(1,3);
+            else
+                all_initPellet3D(iTrial,:) = initPellet3D;
+            end
             
             save(pawTrajectoryList(iTrial).name,'dist_from_pellet',...
                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
@@ -139,7 +147,7 @@ for i_rat = 1 : numRatFolders
 
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         
-        save(sessionSummaryName,'bodyparts','meanTrajectory','mean_v','mean_a','mean_mcpAngle','mean_pipAngle','mean_digAngle','all_endPts')
+        save(sessionSummaryName,'bodyparts','meanTrajectory','mean_v','mean_a','mean_mcpAngle','mean_pipAngle','mean_digAngle','all_endPts','pawPartsList','all_initPellet3D')
         
     end
     
