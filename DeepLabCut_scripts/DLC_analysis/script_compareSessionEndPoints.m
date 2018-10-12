@@ -84,17 +84,14 @@ for i_rat = 1 : numRatFolders
     lastTrainingRow = firstLaserRow - 1;
     lastTrainingDate = sessionInfo.date{lastTrainingRow};
     
-    for iSession = 1 : numSessions
     
-        fprintf('working on session %s\n', sessionDirectories{iSession});
-        C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
-        sessionDate = C{1};
+        fprintf('working on %s, last training session: %s\n', ratID,lastTrainingDate);
         
         lastTrainingSessionDir = dir([ratID '_' lastTrainingDate '*']);
         
-        lastTrainingfullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        lastTrainingfullSessionDir = fullfile(ratRootFolder,lastTrainingSessionDir);
         
-        cd(fullSessionDir);
+        cd(lastTrainingfullSessionDir);
         % load the kinematics summary
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         
@@ -107,7 +104,7 @@ for i_rat = 1 : numRatFolders
         endPt_wrt_pellet{1} = endPointsRelativeToPellet(all_initPellet3D, all_endPts, validTrials, pawPartsList, valid_bodyparts);
         % WORKING HERE...
         
-    end
+
     
 end
         
