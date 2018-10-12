@@ -1,4 +1,4 @@
-% script_processKinematicData
+% script_compareSessionEndPoints
 
 
 % compare last training session end point to first laser session end point
@@ -76,13 +76,23 @@ for i_rat = 1 : numRatFolders
 %     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
+    % find the first laser session
+    firstLaserRow = find(sessionInfo.laserStim == 'on' & strcmp(sessionInfo.session_in_block, '1'));
+    firstLaserDate = sessionInfo.date{firstLaserRow};
+    lastLaserRow = find(sessionInfo.laserStim == 'on' & strcmp(sessionInfo.session_in_block, '10'));
+    lastLaserDate = sessionInfo.date{lastLaserRow};
+    lastTrainingRow = firstLaserRow - 1;
+    lastTrainingDate = sessionInfo.date{lastTrainingRow};
+    
     for iSession = 1 : numSessions
     
         fprintf('working on session %s\n', sessionDirectories{iSession});
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
         
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        lastTrainingSessionDir = dir([ratID '_' lastTrainingDate '*']);
+        
+        lastTrainingfullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
         cd(fullSessionDir);
         % load the kinematics summary
@@ -94,6 +104,7 @@ for i_rat = 1 : numRatFolders
         end
         load(sessionSummaryName);
         
+        endPt_wrt_pellet{1} = endPointsRelativeToPellet(all_initPellet3D, all_endPts, validTrials, pawPartsList, valid_bodyparts);
         % WORKING HERE...
         
     end

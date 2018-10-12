@@ -4,12 +4,10 @@
 % compare last training session end point to first laser session end point
 % to last laser session end point
 
-% compare alternating trial type end points
+% compare alternating trial end points
 %
 
-% calculate paw trajectories
-%
-
+% calculate paw traject
 % labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 labeledBodypartsFolder = '/Users/dleventh/Documents/DLC analysis';
 % shouldn't need this - calibration should be included in the pawTrajectory
