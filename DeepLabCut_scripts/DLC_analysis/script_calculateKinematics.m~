@@ -114,12 +114,12 @@ for i_rat = 1 : numRatFolders
             all_pipAngle(:,iTrial) = pipAngle;
             all_digitAngle(:,iTrial) = digitAngle;
             
-            trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, pawPref);
-            if isempty(trajectory)
+            new_trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, pawPref, varargin);
+            if isempty(new_trajectory)
                 pelletMissingFlag(iTrial) = true;
             else
 %             allTrajectories(:,:,:,iTrial) = pawTrajectory;
-                allTrajectories(:,:,:,iTrial) = trajectory;
+                allTrajectories(:,:,:,iTrial) = new_trajectory;
             end
         end
         
@@ -127,19 +127,15 @@ for i_rat = 1 : numRatFolders
             
         for iTrial = 1 : numTrials
 %             [partEndPts_old,partEndPtFrame_old,endPts_old,endPtFrame_old,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
-            if pelletMissingFlag(iTrial)
-                trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, pawPref, mean_initPellet3D);
-                allTrajectories(:,:,:,iTrial) = trajectory;
+            if 
             else
-                trajectory = squeeze(allTrajectories(:,:,:,iTrial));
-            end
-            
-            [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
+                curTrajectory = 
+            [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(new_trajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
         
             all_endPts(:,:,iTrial) = partEndPts;
 
             
-            save(pawTrajectoryList(iTrial).name,'trajectory',...
+            save(pawTrajectoryList(iTrial).name,'new_trajectory',...
                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
                 'partEndPtFrame','endPts','endPtFrame','pawPartsList','initPellet3D','-append');
         end
