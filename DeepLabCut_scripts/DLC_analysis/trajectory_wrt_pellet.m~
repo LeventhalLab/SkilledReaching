@@ -1,4 +1,4 @@
-function new_trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, pawPref, varargin)
+function new_trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, pawPref, boxCal, varargin)
 % calculate the trajectory of each body part with respect to the initial
 % pellet location. For left-pawed rats, reflect the trajectories about the
 % x-axis so that left and right-pawed trajectories should line up
@@ -15,17 +15,22 @@ function new_trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRa
 %       location. this is designed so that on trials where a pellet isn't
 %       found, the algorithm can use the mean pellet location from the rest
 %       of the trials as the presumed pellet location
+%   'maxreprojectionerror' - maximum allowable difference between a point
+%       reprojected into 2D and the points originally marked by DLC
 %
 % OUTPUTS
 %   new_trajectory - pawTrajectory transformed so that it is the paw
 %   trajectory - the initial pellet location
 
+maxReprojectionError = 10;
 initPellet3D = [];
 
-for iarg = 1 : 2 : nargin - 5
+for iarg = 1 : 2 : nargin - 6
     switch lower(varargin{iarg})
         case 'initpelletloc'
             initPellet3D = varargin{iarg + 1};
+        case 'maxreprojectionerror'
+            maxReprojectionError = varargin{iarg + 1};
     end
     
 end
@@ -39,6 +44,24 @@ if isempty(initPellet3D)
     return
 end
 
+switch pawPref
+    case 'right'
+        Pn = squeeze(boxCal.Pn(:,:,2));
+        sf = mean(boxCal.scaleFactor(2,:));
+    case 'left'
+        Pn = squeeze(boxCal.Pn(:,:,3));
+        sf = mean(boxCal.scaleFactor(3,:));
+end
+
+unscaled_trajectory = pawTrajectory / sf;
+pawTrajectory(pawTrajectory==0) = NaN;
+
+direct_proj = NaN(size(pawTrajectory,1),2,size(pawTrajectory,3));
+mirror_proj = NaN(size(pawTrajectory,1),2,size(pawTrajectory,3));
+for i_bp = 1 : 16
+    
+    direct_pts = projectPoints_DL(squeeze(unscaled_trajectory(:,:,i_bp), boxCal.P);
+    direct_proj(:,:,i_bp)
 new_trajectory = pawTrajectory - repmat(initPellet3D,size(pawTrajectory,1),1,size(pawTrajectory,3));
 
 if strcmpi(pawPref,'left')

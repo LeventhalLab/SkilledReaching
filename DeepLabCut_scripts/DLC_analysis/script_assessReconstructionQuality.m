@@ -8,8 +8,10 @@ vidRootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
 
-ratInfo = readExcelDB(xlfname, 'well learned');
+ratInfo = readtable(csvfname);
+% ratInfo = readExcelDB(xlfname, 'well learned');
 ratInfo_IDs = [ratInfo.ratID];
 
 cd(labeledBodypartsFolder)

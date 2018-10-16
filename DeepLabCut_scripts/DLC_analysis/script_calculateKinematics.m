@@ -88,9 +88,13 @@ for i_rat = 1 : numRatFolders
         vidNum = zeros(numTrials,1);
         
         pelletMissingFlag = false(numTrials,1);
+        trialNumbers = zeros(numTrials,1);
+        
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
+            C = textscan(pawTrajectoryList(iTrial).name, [ratID '_' sessionDate '_%d-%d-%d_%d_3dtrajectory.mat']); 
+            trialNumbers(iTrial) = C{4};
             
 %             dist_from_pellet = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
@@ -101,14 +105,6 @@ for i_rat = 1 : numRatFolders
                 all_initPellet3D(iTrial,:) = initPellet3D;
             end
             
-            % should velocity be calculated based on smoothed position?
-            v = pawVelocity(pawTrajectory,frameRate);
-            all_v(:,:,:,iTrial) = v;
-            
-            % should acceleration be calculated based on smoothed velocity?
-            a = pawVelocity(v,frameRate);
-            all_a(:,:,:,iTrial) = a;
-            
             [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,direct_p,pawPref);
             all_mcpAngle(:,iTrial) = mcpAngle;
             all_pipAngle(:,iTrial) = pipAngle;
@@ -117,6 +113,7 @@ for i_rat = 1 : numRatFolders
             trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, pawPref);
             if isempty(trajectory)
                 pelletMissingFlag(iTrial) = true;
+                fprintf('%s, trial %d\n',sessionDirectories(iSession).name, trialNumbers(iTrial));
             else
 %             allTrajectories(:,:,:,iTrial) = pawTrajectory;
                 allTrajectories(:,:,:,iTrial) = trajectory;
@@ -134,6 +131,14 @@ for i_rat = 1 : numRatFolders
                 trajectory = squeeze(allTrajectories(:,:,:,iTrial));
             end
             
+            % should velocity be calculated based on smoothed position?
+            v = pawVelocity(trajectory,frameRate);
+            all_v(:,:,:,iTrial) = v;
+            
+            % should acceleration be calculated based on smoothed velocity?
+            a = pawVelocity(v,frameRate);
+            all_a(:,:,:,iTrial) = a;
+            
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
         
             all_endPts(:,:,iTrial) = partEndPts;
@@ -141,7 +146,8 @@ for i_rat = 1 : numRatFolders
             
             save(pawTrajectoryList(iTrial).name,'trajectory',...
                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
-                'partEndPtFrame','endPts','endPtFrame','pawPartsList','initPellet3D','-append');
+                'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
+                'initPellet3D', '-append');
         end
         
 %         mean_v = zeros(size(all_v,1),size(all_v,2),size(all_v,3));
@@ -169,7 +175,9 @@ for i_rat = 1 : numRatFolders
 
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         
-        save(sessionSummaryName,'bodyparts','allTrajectories','all_v','all_a','all_mcpAngle','all_pipAngle','all_digitAngle','all_endPts','pawPartsList','all_initPellet3D')
+        save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
+            'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
+            'all_endPts','pawPartsList','all_initPellet3D','trialNumbers')
         
     end
     
