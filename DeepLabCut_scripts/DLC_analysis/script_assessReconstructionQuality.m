@@ -29,7 +29,11 @@ for i_rat = 1 : numRatFolders
     if isempty(ratInfo_idx)
         error('no entry in ratInfo structure for rat %d\n',C{1});
     end
-    thisRatInfo = ratInfo(ratInfo_idx);
+    if istable(ratInfo)
+        thisRatInfo = ratInfo(ratInfo_idx,:);
+    else
+        thisRatInfo = ratInfo(ratInfo_idx);
+    end
     pawPref = thisRatInfo.pawPref;
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
@@ -65,11 +69,11 @@ for i_rat = 1 : numRatFolders
             load(matList(iVid).name); 
             vidStartTime = triggerTime + frameTimeLimits(1);
             
-            if ~exist('low_p_valid','var')
+%             if ~exist('low_p_valid','var')
                 pawPref = thisRatInfo.pawPref;
                 [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, bodyparts, ROIs, boxCal, pawPref);
-                save(matList(iVid).name,'reproj_error','high_p_invalid','low_p_valid','-append');
-            end
+                save(matList(iVid).name,'reproj_error','high_p_invalid','low_p_valid','thisRatInfo','-append');
+%             end
             
         end
     end

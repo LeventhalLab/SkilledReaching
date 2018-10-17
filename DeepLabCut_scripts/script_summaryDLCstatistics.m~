@@ -84,7 +84,7 @@ for i_rat = 1 : numRatFolders
 %             keyboard
 %         end
         numFrames = size(allTrajectories, 1);
-        t = linspace(frameTimeLimits(1),frameTimeLimits(2), numFrames);
+        t = linspace(frameTimeLimits(1),frameTimeLimits(2), size(pawTrajectory,1));
         all_p_direct = zeros(size(direct_p,1),size(direct_p,2),numTrials);
         all_p_mirror = zeros(size(mirror_p,1),size(mirror_p,2),numTrials);
         
@@ -94,12 +94,6 @@ for i_rat = 1 : numRatFolders
             
             all_p_direct(:,:,iTrial) = direct_p;
             all_p_mirror(:,:,iTrial) = mirror_p;
-            
-            
-            % WORKING HERE - NEED TO CREATE SUMMARY FIGURES OF PAW
-            % LOCATIONS, FIGURE OUT WHICH BODYPARTS WILL BE BEST FOR
-            % OVERALL TRACKING - PLOT 3D AND INDIVIDUAL TRAJECTORIES ACROSS
-            % SESSIONS
             
         end
         

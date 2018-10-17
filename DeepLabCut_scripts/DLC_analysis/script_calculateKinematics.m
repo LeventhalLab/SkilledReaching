@@ -110,7 +110,7 @@ for i_rat = 1 : numRatFolders
             all_pipAngle(:,iTrial) = pipAngle;
             all_digitAngle(:,iTrial) = digitAngle;
             
-            trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, pawPref);
+            trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts, frameRate, frameTimeLimits, reproj_error, pawPref);
             if isempty(trajectory)
                 pelletMissingFlag(iTrial) = true;
                 fprintf('%s, trial %d\n',sessionDirectories(iSession).name, trialNumbers(iTrial));
@@ -125,7 +125,8 @@ for i_rat = 1 : numRatFolders
         for iTrial = 1 : numTrials
 %             [partEndPts_old,partEndPtFrame_old,endPts_old,endPtFrame_old,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
             if pelletMissingFlag(iTrial)
-                trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, pawPref, mean_initPellet3D);
+                trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts, frameRate, frameTimeLimits, reproj_error, pawPref, ...
+                    'initpelletloc',mean_initPellet3D);
                 allTrajectories(:,:,:,iTrial) = trajectory;
             else
                 trajectory = squeeze(allTrajectories(:,:,:,iTrial));
@@ -177,7 +178,8 @@ for i_rat = 1 : numRatFolders
         
         save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
             'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
-            'all_endPts','pawPartsList','all_initPellet3D','trialNumbers')
+            'all_endPts','pawPartsList','all_initPellet3D','trialNumbers',...
+            'frameRate','frameTimeLimits');
         
     end
     

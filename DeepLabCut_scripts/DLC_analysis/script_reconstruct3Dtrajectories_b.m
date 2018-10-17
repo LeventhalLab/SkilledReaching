@@ -3,9 +3,10 @@
 % hard-coded in info about each rat including handedness
 % script_ratInfo_for_deepcut;
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
 
-ratInfo = ratInfoFromExcel(xlfname,'well learned');
+ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
