@@ -54,8 +54,16 @@ for i_rat = 1 : numRatFolders
     if isempty(ratInfo_idx)
         error('no entry in ratInfo structure for rat %d\n',C{1});
     end
-    thisRatInfo = ratInfo(ratInfo_idx);
-    pawPref = thisRatInfo.pawPref;
+    if istable(ratInfo)
+        thisRatInfo = ratInfo(ratInfo_idx,:);
+    else
+        thisRatInfo = ratInfo(ratInfo_idx);
+    end
+    if iscell(thisRatInfo.pawPref)
+        pawPref = thisRatInfo.pawPref{1};
+    else
+        pawPref = thisRatInfo.pawPref;
+    end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     
@@ -184,10 +192,10 @@ for i_rat = 1 : numRatFolders
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-            if exist(fullTrajName,'file')
-                % already did this calculation
-                continue;
-            end
+%             if exist(fullTrajName,'file')
+%                 % already did this calculation
+%                 continue;
+%             end
             
             cd(mirViewFolder)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
@@ -219,11 +227,11 @@ for i_rat = 1 : numRatFolders
 
             cd(fullSessionDir)
             
-            if exist(trajName,'file')
-                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
-            else
+%             if exist(trajName,'file')
+%                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
+%             else
                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate');
-            end
+%             end
             
         end
         

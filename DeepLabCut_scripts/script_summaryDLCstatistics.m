@@ -22,7 +22,7 @@ mean_p_timeLimits = [-0.5,2];
 
 % 3D/2D trajectories for individual trials, and mean trajectories
 trajectory_figProps.m = 4;
-mean_p_figProps.n = 2;
+trajectory_figProps.n = 2;
 
 trajectory_figProps.panelWidth = ones(mean_p_figProps.n,1) * 9;
 trajectory_figProps.panelHeight = ones(mean_p_figProps.m,1) * 5;
@@ -31,7 +31,7 @@ trajectory_figProps.colSpacing = ones(mean_p_figProps.n-1,1) * 0.5;
 trajectory_figProps.rowSpacing = ones(mean_p_figProps.m-1,1) * 1;
 
 trajectory_figProps.width = 8.5 * 2.54;
-mean_p_figProps.height = 11 * 2.54;
+trajectory_figProps.height = 11 * 2.54;
 
 trajectory_figProps.topMargin = 2;
 trajectory_figProps.leftMargin = 2.54;
@@ -39,6 +39,8 @@ trajectory_figProps.leftMargin = 2.54;
 trajectory_timeLimits = [-0.5,2];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
@@ -64,7 +66,11 @@ for i_rat = 1 : numRatFolders
     else
         thisRatInfo = ratInfo(ratInfo_idx);
     end
-    pawPref = thisRatInfo.pawPref;
+    if iscell(thisRatInfo.pawPref)
+        pawPref = thisRatInfo.pawPref{1};
+    else
+        pawPref = thisRatInfo.pawPref;
+    end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     
@@ -124,19 +130,44 @@ for i_rat = 1 : numRatFolders
             trajectory_h_figAxis = zeros(num_bp,1);
             trajectory_h_fig = zeros(num_bp,1);
             trajectory_h_axes = cell(num_bp,1);
-            for i_bp = 1 : num_bp
+            
+            currentTrialList(trial_rowNum) = trialNumbers(iTrial);
+            curTrajectories = squeeze(allTrajectories(:,:,:,iTrial));
+            for i_bpGroup = 1 : length(bp_to_group)
                 
                 if trial_rowNum == 1
-                    [trajectory_h_fig(i_bp),trajectory_h_axes{i_bp}] = createFigPanels5(trajectory_figProps);
-                    trajectory_h_figAxis(i_bp) = createFigAxes(mean_p_h_fig);
+                    [trajectory_h_fig(i_bpGroup),trajectory_h_axes{i_bpGroup}] = createFigPanels5(trajectory_figProps);
+                    trajectory_h_figAxis(i_bpGroup) = createFigAxes(trajectory_h_fig(i_bpGroup));
                 end
                 
-                currentTrialList(trial_rowNum) = trialNumbers(iTrial);
-                curTrajectory = squeeze(allTrajectories(:,:,i_bp,iTrial));
+                bp_idx = [];
+                for i_bpLabel = 1 : length(bp_to_group{i_bpGroup})
+                    if strcmpi(bp_to_group{i_bpGroup}{i_bpLabel},'pawdorsum')
+                        testString = [pawPref 'pawdorsum'];
+                    else
+                        testString = bp_to_group{i_bpGroup}{i_bpLabel};
+                    end
+                    bp_idx = [bp_idx, find(contains(bodyparts,testString))];
+                    bpList = bodyparts(bp_idx);
+                end
+                    
+                axes(trajectory_h_axes{i_bpGroup}(trial_rowNum,1))
+                for ii = 1 : length(bp_idx)
+                    toPlot = squeeze(curTrajectories(:,:,bp_idx(ii)));
+                    plot3(toPlot(:,1),toPlot(:,3),toPlot(:,2))
+                    hold on
+                end
+                scatter3(0,0,0,25,'k','o','markerfacecolor','k')
+                legend(bpList)
+                set(gca,'zdir','reverse')
+                xlabel('x');ylabel('z');zlabel('y')
+                
             % WORKING HERE - NEED TO CREATE SUMMARY FIGURES OF PAW
             % LOCATIONS, FIGURE OUT WHICH BODYPARTS WILL BE BEST FOR
             % OVERALL TRACKING - PLOT 3D AND INDIVIDUAL TRAJECTORIES ACROSS
             % SESSIONS
+            
+            end
             
         end
         

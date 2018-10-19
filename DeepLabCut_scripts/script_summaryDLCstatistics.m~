@@ -40,6 +40,8 @@ trajectory_timeLimits = [-0.5,2];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
+
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
@@ -120,12 +122,23 @@ for i_rat = 1 : numRatFolders
             all_p_mirror(:,:,iTrial) = mirror_p;
             
             [trial_rowNum, numTrialPages] = getRow(iTrial, trajectory_figProps.m);
-            trajectory_h_figAxis = zeros(size(allTrajectories,3),1)
-            for i_bp = 1 : size(allTrajectories,3)
+            num_bp = size(allTrajectories,3);
+            trajectory_h_figAxis = zeros(num_bp,1);
+            trajectory_h_fig = zeros(num_bp,1);
+            trajectory_h_axes = cell(num_bp,1);
+            for i_bpGroup = 1 : length(i_bpGroup)
                 
                 if trial_rowNum == 1
-                    [trajectory_h_fig,trajectory_h_axes] = createFigPanels5(trajectory_figProps);
-                    trajectory_h_figAxis(i_bp) = createFigAxes(mean_p_h_fig);
+                    [trajectory_h_fig(i_bpGroup),trajectory_h_axes{i_bpGroup}] = createFigPanels5(trajectory_figProps);
+                    trajectory_h_figAxis(i_bpGroup) = createFigAxes(mean_p_h_fig);
+                end
+                
+                bp_idx = [];
+                for i_bpLabel = 1 : length(bp_to_group{i_bpGroup})
+                    bp_idx = [bp_idx, find(contains(bodyparts,bp_to_group{i_bpGroup}{i_bpLabel}))];
+                    
+                end
+                
                 currentTrialList(trial_rowNum) = trialNumbers(iTrial);
                 curTrajectory = squeeze(allTrajectories(:,:,i_bp,iTrial));
             % WORKING HERE - NEED TO CREATE SUMMARY FIGURES OF PAW
