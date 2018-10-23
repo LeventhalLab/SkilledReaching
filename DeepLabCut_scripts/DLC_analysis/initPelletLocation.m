@@ -43,7 +43,7 @@ pelletPts = squeeze(pawTrajectory(:,:,pelletIdx3D));
 % zeros in the pawTrajectory array represent points where the pellet wasn't
 % visible in at least one view
 initPelletPts = pelletPts(preTriggerFrame:triggerFrame,:);
-validPelletPts = initPelletPts(initPelletPts(:,1)>0,:);
+validPelletPts = initPelletPts(initPelletPts(:,1)~=0,:);
 
 if isempty(validPelletPts)
     initPellet3D = [];

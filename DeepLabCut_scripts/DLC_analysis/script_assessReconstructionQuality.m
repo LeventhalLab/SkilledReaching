@@ -34,7 +34,11 @@ for i_rat = 1 : numRatFolders
     else
         thisRatInfo = ratInfo(ratInfo_idx);
     end
-    pawPref = thisRatInfo.pawPref;
+    if iscell(thisRatInfo.pawPref)
+        pawPref = thisRatInfo.pawPref{1};
+    else
+        pawPref = thisRatInfo.pawPref;
+    end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     
@@ -70,7 +74,11 @@ for i_rat = 1 : numRatFolders
             vidStartTime = triggerTime + frameTimeLimits(1);
             
 %             if ~exist('low_p_valid','var')
-                pawPref = thisRatInfo.pawPref;
+                if iscell(thisRatInfo.pawPref)
+                    pawPref = thisRatInfo.pawPref{1};
+                else
+                    pawPref = thisRatInfo.pawPref;
+                end
                 [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, bodyparts, ROIs, boxCal, pawPref);
                 save(matList(iVid).name,'reproj_error','high_p_invalid','low_p_valid','thisRatInfo','-append');
 %             end

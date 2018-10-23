@@ -44,7 +44,7 @@ trialOutcome = -1;   % return -1 if can't make a guess at the outcome
 time_to_average_prior_to_reach = 0.1;
 
 % figure out the trigger frame
-triggerFrame = round((triggerTime + frameTimeLimits(1)) * frameRate);
+triggerFrame = round((-frameTimeLimits(1)) * frameRate);
 preTriggerFrame = triggerFrame - round(time_to_average_prior_to_reach * frameRate);
 
 % find index of pellet in bodyparts list in direct view and 3D
