@@ -1,4 +1,4 @@
-function trialOutcome = determineTrialOutcome(pawTrajectory,bodyparts,direct_pts,direct_bp,direct_p,ROIs,frameRate,frameTimeLimits,triggerTime)
+function trialOutcome = determineTrialOutcome(pawTrajectory,bodyparts,direct_pts,direct_bp,direct_p,ROIs,frameRate,frameTimeLimits)
 %
 % INPUTS
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
