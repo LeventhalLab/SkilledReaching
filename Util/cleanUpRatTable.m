@@ -33,3 +33,14 @@ for iField = 1 : length(categoricalFields)
             categorical(ratTable_in.(categoricalFields{iField}));
     
 end
+
+for iField = 1 : size(ratTable_in,2)
+    
+    fieldName = ratTable_in.Properties.VariableNames{iField};
+    
+    if isdatetime(ratTable_in.(fieldName))
+        
+       ratTable_out.(fieldName).Year(ratTable_in.(fieldName).Year < 100) = ...
+           ratTable_in.(fieldName).Year(ratTable_in.(fieldName).Year < 100) + 2000;
+    end
+end

@@ -82,6 +82,8 @@ labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
 ratInfo = readtable(csvfname);
+ratInfo = cleanUpRatTable(ratInfo);
+
 ratInfo_IDs = [ratInfo.ratID];
 
 ratFolders = findRatFolders(labeledBodypartsFolder);
