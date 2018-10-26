@@ -11,6 +11,7 @@ function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, 
 %   parts_loc - m x n x 2 array where m is the number of body parts, n is
 %       the number of frames in the video. each bodypart-frame entry is an
 %       x,y coordinate pair
+%   p - 
 %
 % OUTPUTS:
 %   invalidPoints - 

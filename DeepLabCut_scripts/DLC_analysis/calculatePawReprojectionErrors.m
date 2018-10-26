@@ -29,7 +29,7 @@ function reprojErrors = calculatePawReprojectionErrors(pawTrajectory, direct_pts
 %       paw (left mirror for right paw and vice versa)
 %
 % OUTPUTS:
-%
+%   reprojErrors - 
 
 % intrinsic camera calibration matrix in matlab format
 K = boxCal.cameraParams.IntrinsicMatrix;
