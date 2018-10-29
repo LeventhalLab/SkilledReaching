@@ -1,4 +1,4 @@
-function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, boxCal, ROIs, pawPref)
+function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, boxCal, ROIs, frameSize, pawPref)
 %
 % estimate the location of the paw dorsum in the direct view given its
 % location in the mirror view and the locations of associated points
@@ -85,13 +85,20 @@ for iFrame = 1 : numFrames
         end
         if foundValidPoints && ~invalid_mirrorPawDorsum(iFrame)
             % find the knuckle closest to the epipolar line
-            distToEpipolarLine = zeros(size(digitPts,1),1);
-            epiPts = lineToBorderPoints(epiLine);
-            for ii = 1 : size(digitPts,1)
-                distToEpipolarLine(ii) = distanceToLine(epiPts([1,2]),...
-                    epiPts([3,4]),digitPts(ii,:));
-            end
-            minDistIdx = find(distToEpipolarLine == min(distToEpipolarLine));
+            
+            % adjust digitPts for the ROI and camera distortion
+            digitPts = digitPts + repmat(ROIs(1,1:2),size(digitPts,1),1) - 1;
+            digitPts = undistortPoints(digitPts, boxCal.cameraParams);
+            
+            epiPts = lineToBorderPoints(epiLine, frameSize);
+            epiPts = [epiPts(1:2);epiPts(3:4)];
+            
+            % find index of digitPts that is closest to the epipolar line
+            [nndist, nnidx] = findNearestPointToLine(epiPts, digitPts);
+            
+            % find the point on the epipolar line closest to any of the
+            % identified digit points
+            np = findNearestPointOnLine(epiPts,digitPts(nnidx,:));
             
         end
             

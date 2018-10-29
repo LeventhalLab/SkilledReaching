@@ -22,7 +22,7 @@ triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
 frameRate = 300;
 
-imSize = [1024,2040];
+frameSize = [1024,2040];
 % would be nice to have these parameters stored with DLC output so they can
 % be read in directly. Might they be in the .h files?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -223,14 +223,14 @@ for i_rat = 1 : numRatFolders
             [pawTrajectory, bodyparts, dist_from_epipole] = ...
                 calc3D_DLC_trajectory(direct_pts_toPlot, ...
                                       mirror_pts_toPlot, direct_bp, mirror_bp, ...
-                                      ROIs, boxCal.cameraParams, Pn, F, imSize, sf);
+                                      ROIs, boxCal.cameraParams, Pn, F, frameSize, sf);
 
             cd(fullSessionDir)
             
 %             if exist(trajName,'file')
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
-                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate');
+                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate');
 %             end
             
         end
