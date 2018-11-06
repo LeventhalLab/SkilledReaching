@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts, dist_from_epipole, isDirectPawDorsumEstimate] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
+function [pawTrajectory, bodyparts, dist_from_epipole] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
 %
 % INPUTS:
 %   direct_pts, mirror_pts - number of body parts x number of frames x 2
@@ -62,7 +62,7 @@ numFrames = size(direct_pts, 2);
 
 [~,epipole] = isEpipoleInImage(F,imSize);
 
-[final_directPawDorsum_pts, isDirectPawDorsumEstimate] = estimateDirectPawDorsum(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
+[final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
 [~,~,~,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
 
 % match body parts between direct and mirror views
@@ -87,11 +87,7 @@ dist_from_epipole = zeros(numFrames, numValid_bp);
 P = eye(4,3);
 for i_bp = 1 : numValid_bp
 
-    if direct_bpMatch_idx(i_bp) == direct_pawdorsum_idx
-        cur_direct_pts = final_directPawDorsum_pts;
-    else
-        cur_direct_pts = squeeze(direct_pts(direct_bpMatch_idx(i_bp), :, :));
-    end
+    cur_direct_pts = squeeze(direct_pts(direct_bpMatch_idx(i_bp), :, :));
     cur_mirror_pts = squeeze(mirror_pts(mirror_bpMatch_idx(i_bp), :, :));
 
     % adjust for the region of interest from which the cropped videos
@@ -103,11 +99,13 @@ for i_bp = 1 : numValid_bp
     
     % undistort points
     
-
+    if i_bp == 
     if points_still_distorted
         for ii = 1 : size(cur_direct_pts,1)
             if ~isnan(cur_direct_pts(ii,1))
-                if direct_bpMatch_idx(i_bp) ~= direct_pawdorsum_idx   % already undistorted if using paw dorsum estimates
+                if ii == direct_pawdorsum_idx
+                    cur_direct_pts(ii,:) = final_directPawDorsum_pts((ii,:),cameraParams);
+                else
                     cur_direct_pts(ii,:) = undistortPoints(cur_direct_pts(ii,:),cameraParams);
                 end
             end
@@ -115,7 +113,7 @@ for i_bp = 1 : numValid_bp
                 cur_mirror_pts(ii,:) = undistortPoints(cur_mirror_pts(ii,:),cameraParams);
             end
         end
-    end
+    else
         
     
     dist_from_epipole(:,i_bp) = distanceToLine(cur_direct_pts,cur_mirror_pts,epipole);

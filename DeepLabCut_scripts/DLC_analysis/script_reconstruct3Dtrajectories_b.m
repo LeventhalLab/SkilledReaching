@@ -218,19 +218,25 @@ for i_rat = 1 : numRatFolders
                 direct_pts_toPlot(:,:,i_coord) = direct_pts(:,:,i_coord) .* double(~direct_invalid_points);
                 mirror_pts_toPlot(:,:,i_coord) = mirror_pts(:,:,i_coord) .* double(~mirror_invalid_points);
             end
-            direct_pts_toPlot(direct_pts_toPlot==0) = NaN;
-            mirror_pts_toPlot(mirror_pts_toPlot==0) = NaN;
-            [pawTrajectory, bodyparts, dist_from_epipole] = ...
+%             direct_pts_toPlot(direct_pts_toPlot==0) = NaN;
+%             mirror_pts_toPlot(mirror_pts_toPlot==0) = NaN;
+%             [pawTrajectory, bodyparts, dist_from_epipole] = ...
+%                 calc3D_DLC_trajectory(direct_pts_toPlot, ...
+%                                       mirror_pts_toPlot, direct_bp, mirror_bp, ...
+%                                       ROIs, boxCal.cameraParams, Pn, F, frameSize, sf);
+                                  
+            [pawTrajectory, bodyparts, dist_from_epipole, isDirectPawDorsumEstimate] = ...
                 calc3D_DLC_trajectory(direct_pts_toPlot, ...
-                                      mirror_pts_toPlot, direct_bp, mirror_bp, ...
-                                      ROIs, boxCal.cameraParams, Pn, F, frameSize, sf);
+                                      mirror_pts_toPlot, direct_p, mirror_p,...
+                                      direct_bp, mirror_bp, ...
+                                      vidROI, boxCal, pawPref, frameSize);
 
             cd(fullSessionDir)
             
 %             if exist(trajName,'file')
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
-                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate');
+                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','isDirectPawDorsumEstimate');
 %             end
             
         end

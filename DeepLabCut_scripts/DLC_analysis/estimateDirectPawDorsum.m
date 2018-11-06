@@ -34,12 +34,12 @@ invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
 direct_pawdorsum_pts = squeeze(direct_pts(direct_pawdorsum_idx,:,:));
 direct_pawdorsum_pts = direct_pawdorsum_pts + ...
     repmat(ROIs(1,1:2),numFrames,1) - 1;
-direct_pawdorsum_pts = undistortPoints(direct_pawdorsum_pts, boxCal.cameraParams);
+direct_pawdorsum_pts_ud = undistortPoints(direct_pawdorsum_pts, boxCal.cameraParams);
 
 mirror_pawdorsum_pts = squeeze(mirror_pts(mirror_pawdorsum_idx,:,:));
 mirror_pawdorsum_pts = mirror_pawdorsum_pts + ...
     repmat(ROIs(2,1:2),numFrames,1) - 1;
-mirror_pawdorsum_pts = undistortPoints(mirror_pawdorsum_pts, boxCal.cameraParams);
+mirror_pawdorsum_pts_ud = undistortPoints(mirror_pawdorsum_pts, boxCal.cameraParams);
 
 invalid_directPawDorsum = invalid_direct(direct_pawdorsum_idx,:);
 invalid_mirrorPawDorsum = invalid_mirror(mirror_pawdorsum_idx,:);
@@ -59,7 +59,7 @@ for iFrame = 1 : numFrames
             % direct view paw dorsum is constrained to be on the epipolar
             % line through the mirror view point
             
-            epiLine = epipolarLine(F,mirror_pawdorsum_pts(iFrame,:));
+            epiLine = epipolarLine(F,mirror_pawdorsum_pts_ud(iFrame,:));
         end
 
         % are the two middle digit direct points valid?
@@ -94,21 +94,20 @@ for iFrame = 1 : numFrames
             epiPts = [epiPts(1:2);epiPts(3:4)];
             
             % find index of digitPts that is closest to the epipolar line
-            [nndist, nnidx] = findNearestPointToLine(epiPts, digitPts);
+            [~, nnidx] = findNearestPointToLine(epiPts, digitPts);
             
             % find the point on the epipolar line closest to any of the
             % identified digit points
             np = findNearestPointOnLine(epiPts,digitPts(nnidx,:));
+            final_directPawDorsum_pts(iFrame,:) = np;
             
+            isEstimate(iFrame) = true;
         end
-            
-        
-
             
     else
         % the reaching paw dorsum was reliably identified in the current
         % frame
-        final_directPawDorsum_pts(iFrame,:) = direct_pawdorsum_pts(iFrame,:);
+        final_directPawDorsum_pts(iFrame,:) = direct_pawdorsum_pts_ud(iFrame,:);
     end
     
 end

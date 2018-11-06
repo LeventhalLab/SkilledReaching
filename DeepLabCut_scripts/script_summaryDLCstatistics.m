@@ -89,7 +89,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 9 : numRatFolders
+for i_rat = 1 : numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -144,7 +144,7 @@ for i_rat = 9 : numRatFolders
         
         matList = dir([ratID '_*_3dtrajectory.mat']);
         numTrials = length(matList);
-        
+        load(matList(1).name);
 %         try
 %         load(matList(1).name);
 %         catch
@@ -191,11 +191,19 @@ for i_rat = 9 : numRatFolders
                 partEndPtIdx = [];
                 for i_bpLabel = 1 : length(bp_to_group{i_bpGroup})
                     if strcmpi(bp_to_group{i_bpGroup}{i_bpLabel},'pawdorsum')
-                        testString = [pawPref 'pawdorsum'];
+                        if iscategorical(pawPref)
+                            testString = [char(pawPref) 'pawdorsum'];
+                        else
+                            testString = [pawPref 'pawdorsum'];
+                        end
                     else
                         testString = bp_to_group{i_bpGroup}{i_bpLabel};
                     end
-                    bp_idx = [bp_idx, find(contains(bodyparts,testString))];
+                    try
+                        bp_idx = [bp_idx, find(contains(bodyparts,testString))];
+                    catch
+                        keyboard
+                    end
                     partEndPtIdx = [partEndPtIdx, find(contains(pawPartsList,testString))];
                     bpList = bodyparts(bp_idx);
                 end

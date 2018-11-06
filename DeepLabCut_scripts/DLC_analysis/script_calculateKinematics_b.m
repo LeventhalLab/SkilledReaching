@@ -32,7 +32,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 8 : numRatFolders
+for i_rat = 1 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -51,7 +51,7 @@ for i_rat = 8 : numRatFolders
     sessionDirectories = dir([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 3 : numSessions
+    for iSession = 1 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name);
         
@@ -145,10 +145,10 @@ for i_rat = 8 : numRatFolders
             all_endPts(:,:,iTrial) = partEndPts;
 
             
-%             save(pawTrajectoryList(iTrial).name,'trajectory',...
-%                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
-%                 'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
-%                 'initPellet3D','-append');
+            save(pawTrajectoryList(iTrial).name,'trajectory',...
+                'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
+                'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
+                'initPellet3D','-append');
         end
         
 %         mean_v = zeros(size(all_v,1),size(all_v,2),size(all_v,3));
