@@ -254,7 +254,6 @@ for i_rat = 1 : numRatFolders
                         toPlot = cur_direct_pts(:,1);
                         toPlot(direct_invalid_points(bp_idx(ii),:)) = NaN;
                     else
-                        % keep from eliminating estimated paw dorsum position in direct view
                         cur_direct_pts = final_directPawDorsum_pts;
                         toPlot = cur_direct_pts(:,1);
                     end
@@ -273,7 +272,9 @@ for i_rat = 1 : numRatFolders
                     axes(trajectory2d_h_axes(trial_rowNum*2-1,i_bpGroup*2))
                     cur_mirror_pts = squeeze(mirror_pts(bp_idx(ii),:,:));
                     cur_mirror_pts = ROI_to_full_image(cur_mirror_pts, ROIs(2,:), boxCal.cameraParams);
-                    toPlot = cur_mirror_pts(:,1);
+                    toPlot = squeeze(mirror_pts(bp_idx(ii),:,1));
+                    
+                    toPlot = ROI_to_full_image(toPlot, ROIs(2,:), boxCal.cameraParams);
                     toPlot(mirror_invalid_points(bp_idx(ii),:)) = NaN;
                     toPlot = toPlot(1:lastPt);
                     plot(toPlot)
@@ -292,9 +293,7 @@ for i_rat = 1 : numRatFolders
                     % direct y
                     axes(trajectory2d_h_axes(trial_rowNum*2,i_bpGroup*2-1))
                     toPlot = cur_direct_pts(:,2);
-                    if bp_idx(ii) ~= pawdorsum_idx   % keep from eliminating estimated paw dorsum position in direct view
-                        toPlot(direct_invalid_points(bp_idx(ii),:)) = NaN;
-                    end
+                    toPlot(direct_invalid_points(bp_idx(ii),:)) = NaN;
                     toPlot = toPlot(1:lastPt);
                     plot(toPlot)
                     hold on
@@ -305,7 +304,7 @@ for i_rat = 1 : numRatFolders
                     
                     % mirror_y
                     axes(trajectory2d_h_axes(trial_rowNum*2,i_bpGroup*2))
-                    toPlot = cur_mirror_pts(:,2);
+                    toPlot = squeeze(mirror_pts(bp_idx(ii),:,2));
                     toPlot(mirror_invalid_points(bp_idx(ii),:)) = NaN;
                     toPlot = toPlot(1:lastPt);
                     plot(toPlot)

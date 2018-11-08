@@ -25,6 +25,10 @@ nose_idx = find(findStringMatchinCellArray(bodyparts, 'nose'));
 pellet_idx = find(findStringMatchinCellArray(bodyparts, 'pellet'));
 % poss_paw_idx = find(findStringMatchinCellArray(bodyparts, 'paw'));
 
+if iscategorical(pawPref)
+    pawPref = char(pawPref);
+end
+
 switch pawPref
     case 'left'
         otherPaw = 'rightpaw';

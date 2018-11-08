@@ -225,7 +225,8 @@ for i_rat = 1 : numRatFolders
 %                                       mirror_pts_toPlot, direct_bp, mirror_bp, ...
 %                                       ROIs, boxCal.cameraParams, Pn, F, frameSize, sf);
                                   
-            [pawTrajectory, bodyparts, dist_from_epipole, isDirectPawDorsumEstimate] = ...
+
+            [pawTrajectory, bodyparts, dist_from_epipole, final_directPawDorsum_pts, isDirectPawDorsumEstimate] = ...
                 calc3D_DLC_trajectory(direct_pts_toPlot, ...
                                       mirror_pts_toPlot, direct_p, mirror_p,...
                                       direct_bp, mirror_bp, ...
@@ -236,8 +237,11 @@ for i_rat = 1 : numRatFolders
 %             if exist(trajName,'file')
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
-                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','isDirectPawDorsumEstimate');
+                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','final_directPawDorsum_pts','isDirectPawDorsumEstimate');
 %             end
+
+% LOAD IN VIDEO FRAMES AND SEE WHERE THE ESTIMATED PAW DORSUM POINT IS IN
+% THE DIRECT VIEW COMPARED TO THE OTHER DEFINED POINTS - FRAMES 271-310
             
         end
         
@@ -245,4 +249,7 @@ for i_rat = 1 : numRatFolders
     
 end
 
+
+% RUN script_calculateKinematics after this one
+% then run script_summaryDLCstatistics
 

@@ -83,6 +83,8 @@ for i_rat = 1 : numRatFolders
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
         numReachingPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
         all_endPts = zeros(numReachingPawParts, 3, numTrials);
+        all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
+        
         all_initPellet3D = NaN(numTrials, 3);
         
         vidNum = zeros(numTrials,1);
@@ -143,6 +145,7 @@ for i_rat = 1 : numRatFolders
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
         
             all_endPts(:,:,iTrial) = partEndPts;
+            all_partEndPtFrame (:,iTrial) = partEndPtFrame;
 
             
             save(pawTrajectoryList(iTrial).name,'trajectory',...
@@ -178,7 +181,7 @@ for i_rat = 1 : numRatFolders
         
         save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
             'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
-            'all_endPts','pawPartsList','all_initPellet3D','trialNumbers',...
+            'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers',...
             'frameRate','frameTimeLimits');
         
     end

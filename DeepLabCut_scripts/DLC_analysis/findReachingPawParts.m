@@ -1,9 +1,22 @@
 function [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref,varargin)
 %
 % INPUTS
+%   bodyparts - cell array containing strings describing each bodypart in
+%       the same order as in the pawTrajectory array
+%   pawPref
+%
+% VARARGS:
+%   mcpstring
+%   pipstring
+%   digitstring
+%   pawdorsumstring
 %
 % OUTPUTS
 %
+
+if iscategorical(pawPref)
+    pawPref = char(pawPref);
+end
 
 mcpString = 'mcp';
 pipString = 'pip';

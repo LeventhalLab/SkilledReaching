@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts, dist_from_epipole, isDirectPawDorsumEstimate] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
+function [pawTrajectory, bodyparts, dist_from_epipole, final_directPawDorsum_pts, isDirectPawDorsumEstimate] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
 %
 % INPUTS:
 %   direct_pts, mirror_pts - number of body parts x number of frames x 2
@@ -91,19 +91,21 @@ for i_bp = 1 : numValid_bp
         cur_direct_pts = final_directPawDorsum_pts;
     else
         cur_direct_pts = squeeze(direct_pts(direct_bpMatch_idx(i_bp), :, :));
+        % adjust for the region of interest from which the cropped videos
+        % were pulled
+        cur_direct_pts(cur_direct_pts==0) = NaN;
+        cur_direct_pts(:,1) = cur_direct_pts(:,1) + ROIs(1,1) - 1;
+        cur_direct_pts(:,2) = cur_direct_pts(:,2) + ROIs(1,2) - 1;
     end
     cur_mirror_pts = squeeze(mirror_pts(mirror_bpMatch_idx(i_bp), :, :));
+    cur_mirror_pts(cur_mirror_pts==0) = NaN;
 
     % adjust for the region of interest from which the cropped videos
     % were pulled
-    cur_direct_pts(:,1) = cur_direct_pts(:,1) + ROIs(1,1) - 1;
-    cur_direct_pts(:,2) = cur_direct_pts(:,2) + ROIs(1,2) - 1;
     cur_mirror_pts(:,1) = cur_mirror_pts(:,1) + ROIs(2,1) - 1;
     cur_mirror_pts(:,2) = cur_mirror_pts(:,2) + ROIs(2,2) - 1;
     
     % undistort points
-    
-
     if points_still_distorted
         for ii = 1 : size(cur_direct_pts,1)
             if ~isnan(cur_direct_pts(ii,1))

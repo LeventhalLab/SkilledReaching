@@ -29,6 +29,7 @@ function [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachE
 %       numeric arrays above
 
 smoothSize = 3;
+slot_z = 200;    % distance from the camera to the slot. hard-coded for now, eventually should mark this somehow in the video
 
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -37,7 +38,10 @@ for iarg = 1 : 2 : nargin - 5
     end
 end
 
-triggerFrame = round((-frameTimeLimits(1)) * frameRate);
+video_triggerFrame = round((-frameTimeLimits(1)) * frameRate);
+% replace trigger frame as assessed by number of frames before video
+% trigger with the first frame where the paw is in front of the slot
+% (below)
 
 [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 numPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
@@ -68,9 +72,22 @@ end
 % find the first local minimum in the z-dimension after reach onset
 xyz_coords = pawTrajectory(:,:,allPawPartsIdx);
 z_coords = squeeze(xyz_coords(:,3,:));
+z_coords(z_coords == 0) = NaN;
 z_smooth = smoothdata(z_coords,1,'movmean',smoothSize);
 localMins = islocalmin(z_smooth, 1);
 
+% find the first time the paw moves in front of the slot
+firstSlotBreak = NaN(numPawParts,1);
+for iPart = 1 : numPawParts
+    temp = z_smooth(:,iPart);
+    temp(temp == 0) = NaN;
+    tempFrame = find(temp < slot_z,1,'first');
+    if ~isempty(tempFrame)
+        firstSlotBreak(iPart) = tempFrame;
+    end
+end
+triggerFrame = min(firstSlotBreak);
+triggerFrame = min(triggerFrame,video_triggerFrame);
 partEndPts = zeros(numPawParts,3);
 partEndPtFrame = zeros(numPawParts,1);
 for iPart = 1 : numPawParts
