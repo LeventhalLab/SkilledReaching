@@ -249,7 +249,7 @@ for i_rat = 1 : numRatFolders
     
 end
 
-
-% RUN script_calculateKinematics after this one
+% RUN script_calculateKinematics after this one then
+% RUN script_calculateKinematics 
 % then run script_summaryDLCstatistics
 

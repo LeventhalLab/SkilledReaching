@@ -89,7 +89,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 1 : numRatFolders
+for i_rat = 3 : numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -123,7 +123,7 @@ for i_rat = 1 : numRatFolders
     numSessions = length(sessionDirectories);
     
     numSessionPages = 0;
-    for iSession = 1 : numSessions
+    for iSession = 3 : numSessions
     
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -188,7 +188,11 @@ for i_rat = 1 : numRatFolders
             currentTrialList(trial_rowNum) = trialNumbers(iTrial);
             curTrajectories = squeeze(allTrajectories(:,:,:,iTrial));
             
-            lastPt = max(partEndPtFrame);
+            % find outliers and only take "final" reach points that are
+            % close to the other points
+            % simple way is to find the earliest point and add 10 (this is
+            % arbitray) frames
+            lastPt = min(partEndPtFrame) + 10;
             
             for i_bpGroup = 1 : length(bp_to_group)
                 
@@ -407,11 +411,7 @@ for i_rat = 1 : numRatFolders
 %         set(gca,'ytick',1:16,'yticklabel',bodyparts);
 
         
-            
-        % TO DO:
-        %   1) set up a sheet to make a mean_p heat map for the direct and
-        %   mirror views for each session
-        %   3) make at least one colorbar
+           
     end
     
 end

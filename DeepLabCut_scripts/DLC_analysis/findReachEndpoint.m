@@ -1,4 +1,4 @@
-function [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref,varargin)
+function [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref,paw_through_slot_frame,varargin)
 %
 % INPUTS
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
@@ -29,9 +29,13 @@ function [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachE
 %       numeric arrays above
 
 smoothSize = 3;
-slot_z = 200;    % distance from the camera to the slot. hard-coded for now, eventually should mark this somehow in the video
+% slot_z = 200;    % distance from the camera to the slot. hard-coded for now, eventually should mark this somehow in the video
 
-for iarg = 1 : 2 : nargin - 5
+if iscategorical(pawPref)
+    pawPref = char(pawPref);
+end
+
+for iarg = 1 : 2 : nargin - 6
     switch lower(varargin{iarg})
         case 'smoothsize'
             smoothSize = varargin{iarg + 1};
@@ -77,17 +81,18 @@ z_smooth = smoothdata(z_coords,1,'movmean',smoothSize);
 localMins = islocalmin(z_smooth, 1);
 
 % find the first time the paw moves in front of the slot
-firstSlotBreak = NaN(numPawParts,1);
-for iPart = 1 : numPawParts
-    temp = z_smooth(:,iPart);
-    temp(temp == 0) = NaN;
-    tempFrame = find(temp < slot_z,1,'first');
-    if ~isempty(tempFrame)
-        firstSlotBreak(iPart) = tempFrame;
-    end
-end
-triggerFrame = min(firstSlotBreak);
-triggerFrame = min(triggerFrame,video_triggerFrame);
+% firstSlotBreak = NaN(numPawParts,1);
+% for iPart = 1 : numPawParts
+%     temp = z_smooth(:,iPart);
+%     temp(temp == 0) = NaN;
+%     tempFrame = find(temp < slot_z,1,'first');
+%     if ~isempty(tempFrame)
+%         firstSlotBreak(iPart) = tempFrame;
+%     end
+% end
+% paw_through_slot_frame = min(firstSlotBreak);
+
+triggerFrame = min(paw_through_slot_frame,video_triggerFrame); % probably not necessary
 partEndPts = zeros(numPawParts,3);
 partEndPtFrame = zeros(numPawParts,1);
 for iPart = 1 : numPawParts

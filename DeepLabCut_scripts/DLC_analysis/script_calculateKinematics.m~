@@ -33,7 +33,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 3 : numRatFolders
+for i_rat = 1 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -52,7 +52,7 @@ for i_rat = 3 : numRatFolders
     sessionDirectories = dir([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 3 : numSessions
+    for iSession = 1 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name);
         
@@ -113,9 +113,6 @@ for i_rat = 3 : numRatFolders
             all_pipAngle(:,iTrial) = pipAngle;
             all_digitAngle(:,iTrial) = digitAngle;
             
-            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, slot_z);
-            all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
-            
             trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts, frameRate, frameTimeLimits, reproj_error, pawPref);
             if isempty(trajectory)
                 pelletMissingFlag(iTrial) = true;
@@ -148,8 +145,9 @@ for i_rat = 3 : numRatFolders
             
             
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList,] = ...
-                findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial));
+                findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,paw_through_slot_frame);
             
+            all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
         
             all_endPts(:,:,iTrial) = partEndPts;
             all_partEndPtFrame (:,iTrial) = partEndPtFrame;
