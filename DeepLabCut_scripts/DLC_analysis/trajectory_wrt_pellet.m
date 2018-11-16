@@ -25,7 +25,10 @@ function new_trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRa
 %
 % OUTPUTS
 %   new_trajectory - pawTrajectory transformed so that it is the paw
-%   trajectory - the initial pellet location
+%       trajectory - the initial pellet location. Note that: 1) negative z
+%       is closer to the camera, and 2) left-pawed reaches have the
+%       x-dimension inverted so that all trajectories should "point" the
+%       same direction
 
 initPellet3D = [];
 maxReprojError = 10;

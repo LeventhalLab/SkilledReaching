@@ -89,7 +89,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 3 : numRatFolders
+for i_rat = 1 : numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -123,7 +123,7 @@ for i_rat = 3 : numRatFolders
     numSessions = length(sessionDirectories);
     
     numSessionPages = 0;
-    for iSession = 3 : numSessions
+    for iSession = 1 : numSessions
     
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};

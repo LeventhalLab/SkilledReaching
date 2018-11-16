@@ -25,8 +25,10 @@ labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
+ratInfo = readtable(csvfname);
+ratInfo = cleanUpRatTable(ratInfo);
 
-ratInfo = readExcelDB(xlfname, 'well learned');
 ratInfo_IDs = [ratInfo.ratID];
 
 cd(labeledBodypartsFolder)
@@ -133,6 +135,8 @@ for i_rat = 3 : numRatFolders
             if pelletMissingFlag(iTrial)
                 trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts, frameRate, frameTimeLimits, reproj_error, pawPref, ...
                     'initpelletloc',mean_initPellet3D);
+                % note all trajectories are arranged to look like right paw
+                % trajectories (x coordinate inverted for left paws)
                 allTrajectories(:,:,:,iTrial) = trajectory;
             else
                 trajectory = squeeze(allTrajectories(:,:,:,iTrial));
