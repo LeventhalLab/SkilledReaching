@@ -6,6 +6,7 @@ function [mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_i
 %
 % OUTPUTS
 %   mcp_idx - 
+%   pip_idx - 
 
 numDigits = 4;
 mcp_idx = zeros(numDigits,1);

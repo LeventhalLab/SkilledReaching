@@ -63,6 +63,7 @@ numFrames = size(direct_pts, 2);
 [~,epipole] = isEpipoleInImage(F,imSize);
 
 [final_directPawDorsum_pts, isDirectPawDorsumEstimate] = estimateDirectPawDorsum(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
+
 [~,~,~,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
 
 % match body parts between direct and mirror views
