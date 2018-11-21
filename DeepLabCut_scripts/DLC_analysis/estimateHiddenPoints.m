@@ -25,9 +25,42 @@ final_mirror_pts = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.came
 
 for iFrame = 1 : numFrames
     
-    for i_pawPart = 1 : numPawParts
+    % work on digits first
+    for i_pawPart = 1 : length(direct_mcp_idx)
+        direct_part_idx = direct_mcp_idx(i_pawPart);
+        mirror_part_idx = mirror_mcp_idx(i_pawPart);
         
-        direct_part_idx = 
+        if (invalid_direct(direct_part_idx,iFrame) && invalid_mirror(mirror_part_idx,iFrame)) || ...
+           (~invalid_direct(direct_part_idx,iFrame) && ~invalid_mirror(mirror_part_idx,iFrame))
+            % either both points were found or both points were not found
+            % with high certainty; nothing to do
+            continue;
+        end
+        % figure out whether the mirror or direct view point was identified
+        if invalid_direct(direct_part_idx,iFrame)
+            % the mirror point was identified
+            known_pt = squeeze(final_mirror_pts(mirror_part_idx,iFrame,:));
+        else
+            known_pt = squeeze(final_direct_pts(mirror_part_idx,iFrame,:));
+        end
+        epiLine = epipolarLine(F,known_pt);
+        epiBorderPts = lineToBorderPoints(epiLine, imSize);
+        % WORKING HERE...
+        % FIND PAW POINT IN THE VIEW WHERE THE POINT OF INTEREST WASN'T
+        % FOUND THAT'S CLOSEST TO THE EPIPOLAR LINE THAT IS OF THE SAME
+        % TYPE (I.E., IF AN MCP, FIND ANOTHER MCP POINT, ETC)
+    end
+    
+    for i_pawPart = 1 : length(direct_pip_idx)
+        direct_part_idx = direct_pip_idx(i_pawPart);
+        mirror_part_idx = mirror_pip_idx(i_pawPart);
+    end
+    
+    for i_pawPart = 1 : length(direct_digit_idx)
+        direct_part_idx = direct_digit_idx(i_pawPart);
+        mirror_part_idx = mirror_digit_idx(i_pawPart);
+    end
+
         
         
         
@@ -47,4 +80,6 @@ end
 
 for i_part = 1 : size(points_ud,1)
     points_ud(i_part,:,:) = undistortPoints(squeeze(points_ud(i_part,:,:)),cameraParams);
+end
+
 end

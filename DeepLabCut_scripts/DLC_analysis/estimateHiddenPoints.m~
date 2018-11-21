@@ -20,23 +20,30 @@ invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
 invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
 isEstimate = false(size(direct_pts,1),size(direct_pts,2),2);
 
-final_direct_pts = zeros(size(direct_pts));
-final_mirror_pts = zeros(size(mirror_pts));
-for i_coord = 1 : 2
-    final_direct_pts(:,:,i_coord) = direct_pts(:,:,i_coord) + ROIs(1,i_coord) - 1;
-    final_mirror_pts(:,:,i_coord) = mirror_pts(:,:,i_coord) + ROIs(2,i_coord) - 1;
-end
-
-for i_part = 1 : size(final_direct_pts,1)
-    final_direct_pts(i_part,:,:) = undistortPoints(final_direct_pts(i_part,:,:), boxCal.cameraParams);
-    final_mirror_pts(i_part,:,:) = undistortPoints(final_mirror_pts(i_part,:,:), boxCal.cameraParams);
-end
+final_direct_pts = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams);
+final_mirror_pts = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams);
 
 for iFrame = 1 : numFrames
     
-    for i_pawPart = 1 : numPawParts
+    % work on digits first
+    for i_pawPart = 1 : length(direct_mcp_idx)
+        direct_part_idx = direct_mcp_idx(i_pawPart);
+        mirror_part_idx = mirror_mcp_idx(i_pawPart);
         
-        direct_part_idx = 
+        
+        % WORKING HERE...
+    end
+    
+    for i_pawPart = 1 : length(direct_pip_idx)
+        direct_part_idx = direct_pip_idx(i_pawPart);
+        mirror_part_idx = mirror_pip_idx(i_pawPart);
+    end
+    
+    for i_pawPart = 1 : length(direct_digit_idx)
+        direct_part_idx = direct_digit_idx(i_pawPart);
+        mirror_part_idx = mirror_digit_idx(i_pawPart);
+    end
+
         
         
         
@@ -49,4 +56,11 @@ end
 
 function points_ud = reconstructUndistortedPoints(pts,ROI,cameraParams)
 
+points_ud = zeros(size(pts));
 for i_coord = 1 : 2
+    points_ud(:,:,i_coord) = pts(:,:,i_coord) + ROI(i_coord) - 1;
+end
+
+for i_part = 1 : size(points_ud,1)
+    points_ud(i_part,:,:) = undistortPoints(squeeze(points_ud(i_part,:,:)),cameraParams);
+end
