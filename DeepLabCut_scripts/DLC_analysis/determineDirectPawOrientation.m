@@ -1,4 +1,4 @@
-function [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,direct_p,pawPref)
+function [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,invalid_direct,pawPref)
 %
 % function to determine the angle of the paw in the direct view with
 % respect to horizontal (vertical?)
@@ -8,8 +8,12 @@ function [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_p
 %   direct_bp
 %   direct_p
 %   pawPref - 'left' or 'right' indicating the preferred reaching paw
-
-[invalidPoints,~] = find_invalid_DLC_points(direct_pts, direct_p);
+%
+% OUTPUTS
+%   mcpAngle, pipAngle, digitAngle - angle in radians in the direct view of
+%       the paw. pi (or -pi) is horizontal; pi/2 is vertical
+%
+% [invalid_direct,~] = find_invalid_DLC_points(direct_pts, direct_p);
 % hard code strings that only occur in bodyparts that are part of the
 % reaching paw
 [mcpIdx,pipIdx,digIdx,~] = findReachingPawParts(direct_bp,pawPref);
@@ -27,7 +31,7 @@ farthestDIGidx = NaN(numFrames,2);
 for iFrame = 1 : numFrames
     
     % find valid mcp points in this frame, if there are any
-    farthestMCPidx(iFrame,:) = findFarthestDigits(mcpIdx,~invalidPoints(:,iFrame));
+    farthestMCPidx(iFrame,:) = findFarthestDigits(mcpIdx,~invalid_direct(:,iFrame));
     if all(farthestMCPidx(iFrame,:) > 0)
         MCPpts = squeeze(direct_pts(farthestMCPidx(iFrame,:),iFrame,:));
         
@@ -36,7 +40,7 @@ for iFrame = 1 : numFrames
         mcpAngle(iFrame) = pointsAngle(MCPpts);
     end
     
-    farthestPIPidx(iFrame,:) = findFarthestDigits(pipIdx,~invalidPoints(:,iFrame));
+    farthestPIPidx(iFrame,:) = findFarthestDigits(pipIdx,~invalid_direct(:,iFrame));
     if all(farthestPIPidx(iFrame,:) > 0)
         PIPpts = squeeze(direct_pts(farthestPIPidx(iFrame,:),iFrame,:));
         
@@ -45,7 +49,7 @@ for iFrame = 1 : numFrames
         pipAngle(iFrame) = pointsAngle(PIPpts);
     end
         
-    farthestDIGidx(iFrame,:) = findFarthestDigits(digIdx,~invalidPoints(:,iFrame));
+    farthestDIGidx(iFrame,:) = findFarthestDigits(digIdx,~invalid_direct(:,iFrame));
     if all(farthestDIGidx(iFrame,:) > 0)
         DIGpts = squeeze(direct_pts(farthestDIGidx(iFrame,:),iFrame,:));
         % need to keep in mind that angles will be different for right and
@@ -65,7 +69,7 @@ function ptsIdx = findFarthestDigits(digitIdx,validPoints)
 % INPUTS:
 %   digIdx = indices of digits in the bodyparts array in order
 %   validPoints = boolean vector indicating which bodyparts were reliably
-%       identified (logical NOT of invalidPoints)
+%       identified (logical NOT of invalid_direct)
 
 ptsIdx = zeros(1,2);
 validDigIdx = validPoints(digitIdx);

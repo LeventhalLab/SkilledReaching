@@ -76,7 +76,7 @@ end
 % find the first local minimum in the z-dimension after reach onset
 xyz_coords = pawTrajectory(:,:,allPawPartsIdx);
 z_coords = squeeze(xyz_coords(:,3,:));
-z_coords(z_coords == 0) = NaN;
+% z_coords(z_coords == 0) = NaN;
 z_smooth = smoothdata(z_coords,1,'movmean',smoothSize);
 localMins = islocalmin(z_smooth, 1);
 

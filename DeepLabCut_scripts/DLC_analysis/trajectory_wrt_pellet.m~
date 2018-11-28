@@ -1,4 +1,4 @@
-function new_trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, reproj_error, pawPref, varargin)
+function new_trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts,frameRate,frameTimeLimits, reproj_error, pawPref, varargin)
 % calculate the trajectory of each body part with respect to the initial
 % pellet location. For left-pawed rats, reflect the trajectories about the
 % x-axis so that left and right-pawed trajectories should line up
@@ -18,7 +18,10 @@ function new_trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, rep
 %   pawPref - 'left' or 'right'
 %
 % VARARGS:
-%   'maxreprojectionerror' - 
+%   'initpelletloc' - 3-element vector containing the presumed initial pellet
+%       location. this is designed so that on trials where a pellet isn't
+%       found, the algorithm can use the mean pellet location from the rest
+%       of the trials as the presumed pellet location
 %
 % OUTPUTS
 %   new_trajectory - pawTrajectory transformed so that it is the paw
@@ -27,10 +30,13 @@ function new_trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, rep
 %       x-dimension inverted so that all trajectories should "point" the
 %       same direction
 
+
 maxReprojError = 10;
 
-for iarg = 1 : 2 : nargin - 4
+for iarg = 1 : 2 : nargin - 6
     switch lower(varargin{iarg})
+        case 'initpelletloc'
+            initPellet3D = varargin{iarg + 1};
         case 'maxreprojectionerror'
             maxReprojError = varargin{iarg + 1};
     end
@@ -80,7 +86,7 @@ for i_bp = 1 : num_bp
     % identify when direct or mirror reprojection errors are too great to
     % be considered valid reconstructions
     invalidReprojections = cur_reproj_errors(:,1) > maxReprojError | ...
-                           cur_reproj_errors(:,2) > maxReprojError;
+                           cur_reproj_errors(:,1) > maxReprojError;
                        
 	NaN_pawTrajectory(invalidReprojections,:,i_bp) = NaN;
     

@@ -56,7 +56,7 @@ end
 % find the first time the paw moves in front of the slot
 firstSlotBreak = NaN(numPawParts,1);
 for iPart = 1 : numPawParts
-    temp = z_coords(:,iPart);
+%     temp = z_coords(:,iPart);
 %     temp(temp == 0) = NaN;
     tempFrame = find(temp < slot_z,1,'first');
     if ~isempty(tempFrame)

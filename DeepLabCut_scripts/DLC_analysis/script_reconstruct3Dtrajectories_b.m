@@ -1,7 +1,8 @@
 % script to perform 3D reconstruction on videos
 
-% hard-coded in info about each rat including handedness
-% script_ratInfo_for_deepcut;
+slot_z = 200;    % distance from camera of slot in mm. hard coded for now
+time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
+
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
 csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
@@ -209,8 +210,8 @@ for i_rat = 1 : numRatFolders
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
             end
     
-%             [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
-%             [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
+            [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
+            [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
 % 
 %             direct_pts_toPlot = zeros(size(direct_pts));
 %             mirror_pts_toPlot = zeros(size(mirror_pts));
@@ -234,16 +235,21 @@ for i_rat = 1 : numRatFolders
                                   
             [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_mirror_pts, isEstimate] = ...
                 calc3D_DLC_trajectory(direct_pts, ...
-                                      mirror_pts, direct_p, mirror_p,...
+                                      mirror_pts, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
                                       vidROI, boxCal, pawPref, frameSize);
-
+            [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, bodyparts, ROIs, boxCal, pawPref);
+            
+            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, slot_z);
+            initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
+                'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
+            
             cd(fullSessionDir)
             
 %             if exist(trajName,'file')
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
-                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate');
+                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D');
 %             end
             
         end

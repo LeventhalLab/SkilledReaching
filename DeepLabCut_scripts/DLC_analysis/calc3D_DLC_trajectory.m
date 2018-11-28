@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_mirror_pts, isEstimate] = calc3D_DLC_trajectory(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
+function [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_mirror_pts, isEstimate] = calc3D_DLC_trajectory(direct_pts, mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
 %
 % INPUTS:
 %   direct_pts, mirror_pts - number of body parts x number of frames x 2
@@ -33,7 +33,7 @@ function [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_m
 
 % assume that direct and mirror body part labels are the same
 
-points_still_distorted = true;   % set to false if vids were undistorted prior to running through deeplabcut
+% points_still_distorted = true;   % set to false if vids were undistorted prior to running through deeplabcut
 cameraParams = boxCal.cameraParams;
 
 switch pawPref
@@ -66,10 +66,10 @@ numFrames = size(direct_pts, 2);
 
 [~,epipole] = isEpipoleInImage(F,imSize);
 
-[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
+[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(direct_pts, mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
 % [final_directPawDorsum_pts, isDirectPawDorsumEstimate] = estimateDirectPawDorsum(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
 
-[~,~,~,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
+% [~,~,~,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
 
 % match body parts between direct and mirror views
 mirror_bpMatch_idx = [];
