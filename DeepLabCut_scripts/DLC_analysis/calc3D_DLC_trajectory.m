@@ -3,29 +3,33 @@ function [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_m
 % INPUTS:
 %   direct_pts, mirror_pts - number of body parts x number of frames x 2
 %       array
-%   direct_bp, mirror_bp - cell arrays containing lists of body parts
-%       descriptors
 %   direct_p, mirror_p - number of body parts x number of frames array
 %       containing p-values for how confident DLC is that a body part was
 %       correctly identified
+%   direct_bp, mirror_bp - cell arrays containing lists of body parts
+%       descriptors
 %   ROIs - 3 x 4 array where each row is a [left,top,width,height] vector
 %       defining a rectangular region of interest. First row is the direct
 %       view, second row is the left mirror view, third row is the right
 %       mirror view
 %   boxCal - structure with the following fields:
 %       cameraParams - matlab camera parameters structure
-%   Pn - camera matrix for the mirror view that shows the paw dorsum
-%   F - the fundamental matrix for the mirror view that shows the paw
-%       dorsum
-%   scaleFactor - mean computed scaling factor for the mirror view that
-%       shows the paw dorsum
+%   pawPref - 'right' or 'left'
+%   imSize - 2-element vector with frame height x width
 %
-%       
 % OUTPUTS:
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
 %       matrix contains x,y,z points for each bodypart
 %   bodyparts - cell array containing strings describing each bodypart in
 %       the same order as in the pawTrajectory array
+%   dist_from_epipole - 
+%   final_direct_pts
+%	final_mirror_pts
+%   isEstimate - m x n x 2 array of booleans, where m is the number of
+%       bodyparts, n is the number of frames, and the last index indicates
+%       whether it's the direct (1) or mirror (2) views. True indicates
+%       that this bodypart's position was estimated; false indicates that
+%       it was measured directly by DLC
 
 % assume that direct and mirror body part labels are the same
 

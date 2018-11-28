@@ -39,11 +39,7 @@ for iFrame = 1 : numFrames
     validMirrorPoints = allMirrorPts(~invalid_mirror(allMirrorParts_idx,iFrame),:);
     
     directCVboundary_idx = boundary(validDirectPoints);
-    try
     mirrorCVboundary_idx = boundary(validMirrorPoints);
-    catch
-        keyboard
-    end
     
     directCVboundary_pts = validDirectPoints(directCVboundary_idx,:);
     mirrorCVboundary_pts = validMirrorPoints(mirrorCVboundary_idx,:);

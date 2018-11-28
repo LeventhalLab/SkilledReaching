@@ -209,15 +209,15 @@ for i_rat = 1 : numRatFolders
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
             end
     
-            [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
-            [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
-
-            direct_pts_toPlot = zeros(size(direct_pts));
-            mirror_pts_toPlot = zeros(size(mirror_pts));
-            for i_coord = 1 : 2
-                direct_pts_toPlot(:,:,i_coord) = direct_pts(:,:,i_coord) .* double(~direct_invalid_points);
-                mirror_pts_toPlot(:,:,i_coord) = mirror_pts(:,:,i_coord) .* double(~mirror_invalid_points);
-            end
+%             [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
+%             [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
+% 
+%             direct_pts_toPlot = zeros(size(direct_pts));
+%             mirror_pts_toPlot = zeros(size(mirror_pts));
+%             for i_coord = 1 : 2
+%                 direct_pts_toPlot(:,:,i_coord) = direct_pts(:,:,i_coord) .* double(~direct_invalid_points);
+%                 mirror_pts_toPlot(:,:,i_coord) = mirror_pts(:,:,i_coord) .* double(~mirror_invalid_points);
+%             end
 %             direct_pts_toPlot(direct_pts_toPlot==0) = NaN;
 %             mirror_pts_toPlot(mirror_pts_toPlot==0) = NaN;
 %             [pawTrajectory, bodyparts, dist_from_epipole] = ...
@@ -233,8 +233,8 @@ for i_rat = 1 : numRatFolders
 %                                       vidROI, boxCal, pawPref, frameSize);
                                   
             [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_mirror_pts, isEstimate] = ...
-                calc3D_DLC_trajectory(direct_pts_toPlot, ...
-                                      mirror_pts_toPlot, direct_p, mirror_p,...
+                calc3D_DLC_trajectory(direct_pts, ...
+                                      mirror_pts, direct_p, mirror_p,...
                                       direct_bp, mirror_bp, ...
                                       vidROI, boxCal, pawPref, frameSize);
 
@@ -243,7 +243,7 @@ for i_rat = 1 : numRatFolders
 %             if exist(trajName,'file')
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
-                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','final_direct_pts','final_mirror_pts','isDirectPawDorsumEstimate');
+                save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate');
 %             end
             
         end
