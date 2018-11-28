@@ -22,6 +22,10 @@ function [nndist, nnidx] = findNearestPointToLine(Q, Q0, varargin)
 %       defined by Q
 
 numNeighbors = 1;
+
+if size(Q0,1) == numel(Q0)
+    Q0 = Q0';
+end
 if nargin == 3
     numNeighbors = varargin{1};
 end

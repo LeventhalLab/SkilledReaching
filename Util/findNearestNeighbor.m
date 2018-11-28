@@ -22,6 +22,10 @@ if nargin == 3
     numNeighbors = varargin{1};
 end
 
+if size(x,1) == 2 && size(x,2) == 1
+    x = x';
+end
+
 if size(x,2) ~= size(y,2)
     error('x and y must have the same number of columns');
 end

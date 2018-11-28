@@ -99,8 +99,8 @@ for i_bp = 1 : numValid_bp
 %         cur_direct_pts(:,1) = cur_direct_pts(:,1) + ROIs(1,1) - 1;
 %         cur_direct_pts(:,2) = cur_direct_pts(:,2) + ROIs(1,2) - 1;
 %     end
-    cur_mirror_pts = squeeze(final_mirror_pts(mirror_bpMatch_idx(i_bp), :, :));
-%     cur_mirror_pts(cur_mirror_pts==0) = NaN;
+    cur_mirror_pts = squeeze(mirror_pts(mirror_bpMatch_idx(i_bp), :, :));
+    cur_mirror_pts(cur_mirror_pts==0) = NaN;
 
     % adjust for the region of interest from which the cropped videos
     % were pulled
