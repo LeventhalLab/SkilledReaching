@@ -46,7 +46,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 1 : numRatFolders
+for i_rat = 2 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -74,7 +74,7 @@ for i_rat = 1 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 1 : numSessions
+    for iSession = 2 : numSessions
         
         
 %         C = textscan(sessionDirectories(iSession).name,[ratID '_%8c']);
@@ -241,9 +241,12 @@ for i_rat = 1 : numRatFolders
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal, pawPref);
             
             [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, slot_z);
+            try
             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
                 'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
-            
+            catch
+                keyboard
+            end
             cd(fullSessionDir)
             
 %             if exist(trajName,'file')
