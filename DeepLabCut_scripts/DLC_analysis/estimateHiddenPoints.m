@@ -1,7 +1,7 @@
-function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(direct_pts, mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref)
+function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref)
 
-% vidPath = '/Volumes/Tbolt_01/Skilled Reaching/R0186/R0186_20170813a';
-% video = VideoReader(fullfile(vidPath,'R0186_20170813_12-09-21_002.avi'));
+vidPath = '/Volumes/Tbolt_01/Skilled Reaching/R0186/R0186_20170813a';
+video = VideoReader(fullfile(vidPath,'R0186_20170813_12-09-21_002.avi'));
 
 switch pawPref
     case 'right'
@@ -10,7 +10,7 @@ switch pawPref
         F = squeeze(boxCal.F(:,:,3));
 end
 
-numFrames = size(direct_pts,2);
+numFrames = size(final_direct_pts,2);
 
 [direct_mcp_idx,direct_pip_idx,direct_digit_idx,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
 [mirror_mcp_idx,mirror_pip_idx,mirror_digit_idx,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
@@ -24,10 +24,10 @@ allMirrorParts_idx = [mirror_mcp_idx;mirror_pip_idx;mirror_digit_idx;mirror_pawd
 
 % invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
 % invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
-isEstimate = false(size(direct_pts,1),size(direct_pts,2),2);
+isEstimate = false(size(final_direct_pts,1),size(final_mirror_pts,2),2);
 
-final_direct_pts = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams);
-final_mirror_pts = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams);
+% final_direct_pts = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams);
+% final_mirror_pts = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams);
 
 numDigits = length(direct_mcp_idx);
 for iFrame = 1 : numFrames
@@ -78,6 +78,11 @@ for iFrame = 1 : numFrames
                 continue;
             end
             % figure out whether the mirror or direct view point was identified
+            
+% video.CurrentTime = iFrame/video.FrameRate;
+% img = readFrame(video);
+% img_ud = undistortImage(img,boxCal.cameraParams);
+    
             if invalid_direct(direct_part_idx,iFrame)
                 % the mirror point was identified
                 allPawPoints = validDirectPoints;

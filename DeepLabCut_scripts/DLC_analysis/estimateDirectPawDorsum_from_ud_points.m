@@ -68,20 +68,20 @@ for iFrame = 1 : numFrames
         foundValidPoints = false;
         validTest = ~invalid_direct(direct_mcp_idx,iFrame);
         if any(validTest)   % at least one mcp was identified
-            digitPts = squeeze(direct_pts_ud(direct_mcp_idx,iFrame,:));
+            digitPts = squeeze(direct_pts_ud(direct_mcp_idx(validTest),iFrame,:));
             foundValidPoints = true;
         end
         if ~foundValidPoints
             validTest = ~invalid_direct(direct_pip_idx,iFrame);
             if sum(validTest) > 1   % at least one pip was identified
-                digitPts = squeeze(direct_pts_ud(direct_pip_idx,iFrame,:));
+                digitPts = squeeze(direct_pts_ud(direct_pip_idx(validTest),iFrame,:));
                 foundValidPoints = true;
             end
         end
         if ~foundValidPoints
             validTest = ~invalid_direct(direct_digit_idx,iFrame);
             if sum(validTest) > 1   % at least one digit tip was identified
-                digitPts = squeeze(direct_pts_ud(direct_digit_idx,iFrame,:));
+                digitPts = squeeze(direct_pts_ud(direct_digit_idx(validTest),iFrame,:));
                 foundValidPoints = true;
             end
         end
@@ -100,7 +100,12 @@ for iFrame = 1 : numFrames
             
             % find the point on the epipolar line closest to any of the
             % identified digit points
+            if size(digitPts,1) == numel(digitPts)
+                % if digitPts is a column vector, convert to row vector
+                digitPts = digitPts';
+            end
             np = findNearestPointOnLine(epiPts,digitPts(nnidx,:));
+
             final_directPawDorsum_pts(iFrame,:) = np;
             
             isEstimate(iFrame) = true;

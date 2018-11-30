@@ -1,6 +1,9 @@
 % script_calculateKinematics_20181128
 
-slot_z = 200;    % distance from camera of slot in mm. hard coded for now
+maxReprojError = 10;
+
+% slot_z = 200;    % distance from camera of slot in mm. hard coded for now
+% time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
 % calculate the following kinematic parameters:
 % 1. max velocity
@@ -95,6 +98,7 @@ for i_rat = 1 : numRatFolders
         pelletMissingFlag = false(numTrials,1);
         trialNumbers = zeros(numTrials,1);
         
+        invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
@@ -103,10 +107,15 @@ for i_rat = 1 : numRatFolders
             
             invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
             invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
+            invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
             
+            % the following commented out section is now calculated in
+            % script_reconstruct_trajectories...
 %             dist_from_pellet = distFromPellet(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
-            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, slot_z);
-            initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
+%             [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, slot_z);
+%             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
+%                 'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
+%             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
 %             all_dist_from_pellet(:,:,iTrial) = dist_from_pellet;
             if ~isempty(initPellet3D)
                 % most likely, pellet wasn't brought up by the delivery arm
@@ -114,14 +123,20 @@ for i_rat = 1 : numRatFolders
                 all_initPellet3D(iTrial,:) = initPellet3D;
             end
             
-            [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,direct_p,pawPref);
+            [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,invalid_direct,pawPref);
             all_mcpAngle(:,iTrial) = mcpAngle;
             all_pipAngle(:,iTrial) = pipAngle;
             all_digitAngle(:,iTrial) = digitAngle;
             
+            paw_through_slot_frame = min(firstSlotBreak);
             all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
             
-            trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts, frameRate, frameTimeLimits, reproj_error, pawPref);
+            trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
+            for i_bp = 1 : size(invalid3Dpoints,1)
+                for iFrame = 1 : size(invalid3Dpoints,2)
+                    if invalid3Dpoints(i_bp,iFrame,iTrial)
+                        trajectory(
+            
             if isempty(trajectory)
                 pelletMissingFlag(iTrial) = true;
                 fprintf('%s, trial %d\n',sessionDirectories(iSession).name, trialNumbers(iTrial));
@@ -136,8 +151,9 @@ for i_rat = 1 : numRatFolders
         for iTrial = 1 : numTrials
 %             [partEndPts_old,partEndPtFrame_old,endPts_old,endPtFrame_old,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
             if pelletMissingFlag(iTrial)
-                trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts, frameRate, frameTimeLimits, reproj_error, pawPref, ...
-                    'initpelletloc',mean_initPellet3D);
+                trajectory = trajectory_wrt_pellet(pawTrajectory, mean_initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
+%                 trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts, frameRate, frameTimeLimits, reproj_error, pawPref, ...
+%                     'initpelletloc',mean_initPellet3D);
                 % note all trajectories are arranged to look like right paw
                 % trajectories (x coordinate inverted for left paws)
                 allTrajectories(:,:,:,iTrial) = trajectory;
@@ -160,10 +176,15 @@ for i_rat = 1 : numRatFolders
             all_partEndPtFrame (:,iTrial) = partEndPtFrame;
 
             
+%             save(pawTrajectoryList(iTrial).name,'trajectory',...
+%                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
+%                 'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
+%                 'initPellet3D','paw_through_slot_frame','-append');
+            
             save(pawTrajectoryList(iTrial).name,'trajectory',...
                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
                 'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
-                'initPellet3D','paw_through_slot_frame','-append');
+                '-append');
         end
         
 %         mean_v = zeros(size(all_v,1),size(all_v,2),size(all_v,3));

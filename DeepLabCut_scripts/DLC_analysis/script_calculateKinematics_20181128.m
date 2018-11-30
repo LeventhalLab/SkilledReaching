@@ -98,6 +98,7 @@ for i_rat = 1 : numRatFolders
         pelletMissingFlag = false(numTrials,1);
         trialNumbers = zeros(numTrials,1);
         
+        invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
@@ -106,6 +107,7 @@ for i_rat = 1 : numRatFolders
             
             invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
             invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
+            invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
             
             % the following commented out section is now calculated in
             % script_reconstruct_trajectories...
@@ -130,6 +132,14 @@ for i_rat = 1 : numRatFolders
             all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
             
             trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
+            for i_bp = 1 : size(invalid3Dpoints,1)
+                for iFrame = 1 : size(invalid3Dpoints,2)
+                    if invalid3Dpoints(i_bp,iFrame,iTrial)
+                        trajectory(iFrame,:,i_bp) = NaN;
+                    end
+                end
+            end
+            
             if isempty(trajectory)
                 pelletMissingFlag(iTrial) = true;
                 fprintf('%s, trial %d\n',sessionDirectories(iSession).name, trialNumbers(iTrial));
@@ -145,6 +155,13 @@ for i_rat = 1 : numRatFolders
 %             [partEndPts_old,partEndPtFrame_old,endPts_old,endPtFrame_old,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref);
             if pelletMissingFlag(iTrial)
                 trajectory = trajectory_wrt_pellet(pawTrajectory, mean_initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
+                for i_bp = 1 : size(invalid3Dpoints,1)
+                    for iFrame = 1 : size(invalid3Dpoints,2)
+                        if invalid3Dpoints(i_bp,iFrame,iTrial)
+                            trajectory(iFrame,:,i_bp) = NaN;
+                        end
+                    end
+                end
 %                 trajectory = trajectory_wrt_pellet(pawTrajectory, bodyparts, frameRate, frameTimeLimits, reproj_error, pawPref, ...
 %                     'initpelletloc',mean_initPellet3D);
                 % note all trajectories are arranged to look like right paw
