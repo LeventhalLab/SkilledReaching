@@ -42,7 +42,15 @@ end
 % triggerFrame = round(-frameTimeLimits(1) * frameRate);
 
 preTriggerFrame = triggerFrame - round(time_to_average_prior_to_reach * frameRate);
-
+if preTriggerFrame < 1
+    % every now and then, the trigger is off and the paw actually broke
+    % through the slow very early in the video (usually after
+    % "bad-reaching" is established). In that case, ignore the pellet and
+    % will rely on the average pellet location from the entire session in
+    % subsquent analysis steps
+    initPellet3D = [];
+    return;
+end
 pelletIdx3D = strcmpi(bodyparts,'pellet');
 
 pelletPts = squeeze(pawTrajectory(:,:,pelletIdx3D));
