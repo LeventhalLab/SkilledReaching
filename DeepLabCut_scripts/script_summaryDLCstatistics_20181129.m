@@ -192,7 +192,8 @@ for i_rat = 1 : numRatFolders
             % close to the other points
             % simple way is to find the earliest point and add 10 (this is
             % arbitray) frames
-            lastPt = min(partEndPtFrame) + 10;
+%             lastPt = min(partEndPtFrame) + 10;
+            lastPt = endPtFrame;
             
             for i_bpGroup = 1 : length(bp_to_group)
                 
@@ -227,10 +228,13 @@ for i_rat = 1 : numRatFolders
                         lastPt = endPtFrame;
                     end
                     toPlot = squeeze(curTrajectories(:,:,bp_idx(ii)));
-                    validFrames = (~direct_invalid_points(bp_idx(ii),:) & ~mirror_invalid_points(bp_idx(ii),:)) | ...
-                        isEstimate(bp_idx(ii),:,1) | isEstimate(bp_idx(ii),:,2);
-                    nanFrames = ~validFrames;
-%                     toPlot(nanFrames,:) = NaN;
+                    % only plot points if both are valid
+                    % these are the direct points that are OK
+                    direct_nanPoints = direct_invalid_points(bp_idx(ii),:) & ~isEstimate(bp_idx(ii),:,1);
+                    % these are the mirror view points that are OK
+                    mirror_nanPoints = mirror_invalid_points(bp_idx(ii),:) & ~isEstimate(bp_idx(ii),:,2);
+                    nanFrames = direct_nanPoints | mirror_nanPoints;
+                    toPlot(nanFrames,:) = NaN;
                     toPlot = toPlot(1:lastPt,:);
                     plot3(toPlot(:,1),toPlot(:,3),toPlot(:,2))
                     hold on

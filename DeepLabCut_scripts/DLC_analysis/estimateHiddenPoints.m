@@ -205,7 +205,9 @@ else
         epiBorderPts = [epiBorderPts(1:2);epiBorderPts(3:4)];
 
         [~, nnidx] = findNearestPointToLine(epiBorderPts, other_knuckle_pts);
-        np = findNearestPointOnLine(epiBorderPts,other_knuckle_pts(nnidx,:));
+        [~, nnidx2] = findNearestNeighbor(other_knuckle_pts(nnidx,:), intersectPoints);
+%         np = findNearestPointOnLine(epiBorderPts,other_knuckle_pts(nnidx,:));
+        np = intersectPoints(nnidx2,:);
     else
         % the epipolar line intersects the polygon defined by the points
         % that were found in the other view. look for the intersection

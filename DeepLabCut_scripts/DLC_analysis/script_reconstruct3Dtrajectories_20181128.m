@@ -137,7 +137,7 @@ for i_rat = 1 : numRatFolders
 
         % find all the direct view videos that are available
         uniqueDateList = {};
-        for ii = 1 : numMarkedVids
+        for ii = 1 : numMarkedVids   
             C = textscan(direct_csvList(ii).name,'R%04d_%8c_%8c_%03d');
 
             directVid_ratID(ii) = C{1};
@@ -233,9 +233,12 @@ for i_rat = 1 : numRatFolders
 %                                       direct_bp, mirror_bp, ...
 %                                       vidROI, boxCal, pawPref, frameSize);
                                   
+            direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams);
+            mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams);
+
             [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_mirror_pts, isEstimate] = ...
-                calc3D_DLC_trajectory(direct_pts, ...
-                                      mirror_pts, invalid_direct, invalid_mirror,...
+                calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
+                                      mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
                                       vidROI, boxCal, pawPref, frameSize);
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal, pawPref);

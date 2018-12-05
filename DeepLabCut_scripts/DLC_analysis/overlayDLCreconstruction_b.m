@@ -182,16 +182,20 @@ for i_bp = 1 : length(parts_to_show)
         continue;
     end
     
-    if (isPointValid{1}(i_bp) && isPointValid{2}(i_bp)) || isEstimate(i_bp,1)
+    
+    if (isPointValid{1}(i_bp) && isPointValid{2}(i_bp)) || any(isEstimate(i_bp,:))
         currentPt = currentPt / sf;
         % reproject this point into the direct view
         currPt_direct = projectPoints_DL(currentPt, boxCal.P);
         currPt_direct = unnormalize_points(currPt_direct,K);
+        markerColor = getMarkerColor(direct_bp{i_bp}, bodypartColor, pawPref);
         img_out = insertMarker(img_out, currPt_direct, DLC_reprojMarkerType,...
             'color',markerColor,'size',markerSize);
-    end
-    if (isPointValid{1}(i_bp) && isPointValid{2}(i_bp)) || isEstimate(i_bp,2)
+%     end
+%     if (isPointValid{1}(i_bp) && isPointValid{2}(i_bp)) || any(isEstimate(i_bp,:))
         % reproject this point into the mirror view
+        
+        markerColor = getMarkerColor(mirror_bp{i_bp}, bodypartColor, pawPref);
         currPt_mirror = projectPoints_DL(currentPt, Pn);
         currPt_mirror = unnormalize_points(currPt_mirror,K);
         img_out = insertMarker(img_out, currPt_mirror, DLC_reprojMarkerType,...

@@ -40,7 +40,7 @@ numRatFolders = length(ratFolders);
 
 for i_rat = 1 : numRatFolders
 
-    ratID = ratFolders(i_rat).name;
+    ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
@@ -92,6 +92,8 @@ for i_rat = 1 : numRatFolders
         all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
         all_paw_through_slot_frame = zeros(numTrials,1);
         all_initPellet3D = NaN(numTrials, 3);
+        all_endPtFrame = NaN(numTrials,1);
+        all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
         
         vidNum = zeros(numTrials,1);
         
@@ -102,6 +104,7 @@ for i_rat = 1 : numRatFolders
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
+            all_isEstimate(:,:,:,iTrial) = isEstimate;
             C = textscan(pawTrajectoryList(iTrial).name, [ratID '_' sessionDate '_%d-%d-%d_%d_3dtrajectory.mat']); 
             trialNumbers(iTrial) = C{4};
             
@@ -132,18 +135,18 @@ for i_rat = 1 : numRatFolders
             all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
             
             trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
-            for i_bp = 1 : size(invalid3Dpoints,1)
-                for iFrame = 1 : size(invalid3Dpoints,2)
-                    if invalid3Dpoints(i_bp,iFrame,iTrial)
-                        trajectory(iFrame,:,i_bp) = NaN;
-                    end
-                end
-            end
             
             if isempty(trajectory)
                 pelletMissingFlag(iTrial) = true;
                 fprintf('%s, trial %d\n',sessionDirectories(iSession).name, trialNumbers(iTrial));
             else
+                for i_bp = 1 : size(invalid3Dpoints,1)
+                    for iFrame = 1 : size(invalid3Dpoints,2)
+                        if invalid3Dpoints(i_bp,iFrame,iTrial)
+                            trajectory(iFrame,:,i_bp) = NaN;
+                        end
+                    end
+                end
 %             allTrajectories(:,:,:,iTrial) = pawTrajectory;
                 allTrajectories(:,:,:,iTrial) = trajectory;
             end
@@ -181,10 +184,10 @@ for i_rat = 1 : numRatFolders
             
             
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList,] = ...
-                findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial));
+                findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)));
             all_endPts(:,:,iTrial) = partEndPts;
             all_partEndPtFrame (:,iTrial) = partEndPtFrame;
-
+            all_endPtFrame(iTrial) = endPtFrame;
             
 %             save(pawTrajectoryList(iTrial).name,'trajectory',...
 %                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
@@ -225,7 +228,7 @@ for i_rat = 1 : numRatFolders
         save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
             'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
             'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers',...
-            'frameRate','frameTimeLimits','all_paw_through_slot_frame');
+            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate');
         
     end
     

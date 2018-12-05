@@ -19,7 +19,7 @@ numRatFolders = length(ratFolders);
 
 i_rat = 2;
 iSession = 1;
-iVid = 1;
+iVid = 2;
 
 ratID = ratFolders(i_rat).name;
 
@@ -59,6 +59,7 @@ vidDirectory = fullfile(ratVidPath,sessionDirectories{iSession});
 cd(fullSessionDir);
 
 matList = dir([ratID '_*_3dtrajectory.mat']);
+matList(iVid).name
 
 load(matList(iVid).name); 
 
@@ -69,11 +70,11 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 131;
+iFrame = 309;
 
 %%
 while hasFrame(vidIn)
-    vidIn.CurrentTime = iFrame/vidIn.FrameRate;
+    vidIn.CurrentTime = (iFrame)/vidIn.FrameRate;
     curFrame = readFrame(vidIn);
 
     % need to undistort vidIn frames and points to mark
