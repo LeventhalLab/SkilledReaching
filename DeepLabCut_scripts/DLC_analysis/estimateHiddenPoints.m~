@@ -125,9 +125,6 @@ for iFrame = 1 : numFrames
             end
 
 %             epiLine = epipolarLine(F,known_pt);
-% WORKING HERE - NEED TO FIGURE OUT IF THE SAME KNUCKLE ON ONE OF THE
-% ADJACENT DIGITS WAS FOUND. IF SO, USE THAT ONE TO ESTIMATE THE CURRENT
-% POINT
             np = estimatePawPart(known_pt, nextDigitKnuckle, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize);
 %             np = estimatePawPart(known_pt, other_pts, F, imSize);
         

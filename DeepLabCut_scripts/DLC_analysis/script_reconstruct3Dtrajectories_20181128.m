@@ -46,7 +46,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 1 : numRatFolders
+for i_rat = 3 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -74,7 +74,7 @@ for i_rat = 1 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 1 : numSessions
+    for iSession = 3 : numSessions
         
         
 %         C = textscan(sessionDirectories(iSession).name,[ratID '_%8c']);
@@ -170,7 +170,7 @@ for i_rat = 1 : numRatFolders
         cd(mirViewFolder)
         mirror_csvList = dir('R*.csv');
 
-        for i_mirrorcsv = 1 : length(mirror_csvList)
+        for i_mirrorcsv = 9 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             C = textscan(mirror_csvList(i_mirrorcsv).name,'R%04d_%8c_%8c_%03d');
@@ -212,26 +212,6 @@ for i_rat = 1 : numRatFolders
     
             [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
-% 
-%             direct_pts_toPlot = zeros(size(direct_pts));
-%             mirror_pts_toPlot = zeros(size(mirror_pts));
-%             for i_coord = 1 : 2
-%                 direct_pts_toPlot(:,:,i_coord) = direct_pts(:,:,i_coord) .* double(~direct_invalid_points);
-%                 mirror_pts_toPlot(:,:,i_coord) = mirror_pts(:,:,i_coord) .* double(~mirror_invalid_points);
-%             end
-%             direct_pts_toPlot(direct_pts_toPlot==0) = NaN;
-%             mirror_pts_toPlot(mirror_pts_toPlot==0) = NaN;
-%             [pawTrajectory, bodyparts, dist_from_epipole] = ...
-%                 calc3D_DLC_trajectory(direct_pts_toPlot, ...
-%                                       mirror_pts_toPlot, direct_bp, mirror_bp, ...
-%                                       ROIs, boxCal.cameraParams, Pn, F, frameSize, sf);
-                                  
-
-%             [pawTrajectory, bodyparts, dist_from_epipole, final_directPawDorsum_pts, isDirectPawDorsumEstimate] = ...
-%                 calc3D_DLC_trajectory(direct_pts_toPlot, ...
-%                                       mirror_pts_toPlot, direct_p, mirror_p,...
-%                                       direct_bp, mirror_bp, ...
-%                                       vidROI, boxCal, pawPref, frameSize);
                                   
             direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams);
             mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams);
