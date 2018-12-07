@@ -46,7 +46,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 3 : numRatFolders
+for i_rat = 1 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -74,10 +74,8 @@ for i_rat = 3 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 3 : numSessions
+    for iSession = 1 : numSessions
         
-        
-%         C = textscan(sessionDirectories(iSession).name,[ratID '_%8c']);
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
         
@@ -133,8 +131,6 @@ for i_rat = 3 : numRatFolders
         directVidTime = cell(1, numMarkedVids);
         directVidNum = zeros(numMarkedVids,1);
 
-        
-
         % find all the direct view videos that are available
         uniqueDateList = {};
         for ii = 1 : numMarkedVids   
@@ -170,7 +166,7 @@ for i_rat = 3 : numRatFolders
         cd(mirViewFolder)
         mirror_csvList = dir('R*.csv');
 
-        for i_mirrorcsv = 9 : length(mirror_csvList)
+        for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             C = textscan(mirror_csvList(i_mirrorcsv).name,'R%04d_%8c_%8c_%03d');

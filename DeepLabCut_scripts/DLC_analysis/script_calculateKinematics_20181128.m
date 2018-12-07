@@ -59,7 +59,7 @@ for i_rat = 1 : numRatFolders
     
     for iSession = 1 : numSessions
         
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name);
+        fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name)
         
         if ~isfolder(fullSessionDir)
             continue;
@@ -228,7 +228,7 @@ for i_rat = 1 : numRatFolders
         save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
             'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
             'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers',...
-            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate');
+            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame');
         
     end
     

@@ -82,7 +82,8 @@ for iFrame = 1 : numFrames
 % video.CurrentTime = iFrame/video.FrameRate;
 % img = readFrame(video);
 % img_ud = undistortImage(img,boxCal.cameraParams);
-    
+            
+            nextDigitKnuckles = nan(2,2);
             if invalid_direct(direct_part_idx,iFrame)
                 % the mirror point was identified
                 allPawPoints = validDirectPoints;
@@ -90,6 +91,24 @@ for iFrame = 1 : numFrames
 
                 other_knuckle_pts = squeeze(final_direct_pts(direct_indices,iFrame,:));
                 other_knuckle_pts = other_knuckle_pts(~invalid_direct(direct_indices,iFrame),:);
+                
+                switch i_digit
+                    case 1
+                        if ~invalid_direct(direct_indices(2),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(2),iFrame,:));
+                        end
+                    case {2,3}
+                        if ~invalid_direct(direct_indices(i_digit-1),iFrame)
+                            nextDigitKnuckles(1,:) = squeeze(final_direct_pts(direct_indices(i_digit-1),iFrame,:));
+                        end
+                        if ~invalid_direct(direct_indices(i_digit+1),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(i_digit+1),iFrame,:));
+                        end
+                    case 4
+                        if ~invalid_direct(direct_indices(3),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(3),iFrame,:));
+                        end
+                end
                 
                 % find the point marked at the next knuckle on the same
                 % digit
@@ -108,6 +127,24 @@ for iFrame = 1 : numFrames
 
                 other_knuckle_pts = squeeze(final_mirror_pts(mirror_indices,iFrame,:));
                 other_knuckle_pts = other_knuckle_pts(~invalid_mirror(mirror_indices,iFrame),:);
+                
+                switch i_digit
+                    case 1
+                        if ~invalid_mirror(mirror_indices(2),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(2),iFrame,:));
+                        end
+                    case {2,3}
+                        if ~invalid_mirror(mirror_indices(i_digit-1),iFrame)
+                            nextDigitKnuckles(1,:) = squeeze(final_mirror_pts(mirror_indices(i_digit-1),iFrame,:));
+                        end
+                        if ~invalid_mirror(mirror_indices(i_digit+1),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(i_digit+1),iFrame,:));
+                        end
+                    case 4
+                        if ~invalid_mirror(mirror_indices(3),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(3),iFrame,:));
+                        end
+                end
                 
                 % find the point marked at the next knuckle on the same
                 % digit
@@ -128,7 +165,7 @@ for iFrame = 1 : numFrames
 % WORKING HERE - NEED TO FIGURE OUT IF THE SAME KNUCKLE ON ONE OF THE
 % ADJACENT DIGITS WAS FOUND. IF SO, USE THAT ONE TO ESTIMATE THE CURRENT
 % POINT
-            np = estimatePawPart(known_pt, nextDigitKnuckle, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize);
+            np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize);
 %             np = estimatePawPart(known_pt, other_pts, F, imSize);
         
             if invalid_direct(direct_part_idx,iFrame)
@@ -169,7 +206,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function np = estimatePawPart(known_pt, nextDigitKnuckle, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize)
+function np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize)
 
 boundary_idx = boundary(allPawPoints);
 boundary_pts = allPawPoints(boundary_idx,:);
@@ -199,21 +236,26 @@ else
     if isempty(nextKnucklePt)
         % the epipolar line intersects the polygon defined by the points
         % that were found in the other view, but the point for the next
-        % knuckle on the same digit wasn't found either. Look for the
-        % closest point in the intersection of the epipolar line with the
-        % same knuckle on one of the other digits
+        % knuckle on the same digit wasn't found either. 
         
-        % find index of other_pts that is closest to the epipolar line
         epiBorderPts = lineToBorderPoints(epiLine, imSize);
         epiBorderPts = [epiBorderPts(1:2);epiBorderPts(3:4)];
 
-        
-        % WORKING HERE - IF THE SAME KNUCKLE ON THE NEXT DIGIT OVER HAS BEEN FOUND,
-        % USE THAT ONE
-        [~, nnidx] = findNearestPointToLine(epiBorderPts, other_knuckle_pts);
-        [~, nnidx2] = findNearestNeighbor(other_knuckle_pts(nnidx,:), intersectPoints);
-%         np = findNearestPointOnLine(epiBorderPts,other_knuckle_pts(nnidx,:));
-        np = intersectPoints(nnidx2,:);
+        if any(isnan(nextDigitKnuckles(:)))
+            % Look for the closest point in the intersection of the
+            % epipolar line with the same knuckle on the neighboring digits
+            [~, nnidx] = findNearestPointToLine(epiBorderPts, nextDigitKnuckles);
+            [~, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
+            np = intersectPoints(nnidx2,:);
+        else
+            % the neighboring digits for the same knuckle weren't found
+            % either
+            % find index of other_pts that is closest to the epipolar line
+            [~, nnidx] = findNearestPointToLine(epiBorderPts, other_knuckle_pts);
+            [~, nnidx2] = findNearestNeighbor(other_knuckle_pts(nnidx,:), intersectPoints);
+    %         np = findNearestPointOnLine(epiBorderPts,other_knuckle_pts(nnidx,:));
+            np = intersectPoints(nnidx2,:);
+        end
     else
         % the epipolar line intersects the polygon defined by the points
         % that were found in the other view. look for the intersection
