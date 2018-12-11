@@ -17,9 +17,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 3;
-iSession = 3;
-iVid = 9;
+i_rat = 2;
+iSession = 1;
+iVid = 1;
 
 ratID = ratFolders(i_rat).name;
 
@@ -62,7 +62,10 @@ matList = dir([ratID '_*_3dtrajectory.mat']);
 matList(iVid).name
 
 load(matList(iVid).name); 
-
+pawPref = thisRatInfo.pawPref;
+if iscell(pawPref)
+    pawPref = pawPref{1};
+end
 [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
 [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
             
@@ -70,7 +73,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 299;
+iFrame = 105;
 
 %%
 while hasFrame(vidIn)

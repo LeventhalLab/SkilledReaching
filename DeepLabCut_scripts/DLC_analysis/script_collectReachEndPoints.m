@@ -65,16 +65,19 @@ for i_rat = 2 : numRatFolders
             for i_pawPart = 1 : num_pawParts
                 cur_endPts(i_pawPart,:) = curTrajectory(lastPt,:,i_pawPart);
             end
-%             cur_endPts = squeeze(all_endPts(:,:,iTrial));
             % find the paw part closest to the camera
             pawPartIdx = (cur_endPts(:,3) == min(cur_endPts(:,3)));
-            if sum(pawPartIdx == 1)
-                try
-                    reachEndPts{iSession}(iTrial,:) = cur_endPts(pawPartIdx,:);
-                catch
-                    keyboard
-                end
-            end
+            
+            % use the 2nd digit, which is generally visible in both views
+            % at full reach extension.
+            reachEndPts{iSession}(iTrial,:) = cur_endPts(10,:);
+%             if sum(pawPartIdx == 1)
+%                 try
+%                     reachEndPts{iSession}(iTrial,:) = cur_endPts(pawPartIdx,:);
+%                 catch
+%                     keyboard
+%                 end
+%             end
         end
     end
     

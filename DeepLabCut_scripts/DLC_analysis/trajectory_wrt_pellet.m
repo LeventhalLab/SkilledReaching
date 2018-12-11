@@ -75,7 +75,7 @@ NaN_pawTrajectory(pawTrajectory==0) = NaN;
 
 num_bp = size(pawTrajectory,3);
 for i_bp = 1 : num_bp
-    cur_reproj_errors = squeeze(reproj_error(:,i_bp,:));
+    cur_reproj_errors = squeeze(reproj_error(i_bp,:,:));
     
     % identify when direct or mirror reprojection errors are too great to
     % be considered valid reconstructions

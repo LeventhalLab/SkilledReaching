@@ -189,10 +189,10 @@ for i_rat = 1 : numRatFolders
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-%             if exist(fullTrajName,'file')
-%                 % already did this calculation
-%                 continue;
-%             end
+            if exist(fullTrajName,'file')
+                % already did this calculation
+                continue;
+            end
             
             cd(mirViewFolder)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
