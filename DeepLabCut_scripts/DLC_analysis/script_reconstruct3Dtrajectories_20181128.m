@@ -46,7 +46,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 1 : numRatFolders
+for i_rat = 7 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -74,7 +74,12 @@ for i_rat = 1 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 1 : numSessions
+    if i_rat == 7
+        startSession = 2;
+    else
+        startSession = 1;
+    end
+    for iSession = startSession : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -189,10 +194,10 @@ for i_rat = 1 : numRatFolders
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-            if exist(fullTrajName,'file')
-                % already did this calculation
-                continue;
-            end
+%             if exist(fullTrajName,'file')
+%                 % already did this calculation
+%                 continue;
+%             end
             
             cd(mirViewFolder)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
