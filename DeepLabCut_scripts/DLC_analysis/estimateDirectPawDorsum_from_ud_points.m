@@ -25,22 +25,8 @@ numFrames = size(direct_pts_ud,2);
 [direct_mcp_idx,direct_pip_idx,direct_digit_idx,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
 [~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
 
-% direct_pawdorsum_idx = findStringMatchinCellArray(direct_bp, [pawPref 'pawdorsum']);
-% mirror_pawdorsum_idx = findStringMatchinCellArray(mirror_bp, [pawPref 'pawdorsum']);
-
-% invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
-% invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
-
-% direct_pawdorsum_pts = squeeze(direct_pts(direct_pawdorsum_idx,:,:));
-% direct_pawdorsum_pts = direct_pawdorsum_pts + ...
-%     repmat(ROIs(1,1:2),numFrames,1) - 1;
-% direct_pawdorsum_pts_ud = undistortPoints(direct_pawdorsum_pts, boxCal.cameraParams);
 direct_pawdorsum_pts_ud = squeeze(direct_pts_ud(direct_pawdorsum_idx,:,:));
 
-% mirror_pawdorsum_pts = squeeze(mirror_pts(mirror_pawdorsum_idx,:,:));
-% mirror_pawdorsum_pts = mirror_pawdorsum_pts + ...
-%     repmat(ROIs(2,1:2),numFrames,1) - 1;
-% mirror_pawdorsum_pts_ud = undistortPoints(mirror_pawdorsum_pts, boxCal.cameraParams);
 mirror_pawdorsum_pts_ud = squeeze(mirror_pts_ud(mirror_pawdorsum_idx,:,:));
 
 invalid_directPawDorsum = invalid_direct(direct_pawdorsum_idx,:);
