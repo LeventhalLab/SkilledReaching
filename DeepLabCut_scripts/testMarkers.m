@@ -17,9 +17,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 2;
-iSession = 1;
-iVid = 9;
+i_rat = 3;
+iSession = 3;
+iVid = 52;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));
@@ -74,7 +74,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 110;
+iFrame = 78;
 
 %%
 while hasFrame(vidIn)

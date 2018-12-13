@@ -25,7 +25,7 @@ pawDorsum_p = mirror_p(mirror_pawdorsum_idx,1:paw_through_slot_frame)';
 % find the first frame before the paw_through_slot_frame where mirror_p >
 % pThresh and a valid trajectory point was found (so there must have also
 % been at least some points found in the direct view), and this is true for
-% at least min_consec_frames frames in a row
+% at least 
 valid3d = ~isnan(trajectory(1:paw_through_slot_frame,1,mirror_pawdorsum_idx));
 
 validPawDorsumIdx = pawDorsum_p > pThresh & valid3d;

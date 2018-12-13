@@ -94,7 +94,6 @@ for i_rat = 1 : numRatFolders
         all_firstPawDorsumFrame = zeros(numTrials,1);
         all_initPellet3D = NaN(numTrials, 3);
         all_endPtFrame = NaN(numTrials,1);
-        all_trialOutcomes = NaN(numTrials,1);
         all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
         
         vidNum = zeros(numTrials,1);
@@ -130,9 +129,6 @@ for i_rat = 1 : numRatFolders
             all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
             try
             all_firstPawDorsumFrame(iTrial) = firstPawDorsumFrame;
-            catch
-                keyboard
-            end
             
             trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
             
@@ -184,8 +180,6 @@ for i_rat = 1 : numRatFolders
             all_partEndPtFrame (:,iTrial) = partEndPtFrame;
             all_endPtFrame(iTrial) = endPtFrame;
             
-            
-            % NEED TO READ IN TRIAL OUTCOME
             save(pawTrajectoryList(iTrial).name,'trajectory',...
                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
                 'partEndPtFrame','endPts','endPtFrame','pawPartsList',...

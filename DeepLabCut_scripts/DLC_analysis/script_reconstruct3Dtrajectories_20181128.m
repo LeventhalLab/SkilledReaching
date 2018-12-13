@@ -46,7 +46,8 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 7 : numRatFolders
+for i_rat = 3 : numRatFolders
+% for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -74,11 +75,12 @@ for i_rat = 7 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 7
-        startSession = 2;
-    else
-        startSession = 1;
-    end
+%     if i_rat == 8
+%         startSession = 2;
+%     else
+%         startSession = 1;
+%     end
+    startSession = 3;
     for iSession = startSession : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
@@ -171,7 +173,7 @@ for i_rat = 7 : numRatFolders
         cd(mirViewFolder)
         mirror_csvList = dir('R*.csv');
 
-        for i_mirrorcsv = 1 : length(mirror_csvList)
+        for i_mirrorcsv = 52 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             C = textscan(mirror_csvList(i_mirrorcsv).name,'R%04d_%8c_%8c_%03d');
