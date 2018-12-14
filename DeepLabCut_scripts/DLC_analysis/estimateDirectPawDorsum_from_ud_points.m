@@ -26,7 +26,6 @@ numFrames = size(direct_pts_ud,2);
 [~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
 
 direct_pawdorsum_pts_ud = squeeze(direct_pts_ud(direct_pawdorsum_idx,:,:));
-
 mirror_pawdorsum_pts_ud = squeeze(mirror_pts_ud(mirror_pawdorsum_idx,:,:));
 
 invalid_directPawDorsum = invalid_direct(direct_pawdorsum_idx,:);
@@ -50,7 +49,8 @@ for iFrame = 1 : numFrames
             epiLine = epipolarLine(F,mirror_pawdorsum_pts_ud(iFrame,:));
         end
 
-        % are the two middle digit direct points valid?
+        % first look for valid mcp's, then valid pip's, then valid digit
+        % tips
         foundValidPoints = false;
         validTest = ~invalid_direct(direct_mcp_idx,iFrame);
         if any(validTest)   % at least one mcp was identified
@@ -59,24 +59,20 @@ for iFrame = 1 : numFrames
         end
         if ~foundValidPoints
             validTest = ~invalid_direct(direct_pip_idx,iFrame);
-            if sum(validTest) > 1   % at least one pip was identified
+            if any(validTest)   % at least one pip was identified
                 digitPts = squeeze(direct_pts_ud(direct_pip_idx(validTest),iFrame,:));
                 foundValidPoints = true;
             end
         end
         if ~foundValidPoints
             validTest = ~invalid_direct(direct_digit_idx,iFrame);
-            if sum(validTest) > 1   % at least one digit tip was identified
+            if any(validTest)    % at least one digit tip was identified
                 digitPts = squeeze(direct_pts_ud(direct_digit_idx(validTest),iFrame,:));
                 foundValidPoints = true;
             end
         end
         if foundValidPoints && ~invalid_mirrorPawDorsum(iFrame)
             % find the knuckle closest to the epipolar line
-            
-            % adjust digitPts for the ROI and camera distortion
-%             digitPts = digitPts + repmat(ROIs(1,1:2),size(digitPts,1),1) - 1;
-%             digitPts = undistortPoints(digitPts, boxCal.cameraParams);
             
             epiPts = lineToBorderPoints(epiLine, frameSize);
             epiPts = [epiPts(1:2);epiPts(3:4)];

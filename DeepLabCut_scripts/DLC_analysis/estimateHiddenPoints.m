@@ -20,29 +20,21 @@ numFrames = size(final_direct_pts,2);
 allDirectParts_idx = [direct_mcp_idx;direct_pip_idx;direct_digit_idx;direct_pawdorsum_idx];
 allMirrorParts_idx = [mirror_mcp_idx;mirror_pip_idx;mirror_digit_idx;mirror_pawdorsum_idx];
 
-% numPawParts = length(direct_mcp_idx) + length(direct_pip_idx) + length(direct_digit_idx) + length(direct_pawdorsum_idx);
-
-% invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
-% invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
 isEstimate = false(size(final_direct_pts,1),size(final_mirror_pts,2),2);
-
-% final_direct_pts = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams);
-% final_mirror_pts = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams);
 
 numDigits = length(direct_mcp_idx);
 for iFrame = 1 : numFrames
-    
     allDirectPts = squeeze(final_direct_pts(allDirectParts_idx,iFrame,:));
     allMirrorPts = squeeze(final_mirror_pts(allMirrorParts_idx,iFrame,:));
     
     validDirectPoints = allDirectPts(~invalid_direct(allDirectParts_idx,iFrame),:);
     validMirrorPoints = allMirrorPts(~invalid_mirror(allMirrorParts_idx,iFrame),:);
     
-    directCVboundary_idx = boundary(validDirectPoints);
-    mirrorCVboundary_idx = boundary(validMirrorPoints);
+%     directCVboundary_idx = boundary(validDirectPoints);
+%     mirrorCVboundary_idx = boundary(validMirrorPoints);
     
-    directCVboundary_pts = validDirectPoints(directCVboundary_idx,:);
-    mirrorCVboundary_pts = validMirrorPoints(mirrorCVboundary_idx,:);
+%     directCVboundary_pts = validDirectPoints(directCVboundary_idx,:);
+%     mirrorCVboundary_pts = validMirrorPoints(mirrorCVboundary_idx,:);
     % work on digits first
     for i_digitPart = 1 : 3
         switch i_digitPart
@@ -78,11 +70,6 @@ for iFrame = 1 : numFrames
                 continue;
             end
             % figure out whether the mirror or direct view point was identified
-            
-% video.CurrentTime = iFrame/video.FrameRate;
-% img = readFrame(video);
-% img_ud = undistortImage(img,boxCal.cameraParams);
-            
             nextDigitKnuckles = nan(2,2);
             if invalid_direct(direct_part_idx,iFrame)
                 % the mirror point was identified
@@ -161,10 +148,6 @@ for iFrame = 1 : numFrames
                 continue;   % no nearest point to match with. probably will update this later to allow other points to be used...
             end
 
-%             epiLine = epipolarLine(F,known_pt);
-% WORKING HERE - NEED TO FIGURE OUT IF THE SAME KNUCKLE ON ONE OF THE
-% ADJACENT DIGITS WAS FOUND. IF SO, USE THAT ONE TO ESTIMATE THE CURRENT
-% POINT
             np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize);
 %             np = estimatePawPart(known_pt, other_pts, F, imSize);
         

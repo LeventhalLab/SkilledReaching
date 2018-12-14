@@ -1,4 +1,4 @@
-function points_ud = reconstructUndistortedPoints(pts,ROI,cameraParams)
+function points_ud = reconstructUndistortedPoints(pts,ROI,cameraParams,valid_pts)
 %
 % INPUTS:
 %   pts - m x n x 2 array where each row m is the number of body parts and
@@ -12,15 +12,20 @@ function points_ud = reconstructUndistortedPoints(pts,ROI,cameraParams)
 %   points_ud - undistorted points with coordinates such that (0,0) is the
 %      top left corner of the original video frame
 
-points_ud = zeros(size(pts));
+
+points_ud = NaN(size(pts));
+translated_pts = NaN(size(pts));
 for i_coord = 1 : 2
-    points_ud(:,:,i_coord) = pts(:,:,i_coord) + ROI(i_coord) - 1;
+    translated_pts(:,:,i_coord) = pts(:,:,i_coord) + ROI(i_coord) - 1;
 end
 
 for i_part = 1 : size(points_ud,1)
-    points_ud(i_part,:,:) = undistortPoints(squeeze(points_ud(i_part,:,:)),cameraParams);
-end
 
-points_ud(pts == 0) = NaN;
+    validFrames = valid_pts(i_part,:);
+    if any(validFrames)
+        points_ud(i_part,valid_pts(i_part,:),:) = undistortPoints(squeeze(translated_pts(i_part,validFrames,:)),cameraParams);
+    end
+
+end
 
 end

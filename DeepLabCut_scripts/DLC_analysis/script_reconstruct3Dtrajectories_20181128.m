@@ -46,7 +46,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 3 : numRatFolders
+for i_rat = 1 : numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -80,7 +80,7 @@ for i_rat = 3 : numRatFolders
 %     else
 %         startSession = 1;
 %     end
-    startSession = 3;
+    startSession = 1;
     for iSession = startSession : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
@@ -173,7 +173,7 @@ for i_rat = 3 : numRatFolders
         cd(mirViewFolder)
         mirror_csvList = dir('R*.csv');
 
-        for i_mirrorcsv = 52 : length(mirror_csvList)
+        for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             C = textscan(mirror_csvList(i_mirrorcsv).name,'R%04d_%8c_%8c_%03d');
@@ -216,29 +216,26 @@ for i_rat = 3 : numRatFolders
             [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
                                   
-            direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams);
-            mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams);
+            direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams,~invalid_direct);
+            mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams,~invalid_mirror);
 
-            [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_mirror_pts, isEstimate] = ...
+            [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
                 calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
                                       vidROI, boxCal, pawPref, frameSize);
+                                  
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal, pawPref);
             
             [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, slot_z);
-            try
             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
                 'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
-            catch
-                keyboard
-            end
             cd(fullSessionDir)
             
 %             if exist(trajName,'file')
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
-                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid');
+                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid');
 %             end
             
         end
