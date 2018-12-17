@@ -1,4 +1,4 @@
-function firstPawDorsumFrame = findFirstPawDorsumFrame(trajectory,mirror_p,mirror_bp,paw_through_slot_frame,pawPref,varargin)
+function firstPawDorsumFrame = findFirstPawDorsumFrame(mirror_p,mirror_bp,paw_through_slot_frame,pawPref,varargin)
 %
 % INPUTS
 %   trajectory - m x 3 x p array, where m is the number of frames, the
@@ -26,9 +26,9 @@ pawDorsum_p = mirror_p(mirror_pawdorsum_idx,1:paw_through_slot_frame)';
 % pThresh and a valid trajectory point was found (so there must have also
 % been at least some points found in the direct view), and this is true for
 % at least min_consec_frames frames in a row
-valid3d = ~isnan(trajectory(1:paw_through_slot_frame,1,mirror_pawdorsum_idx));
+% valid3d = ~isnan(trajectory(1:paw_through_slot_frame,1,mirror_pawdorsum_idx));
 
-validPawDorsumIdx = pawDorsum_p > pThresh & valid3d;
+validPawDorsumIdx = pawDorsum_p > pThresh;% & valid3d;
 validPawDorsumBorders = findConsecutiveEntries(validPawDorsumIdx);
 
 if isempty(validPawDorsumBorders)
@@ -39,5 +39,12 @@ end
 streakLengths = validPawDorsumBorders(:,2) - validPawDorsumBorders(:,1) + 1;
 
 streak_idx = find(streakLengths > min_consec_frames,1);
+
+if isempty(streak_idx)
+    % this could happen if there aren't enough consecutive frames with a
+    % high enough probability of accurately finding the paw dorsum
+    firstPawDorsumFrame = paw_through_slot_frame;
+    return;
+end
 
 firstPawDorsumFrame = validPawDorsumBorders(streak_idx,1);

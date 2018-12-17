@@ -51,9 +51,17 @@ for i_rat = 1 : numRatFolders
     pawPref = thisRatInfo.pawPref;
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    reachScoresFile = [ratID '_scores.csv'];
+    reachScoresFile = fullfile(ratRootFolder,reachScoresFile);
+    reachScores = readReachScores(reachScoresFile);
     
+    numTableSessions = length(reachScores);
+    dateNums_from_scores_table = zeros(numTableSessions,1);
+    for iSession = 1 : numTableSessions
+        dateNums_from_scores_table(iSession) = datenum(reachScores(iSession).date,'mm/dd/yy');
+    end
+        
     cd(ratRootFolder);
-    
     sessionDirectories = dir([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
@@ -66,7 +74,12 @@ for i_rat = 1 : numRatFolders
         end
         cd(fullSessionDir);
         C = textscan(sessionDirectories(iSession).name,[ratID '_%8c']);
-        sessionDate = C{1};
+        sessionDate = C{1}; % this will be in format yyyymmdd
+                            % note date formats from the scores spreadsheet
+                            % are in m/d/yy
+        sessionDateNum = datenum(sessionDate,'yyyymmdd');
+        % figure out index of reachScores array for this session
+        sessionReachScores = reachScores(dateNums_from_scores_table == sessionDateNum).scores;
         
         % find the pawTrajectory files
         pawTrajectoryList = dir('R*3dtrajectory.mat');
@@ -96,7 +109,7 @@ for i_rat = 1 : numRatFolders
         all_endPtFrame = NaN(numTrials,1);
         all_trialOutcomes = NaN(numTrials,1);
         all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
-        
+        all_trialOutcomes = zeros(numTrials,1);
         vidNum = zeros(numTrials,1);
         
         pelletMissingFlag = false(numTrials,1);
@@ -109,6 +122,9 @@ for i_rat = 1 : numRatFolders
             all_isEstimate(:,:,:,iTrial) = isEstimate;
             C = textscan(pawTrajectoryList(iTrial).name, [ratID '_' sessionDate '_%d-%d-%d_%d_3dtrajectory.mat']); 
             trialNumbers(iTrial) = C{4};
+            
+            trialOutcome = sessionReachScores(trialNumbers(iTrial));
+            all_trialOutcomes(iTrial) = trialOutcome;
             
             invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
             invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
@@ -126,13 +142,14 @@ for i_rat = 1 : numRatFolders
             all_digitAngle(:,iTrial) = digitAngle;
             
             paw_through_slot_frame = min(firstSlotBreak);
-            firstPawDorsumFrame = findFirstPawDorsumFrame(trajectory,mirror_p,mirror_bp,paw_through_slot_frame,pawPref,0.95);
+            firstPawDorsumFrame = findFirstPawDorsumFrame(mirror_p,mirror_bp,paw_through_slot_frame,pawPref,0.99);
             all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
-            try
-            all_firstPawDorsumFrame(iTrial) = firstPawDorsumFrame;
-            catch
-                keyboard
-            end
+            
+%             if isempty(firstPawDorsumFrame)
+%                 all_firstPawDorsumFrame(iTrial) = NaN;
+%             else
+                all_firstPawDorsumFrame(iTrial) = firstPawDorsumFrame;
+%             end
             
             trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
             
@@ -184,12 +201,10 @@ for i_rat = 1 : numRatFolders
             all_partEndPtFrame (:,iTrial) = partEndPtFrame;
             all_endPtFrame(iTrial) = endPtFrame;
             
-            
-            % NEED TO READ IN TRIAL OUTCOME
             save(pawTrajectoryList(iTrial).name,'trajectory',...
                 'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
                 'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
-                'firstPawDorsumFrame','-append');
+                'firstPawDorsumFrame','trialOutcome','-append');
         end
 
         allTrajectories(allTrajectories == 0) = NaN;
@@ -198,7 +213,7 @@ for i_rat = 1 : numRatFolders
         
         save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
             'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
-            'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers',...
+            'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo');
         
     end

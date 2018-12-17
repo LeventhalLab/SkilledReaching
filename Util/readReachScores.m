@@ -1,14 +1,13 @@
-function reachScores = readReachScores(fname,varargin)
+function reachScores = readReachScores(fname)
 %
 % INPUTS
-%   fname - 
+%   fname - name of .csv file containing reach scores for each session
 %
 % OUTPUTS
-%   reachScores - structure with the following fields:
-%       .
-%
-
-maxTrialNum = 100;
+%   reachScores - structure array with an entry for each test session with
+%       the following fields:
+%           .date - session date as a string
+%           .scores - score for each reach
 
 % REACHING SCORES:
 %
@@ -48,3 +47,6 @@ for iCol = 2 : numCols
      end
      
 end
+
+
+end    % function

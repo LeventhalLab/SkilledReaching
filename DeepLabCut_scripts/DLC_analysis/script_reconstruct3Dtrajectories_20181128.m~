@@ -173,7 +173,7 @@ for i_rat = 1 : numRatFolders
         cd(mirViewFolder)
         mirror_csvList = dir('R*.csv');
 
-        for i_mirrorcsv = 16 : length(mirror_csvList)
+        for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             C = textscan(mirror_csvList(i_mirrorcsv).name,'R%04d_%8c_%8c_%03d');
@@ -250,6 +250,5 @@ end
 
 % NEXT ON THE AGENDA - CHECK THAT NEW PAW TRAJECTORIES ARE COMING OUT OK,
 % FINISH NORMALIZING REACH TRAJECTORIES, ADD DIGIT TRAJECTORIES, FIGURE OUT
-% WHY THERE'S A HANDFUL OF TRAJECTORIES THAT ARE JACKED UP (LIKELY
-% CORRELATED WITH WEIRD REACH SCORES LIKE REACHING WITH THE WRONG PAW)
+% WHY THERE'S A HANDFUL OF TRAJECTORIES THAT ARE JACKED UP (
 

@@ -99,9 +99,18 @@ for i_bp = 1 : numValid_bp
                   (valid_direct & estimate_mirror) | ...
                   (valid_mirror & estimate_direct);
     
+	% if there are no validPoints for this bodypart, skip this bodypart
+    if ~any(validPoints)
+        continue;
+    end
+    
     cur_direct_pts = squeeze(final_direct_pts(direct_bpMatch_idx(i_bp),validPoints, :));
     cur_mirror_pts = squeeze(final_mirror_pts(mirror_bpMatch_idx(i_bp),validPoints, :));
     
+    if sum(validPoints) == 1    % only one validPoint, cur_pts arrays come out as column vectors instead of row vectors
+        cur_direct_pts = cur_direct_pts';
+        cur_mirror_pts = cur_mirror_pts';
+    end
 %     cur_direct_pts = squeeze(final_direct_pts(direct_bpMatch_idx(i_bp), :, :));
 %     cur_mirror_pts = squeeze(final_mirror_pts(mirror_bpMatch_idx(i_bp), :, :));
     
