@@ -1,7 +1,15 @@
-function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref)
+function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref, varargin)
 
-vidPath = '/Volumes/Tbolt_01/Skilled Reaching/R0186/R0186_20170813a';
-video = VideoReader(fullfile(vidPath,'R0186_20170813_12-09-21_002.avi'));
+% vidPath = '/Volumes/Tbolt_01/Skilled Reaching/R0186/R0186_20170813a';
+% video = VideoReader(fullfile(vidPath,'R0186_20170813_12-09-21_002.avi'));
+
+maxDistFromNeighbor = 60;  % how far the estimated point is allowed to be from its nearest identified neighbor
+for iarg = 1 : 2 : nargin - 10
+    switch lower(varargin{iarg})
+        case 'maxdistfromneighbor'    % how far the estimated point is allowed to be from its nearest identified neighbor
+            maxDistFromNeighbor = varargin{iarg + 1};
+    end
+end
 
 switch pawPref
     case 'right'
@@ -148,9 +156,10 @@ for iFrame = 1 : numFrames
                 continue;   % no nearest point to match with. probably will update this later to allow other points to be used...
             end
 
-            np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize);
+            np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize, maxDistFromNeighbor);
 %             np = estimatePawPart(known_pt, other_pts, F, imSize);
-        
+            if isempty(np); continue; end
+            
             if invalid_direct(direct_part_idx,iFrame)
                 % the mirror point was identified
                 final_direct_pts(direct_part_idx,iFrame,:) = np;
@@ -189,7 +198,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize)
+function np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize, maxDistFromNeighbor)
 
 boundary_idx = boundary(allPawPoints);
 boundary_pts = allPawPoints(boundary_idx,:);
@@ -208,13 +217,20 @@ if isempty(intersectPoints)
         % first option is to find the point on the epipolar line closest to
         % the next digit over; if that isn't available, find the point on
         % the epipolar line closest to the next knuckle up the same digit
-        [~, nnidx] = findNearestPointToLine(epiBorderPts, nextKnucklePt);
-        np = findNearestPointOnLine(epiBorderPts,nextKnucklePt(nnidx,:));
+        [nndist, nnidx] = findNearestPointToLine(epiBorderPts, nextKnucklePt);
+        if nndist < maxDistFromNeighbor
+            np = findNearestPointOnLine(epiBorderPts,nextKnucklePt(nnidx,:));
+        else
+            np = [];
+        end
     else
-        [~, nnidx] = findNearestPointToLine(epiBorderPts, other_knuckle_pts);
-        np = findNearestPointOnLine(epiBorderPts,other_knuckle_pts(nnidx,:));
+        [nndist, nnidx] = findNearestPointToLine(epiBorderPts, other_knuckle_pts);
+        if nndist < maxDistFromNeighbor
+            np = findNearestPointOnLine(epiBorderPts,other_knuckle_pts(nnidx,:));
+        else
+            np = [];
+        end
     end
-
 else
     if isempty(nextKnucklePt)
         % the epipolar line intersects the polygon defined by the points
@@ -228,24 +244,40 @@ else
             % Look for the closest point in the intersection of the
             % epipolar line with the same knuckle on the neighboring digits
             [~, nnidx] = findNearestPointToLine(epiBorderPts, nextDigitKnuckles);
-            [~, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
-            np = intersectPoints(nnidx2,:);
+            [nndist, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
+            if nndist < maxDistFromNeighbor
+                np = intersectPoints(nnidx2,:);
+            else
+                np = [];
+            end
         else
             % the neighboring digits for the same knuckle weren't found
             % either
             % find index of other_pts that is closest to the epipolar line
             [~, nnidx] = findNearestPointToLine(epiBorderPts, other_knuckle_pts);
-            [~, nnidx2] = findNearestNeighbor(other_knuckle_pts(nnidx,:), intersectPoints);
+            [nndist, nnidx2] = findNearestNeighbor(other_knuckle_pts(nnidx,:), intersectPoints);
     %         np = findNearestPointOnLine(epiBorderPts,other_knuckle_pts(nnidx,:));
-            np = intersectPoints(nnidx2,:);
+            if nndist < maxDistFromNeighbor
+                np = intersectPoints(nnidx2,:);
+            else
+                np = [];
+            end
         end
     else
         % the epipolar line intersects the polygon defined by the points
         % that were found in the other view. look for the intersection
         % point closest to the next knuckle on the same digit
-        [~,nnidx] = findNearestNeighbor(nextKnucklePt, intersectPoints);
-        np = intersectPoints(nnidx,:);
+        [nndist,nnidx] = findNearestNeighbor(nextKnucklePt, intersectPoints);
+        if nndist < maxDistFromNeighbor
+            np = intersectPoints(nnidx,:);
+        else
+            np = [];
+        end
     end
 end
 
 end
+
+
+% WORKING HERE = FILL OUT THE NEAREST NEIGHBOR BITS TO PREVENT POINTS TOO
+% FAR FROM NEIGHBORING POINTS FROM BEING COUNTED

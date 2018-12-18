@@ -48,3 +48,5 @@ if isempty(streak_idx)
 end
 
 firstPawDorsumFrame = validPawDorsumBorders(streak_idx,1);
+
+end

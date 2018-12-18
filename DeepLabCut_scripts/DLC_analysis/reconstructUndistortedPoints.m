@@ -23,7 +23,11 @@ for i_part = 1 : size(points_ud,1)
 
     validFrames = valid_pts(i_part,:);
     if any(validFrames)
-        points_ud(i_part,valid_pts(i_part,:),:) = undistortPoints(squeeze(translated_pts(i_part,validFrames,:)),cameraParams);
+        cur_translated_pts = squeeze(translated_pts(i_part,validFrames,:));
+        if iscolumn(cur_translated_pts)
+            cur_translated_pts = cur_translated_pts';
+        end
+        points_ud(i_part,valid_pts(i_part,:),:) = undistortPoints(cur_translated_pts,cameraParams);
     end
 
 end

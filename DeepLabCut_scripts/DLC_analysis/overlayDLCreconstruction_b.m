@@ -45,6 +45,12 @@ bodypartColor.paw_dorsum = [0 0 1];
 bodypartColor.pellet = [0 0 0];
 bodypartColor.nose = [0 0 0];
 
+colorTextLabels{1} = 'digit 1 - red';
+colorTextLabels{2} = 'digit 2 - magenta';
+colorTextLabels{3} = 'digit 3 - yellow';
+colorTextLabels{4} = 'digit 4 - green';
+colorTextLabels{5} = 'proximal dark-->distal light';
+
 topLeftTextPosition = [20,20];
 textFontSize = 20;
 textRowSpacing = textFontSize + 8;
@@ -211,6 +217,10 @@ if makeKey
     textStr{3} = sprintf('marker for p > %0.2f: %s', p_cutoff, DLC_highProbMarkerType);
     textStr{4} = sprintf('marker for p < %0.2f: %s', p_cutoff, DLC_lowProbMarkerType);
     textStr{5} = sprintf('reconstructed from 3D position: %s', DLC_reprojMarkerType);
+    for ii = 6 : 10
+        textStr{ii} = colorTextLabels{ii-5};
+    end
+    
     
     textPosition = zeros(length(textStr), 2);
     

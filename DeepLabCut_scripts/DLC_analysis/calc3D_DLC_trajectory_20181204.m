@@ -35,6 +35,16 @@ function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstima
 % assume that direct and mirror body part labels are the same
 
 % points_still_distorted = true;   % set to false if vids were undistorted prior to running through deeplabcut
+maxDistFromNeighbor = 60;
+
+for iarg = 1 : 2 : nargin - 10
+    switch lower(varargin{iarg})
+        case 'maxdistfromneighbor'
+            maxDistFromNeighbor = varargin{iarg + 1};
+    end
+end
+
+
 cameraParams = boxCal.cameraParams;
 
 switch pawPref
@@ -67,7 +77,7 @@ numFrames = size(final_direct_pts, 2);
 
 % [~,epipole] = isEpipoleInImage(F,imSize);
 
-[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
+[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
 
 % match body parts between direct and mirror views
 mirror_bpMatch_idx = [];

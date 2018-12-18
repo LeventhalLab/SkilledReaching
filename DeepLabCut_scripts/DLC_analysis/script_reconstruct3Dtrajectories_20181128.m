@@ -2,6 +2,8 @@
 
 slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
+maxDistFromNeighbor = 60;   % maximum distance an estimated point can be from its neighbor
+maxReprojError = 10;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
@@ -75,12 +77,11 @@ for i_rat = 1 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-%     if i_rat == 8
-%         startSession = 2;
-%     else
-%         startSession = 1;
-%     end
-    startSession = 1;
+    if i_rat == 4
+        startSession = 1;
+    else
+        startSession = 1;
+    end
     for iSession = startSession : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
@@ -173,7 +174,7 @@ for i_rat = 1 : numRatFolders
         cd(mirViewFolder)
         mirror_csvList = dir('R*.csv');
 
-        for i_mirrorcsv = 16 : length(mirror_csvList)
+        for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             C = textscan(mirror_csvList(i_mirrorcsv).name,'R%04d_%8c_%8c_%03d');
@@ -227,7 +228,7 @@ for i_rat = 1 : numRatFolders
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal, pawPref);
             
-            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, slot_z);
+            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
                 'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
             cd(fullSessionDir)
@@ -243,6 +244,10 @@ for i_rat = 1 : numRatFolders
     end
     
 end
+% USE REPROJECTION ERROR TO INVALIDATE POINTS BEFORE ESTIMATING HIDDEN
+% LOCATION
+
+
 
 
 % RUN script_calculateKinematics 
@@ -252,4 +257,7 @@ end
 % FINISH NORMALIZING REACH TRAJECTORIES, ADD DIGIT TRAJECTORIES, FIGURE OUT
 % WHY THERE'S A HANDFUL OF TRAJECTORIES THAT ARE JACKED UP (LIKELY
 % CORRELATED WITH WEIRD REACH SCORES LIKE REACHING WITH THE WRONG PAW)
+
+% MODIFY ESTIMATEHIDDENPOINTS SO THAT ESTIMATED POINTS CAN'T BE TOO FAR
+% FROM THE REST OF THE PAW
 

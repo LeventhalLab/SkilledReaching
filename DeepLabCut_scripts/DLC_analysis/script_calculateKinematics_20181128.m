@@ -1,6 +1,9 @@
 % script_calculateKinematics_20181128
 
 maxReprojError = 10;
+num_pd_TrajectoryPoints = 100;
+num_digit_TrajectoryPoints = 100;
+start_z_pawdorsum = 45;
 
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
@@ -109,7 +112,6 @@ for i_rat = 1 : numRatFolders
         all_endPtFrame = NaN(numTrials,1);
         all_trialOutcomes = NaN(numTrials,1);
         all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
-        all_trialOutcomes = zeros(numTrials,1);
         vidNum = zeros(numTrials,1);
         
         pelletMissingFlag = false(numTrials,1);
@@ -208,6 +210,9 @@ for i_rat = 1 : numRatFolders
         end
 
         allTrajectories(allTrajectories == 0) = NaN;
+        
+        [smoothed_pd_trajectories,smoothed_digit_trajectories] = interpolateTrajectories(allTrajectories,pawPartsList,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,pawPref,...
+            'num_pd_TrajectoryPoints',num_pd_TrajectoryPoints,'num_digit_TrajectoryPoints',num_digit_TrajectoryPoints,'start_z_pawdorsum',start_z_pawdorsum);
 
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         
