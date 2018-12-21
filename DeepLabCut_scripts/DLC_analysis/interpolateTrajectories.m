@@ -8,7 +8,8 @@ function [smoothed_pd_trajectories,smoothed_digit_trajectories] = interpolateTra
 
 num_pd_TrajectoryPoints = 100;
 num_digit_TrajectoryPoints = 100;
-start_z_pawdorsum = 45;    % where to start the normalized trajectory (z-dimension w.r.t. the pellet)
+start_z_pawdorsum = 46;    % where to start the normalized trajectory (z-dimension w.r.t. the pellet)
+start_z_digits = 19;
 
 for iarg = 1 : 2 : nargin - 6
     switch lower(varargin{iarg})
@@ -18,6 +19,8 @@ for iarg = 1 : 2 : nargin - 6
             num_digit_TrajectoryPoints = varargin{iarg + 1};
         case 'start_z_pawdorsum'
             start_z_pawdorsum = varargin{iarg + 1};
+        case 'start_z_digits'
+            start_z_digits = varargin{iarg + 1};
     end
 end
 
@@ -39,30 +42,31 @@ smoothed_digit_trajectories = zeros(numTrackedDigitParts,num_digit_TrajectoryPoi
 
 % extract 3D points for paw dorsum trajectory
 smoothed_pd_trajectories = zeros(num_pd_TrajectoryPoints,3,numTrials);
-figure(1);
-hold off
-figure(2)
-for ii = 1 : 3
-    subplot(3,1,ii)
-    hold off
-end
+% for iFig = 1 : 4
+%     figure(iFig);
+%     hold off
+%     figure(iFig+4);
+%     for ii = 1 : 3
+%         subplot(3,1,ii)
+%         hold off
+%     end
+% end
+
+
 for iTrial = 1 : numTrials
     
     curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
 %     trialEstimate = squeeze(pdEstimates(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,iTrial));
     truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_pawdorsum);
     
-    %   PROBLEM IS THAT THE FIRSTPAWDORSUMFRAME WAS INCORRECTLY IDENTIFIED
-    %   FOR VID #9 (NAMED 010)
     smoothed_pd_trajectories(:,:,iTrial) = smoothTrajectory(truncated_trajectory, num_pd_TrajectoryPoints);
 
-    % smooth the trajectory
 %     figure(1)
 %     plot3(smoothed_pd_trajectories(:,1,iTrial),smoothed_pd_trajectories(:,3,iTrial),smoothed_pd_trajectories(:,2,iTrial))
 %     hold on
 %     xlabel('x');ylabel('z');zlabel('y')
 %     
-%     figure(2)
+%     figure(5)
 %     for ii = 1 : 3
 %         subplot(3,1,ii)
 %         plot(smoothed_pd_trajectories(:,ii,iTrial))
@@ -76,20 +80,62 @@ for iTrial = 1 : numTrials
         
         % MCP first
         curTrajectory = squeeze(allTrajectories(all_paw_through_slot_frame(iTrial):all_endPtFrame(iTrial),:,mcp_idx(iDigit),iTrial));
-        smoothed_digit_trajectories(iDigit,:,:,iTrial) = smoothTrajectory(curTrajectory, num_digit_TrajectoryPoints);
+        truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_digits);
+        trajectory_test = ~isnan(truncated_trajectory(:,1));
+        if sum(trajectory_test) < 2   % either zero or one valid points in truncated_trajectory
+            smoothed_digit_trajectories(iDigit,:,:,iTrial) = NaN;
+        else
+            smoothed_digit_trajectories(iDigit,:,:,iTrial) = smoothTrajectory(truncated_trajectory, num_digit_TrajectoryPoints);
+        end
         
         % PIP next
         curTrajectory = squeeze(allTrajectories(all_paw_through_slot_frame(iTrial):all_endPtFrame(iTrial),:,pip_idx(iDigit),iTrial));
-        smoothed_digit_trajectories(iDigit+4,:,:,iTrial) = smoothTrajectory(curTrajectory, num_digit_TrajectoryPoints);
+        truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_digits);
+        trajectory_test = isnan(truncated_trajectory(:,1));
+        if sum(trajectory_test) < 2   % either zero or one valid points in truncated_trajectory
+            smoothed_digit_trajectories(iDigit,:,:,iTrial) = NaN;
+        else
+            smoothed_digit_trajectories(iDigit+4,:,:,iTrial) = smoothTrajectory(truncated_trajectory, num_digit_TrajectoryPoints);
+        end
         
         % digit tip last
         curTrajectory = squeeze(allTrajectories(all_paw_through_slot_frame(iTrial):all_endPtFrame(iTrial),:,digit_idx(iDigit),iTrial));
-        smoothed_digit_trajectories(iDigit+8,:,:,iTrial) = smoothTrajectory(curTrajectory, num_digit_TrajectoryPoints);
+        truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_digits);
+        trajectory_test = isnan(truncated_trajectory(:,1));
+        if sum(trajectory_test) < 2   % either zero or one valid points in truncated_trajectory
+            smoothed_digit_trajectories(iDigit,:,:,iTrial) = NaN;
+        else
+            smoothed_digit_trajectories(iDigit+8,:,:,iTrial) = smoothTrajectory(truncated_trajectory, num_digit_TrajectoryPoints);
+        end
         
+%         figure(2)
+%         plot3(smoothed_digit_trajectories(iDigit,:,1,iTrial),smoothed_digit_trajectories(iDigit,:,3,iTrial),smoothed_digit_trajectories(iDigit,:,2,iTrial));
+%         hold on
+%         
+%         
+%         figure(3)
+%         plot3(smoothed_digit_trajectories(iDigit+4,:,1,iTrial),smoothed_digit_trajectories(iDigit+4,:,3,iTrial),smoothed_digit_trajectories(iDigit+4,:,2,iTrial));
+%         hold on
+%         
+%         figure(4)
+%         plot3(smoothed_digit_trajectories(iDigit+8,:,1,iTrial),smoothed_digit_trajectories(iDigit+8,:,3,iTrial),smoothed_digit_trajectories(iDigit+8,:,2,iTrial));
+%         hold on
+%         
+
     end
+%     figure(2);
+%     scatter3(0,0,0,25,'k','o','markerfacecolor','k')
+%     xlabel('x');ylabel('z');zlabel('y')
+%     hold off
+%     figure(3);
+%     scatter3(0,0,0,25,'k','o','markerfacecolor','k')
+%     xlabel('x');ylabel('z');zlabel('y')
+%     hold off
+%     figure(4);
+%     scatter3(0,0,0,25,'k','o','markerfacecolor','k')
+%     xlabel('x');ylabel('z');zlabel('y')
+%     hold off
     
 end
-
-
 
 end

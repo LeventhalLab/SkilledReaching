@@ -3,7 +3,7 @@
 maxReprojError = 10;
 num_pd_TrajectoryPoints = 100;
 num_digit_TrajectoryPoints = 100;
-start_z_pawdorsum = 45;
+start_z_pawdorsum = 46;
 
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
@@ -41,7 +41,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1 : numRatFolders
+for i_rat = 4 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -68,7 +68,7 @@ for i_rat = 1 : numRatFolders
     sessionDirectories = dir([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 1 : numSessions
+    for iSession = 2 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name)
         
@@ -82,7 +82,11 @@ for i_rat = 1 : numRatFolders
                             % are in m/d/yy
         sessionDateNum = datenum(sessionDate,'yyyymmdd');
         % figure out index of reachScores array for this session
+        try
         sessionReachScores = reachScores(dateNums_from_scores_table == sessionDateNum).scores;
+        catch
+            keyboard
+        end
         
         % find the pawTrajectory files
         pawTrajectoryList = dir('R*3dtrajectory.mat');
@@ -121,6 +125,12 @@ for i_rat = 1 : numRatFolders
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
+            % occasionally there's a video that's too short - truncated
+            % during recording? maybe VI turned off in mid-recording?
+            % if that's the case, pad with false values
+            if size(isEstimate,2) < size(all_isEstimate,2)
+                isEstimate(:,end+1:size(all_isEstimate,2),:) = false;
+            end 
             all_isEstimate(:,:,:,iTrial) = isEstimate;
             C = textscan(pawTrajectoryList(iTrial).name, [ratID '_' sessionDate '_%d-%d-%d_%d_3dtrajectory.mat']); 
             trialNumbers(iTrial) = C{4};
@@ -130,6 +140,11 @@ for i_rat = 1 : numRatFolders
             
             invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
             invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
+            if size(invalid_direct,2) < size(invalid3Dpoints,2)
+                % make any points that aren't in a truncated video invalid
+                invalid_direct(:,end+1:size(invalid3Dpoints,2)) = true;
+                invalid_mirror(:,end+1:size(invalid3Dpoints,2)) = true;
+            end
             invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
             
             if ~isempty(initPellet3D)
@@ -139,6 +154,11 @@ for i_rat = 1 : numRatFolders
             end
             
             [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,invalid_direct,pawPref);
+            if length(mcpAngle) < size(all_mcpAngle,1)
+                mcpAngle(end+1:size(all_mcpAngle,1)) = 0;
+                pipAngle(end+1:size(all_pipAngle,1)) = 0;
+                digitAngle(end+1:size(all_digitAngle,1)) = 0;
+            end
             all_mcpAngle(:,iTrial) = mcpAngle;
             all_pipAngle(:,iTrial) = pipAngle;
             all_digitAngle(:,iTrial) = digitAngle;
@@ -174,6 +194,7 @@ for i_rat = 1 : numRatFolders
             
         for iTrial = 1 : numTrials
             if pelletMissingFlag(iTrial)
+                load(pawTrajectoryList(iTrial).name);
                 trajectory = trajectory_wrt_pellet(pawTrajectory, mean_initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
                 for i_bp = 1 : size(invalid3Dpoints,1)
                     for iFrame = 1 : size(invalid3Dpoints,2)
@@ -217,6 +238,7 @@ for i_rat = 1 : numRatFolders
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         
         save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
+            'smoothed_pd_trajectories','smoothed_digit_trajectories',...
             'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
             'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo');

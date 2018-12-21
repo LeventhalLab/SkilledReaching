@@ -22,11 +22,16 @@ step1 = zeros(size(rawTrajectory));
 % w = ones(numFrames,1);
 % w(isEstimate) = 0.2;
 for iDim = 1 : size(rawTrajectory,2)
+    try
     step1(:,iDim) = smooth(rawTrajectory(:,iDim),'rlowess');
+    catch
+        keyboard
+    end
 %     temp(:,iDim) = csaps(1:numFrames,rawTrajectory(:,iDim),[],1:numFrames,w);
 end
 
 smoothed_trajectory = evenlySpacedPointsAlongTrajectory(step1,numTrajectoryPoints);
+
 % temp2 = evenlySpacedPointsAlongTrajectory(temp,numTrajectoryPoints);
 
 % figure

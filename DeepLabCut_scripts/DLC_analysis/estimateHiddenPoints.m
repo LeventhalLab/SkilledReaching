@@ -189,7 +189,7 @@ for iFrame = 1 : numFrames
 end
 
 [final_directPawDorsum_pts, isPawDorsumEstimate] = ...
-    estimateDirectPawDorsum_from_ud_points(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
+    estimateDirectPawDorsum_from_ud_points(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
 final_direct_pts(direct_pawdorsum_idx,:,:) = final_directPawDorsum_pts;
 isEstimate(direct_pawdorsum_idx,:,1) = isPawDorsumEstimate;
 
@@ -277,7 +277,3 @@ else
 end
 
 end
-
-
-% WORKING HERE = FILL OUT THE NEAREST NEIGHBOR BITS TO PREVENT POINTS TOO
-% FAR FROM NEIGHBORING POINTS FROM BEING COUNTED
