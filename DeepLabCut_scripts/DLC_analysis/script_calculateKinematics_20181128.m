@@ -1,9 +1,18 @@
 % script_calculateKinematics_20181128
 
+% parameter for function trajectory_wrt_pellet:
 maxReprojError = 10;
+
+% parameters for function interpolateTrajectories
 num_pd_TrajectoryPoints = 100;
 num_digit_TrajectoryPoints = 100;
 start_z_pawdorsum = 46;
+
+% parameters for function findFirstPawDorsumFrames:
+min_consec_frames = 5;
+pThresh = 0.99; 
+max_consecutive_misses = 50;
+
 
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
@@ -68,7 +77,7 @@ for i_rat = 4 : numRatFolders
     sessionDirectories = dir([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 2 : numSessions
+    for iSession = 1 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name)
         
@@ -82,11 +91,8 @@ for i_rat = 4 : numRatFolders
                             % are in m/d/yy
         sessionDateNum = datenum(sessionDate,'yyyymmdd');
         % figure out index of reachScores array for this session
-        try
+
         sessionReachScores = reachScores(dateNums_from_scores_table == sessionDateNum).scores;
-        catch
-            keyboard
-        end
         
         % find the pawTrajectory files
         pawTrajectoryList = dir('R*3dtrajectory.mat');
@@ -164,7 +170,8 @@ for i_rat = 4 : numRatFolders
             all_digitAngle(:,iTrial) = digitAngle;
             
             paw_through_slot_frame = min(firstSlotBreak);
-            firstPawDorsumFrame = findFirstPawDorsumFrame(mirror_p,mirror_bp,paw_through_slot_frame,pawPref,0.99);
+            firstPawDorsumFrame = findFirstPawDorsumFrame(mirror_p,mirror_bp,paw_through_slot_frame,pawPref,...
+                'pthresh',pThresh,'min_consec_frames',min_consec_frames,'max_consecutive_misses',max_consecutive_misses);
             all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
             
 %             if isempty(firstPawDorsumFrame)
