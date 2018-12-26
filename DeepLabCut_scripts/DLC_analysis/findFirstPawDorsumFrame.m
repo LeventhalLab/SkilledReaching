@@ -1,14 +1,17 @@
-function firstPawDorsumFrame = findFirstPawDorsumFrame(mirror_p,mirror_bp,paw_through_slot_frame,pawPref,varargin)
+function firstPawDorsumFrame = findFirstPawDorsumFrame(pawDorsum_p,paw_z,paw_through_slot_frame,reproj_error,varargin)
 %
 % INPUTS
 %   trajectory - m x 3 x p array, where m is the number of frames, the
 %       second dimension is for x,y,z coordinates, and p is the number of
 %       bodyparts
-%   mirror_p
+%   paw_z
+%   pawDorsum_p
 
-pThresh = 0.99;   % minimum prob of finding the paw dorsum in the mirror view
+pThresh = 0.98;   % minimum prob of finding the paw dorsum in the mirror view
 min_consec_frames = 5;   % minimum number of consecutive frames in which the paw dorsum must be found in the mirror view
 max_consecutive_misses = 50;   % maximum number of consecutive frames for which there could be a gap where the paw isn't visible in the mirror view
+maxReprojError = 10;    % if paw dorsum found in both views, only count it if they are more or less on the same epipolar line
+slot_z = 200;
 
 for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
@@ -18,20 +21,34 @@ for iarg = 1 : 2 : nargin - 4
             min_consec_frames = varargin{iarg + 1};
         case 'max_consecutive_misses'
             max_consecutive_misses = varargin{iarg + 1};
+        case 'maxreprojerror'
+            maxReprojError = varargin{iarg + 1};
+        case 'slot_z'
+            slot_z = varargin{iarg + 1};
     end
 end
 
-[~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
+% [~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
+pawDorsum_p = pawDorsum_p(1:paw_through_slot_frame);
+paw_z = paw_z(1:paw_through_slot_frame);
+reproj_error = reproj_error(1:paw_through_slot_frame,:);
 
-pawDorsum_p = mirror_p(mirror_pawdorsum_idx,1:paw_through_slot_frame)';
-
+if isrow(pawDorsum_p)
+    pawDorsum_p = pawDorsum_p';
+end
+if isrow(paw_z)
+    paw_z = paw_z';
+end
 % find the first frame before the paw_through_slot_frame where mirror_p >
 % pThresh and a valid trajectory point was found (so there must have also
 % been at least some points found in the direct view), and this is true for
 % at least min_consec_frames frames in a row
 % valid3d = ~isnan(trajectory(1:paw_through_slot_frame,1,mirror_pawdorsum_idx));
 
-validPawDorsumIdx = pawDorsum_p > pThresh;% & valid3d;
+validPawDorsumIdx = (pawDorsum_p > pThresh) & ... % only accept points identified with high probability
+                    (paw_z > 200) & ...     % only accept points on the far side of the reaching slot
+                    (reproj_error(:,1) < maxReprojError) & ...   % only accept points that are near the epipolar line defined by the direct view observation (if present)
+                    (reproj_error(:,2) < maxReprojError);        % only accept points that are near the epipolar line defined by the direct view observation (if present)
 validPawDorsumBorders = findConsecutiveEntries(validPawDorsumIdx);
 if isempty(validPawDorsumBorders)
     firstPawDorsumFrame = paw_through_slot_frame;

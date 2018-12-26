@@ -56,7 +56,7 @@ xlabel('x');ylabel('y');zlabel('z')
 
 if plotAllTrajectories
     hold on
-    for ii = 18 : numValidTrials
+    for ii = 1 : numValidTrials
         if validTrials(ii)
             plot3(trajectories(:,1,validTrials(ii)),trajectories(:,2,validTrials(ii)),trajectories(:,3,validTrials(ii)))
         end

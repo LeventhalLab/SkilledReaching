@@ -13,7 +13,7 @@ min_consec_frames = 5;
 pThresh = 0.98; 
 max_consecutive_misses = 50;
 maxReprojError_pawDorsum = 10;    % if paw dorsum found in both views, only count it if they are more or less on the same epipolar line
-slot_z = 200;   % only count it if the paw dorsum was found on the far side of the reaching slot
+slot_z = 200;   % on
 
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location

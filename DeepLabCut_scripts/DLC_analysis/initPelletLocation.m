@@ -63,7 +63,7 @@ validPelletPts = initPelletPts(initPelletPts(:,1)~=0,:);
 if isempty(validPelletPts)
     initPellet3D = [];
 else
-    initPellet3D = mean(validPelletPts);
+    initPellet3D = mean(validPelletPts,1);
 end
 
 end

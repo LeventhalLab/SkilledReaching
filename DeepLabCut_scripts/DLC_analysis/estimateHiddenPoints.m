@@ -33,7 +33,11 @@ isEstimate = false(size(final_direct_pts,1),size(final_mirror_pts,2),2);
 numDigits = length(direct_mcp_idx);
 for iFrame = 1 : numFrames
     allDirectPts = squeeze(final_direct_pts(allDirectParts_idx,iFrame,:));
+    try
     allMirrorPts = squeeze(final_mirror_pts(allMirrorParts_idx,iFrame,:));
+    catch
+        keyboard
+    end
     
     validDirectPoints = allDirectPts(~invalid_direct(allDirectParts_idx,iFrame),:);
     validMirrorPoints = allMirrorPts(~invalid_mirror(allMirrorParts_idx,iFrame),:);
