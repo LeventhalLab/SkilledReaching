@@ -62,7 +62,7 @@ p_cutoff = 0.9;
 parts_to_show = 1 : length(bodyparts);
 
 DLC_isEstimateType = 'o';
-DLC_invalidMarkerType = 'square';
+DLC_invalidMarkerType = '*';
 DLC_highProbMarkerType = 'square';
 DLC_lowProbMarkerType = '+';
 DLC_reprojMarkerType = 'x';
@@ -213,7 +213,7 @@ end
 if makeKey
     textStr = cell(5,1);
     textStr{1} = sprintf('is marker estimate: %s', DLC_isEstimateType);
-%     textStr{2} = sprintf('invalid marker: %s', DLC_invalidMarkerType);
+    textStr{2} = sprintf('invalid marker: %s', DLC_invalidMarkerType);
     textStr{3} = sprintf('marker for p > %0.2f: %s', p_cutoff, DLC_highProbMarkerType);
     textStr{4} = sprintf('marker for p < %0.2f: %s', p_cutoff, DLC_lowProbMarkerType);
     textStr{5} = sprintf('reconstructed from 3D position: %s', DLC_reprojMarkerType);

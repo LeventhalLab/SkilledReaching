@@ -51,7 +51,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1 : numRatFolders
+for i_rat = 4 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -62,6 +62,12 @@ for i_rat = 1 : numRatFolders
     end
     thisRatInfo = ratInfo(ratInfo_idx,:);
     pawPref = thisRatInfo.pawPref;
+    if iscategorical(pawPref)
+        pawPref = char(pawPref);
+    end
+    if iscell(pawPref)
+        pawPref = pawPref{1};
+    end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     reachScoresFile = [ratID '_scores.csv'];

@@ -46,7 +46,7 @@ end
 % valid3d = ~isnan(trajectory(1:paw_through_slot_frame,1,mirror_pawdorsum_idx));
 
 validPawDorsumIdx = (pawDorsum_p > pThresh) & ... % only accept points identified with high probability
-                    (paw_z > 200) & ...     % only accept points on the far side of the reaching slot
+                    (paw_z > slot_z) & ...     % only accept points on the far side of the reaching slot
                     (reproj_error(:,1) < maxReprojError) & ...   % only accept points that are near the epipolar line defined by the direct view observation (if present)
                     (reproj_error(:,2) < maxReprojError);        % only accept points that are near the epipolar line defined by the direct view observation (if present)
 validPawDorsumBorders = findConsecutiveEntries(validPawDorsumIdx);
@@ -86,6 +86,14 @@ if isempty(streak_idx)
     return;
 end
 
-firstPawDorsumFrame = validPawDorsumBorders(streak_idx,1);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% change this so it takes the maximum z-value instead of the first
+% recognized point
+valid_z_idx = validPawDorsumBorders(streak_idx,1) : validPawDorsumBorders(streak_idx,2);
+max_z_idx = find(paw_z(valid_z_idx) == max(paw_z(valid_z_idx)),1);
+
+firstPawDorsumFrame = valid_z_idx(max_z_idx);
+
+% firstPawDorsumFrame = validPawDorsumBorders(streak_idx,1);
 
 end

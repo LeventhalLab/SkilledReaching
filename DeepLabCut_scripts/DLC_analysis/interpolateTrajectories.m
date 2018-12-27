@@ -53,7 +53,7 @@ smoothed_pd_trajectories = zeros(num_pd_TrajectoryPoints,3,numTrials);
 % end
 
 
-for iTrial = 22 : numTrials
+for iTrial = 1 : numTrials
     
     curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
 %     trialEstimate = squeeze(pdEstimates(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,iTrial));

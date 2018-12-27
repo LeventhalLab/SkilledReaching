@@ -26,12 +26,32 @@ for iarg = 1 : 2 : nargin - 6
     end
 end
 
-if nargin == 7
-    slot_z = varargin{1};
+[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
+
+% only look for paw coming through the slot after the paw has been
+% identified behind the front panel
+pawDorsum_z = pawTrajectory(:,3,pawDorsumIdx);
+pawDorsum_mirror_valid = ~invalid_mirror(pawDorsumIdx,:);
+pawDorsum_reproj_error = squeeze(reproj_error(pawDorsumIdx,:,:));
+
+if isrow(pawDorsum_z)
+    pawDorsum_z = pawDorsum_z';
+end
+if isrow(pawDorsum_mirror_valid)
+    pawDorsum_mirror_valid = pawDorsum_mirror_valid';
 end
 
-
-[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
+validPawDorsumIdx = (pawDorsum_mirror_valid) & ... % only accept points identified with high probability
+                    (pawDorsum_z > slot_z) & ...     % only accept points on the far side of the reaching slot
+                    (pawDorsum_reproj_error(:,1) < maxReprojError) & ...   % only accept points that are near the epipolar line defined by the direct view observation (if present)
+                    (pawDorsum_reproj_error(:,2) < maxReprojError);   
+firstValidPawDorsum = find(validPawDorsumIdx,1);
+if isempty(firstValidPawDorsum)
+    firstValidPawDorsum = 1;
+end
+pastValidDorsum = false(size(validPawDorsumIdx));
+pastValidDorsum(firstValidPawDorsum:end) = true;
+                
 numPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
 pawPartsList = cell(1,numPawParts);
 curPartIdx = 0;
@@ -75,11 +95,12 @@ end
 firstSlotBreak = NaN(numPawParts,1);
 
 % assume that one of the digit tips has to be the first visible paw part
-% through the slot
+% through the slot, but only after the paw dorsum has been found behing the
+% slot
 for iDigit = 1 : length(digIdx)
     
     temp = z_coords(:,digIdx(iDigit));
-    tempFrame = temp < slot_z;
+    tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot
     through_slot_borders = findConsecutiveEntries(tempFrame);
     if isempty(through_slot_borders)
         continue;
@@ -105,7 +126,7 @@ for iPart = 1 : numPawParts
         temp = z_coords(:,iPart);
     %     temp(temp == 0) = NaN;
     %     tempFrame = find(temp < slot_z,1,'first');
-        tempFrame = temp < slot_z & paw_through_slot_mask;   % only take frames where a digit tip is already through the slot
+        tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot
         through_slot_borders = findConsecutiveEntries(tempFrame);
         if isempty(through_slot_borders)
             continue;
