@@ -1,7 +1,26 @@
 % script_summaryDLCstatistics
 x_lim = [-30 10];
-y_lim = [-10 10];
+y_lim = [-15 10];
 z_lim = [-5 50];
+
+% REACHING SCORES:
+%
+% 0 - No pellet, mechanical failure
+% 1 -  First trial success (obtained pellet on initial limb advance)
+% 2 -  Success (obtain pellet, but not on first attempt)
+% 3 -  Forelimb advance -pellet dropped in box
+% 4 -  Forelimb advance -pellet knocked off shelf
+% 5 -  Obtain pellet with tongue
+% 6 -  Walk away without forelimb advance, no forelimb advance
+% 7 -  Reached, pellet remains on shelf
+% 8 - Used only contralateral paw
+% 9 - Laser fired at the wrong time
+% 10 ?Used preferred paw after obtaining or moving pellet with tongue
+
+trialTypeColors = {'k','k','b','r','g'};
+validTrialTypes = {0:10,0,1,2,[3,4,7]};
+validTypeNames = {'all','no pellet','1st reach success','any reach success','failed reach'};
+numTrialTypes_to_analyze = length(validTrialTypes);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up the figures for each type of plot
@@ -24,11 +43,11 @@ mean_p_figProps.leftMargin = 2.54;
 mean_p_timeLimits = [-0.5,2];
 
 % 3D trajectories for individual trials, and mean trajectories
-trajectory_figProps.m = 4;
+trajectory_figProps.m = 5;
 trajectory_figProps.n = 4;
 
 trajectory_figProps.panelWidth = ones(trajectory_figProps.n,1) * 10;
-trajectory_figProps.panelHeight = ones(trajectory_figProps.m,1) * 5;
+trajectory_figProps.panelHeight = ones(trajectory_figProps.m,1) * 4;
 
 trajectory_figProps.colSpacing = ones(trajectory_figProps.n-1,1) * 0.5;
 trajectory_figProps.rowSpacing = ones(trajectory_figProps.m-1,1) * 1;
@@ -84,15 +103,14 @@ bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
-ratInfo = readtable(csvfname);
-ratInfo = cleanUpRatTable(ratInfo);
+ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
 
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : numRatFolders
+for i_rat = 4 : 5%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -126,25 +144,28 @@ for i_rat = 4 : numRatFolders
     numSessions = length(sessionDirectories);
     
     numSessionPages = 0;
-    pdf_baseName_sessionTrials = [ratID '_3dtrajectories_smoothed'];
+%     pdf_baseName_sessionTrials = [ratID '_3dtrajectories_smoothed'];
     for iSession = 1 : numSessions
         
-        [session_rowNum, numSessionPages] = getRow(iSession, trajectory_figProps.m);
-        if session_rowNum == 1
+%         [session_rowNum, numSessionPages] = getRow(iSession, trajectory_figProps.m);
+%         if session_rowNum == 1
             [session_h_fig,session_h_axes] = createFigPanels5(trajectory_figProps);
             session_h_figAxis = createFigAxes(session_h_fig);
             currentSessionList = {};
-        end
+%         end
         currentSessionList{session_rowNum} = sessionDirectories{iSession};
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
-        sessionDate = C{1};
+        sessionDateString = C{1};
+        sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
+        
+        sessionType = determineSessionType(thisRatInfo, sessionDate);
     
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
         cd(fullSessionDir);
         
-        sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
-        
+        sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
+             
         try
             load(sessionSummaryName);
         catch
@@ -158,6 +179,10 @@ for i_rat = 4 : numRatFolders
             pawPref = pawPref{1};
         end
         
+        trialTypeIdx = false(length(all_trialOutcomes),numTrialTypes_to_analyze);
+        for iType = 1 : numTrialTypes_to_analyze
+            trialTypeIdx(:,iType) = extractTrialTypes(all_trialOutcomes,validTrialTypes{iType});
+        end
         matList = dir([ratID '_*_3dtrajectory.mat']);
 %         numTrials = length(matList);
         numTrials = size(allTrajectories,4);
@@ -176,63 +201,83 @@ for i_rat = 4 : numRatFolders
 %         trajectory_h_fig = zeros(num_bp,1);
 %         trajectory_h_axes = zeros(trajectory_figProps.m,trajectory_figProps.n,3);
         
-        pdf_baseName_indTrials = [sessionDirectories{iSession} '_singleTrials_smoothed'];
+        pdf_baseName_indTrials = [sessionDirectories{iSession} '_singleTrials_normalized'];
 
         [mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_idx] = group_DLC_bodyparts(bodyparts,pawPref);
-        mean_pd_trajectory = mean(smoothed_pd_trajectories,3);
 
+        mean_pd_trajectory = zeros(size(normalized_pd_trajectories,1),size(normalized_pd_trajectories,2),numTrialTypes_to_analyze);
+        for iType = 1 : numTrialTypes_to_analyze
+            mean_pd_trajectory(:,:,iType) = mean(normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)),3);
+        end
+        if iSession == 1
+            mean_pd_trajectories = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),size(mean_pd_trajectory,3),numSessions);
+        end
+        mean_pd_trajectories(:,:,:,iSession) = mean_pd_trajectory;
         
-        for iDim = 1 : 3
-            axes(session_h_axes(session_rowNum,iDim))
-            plot(mean_pd_trajectory(:,iDim),'linewidth',2,'color','k');
-            hold on
-            for iTrial = 1 : numTrials
-                plot(smoothed_pd_trajectories(:,iDim,iTrial));
-            end
-            if session_rowNum == 1
+        for iType = 1 : numTrialTypes_to_analyze
+            for iDim = 1 : 3
+                axes(session_h_axes(iType,iDim))
+                plot(mean_pd_trajectory(:,iDim,iType),'linewidth',2,'color','k');
+                hold on
+                for iTrial = 1 : numTrials
+                    if trialTypeIdx(iTrial,iType)
+                        plot(normalized_pd_trajectories(:,iDim,iTrial));
+                    end
+                end
+                if session_rowNum == 1
+                    switch iDim
+                        case 1
+                            title('x')
+                        case 2
+                            title('y')
+                        case 3
+                            title('z')
+                    end
+                end
                 switch iDim
                     case 1
-                        title('x')
+                        set(gca,'ylim',x_lim)
                     case 2
-                        title('y')
+                        set(gca,'ylim',y_lim,'ydir','reverse')
                     case 3
-                        title('z')
+                        set(gca,'ylim',z_lim)
                 end
             end
-            switch iDim
-                case 1
-                    set(gca,'ylim',x_lim)
-                case 2
-                    set(gca,'ylim',y_lim)
-                case 3
-                    set(gca,'ylim',z_lim)
-            end
-        end
-        
-        axes(session_h_axes(session_rowNum,4))
-        plot3(mean_pd_trajectory(:,1),mean_pd_trajectory(:,3),mean_pd_trajectory(:,2),'linewidth',2,'color','k');
-        hold on
-        for iTrial = 1 : numTrials
-            plot3(smoothed_pd_trajectories(:,1,iTrial),smoothed_pd_trajectories(:,3,iTrial),smoothed_pd_trajectories(:,2,iTrial))
-        end
-        
-        scatter3(0,0,0,25,'k','o','markerfacecolor','k')
-        set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
-            'view',[-70,30])
-        xlabel('x');ylabel('z');zlabel('y');
 
-        if (session_rowNum == trajectory_figProps.m) || iSession == numSessions
-            textString{1} = 'all trial 3D trajectories';
-            textString{2} = sprintf('sessions: %s', currentSessionList{1});
-            for ii = 2 : length(currentSessionList)
-                textString{2} = sprintf('%s, %d', textString{2}, currentSessionList{ii});
+            axes(session_h_axes(iType,4))
+            plot3(mean_pd_trajectory(:,1,iType),mean_pd_trajectory(:,3,iType),mean_pd_trajectory(:,2,iType),'linewidth',2,'color','k');
+            hold on
+            for iTrial = 1 : numTrials
+                if trialTypeIdx(iTrial,iType)
+                    plot3(normalized_pd_trajectories(:,1,iTrial),normalized_pd_trajectories(:,3,iTrial),normalized_pd_trajectories(:,2,iTrial))
+                end
+            end
+
+            scatter3(0,0,0,25,'k','o','markerfacecolor','k')
+            set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
+                'view',[-70,30])
+            xlabel('x');ylabel('z');zlabel('y');
+        end
+            textString = {};
+%         if (session_rowNum == trajectory_figProps.m) || iSession == numSessions
+try
+            textString{1} = sprintf('%s all trial 3D trajectories; %s, day %d, %d days left in block', ...
+                sessionDirectories{iSession}, sessionType.type, sessionType.daysInBlock, sessionType.daysUntilBlockEnd);
+catch
+    keyboard
+end
+            textString{2} = sprintf('trial types: %s', validTypeNames{1});
+            for ii = 2 : length(validTypeNames)
+                textString{2} = sprintf('%s, %s', textString{2}, validTypeNames{ii});
             end
             axes(session_h_figAxis);
-            text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.5,textString,'units','centimeters');
-            pdfName_sessionTrials = sprintf('%s_%02d.pdf',pdf_baseName_sessionTrials,numSessionPages);
+            text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.5,textString,'units','centimeters','interpreter','none');
+%             pdfName_sessionTrials = sprintf('%s_%02d.pdf',pdf_baseName_sessionTrials,iSession);
+            pdfName_sessionTrials = sprintf('%s_3dtrajectories_summary.pdf',sessionDirectories{iSession});
+            pdfName_sessionTrials = fullfile(ratRootFolder,pdfName_sessionTrials);
             print(session_h_fig,pdfName_sessionTrials,'-dpdf');
             close(session_h_fig);
-        end
+%         end
             
         for iTrial = 1 : numTrials
             
@@ -250,14 +295,23 @@ for i_rat = 4 : numRatFolders
             
             currentTrialList(trial_rowNum) = trialNumbers(iTrial);
             curTrajectories = squeeze(allTrajectories(:,:,:,iTrial));
-            cur_smoothed_trajectory = squeeze(smoothed_pd_trajectories(:,:,iTrial));
+            cur_normalized_trajectory = squeeze(normalized_pd_trajectories(:,:,iTrial));
             
             firstPt = all_firstPawDorsumFrame(iTrial);
             lastPt = all_endPtFrame(iTrial);
             
+            for iType = 2 : numTrialTypes_to_analyze
+                if trialTypeIdx(iTrial,iType)
+                    plotColor = trialTypeColors{iType};
+                    break;
+                else
+                    plotColor = 'y';   % if not one of the trials we defined at the top of the script
+                end
+            end
+                        
             for iDim = 1 : 3
                 axes(trajectory_h_axes(trial_rowNum,iDim))
-                plot(cur_smoothed_trajectory(:,iDim));
+                plot(cur_normalized_trajectory(:,iDim),'color',plotColor);
                 hold on
                 plot(mean_pd_trajectory(:,iDim),'linewidth',2,'color','k');
                 if trial_rowNum == 1
@@ -274,29 +328,34 @@ for i_rat = 4 : numRatFolders
                     case 1
                         set(gca,'ylim',x_lim)
                     case 2
-                        set(gca,'ylim',y_lim)
+                        set(gca,'ylim',y_lim,'ydir','reverse')
                     case 3
                         set(gca,'ylim',z_lim)
                 end
             end
             axes(trajectory_h_axes(trial_rowNum,4))
-            plot3(cur_smoothed_trajectory(:,1),cur_smoothed_trajectory(:,3),cur_smoothed_trajectory(:,2))
+            plot3(cur_normalized_trajectory(:,1),cur_normalized_trajectory(:,3),cur_normalized_trajectory(:,2),'color',plotColor);
             hold on
-            plot3(mean_pd_trajectory(:,1),mean_pd_trajectory(:,3),mean_pd_trajectory(:,2),'linewidth',2,'color','k');
+            plot3(mean_pd_trajectory(:,1,1),mean_pd_trajectory(:,3,1),mean_pd_trajectory(:,2,1),'linewidth',2,'color','k');
             scatter3(0,0,0,25,'k','o','markerfacecolor','k')
             set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
                 'view',[-70,30])
             xlabel('x');ylabel('z');zlabel('y');
             
             if (trial_rowNum == trajectory_figProps.m)|| iTrial == numTrials
-                textString{1} = sprintf('%s individual trial 3D trajectories', sessionDirectories{iSession});
+                textString{1} = sprintf('%s individual trial 3D trajectories; %s, day %d, %d days left in block', ...
+                    sessionDirectories{iSession}, sessionType.type, sessionType.daysInBlock, sessionType.daysUntilBlockEnd);
                 textString{2} = sprintf('trial numbers: %d', currentTrialList(1));
                 for ii = 2 : length(currentTrialList)
                     textString{2} = sprintf('%s, %d', textString{2}, currentTrialList(ii));
                 end
+                textString{3} = sprintf('color indicators: %s - %s',trialTypeColors{1},validTypeNames{1});
+                for ii = 2 : length(currentTrialList)
+                    textString{3} = sprintf('%s, %s - %s', textString{3},trialTypeColors{ii},validTypeNames{ii});
+                end
                 axes(trajectory_h_figAxis);
-                text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.5,textString,'units','centimeters');
-                pdfName_indTrials = sprintf('%s_%02d.pdf',pdf_baseName_indTrials,numTrialPages);
+                text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
+                pdfName_indTrials = sprintf('%s_%02d_normalized.pdf',pdf_baseName_indTrials,numTrialPages);
                 print(trajectory_h_fig,pdfName_indTrials,'-dpdf');
                 close(trajectory_h_fig);
             end

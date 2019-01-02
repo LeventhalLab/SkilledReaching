@@ -116,14 +116,15 @@ end
     
 % now come up with an overall endpoint frame
 % first choice is the latest frame for one of the digit tips to reach its furthest extension
-endPtFrame = max(partEndPtFrame(digIdx));
+% exclude the first digit, which is often obscured
+endPtFrame = max(partEndPtFrame(digIdx(2:4)));
 % second choice is the most advanced pip frame
 if isnan(endPtFrame)
-    endPtFrame = max(partEndPtFrame(pipIdx));
+    endPtFrame = max(partEndPtFrame(pipIdx(2:4)));
 end
 % third choice is the most advanced pip frame
 if isnan(endPtFrame)
-    endPtFrame = max(partEndPtFrame(mcpIdx));
+    endPtFrame = max(partEndPtFrame(mcpIdx(2:4)));
 end
 % last choice is paw dorsum
 if isnan(endPtFrame)

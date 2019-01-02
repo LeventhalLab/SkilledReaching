@@ -7,7 +7,6 @@ maxReprojError = 10;
 num_pd_TrajectoryPoints = 100;
 num_digit_TrajectoryPoints = 100;
 start_z_pawdorsum = 46;
-smoothWindow = 3;
 
 % parameters for function findFirstPawDorsumFrames:
 min_consec_frames = 5;
@@ -57,7 +56,7 @@ xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Shee
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
 csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
 ratInfo = readRatInfoTable(csvfname);
-% ratInfo = cleanUpRatTable(ratInfo);
+ratInfo = cleanUpRatTable(ratInfo);
 
 ratInfo_IDs = [ratInfo.ratID];
 
@@ -267,17 +266,13 @@ for i_rat = 4 : 5%numRatFolders
 
         allTrajectories(allTrajectories == 0) = NaN;
         
-        [normalized_pd_trajectories,smoothed_pd_trajectories,interp_pd_trajectories,normalized_digit_trajectories,smoothed_digit_trajectories,interp_digit_trajectories] = ...
-            interpolateTrajectories(allTrajectories,pawPartsList,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,pawPref,...
-            'num_pd_TrajectoryPoints',num_pd_TrajectoryPoints,'num_digit_TrajectoryPoints',num_digit_TrajectoryPoints,'start_z_pawdorsum',start_z_pawdorsum,'smoothwindow',smoothWindow);
+        [smoothed_pd_trajectories,smoothed_digit_trajectories] = interpolateTrajectories(allTrajectories,pawPartsList,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,pawPref,...
+            'num_pd_TrajectoryPoints',num_pd_TrajectoryPoints,'num_digit_TrajectoryPoints',num_digit_TrajectoryPoints,'start_z_pawdorsum',start_z_pawdorsum);
 
-        
         sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
         
         save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
-            'normalized_pd_trajectories','normalized_digit_trajectories',...
             'smoothed_pd_trajectories','smoothed_digit_trajectories',...
-            'interp_pd_trajectories','interp_digit_trajectories',...
             'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
             'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo');

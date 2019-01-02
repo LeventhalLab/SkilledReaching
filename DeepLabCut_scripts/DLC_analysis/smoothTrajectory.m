@@ -1,4 +1,4 @@
-function smoothed_trajectory = smoothTrajectory(rawTrajectory,varargin)
+function [normalized_trajectory,interp_trajectory,smoothed_trajectory] = smoothTrajectory(rawTrajectory,varargin)
 % function smoothed_trajectory = smoothTrajectory(rawTrajectory,trialEstimate,varargin)
 %
 % INPUTS
@@ -8,15 +8,22 @@ function smoothed_trajectory = smoothTrajectory(rawTrajectory,varargin)
 %
 %
 
+smoothWindow = 3;
 numTrajectoryPoints = 100;
 
-if nargin > 1
-    numTrajectoryPoints = varargin{1};
+for iarg = 1 : 2 : nargin - 1
+    switch lower(varargin{iarg})
+        case 'numtrajectorypoints'
+            numTrajectoryPoints = varargin{iarg + 1};
+        case 'smoothwindow'
+            smoothWindow = varargin{iarg + 1};
+    end
 end
 
 % step1 = zeros(size(rawTrajectory));
 % spline_interp = zeros(size(rawTrajectory));
-pchip_interp = zeros(size(rawTrajectory));
+interp_trajectory = zeros(size(rawTrajectory));
+smoothed_trajectory = zeros(size(rawTrajectory));
 num_x = size(rawTrajectory,1);
 % temp = zeros(size(rawTrajectory));
 % numFrames = size(rawTrajectory,1);
@@ -28,14 +35,15 @@ for iDim = 1 : size(rawTrajectory,2)
     try
 %     step1(:,iDim) = smooth(rawTrajectory(:,iDim),'rlowess');
 %     spline_interp(:,iDim) = spline(1:num_x,rawTrajectory(:,iDim),1:num_x);
-    pchip_interp(:,iDim) = pchip(1:num_x,rawTrajectory(:,iDim),1:num_x);
+    interp_trajectory(:,iDim) = pchip(1:num_x,rawTrajectory(:,iDim),1:num_x);
+    smoothed_trajectory(:,iDim) = smooth(interp_trajectory(:,iDim),smoothWindow);
     catch
         keyboard
     end
 %     temp(:,iDim) = csaps(1:numFrames,rawTrajectory(:,iDim),[],1:numFrames,w);
 end
 
-smoothed_trajectory = evenlySpacedPointsAlongTrajectory(pchip_interp,numTrajectoryPoints);
+normalized_trajectory = evenlySpacedPointsAlongTrajectory(interp_trajectory,numTrajectoryPoints);
 
 % temp2 = evenlySpacedPointsAlongTrajectory(temp,numTrajectoryPoints);
 

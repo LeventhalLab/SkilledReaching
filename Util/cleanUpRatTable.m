@@ -34,13 +34,24 @@ for iField = 1 : length(categoricalFields)
     
 end
 
-for iField = 1 : size(ratTable_in,2)
+% for iField = 1 : size(ratTable_in,2)
+%     
+%     fieldName = ratTable_in.Properties.VariableNames{iField};
+%     
+%     if isdatetime(ratTable_in.(fieldName))
+%         
+%        ratTable_out.(fieldName).Year(ratTable_in.(fieldName).Year < 100) = ...
+%            ratTable_in.(fieldName).Year(ratTable_in.(fieldName).Year < 100) + 2000;
+%     end
+% end
+
+for iCol = 1 : size(ratTable_in,2)
     
-    fieldName = ratTable_in.Properties.VariableNames{iField};
-    
-    if isdatetime(ratTable_in.(fieldName))
+    if isdatetime(ratTable_in{:,iCol})
         
-       ratTable_out.(fieldName).Year(ratTable_in.(fieldName).Year < 100) = ...
-           ratTable_in.(fieldName).Year(ratTable_in.(fieldName).Year < 100) + 2000;
+        ratTable_out{:,iCol}.Year(ratTable_in{:,iCol}.Year < 100) = ...
+            ratTable_in{:,iCol}.Year(ratTable_in{:,iCol}.Year < 100) + 2000;
+        
     end
+    
 end
