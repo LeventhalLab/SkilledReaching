@@ -153,7 +153,7 @@ for i_rat = 4 : 5%numRatFolders
             session_h_figAxis = createFigAxes(session_h_fig);
             currentSessionList = {};
 %         end
-        currentSessionList{session_rowNum} = sessionDirectories{iSession};
+%         currentSessionList{session_rowNum} = sessionDirectories{iSession};
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDateString = C{1};
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
@@ -194,8 +194,8 @@ for i_rat = 4 : 5%numRatFolders
 %         end
         numFrames = size(allTrajectories, 1);
         t = linspace(frameTimeLimits(1),frameTimeLimits(2), numFrames);
-        all_p_direct = zeros(size(direct_p,1),size(direct_p,2),numTrials);
-        all_p_mirror = zeros(size(mirror_p,1),size(mirror_p,2),numTrials);
+%         all_p_direct = zeros(size(direct_p,1),size(direct_p,2),numTrials);
+%         all_p_mirror = zeros(size(mirror_p,1),size(mirror_p,2),numTrials);
         
 %         trajectory_h_figAxis = zeros(num_bp,1);
 %         trajectory_h_fig = zeros(num_bp,1);
@@ -207,7 +207,7 @@ for i_rat = 4 : 5%numRatFolders
 
         mean_pd_trajectory = zeros(size(normalized_pd_trajectories,1),size(normalized_pd_trajectories,2),numTrialTypes_to_analyze);
         for iType = 1 : numTrialTypes_to_analyze
-            mean_pd_trajectory(:,:,iType) = mean(normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)),3);
+            mean_pd_trajectory(:,:,iType) = nanmean(normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)),3);
         end
         if iSession == 1
             mean_pd_trajectories = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),size(mean_pd_trajectory,3),numSessions);
@@ -224,7 +224,7 @@ for i_rat = 4 : 5%numRatFolders
                         plot(normalized_pd_trajectories(:,iDim,iTrial));
                     end
                 end
-                if session_rowNum == 1
+                if iType == 1
                     switch iDim
                         case 1
                             title('x')

@@ -80,7 +80,7 @@ for i_rat = 1 : numRatFolders
     if i_rat == 4
         startSession = 2;
     else
-        startSession = 1;
+        startSession = 2;
     end
     for iSession = startSession : 2 : numSessions
         

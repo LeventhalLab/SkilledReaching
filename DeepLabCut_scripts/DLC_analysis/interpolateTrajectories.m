@@ -64,6 +64,15 @@ normalized_pd_trajectories = zeros(num_pd_TrajectoryPoints,3,numTrials);
 
 for iTrial = 1 : numTrials
     
+    if all_firstPawDorsumFrame(iTrial) == all_paw_through_slot_frame(iTrial)
+        % couldn't find the paw dorsum behind the reaching slot prior to
+        % the paw breaking through the slot
+        normalized_pd_trajectories(:,:,iTrial) = NaN;
+        smoothed_pd_trajectories{iTrial} = NaN;
+        interp_pd_trajectories{iTrial} = NaN;
+        continue;
+    end
+        
     curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
 %     trialEstimate = squeeze(pdEstimates(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,iTrial));
     truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_pawdorsum);
@@ -104,7 +113,7 @@ for iTrial = 1 : numTrials
         % PIP next
         curTrajectory = squeeze(allTrajectories(all_paw_through_slot_frame(iTrial):all_endPtFrame(iTrial),:,pip_idx(iDigit),iTrial));
         truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_digits);
-        trajectory_test = isnan(truncated_trajectory(:,1));
+        trajectory_test = ~isnan(truncated_trajectory(:,1));
         if sum(trajectory_test) < 2   % either zero or one valid points in truncated_trajectory
             normalized_digit_trajectories(iDigit+4,:,:,iTrial) = NaN;
             smoothed_digit_trajectories{iTrial,iDigit+4} = NaN;
@@ -117,7 +126,7 @@ for iTrial = 1 : numTrials
         % digit tip last
         curTrajectory = squeeze(allTrajectories(all_paw_through_slot_frame(iTrial):all_endPtFrame(iTrial),:,digit_idx(iDigit),iTrial));
         truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_digits);
-        trajectory_test = isnan(truncated_trajectory(:,1));
+        trajectory_test = ~isnan(truncated_trajectory(:,1));
         if sum(trajectory_test) < 2   % either zero or one valid points in truncated_trajectory
             normalized_digit_trajectories(iDigit+8,:,:,iTrial) = NaN;
             smoothed_digit_trajectories{iTrial,iDigit+8} = NaN;

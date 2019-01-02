@@ -43,7 +43,7 @@ for iDim = 1 : size(rawTrajectory,2)
 %     temp(:,iDim) = csaps(1:numFrames,rawTrajectory(:,iDim),[],1:numFrames,w);
 end
 
-normalized_trajectory = evenlySpacedPointsAlongTrajectory(interp_trajectory,numTrajectoryPoints);
+normalized_trajectory = evenlySpacedPointsAlongTrajectory(smoothed_trajectory,numTrajectoryPoints);
 
 % temp2 = evenlySpacedPointsAlongTrajectory(temp,numTrajectoryPoints);
 
@@ -66,4 +66,3 @@ normalized_trajectory = evenlySpacedPointsAlongTrajectory(interp_trajectory,numT
 
 % MAYBE THERE'S SOME FANCY STUFF STILL TO DO FOR INTERPOLATING...WE'LL SEE
 end
-
