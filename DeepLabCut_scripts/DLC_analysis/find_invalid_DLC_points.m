@@ -19,8 +19,8 @@ function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, 
 %       distance (in pixels) that a point moved on each frame
 
 maxDistPerFrame = 30;
-min_valid_p = 0.8;
-min_certain_p = 0.95;
+min_valid_p = 0.85;
+min_certain_p = 0.96;
 %maxNeighborSeparation = 30;   % to be used to make sure points that should
 %be near each other are near each other
 

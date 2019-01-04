@@ -1,4 +1,4 @@
-function reachScores = readReachScores(fname)
+function reachScores = readReachScores(fname, varargin)
 %
 % INPUTS
 %   fname - name of .csv file containing reach scores for each session
@@ -6,7 +6,7 @@ function reachScores = readReachScores(fname)
 % OUTPUTS
 %   reachScores - structure array with an entry for each test session with
 %       the following fields:
-%           .date - session date as a string
+%           .date - session date as a datetime object
 %           .scores - score for each reach
 
 % REACHING SCORES:
@@ -23,6 +23,15 @@ function reachScores = readReachScores(fname)
 % 9 - Laser fired at the wrong time
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
 
+csvDateFormat = 'MM/dd/yyyy';
+for iarg = 1 : 2 : nargin - 1
+    switch lower(varargin{iarg})
+        case 'csvdateformat'
+            csvDateFormat = varargin{iarg + 1};
+    end
+end
+
+
 scoresTable = readtable(fname);
 
 numValidSessions = 0;
@@ -38,7 +47,19 @@ for iCol = 2 : numCols
      end
      numValidSessions = numValidSessions + 1;
      
-     reachScores(numValidSessions).date = temp{1};
+     sessionDate = temp{1};
+     if ~isdatetime(sessionDate)
+         if ischar(sessionDate)
+             sessionDate = datetime(sessionDate,'inputformat',csvDateFormat);
+         else
+             sessionDate = NaT;
+         end
+     end
+     if sessionDate.Year < 100
+         sessionDate.Year = sessionDate.Year + 2000;
+     end
+
+     reachScores(numValidSessions).date = sessionDate;
      
      temp = table2cell(scoresTable(3:end,iCol));
      reachScores(numValidSessions).scores = NaN(length(temp),1);
@@ -47,6 +68,5 @@ for iCol = 2 : numCols
      end
      
 end
-
 
 end    % function

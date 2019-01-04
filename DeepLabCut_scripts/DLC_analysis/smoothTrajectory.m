@@ -2,7 +2,8 @@ function [normalized_trajectory,interp_trajectory,smoothed_trajectory] = smoothT
 % function smoothed_trajectory = smoothTrajectory(rawTrajectory,trialEstimate,varargin)
 %
 % INPUTS
-%   rawTrajectory - 
+%   rawTrajectory - m x 3 array where each row m is the number of frames 
+%       and each row is an (x,y,z) triple
 %
 % OUTPUTS
 %
@@ -22,6 +23,18 @@ end
 
 % step1 = zeros(size(rawTrajectory));
 % spline_interp = zeros(size(rawTrajectory));
+
+% clip rawTrajectory to remove any NaN's from the beginning or end of the
+% trajectory. This can be a problem especially for trials where the paw
+% doesn't completely break through the reaching slot.
+if isnan(rawTrajectory(1,1))
+    firstValidFrame = find(~isnan(rawTrajectory(:,1)),1);
+    rawTrajectory = rawTrajectory(firstValidFrame:end,:);
+end
+if isnan(rawTrajectory(end,1))
+    lastValidFrame = find(~isnan(rawTrajectory(:,1)),1,'last');
+    rawTrajectory = rawTrajectory(1:lastValidFrame,:);
+end
 interp_trajectory = zeros(size(rawTrajectory));
 smoothed_trajectory = zeros(size(rawTrajectory));
 num_x = size(rawTrajectory,1);
@@ -32,14 +45,10 @@ num_x = size(rawTrajectory,1);
 % w = ones(numFrames,1);
 % w(isEstimate) = 0.2;
 for iDim = 1 : size(rawTrajectory,2)
-    try
 %     step1(:,iDim) = smooth(rawTrajectory(:,iDim),'rlowess');
 %     spline_interp(:,iDim) = spline(1:num_x,rawTrajectory(:,iDim),1:num_x);
     interp_trajectory(:,iDim) = pchip(1:num_x,rawTrajectory(:,iDim),1:num_x);
     smoothed_trajectory(:,iDim) = smooth(interp_trajectory(:,iDim),smoothWindow);
-    catch
-        keyboard
-    end
 %     temp(:,iDim) = csaps(1:numFrames,rawTrajectory(:,iDim),[],1:numFrames,w);
 end
 

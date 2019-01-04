@@ -3,6 +3,8 @@ x_lim = [-30 10];
 y_lim = [-15 10];
 z_lim = [-5 50];
 
+skipTrialPlots = false;
+
 % REACHING SCORES:
 %
 % 0 - No pellet, mechanical failure
@@ -132,6 +134,10 @@ for i_rat = 4 : 5%numRatFolders
     end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    reachScoresFile = [ratID '_scores.csv'];
+    reachScoresFile = fullfile(ratRootFolder,reachScoresFile);
+    reachScores = readReachScores(reachScoresFile);
+    allSessionDates = [reachScores.date]';
     
     cd(ratRootFolder);
     DLCstatsFolder = fullfile(ratRootFolder,[ratID '_DLCstats']);
@@ -145,6 +151,7 @@ for i_rat = 4 : 5%numRatFolders
     
     numSessionPages = 0;
 %     pdf_baseName_sessionTrials = [ratID '_3dtrajectories_smoothed'];
+    sessionType = determineSessionType(thisRatInfo, allSessionDates);
     for iSession = 1 : numSessions
         
 %         [session_rowNum, numSessionPages] = getRow(iSession, trajectory_figProps.m);
@@ -157,11 +164,10 @@ for i_rat = 4 : 5%numRatFolders
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDateString = C{1};
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
-        
-        sessionType = determineSessionType(thisRatInfo, sessionDate);
     
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        allSessionIdx = find(sessionDate == allSessionDates);
         
+        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         cd(fullSessionDir);
         
         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
@@ -184,22 +190,10 @@ for i_rat = 4 : 5%numRatFolders
             trialTypeIdx(:,iType) = extractTrialTypes(all_trialOutcomes,validTrialTypes{iType});
         end
         matList = dir([ratID '_*_3dtrajectory.mat']);
-%         numTrials = length(matList);
+
         numTrials = size(allTrajectories,4);
-%         load(matList(1).name);
-%         try
-%         load(matList(1).name);
-%         catch
-%             keyboard
-%         end
         numFrames = size(allTrajectories, 1);
         t = linspace(frameTimeLimits(1),frameTimeLimits(2), numFrames);
-%         all_p_direct = zeros(size(direct_p,1),size(direct_p,2),numTrials);
-%         all_p_mirror = zeros(size(mirror_p,1),size(mirror_p,2),numTrials);
-        
-%         trajectory_h_figAxis = zeros(num_bp,1);
-%         trajectory_h_fig = zeros(num_bp,1);
-%         trajectory_h_axes = zeros(trajectory_figProps.m,trajectory_figProps.n,3);
         
         pdf_baseName_indTrials = [sessionDirectories{iSession} '_singleTrials_normalized'];
 
@@ -260,18 +254,14 @@ for i_rat = 4 : 5%numRatFolders
         end
             textString = {};
 %         if (session_rowNum == trajectory_figProps.m) || iSession == numSessions
-try
             textString{1} = sprintf('%s all trial 3D trajectories; %s, day %d, %d days left in block', ...
-                sessionDirectories{iSession}, sessionType.type, sessionType.daysInBlock, sessionType.daysUntilBlockEnd);
-catch
-    keyboard
-end
+                sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock);
             textString{2} = sprintf('trial types: %s', validTypeNames{1});
             for ii = 2 : length(validTypeNames)
                 textString{2} = sprintf('%s, %s', textString{2}, validTypeNames{ii});
             end
             axes(session_h_figAxis);
-            text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.5,textString,'units','centimeters','interpreter','none');
+            text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
 %             pdfName_sessionTrials = sprintf('%s_%02d.pdf',pdf_baseName_sessionTrials,iSession);
             pdfName_sessionTrials = sprintf('%s_3dtrajectories_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionTrials = fullfile(ratRootFolder,pdfName_sessionTrials);
@@ -279,6 +269,7 @@ end
             close(session_h_fig);
 %         end
             
+if ~skipTrialPlots
         for iTrial = 1 : numTrials
             
 %             load(matList(iTrial).name);
@@ -344,7 +335,7 @@ end
             
             if (trial_rowNum == trajectory_figProps.m)|| iTrial == numTrials
                 textString{1} = sprintf('%s individual trial 3D trajectories; %s, day %d, %d days left in block', ...
-                    sessionDirectories{iSession}, sessionType.type, sessionType.daysInBlock, sessionType.daysUntilBlockEnd);
+                    sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock);
                 textString{2} = sprintf('trial numbers: %d', currentTrialList(1));
                 for ii = 2 : length(currentTrialList)
                     textString{2} = sprintf('%s, %d', textString{2}, currentTrialList(ii));
@@ -360,6 +351,8 @@ end
                 close(trajectory_h_fig);
             end
         end
+        
+end
             
             
             % include trial outcomes in the plots

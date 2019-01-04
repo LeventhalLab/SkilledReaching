@@ -91,7 +91,8 @@ for i_rat = 4 : 5%numRatFolders
     numTableSessions = length(reachScores);
     dateNums_from_scores_table = zeros(numTableSessions,1);
     for iSession = 1 : numTableSessions
-        dateNums_from_scores_table(iSession) = datenum(reachScores(iSession).date,'mm/dd/yy');
+        dateNums_from_scores_table(iSession) = datenum(reachScores(iSession).date);
+%         dateNums_from_scores_table(iSession) = datenum(reachScores(iSession).date,'mm/dd/yy');
     end
         
     cd(ratRootFolder);
