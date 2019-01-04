@@ -16,6 +16,10 @@ max_consecutive_misses = 50;
 maxReprojError_pawDorsum = 10;    % if paw dorsum found in both views, only count it if they are more or less on the same epipolar line
 slot_z = 200;   % only count it if the paw dorsum was found on the far side of the reaching slot
 
+% parameters for findReachEndpoint
+smoothSize = 3;
+slot_z_wrt_pellet = 25;
+
 % REACHING SCORES:
 %
 % 0 - No pellet, mechanical failure
@@ -65,7 +69,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : 5%numRatFolders
+for i_rat = 5 : 6%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -99,7 +103,7 @@ for i_rat = 4 : 5%numRatFolders
     sessionDirectories = dir([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 1 : numSessions
+    for iSession = 13 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name)
         
@@ -253,9 +257,10 @@ for i_rat = 4 : 5%numRatFolders
             a = pawVelocity(v,frameRate);
             all_a(:,:,:,iTrial) = a;
             
-            
+            % DEBUGGING HERE
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList,] = ...
-                findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)));
+                findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
+                'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet);
             all_endPts(:,:,iTrial) = partEndPts;
             all_partEndPtFrame (:,iTrial) = partEndPtFrame;
             all_endPtFrame(iTrial) = endPtFrame;

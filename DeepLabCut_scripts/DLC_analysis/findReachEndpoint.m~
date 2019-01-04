@@ -96,11 +96,11 @@ localMins = islocalmin(z_smooth, 1);
 % find the first time the paw moves behind the slot after paw_through_slot_frame
 paw_behind_slot_frames = find(pawDorsum_z > slot_z);
 first_paw_return = paw_behind_slot_frames(paw_behind_slot_frames > paw_through_slot_frame);
-if isempty(first_paw_return)
-    first_paw_return = numFrames;
-else
-    first_paw_return = first_paw_return(1);
-end
+% if isempty(first_paw_return)
+%     first_paw_return = numFrames;
+% else
+%     first_paw_return = first_paw_return(1);
+% end
 triggerFrame = min(paw_through_slot_frame,video_triggerFrame); % probably not necessary
 partEndPts = zeros(numPawParts,3);
 partEndPtFrame = zeros(numPawParts,1);
@@ -108,9 +108,6 @@ for iPart = 1 : numPawParts
     
     if any(localMins(triggerFrame+1:end,iPart))
         partEndPtFrame(iPart) = triggerFrame + find(localMins(triggerFrame+1:end,iPart),1);
-        if partEndPtFrame(iPart) > first_paw_return
-            partEndPtFrame(iPart) = first_paw_return;
-        end
         partEndPts(iPart,:) = squeeze(xyz_coords(partEndPtFrame(iPart),:,iPart));
     end
     if all(partEndPts(iPart,:) == 0)

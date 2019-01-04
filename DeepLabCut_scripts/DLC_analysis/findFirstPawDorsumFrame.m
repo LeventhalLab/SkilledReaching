@@ -77,7 +77,7 @@ if isempty(validPawDorsumBorders)
 end
 
 streakLengths = validPawDorsumBorders(:,2) - validPawDorsumBorders(:,1) + 1;
-streak_idx = find(streakLengths > min_consec_frames,1);
+streak_idx = find(streakLengths >= min_consec_frames,1);
 
 if isempty(streak_idx)
     % this could happen if there aren't enough consecutive frames with a

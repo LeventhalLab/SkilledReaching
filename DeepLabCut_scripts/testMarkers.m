@@ -18,8 +18,8 @@ ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
 i_rat = 4;
-iSession = 18;
-iVid = 17;
+iSession = 22;
+iVid = 1;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));
@@ -74,7 +74,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 343;
+iFrame = 279;
 
 %%
 while hasFrame(vidIn)

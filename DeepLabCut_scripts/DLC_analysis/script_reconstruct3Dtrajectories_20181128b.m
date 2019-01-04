@@ -2,8 +2,15 @@
 
 slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
-maxDistFromNeighbor = 60;   % maximum distance an estimated point can be from its neighbor
+
+% parameter for calc3D_DLC_trajectory_20181204
+maxDistFromNeighbor = 40;   % maximum distance an estimated point can be from its neighbor
 maxReprojError = 10;
+
+% parameters for find_invalid_DLC_points
+maxDistPerFrame = 30;
+min_valid_p = 0.85;
+min_certain_p = 0.96;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
@@ -48,7 +55,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 1 : numRatFolders
+for i_rat = 4 : numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -82,7 +89,7 @@ for i_rat = 1 : numRatFolders
     else
         startSession = 2;
     end
-    for iSession = startSession : 2 : numSessions
+    for iSession = startSession : 3 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -214,8 +221,10 @@ for i_rat = 1 : numRatFolders
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
             end
     
-            [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
-            [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
+            [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p,...
+                'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p);
+            [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,...
+                'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p);
                                   
             direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams,~invalid_direct);
             mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams,~invalid_mirror);
@@ -224,7 +233,8 @@ for i_rat = 1 : numRatFolders
                 calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
-                                      vidROI, boxCal, pawPref, frameSize);
+                                      vidROI, boxCal, pawPref, frameSize,...
+                                      'maxdistfromneighbor',maxDistFromNeighbor);
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal, pawPref);
             
