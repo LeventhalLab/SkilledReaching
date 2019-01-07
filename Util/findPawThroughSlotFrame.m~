@@ -121,8 +121,8 @@ for iDigit = 1 : length(digIdx)
 end
     
 paw_through_slot_frame = min(firstSlotBreak);
-% paw_through_slot_mask = false(size(z_coords,1),1);
-% paw_through_slot_mask(paw_through_slot_frame:end) = true;
+paw_through_slot_mask = false(size(z_coords,1),1);
+paw_through_slot_mask(paw_through_slot_frame:end) = true;
 
 for iPart = 1 : numPawParts
     

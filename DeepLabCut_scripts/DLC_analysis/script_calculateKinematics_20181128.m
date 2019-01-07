@@ -69,7 +69,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 5 : 6%numRatFolders
+for i_rat = 4 : 6%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -103,7 +103,7 @@ for i_rat = 5 : 6%numRatFolders
     sessionDirectories = dir([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    for iSession = 13 : numSessions
+    for iSession = 1 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name)
         
