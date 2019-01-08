@@ -6,8 +6,11 @@ if nargin == 2
     num_pts_out = varargin{1};
 end
 
-
-pl = pathlength(trajectory);
+try
+    pl = pathlength(trajectory);
+catch
+    keyboard
+end
 dist_per_pt = pl / (num_pts_out-1);
 
 pts_out = zeros(num_pts_out,size(trajectory,2));
