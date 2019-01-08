@@ -1,5 +1,8 @@
 % script_collectReachEndPoints
 
+pelletSize = 25;
+meanEndPtSize = 15;
+
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
@@ -43,16 +46,15 @@ for i_rat = 4 : numRatFolders
     reachEndPts = cell(numSessions,1);
     mean_endPts = NaN(numSessions, 3);
     covar_endPts = NaN(numSessions, 3, 3);
+    
     for iSession = 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
     
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
-        
         cd(fullSessionDir);
-        
-        sessionSummaryName = [ratID '_' sessionDate '_kinematicsSummary.mat'];
+        sessionSummaryName = fullfile(fullSessionDir,[ratID '_' sessionDate '_kinematicsSummary.mat']);
         
         load(sessionSummaryName);
         
@@ -86,17 +88,27 @@ for i_rat = 4 : numRatFolders
         covar_endPts(iSession,:,:) = cov(reachEndPts{iSession}(~isnan(reachEndPts{iSession}(:,1)),:));
     end
     
-    figure
-    scatter3(0,0,0,25,'k','o','markerfacecolor','k')
-    hold on
-    scatter3(reachEndPts{1}(:,1),reachEndPts{1}(:,3),reachEndPts{1}(:,2),2,'b','.');
-    scatter3(nanmean(reachEndPts{1}(:,1)),nanmean(reachEndPts{1}(:,3)),nanmean(reachEndPts{1}(:,2)),10,'b','+');
+    % individual session plots
+%     figure
+%     scatter3(0,0,0,25,'k','o','markerfacecolor','k')
+%     hold on
+%     scatter3(reachEndPts{1}(:,1),reachEndPts{1}(:,3),reachEndPts{1}(:,2),2,'b','.');
+%     scatter3(nanmean(reachEndPts{1}(:,1)),nanmean(reachEndPts{1}(:,3)),nanmean(reachEndPts{1}(:,2)),10,'b','+');
+%     
+%     scatter3(reachEndPts{3}(:,1),reachEndPts{3}(:,3),reachEndPts{3}(:,2),2,'r','.');
+%     scatter3(nanmean(reachEndPts{3}(:,1)),nanmean(reachEndPts{3}(:,3)),nanmean(reachEndPts{3}(:,2)),10,'r','+');
+%     set(gca,'zdir','reverse');
+%     xlabel('x');ylabel('z');zlabel('y')
+%     set(gcf,'name',ratID);
     
-    scatter3(reachEndPts{3}(:,1),reachEndPts{3}(:,3),reachEndPts{3}(:,2),2,'r','.');
-    scatter3(nanmean(reachEndPts{3}(:,1)),nanmean(reachEndPts{3}(:,3)),nanmean(reachEndPts{3}(:,2)),10,'r','+');
-    set(gca,'zdir','reverse');
+    figure;
+    scatter3(0,0,0,pelletSize,'k','o','markerfacecolor','k')
+    hold on
+    scatter3(mean_endPts(1:2,1),mean_endPts(1:2,3),mean_endPts(1:2,2),meanEndPtSize,'k','+','markerfacecolor','k')
+    scatter3(mean_endPts(3:12,1),mean_endPts(3:12,3),mean_endPts(3:12,2),meanEndPtSize,'b','+','markerfacecolor','k')
+    scatter3(mean_endPts(13:22,1),mean_endPts(13:22,3),mean_endPts(13:22,2),meanEndPtSize,'r','+','markerfacecolor','k')
+    set(gca,'zdir','reverse','ydir','reverse');
     xlabel('x');ylabel('z');zlabel('y')
     set(gcf,'name',ratID);
-        
         
 end

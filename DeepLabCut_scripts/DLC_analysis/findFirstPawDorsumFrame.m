@@ -7,6 +7,11 @@ function firstPawDorsumFrame = findFirstPawDorsumFrame(pawDorsum_p,paw_z,paw_thr
 %   paw_z
 %   pawDorsum_p
 
+if isnan(paw_through_slot_frame)
+    firstPawDorsumFrame = NaN;
+    return;
+end
+
 pThresh = 0.98;   % minimum prob of finding the paw dorsum in the mirror view
 min_consec_frames = 5;   % minimum number of consecutive frames in which the paw dorsum must be found in the mirror view
 max_consecutive_misses = 50;   % maximum number of consecutive frames for which there could be a gap where the paw isn't visible in the mirror view

@@ -206,7 +206,6 @@ for i_rat = 6 : 6%numRatFolders
         end
         
         [h_summaryFig,h_summaryAxes] = plotSessionSummary(trialTypeIdx,mean_pd_trajectory,normalized_pd_trajectories,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames);
-        h_summary_figAxis = createFigAxes(h_summaryFig);
         
         if iSession == 1
             mean_pd_trajectories = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),size(mean_pd_trajectory,3),numSessions);
@@ -274,18 +273,9 @@ for i_rat = 6 : 6%numRatFolders
             close(session_h_fig);
             
             textString = {};
-            textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block', ...
-                sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock);
-            textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
-            textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
-            axes(h_summary_figAxis);
-            text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
             
-            pdfName_sessionSummary = sprintf('%s_3dtrajectories_summary.pdf',sessionDirectories{iSession});
-            pdfName_sessionSummary = fullfile(ratRootFolder,pdfName_sessionSummary);
-            print(h_summaryFig,pdfName_sessionSummary,'-dpdf');
             close(h_summaryFig);
-            
+            [h_summaryFig,h_summaryAxes]
 %         end
             
 if ~skipTrialPlots
