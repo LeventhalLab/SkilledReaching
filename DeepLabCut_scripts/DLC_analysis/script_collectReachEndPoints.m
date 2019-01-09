@@ -3,6 +3,10 @@
 pelletSize = 25;
 meanEndPtSize = 15;
 
+x_lim = [-30 10];
+y_lim = [-15 10];
+z_lim = [-5 20];
+
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
@@ -15,7 +19,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : numRatFolders
+for i_rat = 4 : 4%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -37,6 +41,10 @@ for i_rat = 4 : numRatFolders
     end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    reachScoresFile = [ratID '_scores.csv'];
+    reachScoresFile = fullfile(ratRootFolder,reachScoresFile);
+    reachScores = readReachScores(reachScoresFile);
+    allSessionDates = [reachScores.date]';
     
     cd(ratRootFolder);
     
@@ -47,14 +55,46 @@ for i_rat = 4 : numRatFolders
     mean_endPts = NaN(numSessions, 3);
     covar_endPts = NaN(numSessions, 3, 3);
     
+    sessionType = determineSessionType(thisRatInfo, allSessionDates);
+    sessionDates = cell(1,numSessions);
+    
+    figure;
+    scatter3(0,0,0,pelletSize,'k','o','markerfacecolor','k')
+    hold on
+    
     for iSession = 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
-        sessionDate = C{1};
+        sessionDateString = C{1};
     
+        sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
+        sessionDates{iSession} = sessionDate;
+        
+        allSessionIdx = find(sessionDates{iSession} == allSessionDates);
+        curSessionType = sessionType(allSessionIdx).type;
+        sessionsLeftInBlock = sessionType(allSessionIdx).sessionsLeftInBlock;
+        switch curSessionType
+            case 'training'
+                plotRow = 1;
+                plot_colmap = colormap(gray);
+%                 plotColor = [0,0,0];
+            case 'laser_during'
+                plotRow = 2;
+                plot_colmap = colormap(winter);
+%                 plotColor = [0,0,1];
+            case 'laser_between'
+                plotRow = 2;
+                plot_colmap = colormap(winter);
+%                 plotColor = [0,0,1];
+            case 'occlusion'
+                plotRow = 3;
+                plot_colmap = colormap(autumn);
+%                 plotColor = [1,0,0];
+        end
+        plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         cd(fullSessionDir);
-        sessionSummaryName = fullfile(fullSessionDir,[ratID '_' sessionDate '_kinematicsSummary.mat']);
+        sessionSummaryName = fullfile(fullSessionDir,[ratID '_' sessionDateString '_kinematicsSummary.mat']);
         
         load(sessionSummaryName);
         
@@ -86,6 +126,11 @@ for i_rat = 4 : numRatFolders
         end
         mean_endPts(iSession,:) = nanmean(reachEndPts{iSession},1);
         covar_endPts(iSession,:,:) = cov(reachEndPts{iSession}(~isnan(reachEndPts{iSession}(:,1)),:));
+        
+        scatter3(mean_endPts(iSession,1),mean_endPts(iSession,3),mean_endPts(iSession,2),meanEndPtSize,plotColor,'+','markerfacecolor',plotColor)
+%         scatter3(mean_endPts(3:12,1),mean_endPts(3:12,3),mean_endPts(3:12,2),meanEndPtSize,plotColor,'+','markerfacecolor',plotColor)
+%         scatter3(mean_endPts(13:22,1),mean_endPts(13:22,3),mean_endPts(13:22,2),meanEndPtSize,plotColor,'+','markerfacecolor',plotColor)
+    
     end
     
     % individual session plots
@@ -101,13 +146,8 @@ for i_rat = 4 : numRatFolders
 %     xlabel('x');ylabel('z');zlabel('y')
 %     set(gcf,'name',ratID);
     
-    figure;
-    scatter3(0,0,0,pelletSize,'k','o','markerfacecolor','k')
-    hold on
-    scatter3(mean_endPts(1:2,1),mean_endPts(1:2,3),mean_endPts(1:2,2),meanEndPtSize,'k','+','markerfacecolor','k')
-    scatter3(mean_endPts(3:12,1),mean_endPts(3:12,3),mean_endPts(3:12,2),meanEndPtSize,'b','+','markerfacecolor','k')
-    scatter3(mean_endPts(13:22,1),mean_endPts(13:22,3),mean_endPts(13:22,2),meanEndPtSize,'r','+','markerfacecolor','k')
-    set(gca,'zdir','reverse','ydir','reverse');
+    set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
+        'view',[-70,30])
     xlabel('x');ylabel('z');zlabel('y')
     set(gcf,'name',ratID);
         

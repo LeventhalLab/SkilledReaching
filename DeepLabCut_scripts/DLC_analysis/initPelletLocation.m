@@ -28,6 +28,14 @@ function initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,tri
 %       (e.g., the first entry should be negative if the first frame is
 %       before the trigger event)
 
+if isnan(triggerFrame)
+    % this can happen if the paw is already through the slot at the start
+    % of the video becuase the findPawThroughSlotFrame function looks for
+    % the first time the paw breaks through the slot after the paw dorsum
+    % is found behind the slot
+    initPellet3D = [];
+    return;
+end
 
 time_to_average_prior_to_reach = 0.1;
 

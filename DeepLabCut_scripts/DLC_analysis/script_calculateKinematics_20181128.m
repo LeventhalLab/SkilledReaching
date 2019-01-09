@@ -136,8 +136,8 @@ for i_rat = 4 : 5%numRatFolders
         
         load(pawTrajectoryList(1).name);
         
-        all_v = zeros(size(pawTrajectory,1)-1,3,size(pawTrajectory,3),numTrials);
-        all_a = zeros(size(pawTrajectory,1)-2,3,size(pawTrajectory,3),numTrials);
+%         all_v = zeros(size(pawTrajectory,1)-1,3,size(pawTrajectory,3),numTrials);
+%         all_a = zeros(size(pawTrajectory,1)-2,3,size(pawTrajectory,3),numTrials);
 %         all_dist_from_pellet = zeros(size(pawTrajectory,1),size(pawTrajectory,3),numTrials);
         all_mcpAngle = zeros(size(pawTrajectory,1),numTrials);
         all_pipAngle = zeros(size(pawTrajectory,1),numTrials);
@@ -201,10 +201,18 @@ for i_rat = 4 : 5%numRatFolders
             all_pipAngle(:,iTrial) = pipAngle;
             all_digitAngle(:,iTrial) = digitAngle;
             
-            paw_through_slot_frame = min(firstSlotBreak);
-            
             [~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
-            [~,~,~,pawdorsum_idx,~,~,~] = group_DLC_bodyparts(bodyparts,pawPref);
+%             [~,~,~,pawdorsum_idx,~,~,~] = group_DLC_bodyparts(bodyparts,pawPref);
+            [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
+            
+            paw_through_slot_frame = min(firstSlotBreak(digIdx));
+            if isnan(paw_through_slot_frame)
+                paw_through_slot_frame = min(firstSlotBreak(pipIdx));
+            end
+            if isnan(paw_through_slot_frame)
+                paw_through_slot_frame = min(firstSlotBreak(mcpIdx));
+            end
+
             pawDorsum_p = squeeze(mirror_p(mirror_pawdorsum_idx,:));
             paw_z = squeeze(pawTrajectory(:,3,pawdorsum_idx));
             pawDorsum_reproj_error = squeeze(reproj_error(pawdorsum_idx,:,:));
@@ -256,12 +264,12 @@ for i_rat = 4 : 5%numRatFolders
             end
             
             % should velocity be calculated based on smoothed position?
-            v = pawVelocity(trajectory,frameRate);
-            all_v(:,:,:,iTrial) = v;
+%             v = pawVelocity(trajectory,frameRate);
+%             all_v(:,:,:,iTrial) = v;
             
             % should acceleration be calculated based on smoothed velocity?
-            a = pawVelocity(v,frameRate);
-            all_a(:,:,:,iTrial) = a;
+%             a = pawVelocity(v,frameRate);
+%             all_a(:,:,:,iTrial) = a;
             
             % DEBUGGING HERE
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList,] = ...
@@ -272,7 +280,7 @@ for i_rat = 4 : 5%numRatFolders
             all_endPtFrame(iTrial) = endPtFrame;
             
             save(pawTrajectoryList(iTrial).name,'trajectory',...
-                'v','a','mcpAngle','pipAngle','digitAngle','partEndPts',...
+                'mcpAngle','pipAngle','digitAngle','partEndPts',...
                 'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
                 'firstPawDorsumFrame','trialOutcome','-append');
         end
@@ -286,14 +294,15 @@ for i_rat = 4 : 5%numRatFolders
             keyboard
         end
         
+        [all_paw_xyz_v,all_paw_tangential_v] = calculatePawVelocity(smoothed_pd_trajectories,frameRate);
         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
         thisSessionType = sessionType(allSessionIdx);
         
-        save(sessionSummaryName,'bodyparts','allTrajectories','all_v',...
+        save(sessionSummaryName,'bodyparts','allTrajectories','all_paw_xyz_v','all_paw_tangential_v',...
             'normalized_pd_trajectories','normalized_digit_trajectories',...
             'smoothed_pd_trajectories','smoothed_digit_trajectories',...
             'interp_pd_trajectories','interp_digit_trajectories',...
-            'all_a','all_mcpAngle','all_pipAngle','all_digitAngle',...
+            'all_mcpAngle','all_pipAngle','all_digitAngle',...
             'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo','thisSessionType');
         
