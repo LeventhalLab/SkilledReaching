@@ -14,7 +14,7 @@ min_consec_frames = 5;
 pThresh = 0.98; 
 max_consecutive_misses = 50;
 maxReprojError_pawDorsum = 10;    % if paw dorsum found in both views, only count it if they are more or less on the same epipolar line
-slot_z = 200;   % only count it if the paw dorsum was found on the far side of the reaching slot
+% slot_z = 200;   % only count it if the paw dorsum was found on the far side of the reaching slot
 
 % parameters for findReachEndpoint
 smoothSize = 3;
@@ -34,7 +34,8 @@ slot_z_wrt_pellet = 25;
 % 9 - Laser fired at the wrong time
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
 
-% time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
+% parameter for initPelletLocation
+time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
 % calculate the following kinematic parameters:
 % 1. max velocity
@@ -160,6 +161,12 @@ for i_rat = 4 : 5%numRatFolders
         trialNumbers = zeros(numTrials,1);
         
         invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
+        
+        slot_z = find_slot_z(fullSessionDir);
+        if slot_z < 160 || slot_z > 210
+            keyboard
+        end
+        
         for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
@@ -205,6 +212,10 @@ for i_rat = 4 : 5%numRatFolders
 %             [~,~,~,pawdorsum_idx,~,~,~] = group_DLC_bodyparts(bodyparts,pawPref);
             [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
             
+            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
+                'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
+
             paw_through_slot_frame = min(firstSlotBreak(digIdx));
             if isnan(paw_through_slot_frame)
                 paw_through_slot_frame = min(firstSlotBreak(pipIdx));
@@ -282,7 +293,8 @@ for i_rat = 4 : 5%numRatFolders
             save(pawTrajectoryList(iTrial).name,'trajectory',...
                 'mcpAngle','pipAngle','digitAngle','partEndPts',...
                 'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
-                'firstPawDorsumFrame','trialOutcome','-append');
+                'firstPawDorsumFrame','trialOutcome','paw_through_slot_frame',...
+                'initPellet3D','-append');
         end
 
         allTrajectories(allTrajectories == 0) = NaN;
@@ -304,7 +316,7 @@ for i_rat = 4 : 5%numRatFolders
             'interp_pd_trajectories','interp_digit_trajectories',...
             'all_mcpAngle','all_pipAngle','all_digitAngle',...
             'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
-            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo','thisSessionType');
+            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo','thisSessionType','slot_z');
         
     end
     

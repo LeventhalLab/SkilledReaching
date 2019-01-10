@@ -58,17 +58,9 @@ set(gca,'ylim',pawFrameLim);
 % histogram of paw dorsum endpoints
 [mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_idx] = group_DLC_bodyparts(bodyparts,pawPref);
 axes(h_axes(1,4));
-pd_endPts_z = squeeze(all_endPts(pawdorsum_idx,3,:));
-histogram(pd_endPts_z,10)
-title('paw dorsum z-endpoints')
-set(gca,'xdir','reverse');
-
+pd_endPts = 
 % histogram of second digit endpoints
 axes(h_axes(1,5));
-digit_endPts_z = squeeze(all_endPts(digit_idx(2),3,:));
-histogram(digit_endPts_z,10)
-title('2nd digit z-endpoints')
-set(gca,'xdir','reverse');
 
 mean_dist_from_trajectory = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),numTrialTypes_to_analyze);
 mean_euc_dist_from_trajectory = zeros(size(mean_pd_trajectory,1),numTrialTypes_to_analyze);

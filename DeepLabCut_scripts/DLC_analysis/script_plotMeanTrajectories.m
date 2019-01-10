@@ -104,7 +104,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : 4%numRatFolders
+for i_rat = 4 : 5%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -199,7 +199,7 @@ for i_rat = 4 : 4%numRatFolders
             mean_pd_trajectory(:,:,iType) = nanmean(normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)),3);
         end
         
-        [h_summaryFig,h_summaryAxes] = plotSessionSummary(trialTypeIdx,mean_pd_trajectory,normalized_pd_trajectories,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,...
+        [h_summaryFig,h_summaryAxes] = plotSessionSummary(trialTypeIdx,mean_pd_trajectory,normalized_pd_trajectories,all_endPts,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,...
             'var_lim',var_lim,'pawframelim',pawFrameLim);
         h_summary_figAxis = createFigAxes(h_summaryFig);
         

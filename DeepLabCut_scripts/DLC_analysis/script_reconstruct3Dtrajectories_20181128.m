@@ -1,7 +1,7 @@
 % script to perform 3D reconstruction on videos
 
-slot_z = 200;    % distance from camera of slot in mm. hard coded for now
-time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
+% slot_z = 200;    % distance from camera of slot in mm. hard coded for now
+% time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
 % parameter for calc3D_DLC_trajectory_20181204
 maxDistFromNeighbor = 40;   % maximum distance an estimated point can be from its neighbor
@@ -55,7 +55,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 5 : numRatFolders
+for i_rat = 6 : numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -84,8 +84,8 @@ for i_rat = 5 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 5
-        startSession = 18;
+    if i_rat == 6
+        startSession = 1;
     else
         startSession = 1;
     end
@@ -141,6 +141,10 @@ for i_rat = 5 : numRatFolders
         
         cd(directViewDir);
         direct_csvList = dir('R*.csv');
+        if isempty(direct_csvList)
+            continue;
+        end
+        
         numMarkedVids = length(direct_csvList);
         % ratID, date, etc. for each individual video
         directVidTime = cell(1, numMarkedVids);
@@ -238,15 +242,16 @@ for i_rat = 5 : numRatFolders
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal, pawPref);
             
-            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
-            initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
-                'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
+%             [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+%             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
+%                 'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
             cd(fullSessionDir)
             
 %             if exist(trajName,'file')
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
-                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
+%                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
+                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid');
 %             end
             
         end
@@ -257,7 +262,8 @@ end
 % USE REPROJECTION ERROR TO INVALIDATE POINTS BEFORE ESTIMATING HIDDEN
 % LOCATION
 
-
+% WORK ON PAW DORSUM RECONSTRUCTION IN DIRECT VIEW - SOMETIMES WOBBLES...
+% SEE RAT 187, SESSION 1, VID 1 AROUND FRAME 265 (I THINK)
 
 
 % RUN script_calculateKinematics 
