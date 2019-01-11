@@ -103,10 +103,13 @@ for iFrame = 1 : numFrames
             epiPts = lineToBorderPoints(epiLine, frameSize);
             epiPts = [epiPts(1:2);epiPts(3:4)];
 
-            if size(digitPts,1) == numel(digitPts)
-                % if digitPts is a column vector, convert to row vector
+            if iscolumn(digitPts)
                 digitPts = digitPts';
             end
+%             if size(digitPts,1) == numel(digitPts)
+%                 % if digitPts is a column vector, convert to row vector
+%                 digitPts = digitPts';
+%             end
                     
             % find index of digitPts that is closest to the epipolar line
             [nndist, nnidx] = findNearestPointToLine(epiPts, digitPts);

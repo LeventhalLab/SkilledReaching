@@ -448,6 +448,11 @@ end
         plot3(toPlot(:,1),toPlot(:,3),toPlot(:,2),'color',plotColor);
         hold on
         
+        % in the last row, plot final reach z, final distance from pellet
+        % for each session
+        axes(ratSummary_h_axes(5,1))
+        title('final mean dist from pellet')
+        
     end
     for i_plotRow = 1 : 4
         axes(ratSummary_h_axes(i_plotRow,4))

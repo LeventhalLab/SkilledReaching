@@ -74,7 +74,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 287;
+iFrame = 299;
 
 %%
 while hasFrame(vidIn)
@@ -112,7 +112,7 @@ while hasFrame(vidIn)
 
 %                 writeVideo(vidOut,curFrame_out);
 
-dkeyboard
+keyboard
     iFrame = iFrame + 1; 
     
 end

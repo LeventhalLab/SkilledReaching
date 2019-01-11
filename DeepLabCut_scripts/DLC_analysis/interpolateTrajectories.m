@@ -73,13 +73,21 @@ for iTrial = 1 : numTrials
         interp_pd_trajectories{iTrial} = NaN;
         continue;
     end
+    try
     curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
+    catch
+        keyboard
+    end
 
 %     trialEstimate = squeeze(pdEstimates(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,iTrial));
     truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_pawdorsum);
     
+    try
     [normalized_pd_trajectories(:,:,iTrial),smoothed_pd_trajectories{iTrial},interp_pd_trajectories{iTrial}] = ...
         smoothTrajectory(truncated_trajectory, 'numtrajectorypoints', num_pd_TrajectoryPoints,'smoothwindow',smoothWindow);
+    catch
+        keyboard
+    end
 
 %     figure(1)
 %     plot3(smoothed_pd_trajectories(:,1,iTrial),smoothed_pd_trajectories(:,3,iTrial),smoothed_pd_trajectories(:,2,iTrial))
