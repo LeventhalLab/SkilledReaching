@@ -41,11 +41,8 @@ if isrow(pawDorsum_mirror_valid)
     pawDorsum_mirror_valid = pawDorsum_mirror_valid';
 end
 
-% truncate pawDorsum_mirror_valid, which has the same number of points as
-% most of the videos. However, sometimes a video recording gets cut off,
-% and pawDorsum_z will not have as many points
-numFramesInThisVideo = size(pawDorsum_z,1);
-validPawDorsumIdx = (pawDorsum_mirror_valid(1:numFramesInThisVideo)) & ... % only accept points identified with high probability
+% truncate 
+validPawDorsumIdx = (pawDorsum_mirror_valid) & ... % only accept points identified with high probability
                     (pawDorsum_z > slot_z) & ...     % only accept points on the far side of the reaching slot
                     (pawDorsum_reproj_error(:,1) < maxReprojError) & ...   % only accept points that are near the epipolar line defined by the direct view observation (if present)
                     (pawDorsum_reproj_error(:,2) < maxReprojError);   
@@ -89,8 +86,8 @@ for iPart = 1 : numPawParts
     invalid_reproj = part_reproj_error(:,1) > maxReprojError | ...
                      part_reproj_error(:,2) > maxReprojError;
 
-    z_coords(invalid_direct(iPart,1:numFramesInThisVideo),iPart) = NaN;
-    z_coords(invalid_mirror(iPart,1:numFramesInThisVideo),iPart) = NaN;
+    z_coords(invalid_direct(iPart,:),iPart) = NaN;
+    z_coords(invalid_mirror(iPart,:),iPart) = NaN;
     z_coords(invalid_reproj,iPart) = NaN;
 end
 % z_coords(z_coords == 0) = NaN;

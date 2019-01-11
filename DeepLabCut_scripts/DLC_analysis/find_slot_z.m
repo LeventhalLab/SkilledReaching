@@ -31,7 +31,7 @@ allTrajectories = NaN(size(pawTrajectory,1),size(pawTrajectory,2),size(pawTrajec
 allTrajectories(:,:,:,1) = pawTrajectory;
 [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 reachingPawIdx = [mcpIdx;pipIdx;digIdx;pawDorsumIdx];
-numPawParts = length(reachingPawIdx);
+% numPawParts = length(reachingPawIdx);
 
 for iTrial = 2 : numTrials
     load(pawTrajectoryList(iTrial).name);
