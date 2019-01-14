@@ -104,7 +104,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : 5%numRatFolders
+for i_rat = 4 : 6%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -140,6 +140,9 @@ for i_rat = 4 : 5%numRatFolders
     
     sessionDirectories = listFolders([ratID '_2*']);   % all were recorded after the year 2000
     numSessions = length(sessionDirectories);
+    
+    reachEndPts = cell(numSessions,1);
+    mean_endPts = NaN(numSessions, 3);
     
     numSessionPages = 0;
 %     pdf_baseName_sessionTrials = [ratID '_3dtrajectories_smoothed'];

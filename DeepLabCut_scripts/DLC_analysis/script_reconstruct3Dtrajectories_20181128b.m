@@ -84,8 +84,8 @@ for i_rat = 5 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 6
-        startSession = 2;
+    if i_rat == 5
+        startSession = 16;
     else
         startSession = 2;
     end
