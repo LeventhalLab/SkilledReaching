@@ -349,7 +349,7 @@ for i_rat = 4 : numRatFolders
                         textString{2} = sprintf('%s, %d', textString{2}, currentTrialList(ii));
                     end
                     axes(trajectory_h_figAxis);
-                    text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.5,textString,'units','centimeters');
+                    text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.5,textString,'units','centimeters','interpreter','none');
                     
                     pdfName3D = sprintf('%s_%02d.pdf',pdf_baseName3D,numTrialPages);
                     print(trajectory_h_fig,pdfName3D,'-dpdf');
@@ -357,7 +357,7 @@ for i_rat = 4 : numRatFolders
                 
                     axes(trajectory2d_h_figAxis);
                     textString{1} = sprintf('%s individual trial 2D trajectories', sessionDirectories{iSession});
-                    text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.5,textString,'units','centimeters');
+                    text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.5,textString,'units','centimeters','interpreter','none');
                     
                     pdfName2D = sprintf('%s_%02d.pdf',pdf_baseName2D,numTrialPages);
                     print(trajectory2d_h_fig,pdfName2D,'-dpdf');
@@ -413,7 +413,7 @@ for i_rat = 4 : numRatFolders
             end
             
             axes(mean_p_h_figAxis);
-            text(mean_p_figProps.leftMargin,mean_p_figProps.height-0.5,textString,'units','centimeters');
+            text(mean_p_figProps.leftMargin,mean_p_figProps.height-0.5,textString,'units','centimeters','interpreter','none');
             
 %             numSessionPages = numSessionPages + 1;
             

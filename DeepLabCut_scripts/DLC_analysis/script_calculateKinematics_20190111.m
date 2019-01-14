@@ -148,6 +148,7 @@ for i_rat = 4 : 6%numRatFolders
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
         numReachingPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
         all_endPts = zeros(numReachingPawParts, 3, numTrials);
+        all_partEndPts = zeros(numReachingPawParts, 3, numTrials);
         all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
         all_paw_through_slot_frame = zeros(numTrials,1);
         all_firstPawDorsumFrame = zeros(numTrials,1);
@@ -287,7 +288,8 @@ for i_rat = 4 : 6%numRatFolders
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList,] = ...
                 findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
                 'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet);
-            all_endPts(:,:,iTrial) = partEndPts;
+            all_endPts(:,:,iTrial) = endPts;
+            all_partEndPts(:,:,iTrial) = partEndPts;
             all_partEndPtFrame (:,iTrial) = partEndPtFrame;
             all_endPtFrame(iTrial) = endPtFrame;
             
@@ -316,7 +318,7 @@ for i_rat = 4 : 6%numRatFolders
             'smoothed_pd_trajectories','smoothed_digit_trajectories',...
             'interp_pd_trajectories','interp_digit_trajectories',...
             'all_mcpAngle','all_pipAngle','all_digitAngle',...
-            'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
+            'all_endPts','all_partEndPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo','thisSessionType','slot_z');
         
     end
