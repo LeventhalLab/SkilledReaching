@@ -115,7 +115,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 4:numRatFolders
+for i_rat = 4:6%4 : 6%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -322,7 +322,7 @@ for i_rat = 4:numRatFolders
                 sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock);
             textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
             textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
-            axes(h_summary_figAxis(1));
+            axes(h_summary_figAxis);
             text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
             
             pdfName_sessionSummary = sprintf('%s_summary.pdf',sessionDirectories{iSession});
@@ -333,7 +333,7 @@ for i_rat = 4:numRatFolders
             textString{2} = 'rows 2-4: mean digit trajectories for MCP, PIP, tips in x, y, z';
             textString{3} = '';
             text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
-            axes(h_digitSummary_figAxis(1));
+            axes(h_summary_figAxis);
             pdfName_sessionDigitSummary = sprintf('%s_digits_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionDigitSummary = fullfile(ratRootFolder,pdfName_sessionDigitSummary);
             print(h_digitSummaryFigs(1),pdfName_sessionSummary,'-dpdf');

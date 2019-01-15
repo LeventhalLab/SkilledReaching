@@ -1,4 +1,4 @@
-function [h_fig,h_axes] = plotSessionSummary(trialTypeIdx,mean_pd_trajectory,normalized_pd_trajectories,reachEndPoints,distFromPellet,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,varargin)
+function [h_fig,h_axes] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,distFromPellet,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,varargin)
 
 % to plot:
 %   mean distance from mean trajectory at each point for all, correct, no
@@ -40,7 +40,6 @@ end
 [h_fig(1),h_axes{1}] = createFigPanels5(figProps);
 % [h_fig(2),h_axes{2}] = createFigPanels5(figProps);
 
-% ,reachEndPoints,distFromPellet
 
 
 % first row, plot 1 - frame limits
@@ -61,44 +60,61 @@ set(gca,'ylim',pawFrameLim);
 
 % final z location as a function of trial #
 [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
-pd_endPts_z = squeeze(reachEndPoints{1}(pawDorsumIdx,3,:));
-digit_endPts_z = squeeze(reachEndPoints{1}(digIdx(2),3,:));
-axes(h_axes{1}(1,3));
-scatter(trialNumbers,pd_endPts_z);
-hold on
-scatter(trialNumbers,digit_endPts_z);
-legend({'paw dorsum','digit 2'});
-title('z-endpoints')
+pd_endPts = squeeze(reachEndPoints{1}(pawDorsumIdx,:,:));
+digit_endPts = squeeze(reachEndPoints{1}(digIdx(2),:,:));
+for iDim = 1 : 3
+    axes(h_axes{1}(1,1+iDim));
+    scatter(trialNumbers,pd_endPts(iDim,:));
+    hold on
+    scatter(trialNumbers,digit_endPts(iDim,:));
+    switch iDim
+        case 1
+            title('x-endpoints vs trial #')
+        case 2
+            title('y-endpoints vs trial #')
+        case 3
+            title('z-endpoints vs trial #')
+    end
+end
+
 
 % histogram of paw dorsum endpoints
 % [mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_idx] = group_DLC_bodyparts(bodyparts,pawPref);
-axes(h_axes{1}(1,4));
-histogram(pd_endPts_z,10)
-title('paw dorsum z-endpoints')
+axes(h_axes{1}(1,5));
+[pd_N,pd_edges] = histcounts(pd_endPts(3,:),10);
+[d2_N,d2_edges] = histcounts(digit_endPts(3,:),10);
+pd_x = pd_edges(1:end-1) + diff(pd_edges)/2;
+d2_x = d2_edges(1:end-1) + diff(d2_edges)/2;
+plot(pd_x,pd_N);
+hold on
+plot(d2_x,d2_N);
+% histogram(pd_endPts_z,10)
+title('z-endpoints')
 set(gca,'xdir','reverse');
+legend({'paw dorsum','digit 2'},'location','northwest');
 
 % histogram of second digit endpoints
-axes(h_axes{1}(1,5));
-histogram(digit_endPts_z,10)
-title('2nd digit z-endpoints')
-set(gca,'xdir','reverse');
+% axes(h_axes{1}(1,5));
+% histogram(digit_endPts_z,10)
+% title('2nd digit z-endpoints')
+% set(gca,'xdir','reverse');
 
 
 
-mean_dist_from_trajectory = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),numTrialTypes_to_analyze);
-mean_euc_dist_from_trajectory = zeros(size(mean_pd_trajectory,1),numTrialTypes_to_analyze);
+% mean_dist_from_trajectory = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),numTrialTypes_to_analyze);
+% mean_euc_dist_from_trajectory = zeros(size(mean_pd_trajectory,1),numTrialTypes_to_analyze);
 
 for iType = 1 : numTrialTypes_to_analyze
-    numTrials = sum(trialTypeIdx(:,iType));
-    current_mean_trajectory = squeeze(mean_pd_trajectory(:,:,iType));
-    dist_from_trajectory = normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)) - repmat(current_mean_trajectory,1,1,numTrials);
-    euclidean_dist_from_trajectory = sqrt(squeeze(sum(dist_from_trajectory.^2,2)));
-    mean_dist_from_trajectory(:,:,iType) = nanmean(abs(dist_from_trajectory),3);
-    mean_euc_dist_from_trajectory(:,iType) = nanmean(euclidean_dist_from_trajectory,2);
+%     numTrials = sum(trialTypeIdx(:,iType));
+%     current_mean_trajectory = squeeze(mean_pd_trajectory(:,:,iType));
+%     dist_from_trajectory = normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)) - repmat(current_mean_trajectory,1,1,numTrials);
+%     euclidean_dist_from_trajectory = sqrt(squeeze(sum(dist_from_trajectory.^2,2)));
+%     mean_dist_from_trajectory(:,:,iType) = nanmean(abs(dist_from_trajectory),3);
+%     mean_euc_dist_from_trajectory(:,iType) = nanmean(euclidean_dist_from_trajectory,2);
     
     for iDir = 1 : 3
         axes(h_axes{1}(iDir+1,iType))
-        toPlot = squeeze(mean_dist_from_trajectory(:,iDir,iType));
+        toPlot = squeeze(mean_xyz_from_trajectory(:,iDir,iType));
         plot(toPlot)
         set(gca,'ylim',var_lim(iDir,:));
         title(validTypeNames{iType})
