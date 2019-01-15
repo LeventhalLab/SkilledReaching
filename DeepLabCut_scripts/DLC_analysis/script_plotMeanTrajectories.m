@@ -1,5 +1,8 @@
 % script_plotMeanTrajectories
 
+% CONSIDER EXCLUDING ANY TRIALS WHERE Z < 40 AT THE START OF THE TRIAL (PAW
+% MAY ALREADY BE AT THE SLOT - MISSED TRIGGER)
+
 x_lim = [-30 10];
 y_lim = [-15 10];
 z_lim = [-5 50];
@@ -10,7 +13,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
+skipTrialPlots = false;
 
 % REACHING SCORES:
 %
@@ -106,7 +109,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : 6%numRatFolders
+for i_rat = 6:6%4 : 6%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -150,7 +153,7 @@ for i_rat = 4 : 6%numRatFolders
 %     pdf_baseName_sessionTrials = [ratID '_3dtrajectories_smoothed'];
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     sessionDates = cell(1,numSessions);
-    for iSession = 1 : numSessions
+    for iSession = 10 : numSessions
         
 %         currentSessionList{session_rowNum} = sessionDirectories{iSession};
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);

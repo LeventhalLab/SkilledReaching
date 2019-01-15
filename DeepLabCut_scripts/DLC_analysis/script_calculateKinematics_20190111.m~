@@ -70,7 +70,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 5 : 5%numRatFolders
+for i_rat = 6 : 6%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -107,7 +107,7 @@ for i_rat = 5 : 5%numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 2 : numSessions
+    for iSession = 1 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
@@ -148,6 +148,7 @@ for i_rat = 5 : 5%numRatFolders
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
         numReachingPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
         all_endPts = zeros(numReachingPawParts, 3, numTrials);
+        all_partEndPts = zeros(numReachingPawParts, 3, numTrials);
         all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
         all_paw_through_slot_frame = zeros(numTrials,1);
         all_firstPawDorsumFrame = zeros(numTrials,1);
@@ -191,7 +192,6 @@ for i_rat = 5 : 5%numRatFolders
                 invalid_mirror(:,end+1:size(invalid3Dpoints,2)) = true;
             end
             invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
-
             
             [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,invalid_direct,pawPref);
             if length(mcpAngle) < size(all_mcpAngle,1)
@@ -210,6 +210,12 @@ for i_rat = 5 : 5%numRatFolders
             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
                 'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
 
+            if ~isempty(initPellet3D)
+                % most likely, pellet wasn't brought up by the delivery arm
+                % on this trial
+                all_initPellet3D(iTrial,:) = initPellet3D;
+            end
+            
             paw_through_slot_frame = min(firstSlotBreak(digIdx));
             if isnan(paw_through_slot_frame)
                 paw_through_slot_frame = min(firstSlotBreak(pipIdx));
@@ -282,7 +288,8 @@ for i_rat = 5 : 5%numRatFolders
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList,] = ...
                 findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
                 'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet);
-            all_endPts(:,:,iTrial) = partEndPts;
+            all_endPts(:,:,iTrial) = endPts;
+            all_partEndPts(:,:,iTrial) = partEndPts;
             all_partEndPtFrame (:,iTrial) = partEndPtFrame;
             all_endPtFrame(iTrial) = endPtFrame;
             
@@ -311,7 +318,7 @@ for i_rat = 5 : 5%numRatFolders
             'smoothed_pd_trajectories','smoothed_digit_trajectories',...
             'interp_pd_trajectories','interp_digit_trajectories',...
             'all_mcpAngle','all_pipAngle','all_digitAngle',...
-            'all_endPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
+            'all_endPts','all_partEndPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo','thisSessionType','slot_z');
         
     end

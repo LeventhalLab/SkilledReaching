@@ -65,7 +65,8 @@ normalized_pd_trajectories = zeros(num_pd_TrajectoryPoints,3,numTrials);
 for iTrial = 1 : numTrials
     
     if all_firstPawDorsumFrame(iTrial) == all_paw_through_slot_frame(iTrial) || ...
-          isnan(all_firstPawDorsumFrame(iTrial))  
+          isnan(all_firstPawDorsumFrame(iTrial))  || ...
+          all_firstPawDorsumFrame(iTrial) > all_endPtFrame(iTrial)
         % couldn't find the paw dorsum behind the reaching slot prior to
         % the paw breaking through the slot
         normalized_pd_trajectories(:,:,iTrial) = NaN;

@@ -70,10 +70,6 @@ pelletIdx3D = strcmpi(bodyparts,'pellet');
 
 pelletPts = squeeze(pawTrajectory(:,:,pelletIdx3D));
 
-% find frames where the pellet may have been mislabeled - for example,
-% for rat 189, 20171002, some reflections in the mirror view are
-% sometimes identified as the pellet. One way to check is that the
-% reprojection error isn't too big
 invalidPoints = (pellet_reproj_error(:,1) > maxReprojError)' | (pellet_reproj_error(:,2) > maxReprojError)';
 pelletPts(invalidPoints,:) = 0;
 % zeros in the pawTrajectory array represent points where the pellet wasn't
@@ -84,6 +80,7 @@ validPelletPts = initPelletPts(initPelletPts(:,1)~=0,:);
 if isempty(validPelletPts)
     initPellet3D = [];
 else
+
     initPellet3D = mean(validPelletPts,1);
 end
 
