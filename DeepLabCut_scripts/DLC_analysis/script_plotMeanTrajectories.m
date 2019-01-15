@@ -109,7 +109,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 6:6%4 : 6%numRatFolders
+for i_rat = 4:6%4 : 6%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -146,14 +146,14 @@ for i_rat = 6:6%4 : 6%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);   % all were recorded after the year 2000
     numSessions = length(sessionDirectories);
     
-    reachEndPts = cell(numSessions,1);
-    mean_endPts = NaN(numSessions, 3);
+%     reachEndPts = cell(numSessions,1);
+%     mean_endPts = NaN(numSessions, 3);
     
     numSessionPages = 0;
 %     pdf_baseName_sessionTrials = [ratID '_3dtrajectories_smoothed'];
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     sessionDates = cell(1,numSessions);
-    for iSession = 10 : numSessions
+    for iSession = 1 : numSessions
         
 %         currentSessionList{session_rowNum} = sessionDirectories{iSession};
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
@@ -208,9 +208,12 @@ for i_rat = 6:6%4 : 6%numRatFolders
             mean_pd_trajectory(:,:,iType) = nanmean(normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)),3);
         end
         
-        [h_summaryFig,h_summaryAxes] = plotSessionSummary(trialTypeIdx,mean_pd_trajectory,normalized_pd_trajectories,all_endPts,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,...
+        [h_summaryFigs,h_summaryAxes] = plotSessionSummary(trialTypeIdx,mean_pd_trajectory,normalized_pd_trajectories,reachEndPoints{iSession},distFromPellet{iSession},bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,...
             'var_lim',var_lim,'pawframelim',pawFrameLim);
-        h_summary_figAxis = createFigAxes(h_summaryFig);
+        h_summary_figAxis = zeros(length(h_summaryFigs));
+        for iFig = 1 : length(h_summaryFigs)
+        	h_summary_figAxis(iFig) = createFigAxes(h_summaryFigs(iFig));
+        end
         
         if iSession == 1
             mean_pd_trajectories = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),size(mean_pd_trajectory,3),numSessions);
@@ -287,8 +290,8 @@ for i_rat = 6:6%4 : 6%numRatFolders
             
             pdfName_sessionSummary = sprintf('%s_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionSummary = fullfile(ratRootFolder,pdfName_sessionSummary);
-            print(h_summaryFig,pdfName_sessionSummary,'-dpdf');
-            close(h_summaryFig);
+            print(h_summaryFigs(1),pdfName_sessionSummary,'-dpdf');
+            close(h_summaryFigs(1));
             
 %         end
             

@@ -1,4 +1,4 @@
-function [h_fig,h_axes] = plotSessionSummary(trialTypeIdx,mean_pd_trajectory,normalized_pd_trajectories,reachEndPoints,distFromPellet,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,varargin)
+function [h_fig,h_axes] = plotSessionSummary(trialTypeIdx,mean_pd_trajectory,normalized_pd_trajectories,all_endPts,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,reachEndPoints,distFromPellet,varargin)
 
 % to plot:
 %   mean distance from mean trajectory at each point for all, correct, no
@@ -29,7 +29,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-for iarg = 1 : 2 : nargin - 12
+for iarg = 1 : 2 : nargin - 13
     switch lower(varargin{iarg})
         case 'var_lim'
             var_lim = varargin{iarg + 1};
@@ -37,53 +37,42 @@ for iarg = 1 : 2 : nargin - 12
             pawFrameLim = varargin{iarg + 1};
     end
 end
-[h_fig(1),h_axes{1}] = createFigPanels5(figProps);
-% [h_fig(2),h_axes{2}] = createFigPanels5(figProps);
+[h_fig,h_axes] = createFigPanels5(figProps);
+
 
 % ,reachEndPoints,distFromPellet
 
 
-% first row, plot 1 - frame limits
-axes(h_axes{1}(1,1));
+% first row - frame limits
+axes(h_axes(1,1));
 plot(trialNumbers,all_firstPawDorsumFrame);
-% title('first paw dorsum frame')
-% set(gca,'ylim',pawFrameLim);
-hold on
-% axes(h_axes{1}(1,2));
-plot(trialNumbers,all_paw_through_slot_frame);
-% title('paw through slot frame frame')
-% set(gca,'ylim',pawFrameLim);
-
-% axes(h_axes{1}(1,3));
-plot(trialNumbers,all_endPtFrame);
-title('event frames')
+title('first paw dorsum frame')
 set(gca,'ylim',pawFrameLim);
 
-% final z location as a function of trial #
-[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
-pd_endPts_z = squeeze(reachEndPoints{1}(pawDorsumIdx,3,:));
-digit_endPts_z = squeeze(reachEndPoints{1}(digIdx(2),3,:));
-axes(h_axes{1}(1,3));
-scatter(trialNumbers,pd_endPts_z);
-hold on
-scatter(trialNumbers,digit_endPts_z);
-legend({'paw dorsum','digit 2'});
-title('z-endpoints')
+axes(h_axes(1,2));
+plot(trialNumbers,all_paw_through_slot_frame);
+title('paw through slot frame frame')
+set(gca,'ylim',pawFrameLim);
+
+axes(h_axes(1,3));
+plot(trialNumbers,all_endPtFrame);
+title('reach endpoint frames')
+set(gca,'ylim',pawFrameLim);
 
 % histogram of paw dorsum endpoints
-% [mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_idx] = group_DLC_bodyparts(bodyparts,pawPref);
-axes(h_axes{1}(1,4));
+[mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_idx] = group_DLC_bodyparts(bodyparts,pawPref);
+axes(h_axes(1,4));
+pd_endPts_z = squeeze(all_endPts(pawdorsum_idx,3,:));
 histogram(pd_endPts_z,10)
 title('paw dorsum z-endpoints')
 set(gca,'xdir','reverse');
 
 % histogram of second digit endpoints
-axes(h_axes{1}(1,5));
+axes(h_axes(1,5));
+digit_endPts_z = squeeze(all_endPts(digit_idx(2),3,:));
 histogram(digit_endPts_z,10)
 title('2nd digit z-endpoints')
 set(gca,'xdir','reverse');
-
-
 
 mean_dist_from_trajectory = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),numTrialTypes_to_analyze);
 mean_euc_dist_from_trajectory = zeros(size(mean_pd_trajectory,1),numTrialTypes_to_analyze);
@@ -97,7 +86,7 @@ for iType = 1 : numTrialTypes_to_analyze
     mean_euc_dist_from_trajectory(:,iType) = nanmean(euclidean_dist_from_trajectory,2);
     
     for iDir = 1 : 3
-        axes(h_axes{1}(iDir+1,iType))
+        axes(h_axes(iDir+1,iType))
         toPlot = squeeze(mean_dist_from_trajectory(:,iDir,iType));
         plot(toPlot)
         set(gca,'ylim',var_lim(iDir,:));
@@ -113,7 +102,7 @@ for iType = 1 : numTrialTypes_to_analyze
             end
         end
     end
-    axes(h_axes{1}(5,iType))
+    axes(h_axes(5,iType))
     toPlot = squeeze(mean_euc_dist_from_trajectory(:,iType));
     plot(toPlot)
     set(gca,'ylim',var_lim(4,:));
