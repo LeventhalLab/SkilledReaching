@@ -1,4 +1,4 @@
-function [h_fig,h_axes,h_figAxis] = plotSessionDigitSummary(trialTypeIdx,digit_endAngle,mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,curSession,curSessionType,varargin)
+function [h_fig,h_axes,h_figAxis] = plotSessionDigitSummary(trialTypeIdx,digit_endAngle,mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,varargin)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -33,7 +33,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-for iarg = 1 : 2 : nargin - 14
+for iarg = 1 : 2 : nargin - 12
     switch lower(varargin{iarg})
         case 'var_lim'
             var_lim = varargin{iarg + 1};
@@ -98,8 +98,8 @@ textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block',
     curSession, curSessionType.type, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock);
 textString{2} = 'rows 2-4: mean digit trajectories for MCP, PIP, tips in x, y, z';
 textString{3} = '';
-axes(h_figAxis(1));
-text(figProps.leftMargin,figProps.height-0.75,textString,'units','centimeters','interpreter','none');
+text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
+axes(h_digitSummary_figAxis(1));
             
 end    % function
         

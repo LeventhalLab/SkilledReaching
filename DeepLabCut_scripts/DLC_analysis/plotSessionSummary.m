@@ -1,4 +1,4 @@
-function [h_fig,h_axes] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,distFromPellet,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,varargin)
+function [h_fig,h_axes,h_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,curSession,curSessionType,varargin)
 
 % to plot:
 %   mean distance from mean trajectory at each point for all, correct, no
@@ -29,7 +29,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-for iarg = 1 : 2 : nargin - 12
+for iarg = 1 : 2 : nargin - 13
     switch lower(varargin{iarg})
         case 'var_lim'
             var_lim = varargin{iarg + 1};
@@ -64,7 +64,11 @@ pd_endPts = squeeze(reachEndPoints{1}(pawDorsumIdx,:,:));
 digit_endPts = squeeze(reachEndPoints{1}(digIdx(2),:,:));
 for iDim = 1 : 3
     axes(h_axes{1}(1,1+iDim));
+    try
     scatter(trialNumbers,pd_endPts(iDim,:));
+    catch
+        keyboard
+    end
     hold on
     scatter(trialNumbers,digit_endPts(iDim,:));
     switch iDim
@@ -137,6 +141,18 @@ for iType = 1 : numTrialTypes_to_analyze
     ylabel('euc dist')
 %     plot(mean_dist_from_trajectory
 end
+
+h_figAxis = zeros(length(h_fig),1);
+for iFig = 1 : length(h_fig)
+    h_figAxis(iFig) = createFigAxes(h_fig(iFig));
+end
+
+textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block', ...
+    curSession, curSessionType.type, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock);
+textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
+textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
+axes(h_figAxis(1));
+text(figProps.leftMargin,figProps.height-0.75,textString,'units','centimeters','interpreter','none');
 
 end
         

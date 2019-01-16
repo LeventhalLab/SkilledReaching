@@ -13,7 +13,8 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = false;
+skipTrialPlots = true;
+skipSessionSummaryPlots = false;
 
 % REACHING SCORES:
 %
@@ -152,17 +153,12 @@ for i_rat = 4:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);   % all were recorded after the year 2000
     numSessions = length(sessionDirectories);
     
-%     reachEndPts = cell(numSessions,1);
-%     mean_endPts = NaN(numSessions, 3);
-    
     numSessionPages = 0;
-%     pdf_baseName_sessionTrials = [ratID '_3dtrajectories_smoothed'];
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     sessionDates = cell(1,numSessions);
     digit_endAngle = cell(1,numSessions);
     for iSession = 1 : numSessions
         
-%         currentSessionList{session_rowNum} = sessionDirectories{iSession};
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDateString = C{1};
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
@@ -183,12 +179,6 @@ for i_rat = 4:numRatFolders
             continue
         end
         [reachEndPoints{iSession},distFromPellet{iSession}] = collectReachEndPoints(all_endPts,validTrialTypes,all_trialOutcomes);
-%         [session_rowNum, numSessionPages] = getRow(iSession, trajectory_figProps.m);
-%         if session_rowNum == 1
-            [session_h_fig,session_h_axes] = createFigPanels5(trajectory_figProps);
-            session_h_figAxis = createFigAxes(session_h_fig);
-            currentSessionList = {};
-%         end
 
         pawPref = thisRatInfo.pawPref;
         if iscell(pawPref)
@@ -226,20 +216,7 @@ for i_rat = 4:numRatFolders
 %             mean_pd_trajectory(:,:,iType) = nanmean(normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)),3);
 %         end
         
-        [h_summaryFigs,h_summaryAxes] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},distFromPellet{iSession},bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,...
-            'var_lim',var_lim,'pawframelim',pawFrameLim);
-        
-        digit_endAngle{iSession} = collectFinalPawOrientations(all_digitAngle,all_endPtFrame);
-        [h_digitSummaryFigs,h_digitSummaryAxes] = plotSessionDigitSummary(trialTypeIdx,digit_endAngle{iSession},mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames);
-        h_summary_figAxis = zeros(length(h_summaryFigs));
-        h_digitSummary_figAxis = zeros(length(h_digitSummaryFigs));
-        for iFig = 1 : length(h_summaryFigs)
-        	h_summary_figAxis(iFig) = createFigAxes(h_summaryFigs(iFig));
-        end
-        for iFig = 1 : length(h_digitSummaryFigs)
-        	h_digitSummary_figAxis(iFig) = createFigAxes(h_digitSummaryFigs(iFig));
-        end
-        
+
         if iSession == 1
             mean_pd_trajectories = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),size(mean_pd_trajectory,3),numSessions);
             mean_xyz_from_pd_trajectories = zeros(size(mean_xyz_from_pd_trajectory,1),size(mean_xyz_from_pd_trajectory,2),size(mean_xyz_from_pd_trajectory,3),numSessions);
@@ -257,89 +234,29 @@ for i_rat = 4:numRatFolders
         mean_xyz_from_dig_trajectories(:,:,:,:,iSession) = mean_xyz_from_dig_session_trajectories;
         mean_euc_dist_from_dig_trajectories(:,:,:,iSession) = mean_euc_from_dig_session_trajectories;
         
-        for iType = 1 : numTrialTypes_to_analyze
-            for iDim = 1 : 3
-                axes(session_h_axes(iType,iDim))
-                plot(mean_pd_trajectory(:,iDim,iType),'linewidth',2,'color','k');
-                hold on
-                for iTrial = 1 : numTrials
-                    if trialTypeIdx(iTrial,iType)
-                        plot(normalized_pd_trajectories(:,iDim,iTrial));
-                    end
-                end
-                if iType == 1
-                    switch iDim
-                        case 1
-                            title('x')
-                        case 2
-                            title('y')
-                        case 3
-                            title('z')
-                    end
-                end
-                switch iDim
-                    case 1
-                        set(gca,'ylim',x_lim)
-                    case 2
-                        set(gca,'ylim',y_lim,'ydir','reverse')
-                    case 3
-                        set(gca,'ylim',z_lim)
-                end
-            end
+        digit_endAngle{iSession} = collectFinalPawOrientations(all_digitAngle,all_endPtFrame);
+        if ~skipSessionSummaryPlots
+            [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),...
+                'var_lim',var_lim,'pawframelim',pawFrameLim);
+            [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,digit_endAngle{iSession},mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx));
+            [session_h_fig,session_h_axes,session_h_figAxis] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx,...
+                sessionDirectories{iSession},sessionType(allSessionIdx),validTypeNames);
 
-            axes(session_h_axes(iType,4))
-            plot3(mean_pd_trajectory(:,1,iType),mean_pd_trajectory(:,3,iType),mean_pd_trajectory(:,2,iType),'linewidth',2,'color','k');
-            hold on
-            for iTrial = 1 : numTrials
-                if trialTypeIdx(iTrial,iType)
-                    plot3(normalized_pd_trajectories(:,1,iTrial),normalized_pd_trajectories(:,3,iTrial),normalized_pd_trajectories(:,2,iTrial))
-                end
-            end
-
-            scatter3(0,0,0,25,'k','o','markerfacecolor','k')
-            set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
-                'view',[-70,30])
-            xlabel('x');ylabel('z');zlabel('y');
-        end
-            textString = {};
-%         if (session_rowNum == trajectory_figProps.m) || iSession == numSessions
-            textString{1} = sprintf('%s all trial 3D trajectories; %s, day %d, %d days left in block', ...
-                sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock);
-            textString{2} = sprintf('trial types: %s', validTypeNames{1});
-            for ii = 2 : length(validTypeNames)
-                textString{2} = sprintf('%s, %s', textString{2}, validTypeNames{ii});
-            end
-            axes(session_h_figAxis);
-            text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
-%             pdfName_sessionTrials = sprintf('%s_%02d.pdf',pdf_baseName_sessionTrials,iSession);
             pdfName_sessionTrials = sprintf('%s_3dtrajectories_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionTrials = fullfile(ratRootFolder,pdfName_sessionTrials);
             print(session_h_fig,pdfName_sessionTrials,'-dpdf');
             close(session_h_fig);
-            
-            textString = {};
-            textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block', ...
-                sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock);
-            textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
-            textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
-            axes(h_summary_figAxis(1));
-            text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
-            
+
             pdfName_sessionSummary = sprintf('%s_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionSummary = fullfile(ratRootFolder,pdfName_sessionSummary);
             print(h_summaryFigs(1),pdfName_sessionSummary,'-dpdf');
             close(h_summaryFigs(1));
-            
-            textString{2} = 'rows 2-4: mean digit trajectories for MCP, PIP, tips in x, y, z';
-            textString{3} = '';
-            text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
-            axes(h_digitSummary_figAxis(1));
+
             pdfName_sessionDigitSummary = sprintf('%s_digits_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionDigitSummary = fullfile(ratRootFolder,pdfName_sessionDigitSummary);
             print(h_digitSummaryFigs(1),pdfName_sessionDigitSummary,'-dpdf');
-            close(h_digitSummaryFigs(1));
-            
-%         end
+            close(h_digitSummaryFigs(1));    
+        end
             
 if ~skipTrialPlots
         for iTrial = 1 : numTrials
@@ -428,160 +345,8 @@ end
             
     end
     
-    % summarize all trajectories for this rat
-    [ratSummary_h_fig,ratSummary_h_axes] = createFigPanels5(ratSummary_figProps);
-    ratSummary_h_figAxis = createFigAxes(ratSummary_h_fig);
-    
-    % plot mean trajectories in baseline, laser, and occlusion sessions in
-    % each dimension and in 3D
-    for iSession = 1 : numSessions
-        
-        allSessionIdx = find(sessionDates{iSession} == allSessionDates);
-        curSessionType = sessionType(allSessionIdx).type;
-        sessionsLeftInBlock = sessionType(allSessionIdx).sessionsLeftInBlock;
-%         switch curSessionType
-%             case 'training'
-%                 plotRow = 1;
-%                 plot_colmap = colormap(gray);
-% %                 plotColor = [0,0,0];
-%             case 'laser_during'
-%                 plotRow = 2;
-%                 plot_colmap = colormap(winter);
-% %                 plotColor = [0,0,1];
-%             case 'laser_between'
-%                 plotRow = 2;
-%                 plot_colmap = colormap(winter);
-% %                 plotColor = [0,0,1];
-%             case 'occlusion'
-%                 plotRow = 3;
-%                 plot_colmap = colormap(autumn);
-% %                 plotColor = [1,0,0];
-%         end
-        plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
-        for iDim = 1 : 3
-            axes(ratSummary_h_axes(1,iDim))
-            % plot mean for all trajectories
-            toPlot = squeeze(mean_pd_trajectories(:,iDim,1,iSession));
-            plot(toPlot,'color',plotColor);
-            hold on
-            
-%             if plotRow == 1
-                switch iDim
-                    case 1
-                        title('mean trajectory, x')
-                        set(gca,'ylim',x_lim)
-                    case 2
-                        title('mean trajectory, y')
-                        set(gca,'ylim',y_lim,'ydir','reverse')
-                    case 3
-                        title('mean trajectory, z')
-                        set(gca,'ylim',z_lim)
-                end
-%             end
-                
-            axes(ratSummary_h_axes(2,iDim))
-            toPlot = squeeze(mean_xyz_from_pd_trajectories(:,iDim,1,iSession));
-            plot(toPlot,'color',plotColor);
-            hold on
-%             switch iDim
-%                 case 1
-%                     set(gca,'ylim',x_lim)
-%                 case 2
-%                     set(gca,'ylim',y_lim,'ydir','reverse')
-%                 case 3
-%                     set(gca,'ylim',z_lim)
-%             end
-        end
-        axes(ratSummary_h_axes(1,4))
-        toPlot = squeeze(mean_pd_trajectories(:,:,1,iSession));
-        plot3(toPlot(:,1),toPlot(:,3),toPlot(:,2),'color',plotColor);
-        hold on
-        
-        axes(ratSummary_h_axes(2,4))
-        toPlot = squeeze(mean_euc_dist_from_pd_trajectories(:,1,iSession));
-        plot3(toPlot(:,1),toPlot(:,3),toPlot(:,2),'color',plotColor);
-        hold on
-
-    end
-%     for i_plotRow = 1 : 4
-        axes(ratSummary_h_axes(4,4))
-        scatter3(0,0,0,25,'k','o','markerfacecolor','k')
-        set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
-            'view',[-70,30])
-        xlabel('x');ylabel('z');zlabel('y');
-%     end
-    
-        % in the last row, plot final reach x,y,z, final distance from pellet
-        % for each session
-    for iSession = 1 : numSessions
-        
-        allSessionIdx = find(sessionDates{iSession} == allSessionDates);
-        curSessionType = sessionType(allSessionIdx).type;
-        sessionsLeftInBlock = sessionType(allSessionIdx).sessionsLeftInBlock;
-        switch curSessionType
-            case 'training'
-                plotRow = 1;
-                plot_colmap = colormap(gray);
-%                 plotColor = [0,0,0];
-            case 'laser_during'
-                plotRow = 2;
-                plot_colmap = colormap(winter);
-%                 plotColor = [0,0,1];
-            case 'laser_between'
-                plotRow = 2;
-                plot_colmap = colormap(winter);
-%                 plotColor = [0,0,1];
-            case 'occlusion'
-                plotRow = 3;
-                plot_colmap = colormap(autumn);
-%                 plotColor = [1,0,0];
-        end
-        plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
-        
-        for iDim = 1 : 3
-            axes(ratSummary_h_axes(5,iDim))
-            % find reach end points for the bodypart of interest for all
-            % trials
-            dim_endPoints = squeeze(reachEndPoints{iSession}{1}(bodypart_idx_toPlot,iDim,:));
-            toPlot = nanmean(dim_endPoints);
-            scatter(iSession,toPlot,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
-            hold on
-        end
-        
-        axes(ratSummary_h_axes(5,4))
-        session_distFromPellet = squeeze(distFromPellet{iSession}{1}(bodypart_idx_toPlot,:));
-        toPlot = nanmean(session_distFromPellet);
-        scatter(iSession,toPlot,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
-        hold on
-        
-        axes(ratSummary_h_axes(5,5))
-        MRL = circ_r(digit_endAngle{iSession});
-        mean_endAngle = circ_mean(digit_endAngle{iSession});
-        toPlot = MRL * exp(1i*mean_endAngle);
-        h_line = compass(toPlot);
-        h_line.Color = plotColor;
-        hold on
-    end
-        
-    axes(ratSummary_h_axes(5,1))
-    title('final mean x')
-    
-    axes(ratSummary_h_axes(5,2))
-    title('final mean y')
-    
-    axes(ratSummary_h_axes(5,3))
-    title('final mean z')
-    
-    axes(ratSummary_h_axes(5,4))
-    title('final mean dist from pellet')
-    
-        
-        
-    textString = {};
-    textString{1} = sprintf('%s trajectory summary', ratID);
-    textString{2} = 'black - baseline; blue - laser stim; red - occlusion';
-    axes(ratSummary_h_figAxis);
-    text(ratSummary_figProps.leftMargin,ratSummary_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
+    [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
+        mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle);
     
     pdfName_ratSummary = sprintf('%s_trajectories_summary.pdf',ratID);
     pdfName_ratSummary = fullfile(ratRootFolder,pdfName_ratSummary);

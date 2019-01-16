@@ -84,12 +84,12 @@ for i_rat = 4 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 5
-        startSession = 13;
+    if i_rat == 6
+        startSession = 1;
     else
         startSession = 1;
     end
-    for iSession = startSession : 3 : numSessions
+    for iSession = startSession : 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};

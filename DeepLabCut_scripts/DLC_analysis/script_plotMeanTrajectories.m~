@@ -14,6 +14,7 @@ var_lim = [0,5;
 pawFrameLim = [0 400];
 
 skipTrialPlots = false;
+skipSessionSummaryPlots = false;
 
 % REACHING SCORES:
 %
@@ -115,7 +116,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 4:6%4 : 6%numRatFolders
+for i_rat = 4:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -152,17 +153,12 @@ for i_rat = 4:6%4 : 6%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);   % all were recorded after the year 2000
     numSessions = length(sessionDirectories);
     
-%     reachEndPts = cell(numSessions,1);
-%     mean_endPts = NaN(numSessions, 3);
-    
     numSessionPages = 0;
-%     pdf_baseName_sessionTrials = [ratID '_3dtrajectories_smoothed'];
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     sessionDates = cell(1,numSessions);
     digit_endAngle = cell(1,numSessions);
     for iSession = 1 : numSessions
         
-%         currentSessionList{session_rowNum} = sessionDirectories{iSession};
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDateString = C{1};
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
@@ -183,12 +179,6 @@ for i_rat = 4:6%4 : 6%numRatFolders
             continue
         end
         [reachEndPoints{iSession},distFromPellet{iSession}] = collectReachEndPoints(all_endPts,validTrialTypes,all_trialOutcomes);
-%         [session_rowNum, numSessionPages] = getRow(iSession, trajectory_figProps.m);
-%         if session_rowNum == 1
-            [session_h_fig,session_h_axes] = createFigPanels5(trajectory_figProps);
-            session_h_figAxis = createFigAxes(session_h_fig);
-            currentSessionList = {};
-%         end
 
         pawPref = thisRatInfo.pawPref;
         if iscell(pawPref)
@@ -226,20 +216,13 @@ for i_rat = 4:6%4 : 6%numRatFolders
 %             mean_pd_trajectory(:,:,iType) = nanmean(normalized_pd_trajectories(:,:,trialTypeIdx(:,iType)),3);
 %         end
         
-        [h_summaryFigs,h_summaryAxes] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},distFromPellet{iSession},bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,...
+        [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},distFromPellet{iSession},bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,...
             'var_lim',var_lim,'pawframelim',pawFrameLim);
         
         digit_endAngle{iSession} = collectFinalPawOrientations(all_digitAngle,all_endPtFrame);
-        [h_digitSummaryFigs,h_digitSummaryAxes] = plotSessionDigitSummary(trialTypeIdx,digit_endAngle{iSession},mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames);
+        [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,digit_endAngle{iSession},mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames);
         h_summary_figAxis = zeros(length(h_summaryFigs));
-        h_digitSummary_figAxis = zeros(length(h_digitSummaryFigs));
-        for iFig = 1 : length(h_summaryFigs)
-        	h_summary_figAxis(iFig) = createFigAxes(h_summaryFigs(iFig));
-        end
-        for iFig = 1 : length(h_digitSummaryFigs)
-        	h_digitSummary_figAxis(iFig) = createFigAxes(h_digitSummaryFigs(iFig));
-        end
-        
+
         if iSession == 1
             mean_pd_trajectories = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),size(mean_pd_trajectory,3),numSessions);
             mean_xyz_from_pd_trajectories = zeros(size(mean_xyz_from_pd_trajectory,1),size(mean_xyz_from_pd_trajectory,2),size(mean_xyz_from_pd_trajectory,3),numSessions);
@@ -257,50 +240,8 @@ for i_rat = 4:6%4 : 6%numRatFolders
         mean_xyz_from_dig_trajectories(:,:,:,:,iSession) = mean_xyz_from_dig_session_trajectories;
         mean_euc_dist_from_dig_trajectories(:,:,:,iSession) = mean_euc_from_dig_session_trajectories;
         
-        for iType = 1 : numTrialTypes_to_analyze
-            for iDim = 1 : 3
-                axes(session_h_axes(iType,iDim))
-                plot(mean_pd_trajectory(:,iDim,iType),'linewidth',2,'color','k');
-                hold on
-                for iTrial = 1 : numTrials
-                    if trialTypeIdx(iTrial,iType)
-                        plot(normalized_pd_trajectories(:,iDim,iTrial));
-                    end
-                end
-                if iType == 1
-                    switch iDim
-                        case 1
-                            title('x')
-                        case 2
-                            title('y')
-                        case 3
-                            title('z')
-                    end
-                end
-                switch iDim
-                    case 1
-                        set(gca,'ylim',x_lim)
-                    case 2
-                        set(gca,'ylim',y_lim,'ydir','reverse')
-                    case 3
-                        set(gca,'ylim',z_lim)
-                end
-            end
+        [session_h_fig,session_h_axes] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx);
 
-            axes(session_h_axes(iType,4))
-            plot3(mean_pd_trajectory(:,1,iType),mean_pd_trajectory(:,3,iType),mean_pd_trajectory(:,2,iType),'linewidth',2,'color','k');
-            hold on
-            for iTrial = 1 : numTrials
-                if trialTypeIdx(iTrial,iType)
-                    plot3(normalized_pd_trajectories(:,1,iTrial),normalized_pd_trajectories(:,3,iTrial),normalized_pd_trajectories(:,2,iTrial))
-                end
-            end
-
-            scatter3(0,0,0,25,'k','o','markerfacecolor','k')
-            set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
-                'view',[-70,30])
-            xlabel('x');ylabel('z');zlabel('y');
-        end
             textString = {};
 %         if (session_rowNum == trajectory_figProps.m) || iSession == numSessions
             textString{1} = sprintf('%s all trial 3D trajectories; %s, day %d, %d days left in block', ...
@@ -322,7 +263,7 @@ for i_rat = 4:6%4 : 6%numRatFolders
                 sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock);
             textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
             textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
-            axes(h_summary_figAxis);
+            axes(h_summary_figAxis(1));
             text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
             
             pdfName_sessionSummary = sprintf('%s_summary.pdf',sessionDirectories{iSession});
@@ -333,10 +274,10 @@ for i_rat = 4:6%4 : 6%numRatFolders
             textString{2} = 'rows 2-4: mean digit trajectories for MCP, PIP, tips in x, y, z';
             textString{3} = '';
             text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
-            axes(h_summary_figAxis);
+            axes(h_digitSummary_figAxis(1));
             pdfName_sessionDigitSummary = sprintf('%s_digits_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionDigitSummary = fullfile(ratRootFolder,pdfName_sessionDigitSummary);
-            print(h_digitSummaryFigs(1),pdfName_sessionSummary,'-dpdf');
+            print(h_digitSummaryFigs(1),pdfName_sessionDigitSummary,'-dpdf');
             close(h_digitSummaryFigs(1));
             
 %         end
