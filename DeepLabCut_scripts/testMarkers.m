@@ -17,8 +17,8 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 6;
-iSession = 10;
+i_rat = 4;
+iSession = 3;
 iVid = 1;
 
 ratID = ratFolders(i_rat).name;
@@ -74,7 +74,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 254;
+iFrame = 305;
 
 %%
 while hasFrame(vidIn)
@@ -111,7 +111,6 @@ while hasFrame(vidIn)
     % declared invalid
 
 %                 writeVideo(vidOut,curFrame_out);
-
 keyboard
     iFrame = iFrame + 1; 
     

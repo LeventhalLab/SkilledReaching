@@ -336,7 +336,7 @@ for i_rat = 4:numRatFolders
             axes(h_digitSummary_figAxis(1));
             pdfName_sessionDigitSummary = sprintf('%s_digits_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionDigitSummary = fullfile(ratRootFolder,pdfName_sessionDigitSummary);
-            print(h_digitSummaryFigs(1),pdfName_sessionSummary,'-dpdf');
+            print(h_digitSummaryFigs(1),pdfName_sessionDigitSummary,'-dpdf');
             close(h_digitSummaryFigs(1));
             
 %         end
