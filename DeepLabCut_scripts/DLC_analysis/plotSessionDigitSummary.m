@@ -55,7 +55,7 @@ title('paw orientations at reach end')
 
 % paw angle at reach end point as a function of trial #
 axes(h_axes{1}(1,2));
-plot(trialNumbers,digit_endAngle);
+plot(trialNumbers(:,2),digit_endAngle);
 title('paw orientation at reach end')
 set(gca,'ylim',[0,2*pi]);
 % axes(h_axes{1}(1,2));

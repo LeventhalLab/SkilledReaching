@@ -273,7 +273,7 @@ if ~skipTrialPlots
                 
             num_bp = size(allTrajectories,3);
             
-            currentTrialList(trial_rowNum) = trialNumbers(iTrial);
+            currentTrialList(trial_rowNum) = trialNumbers(iTrial,1);
             curTrajectories = squeeze(allTrajectories(:,:,:,iTrial));
             cur_normalized_trajectory = squeeze(normalized_pd_trajectories(:,:,iTrial));
             

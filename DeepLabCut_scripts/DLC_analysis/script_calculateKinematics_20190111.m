@@ -107,7 +107,7 @@ for i_rat = 4 : 6%numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 21 : numSessions
+    for iSession = 1 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
@@ -164,7 +164,13 @@ for i_rat = 4 : 6%numRatFolders
         % numbers from the file names. The second column will contain trial
         % numbers as recorded in the csv scoring tables.
         trialNumbers = zeros(numTrials,2);
-        
+        for iTrial = 1 : numTrials
+            C = textscan(pawTrajectoryList(iTrial).name, [ratID '_' sessionDateString '_%d-%d-%d_%d_3dtrajectory.mat']); 
+            trialNumbers(iTrial,1) = C{4};
+        end
+        % necessary because if the skilled reaching VI restarted, need to
+        % account for renumbering the videos
+        trialNumbers(:,2) = resolveDuplicateTrialNumbers(trialNumbers(:,1));
         invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
         
         slot_z = find_slot_z(fullSessionDir);
@@ -182,10 +188,8 @@ for i_rat = 4 : 6%numRatFolders
                 isEstimate(:,end+1:size(all_isEstimate,2),:) = false;
             end 
             all_isEstimate(:,:,:,iTrial) = isEstimate;
-            C = textscan(pawTrajectoryList(iTrial).name, [ratID '_' sessionDateString '_%d-%d-%d_%d_3dtrajectory.mat']); 
-            trialNumbers(iTrial) = C{4};
-            
-            trialOutcome = sessionReachScores(trialNumbers(iTrial));
+
+            trialOutcome = sessionReachScores(trialNumbers(iTrial,2));
             all_trialOutcomes(iTrial) = trialOutcome;
             
             invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
@@ -248,7 +252,7 @@ for i_rat = 4 : 6%numRatFolders
             
             if isempty(trajectory)
                 pelletMissingFlag(iTrial) = true;
-                fprintf('%s, trial %d\n',sessionDirectories{iSession}, trialNumbers(iTrial));
+                fprintf('%s, trial %d\n',sessionDirectories{iSession}, trialNumbers(iTrial,1));
             else
                 for i_bp = 1 : size(invalid3Dpoints,1)
                     for iFrame = 1 : size(invalid3Dpoints,2)

@@ -44,17 +44,17 @@ end
 
 % first row, plot 1 - frame limits
 axes(h_axes{1}(1,1));
-plot(trialNumbers,all_firstPawDorsumFrame);
+plot(trialNumbers(:,2),all_firstPawDorsumFrame);
 % title('first paw dorsum frame')
 % set(gca,'ylim',pawFrameLim);
 hold on
 % axes(h_axes{1}(1,2));
-plot(trialNumbers,all_paw_through_slot_frame);
+plot(trialNumbers(:,2),all_paw_through_slot_frame);
 % title('paw through slot frame frame')
 % set(gca,'ylim',pawFrameLim);
 
 % axes(h_axes{1}(1,3));
-plot(trialNumbers,all_endPtFrame);
+plot(trialNumbers(:,2),all_endPtFrame);
 title('event frames')
 set(gca,'ylim',pawFrameLim);
 
@@ -65,12 +65,12 @@ digit_endPts = squeeze(reachEndPoints{1}(digIdx(2),:,:));
 for iDim = 1 : 3
     axes(h_axes{1}(1,1+iDim));
     try
-    scatter(trialNumbers,pd_endPts(iDim,:));
+    scatter(trialNumbers(:,2),pd_endPts(iDim,:));
     catch
         keyboard
     end
     hold on
-    scatter(trialNumbers,digit_endPts(iDim,:));
+    scatter(trialNumbers(:,2),digit_endPts(iDim,:));
     switch iDim
         case 1
             title('x-endpoints vs trial #')
