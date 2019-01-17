@@ -13,7 +13,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
+skipTrialPlots = false;
 skipSessionSummaryPlots = false;
 
 % REACHING SCORES:
