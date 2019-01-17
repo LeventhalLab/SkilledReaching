@@ -159,7 +159,11 @@ for i_rat = 4 : 6%numRatFolders
         vidNum = zeros(numTrials,1);
         
         pelletMissingFlag = false(numTrials,1);
-        trialNumbers = zeros(numTrials,1);
+        % sometimes the session restarted and we get duplicate trial
+        % numbers. The first column of trialNumbers will contain the trial
+        % numbers from the file names. The second column will contain trial
+        % numbers as recorded in the csv scoring tables.
+        trialNumbers = zeros(numTrials,2);
         
         invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
         
