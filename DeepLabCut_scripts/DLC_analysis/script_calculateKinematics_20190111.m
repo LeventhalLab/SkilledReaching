@@ -70,7 +70,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : 6%numRatFolders
+for i_rat = 4 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -295,7 +295,7 @@ for i_rat = 4 : 6%numRatFolders
             % DEBUGGING HERE
             slot_z_wrt_pellet = slot_z - mean_initPellet3D(3);
             
-            [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList,] = ...
+            [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = ...
                 findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
                 'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet);
             all_endPts(:,:,iTrial) = endPts;
@@ -318,6 +318,7 @@ for i_rat = 4 : 6%numRatFolders
         catch
             keyboard
         end
+%         smoothed_pawOrientations = calcSmoothedPawOrientations(smoothed_pd_trajectories,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,pawPref);
         
         [all_paw_xyz_v,all_paw_tangential_v] = calculatePawVelocity(smoothed_pd_trajectories,frameRate);
         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];

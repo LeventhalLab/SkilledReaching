@@ -209,13 +209,8 @@ digits_behind_slot_frames = true(size(z_smooth,1),12);
 for iDigitIdx = 1 : 12
     digits_behind_slot_frames = digits_behind_slot_frames & ((z_smooth(:,iDigitIdx) > slot_z) | isnan(z_smooth(:,iDigitIdx)));
 end
-digits_behind_slot_frames = digits_behind_slot_frames & paw_through_slot_frame_mask;
-
-first_pd_return = pd_behind_slot_frames(pd_behind_slot_frames > pd_through_slot_frame);
-first_digits_return = find(digits_behind_slot_frames,1);
-
-first_paw_return = min(first_digits_return,first_pd_return);
-
+    
+first_paw_return = pd_behind_slot_frames(pd_behind_slot_frames > pd_through_slot_frame);
 if isempty(first_paw_return)
     first_paw_return = length(pawDorsum_z);
 else
