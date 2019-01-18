@@ -13,7 +13,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = false;
+skipTrialPlots = true;
 skipSessionSummaryPlots = false;
 
 % REACHING SCORES:
@@ -156,7 +156,7 @@ for i_rat = 4:numRatFolders
     numSessionPages = 0;
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     sessionDates = cell(1,numSessions);
-    digit_endAngle = cell(1,numSessions);
+    paw_endAngle = cell(1,numSessions);
     for iSession = 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
@@ -234,11 +234,11 @@ for i_rat = 4:numRatFolders
         mean_xyz_from_dig_trajectories(:,:,:,:,iSession) = mean_xyz_from_dig_session_trajectories;
         mean_euc_dist_from_dig_trajectories(:,:,:,iSession) = mean_euc_from_dig_session_trajectories;
         
-        digit_endAngle{iSession} = collectFinalPawOrientations(all_digitAngle,all_endPtFrame);
+        paw_endAngle{iSession} = collectFinalPawOrientations(all_pawAngle,all_endPtFrame);
         if ~skipSessionSummaryPlots
             [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),...
                 'var_lim',var_lim,'pawframelim',pawFrameLim);
-            [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,digit_endAngle{iSession},mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx));
+            [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle{iSession},mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx));
             [session_h_fig,session_h_axes,session_h_figAxis] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx,...
                 sessionDirectories{iSession},sessionType(allSessionIdx),validTypeNames);
 
@@ -346,7 +346,7 @@ end
     end
     
     [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
-        mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle);
+        mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,paw_endAngle);
     
     pdfName_ratSummary = sprintf('%s_trajectories_summary.pdf',ratID);
     pdfName_ratSummary = fullfile(ratRootFolder,pdfName_ratSummary);

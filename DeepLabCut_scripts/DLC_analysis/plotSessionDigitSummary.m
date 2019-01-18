@@ -1,4 +1,4 @@
-function [h_fig,h_axes,h_figAxis] = plotSessionDigitSummary(trialTypeIdx,digit_endAngle,mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,curSession,curSessionType,varargin)
+function [h_fig,h_axes,h_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle,mean_session_digit_trajectories,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,curSession,curSessionType,varargin)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -50,14 +50,17 @@ numTrials = length(all_endPtFrame);
 axes(h_axes{1}(1,1));
 % binEdges = 0 : pi/20 : 2*pi;
 
-polarhistogram(digit_endAngle,20);
+polarhistogram(paw_endAngle,20);
 title('paw orientations at reach end')
 
 % paw angle at reach end point as a function of trial #
 axes(h_axes{1}(1,2));
-plot(trialNumbers(:,2),digit_endAngle);
+plot(trialNumbers(:,2),paw_endAngle);
+hold on
+plot(trialNumbers(:,2),paw_endAngle + 2*pi);
+
 title('paw orientation at reach end')
-set(gca,'ylim',[0,2*pi]);
+set(gca,'ylim',[-pi,3*pi]);
 % axes(h_axes{1}(1,2));
 % plot(trialNumbers,all_paw_through_slot_frame);
 % title('paw through slot frame frame')

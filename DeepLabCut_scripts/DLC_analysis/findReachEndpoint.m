@@ -106,8 +106,6 @@ for iPart = 1 : numPawParts
 end
 z_smooth = squeeze(xyz_smooth(:,3,:));
 
-
-
 % z_smooth = smoothdata(z_coords,1,'movmean',smoothSize);
 localMins = islocalmin(z_smooth, 1);
 
@@ -126,7 +124,8 @@ catch
     keyboard
 end
 
-triggerFrame = min(paw_through_slot_frame,video_triggerFrame); % probably not necessary
+% triggerFrame = min(paw_through_slot_frame,video_triggerFrame); % probably not necessary
+triggerFrame = paw_through_slot_frame; % probably not necessary
 partEndPts = zeros(numPawParts,3);
 partEndPtFrame = zeros(numPawParts,1);
 for iPart = 1 : numPawParts
@@ -212,14 +211,19 @@ end
 digits_behind_slot_frames = digits_behind_slot_frames & paw_through_slot_frame_mask;
 
 first_pd_return = pd_behind_slot_frames(pd_behind_slot_frames > pd_through_slot_frame);
+if isempty(first_pd_return)
+    first_pd_return = length(pawDorsum_z);
+else
+    first_pd_return = first_pd_return(1);
+end
 first_digits_return = find(digits_behind_slot_frames,1);
 
 first_paw_return = min(first_digits_return,first_pd_return);
 
-if isempty(first_paw_return)
-    first_paw_return = length(pawDorsum_z);
-else
-    first_paw_return = first_paw_return(1);
-end
+% if isempty(first_paw_return)
+%     first_paw_return = length(pawDorsum_z);
+% else
+%     first_paw_return = first_paw_return(1);
+% end
 
 end

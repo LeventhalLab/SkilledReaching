@@ -1,4 +1,4 @@
-function [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,invalid_direct,pawPref)
+function [mcpAngle,pipAngle,digitAngle,pawAngle] = determineDirectPawOrientation(direct_pts,direct_bp,invalid_direct,pawPref)
 %
 % function to determine the angle of the paw in the direct view with
 % respect to horizontal (vertical?)
@@ -24,6 +24,7 @@ numFrames = size(direct_pts,2);
 mcpAngle = NaN(numFrames,1);
 pipAngle = NaN(numFrames,1);
 digitAngle = NaN(numFrames,1);
+pawAngle = NaN(numFrames,1);
 
 farthestMCPidx = NaN(numFrames,2);
 farthestPIPidx = NaN(numFrames,2);
@@ -56,7 +57,14 @@ for iFrame = 1 : numFrames
         % left paws
         digitAngle(iFrame) = pointsAngle(DIGpts);
     end
-
+    
+    if diff(farthestDIGidx(iFrame,:)) == 3   % valid points for the first and fourth digits
+        pawAngle(iFrame) = digitAngle(iFrame);
+    elseif diff(farthestPIPidx(iFrame,:)) == 3
+        pawAngle(iFrame) = pipAngle(iFrame);
+    elseif diff(farthestMCPidx(iFrame,:)) == 3
+        pawAngle(iFrame) = mcpAngle(iFrame);
+    end
 end
 
 end

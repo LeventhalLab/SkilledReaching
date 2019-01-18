@@ -143,6 +143,7 @@ for i_rat = 4 : numRatFolders
         all_mcpAngle = zeros(size(pawTrajectory,1),numTrials);
         all_pipAngle = zeros(size(pawTrajectory,1),numTrials);
         all_digitAngle = zeros(size(pawTrajectory,1),numTrials);
+        all_pawAngle = zeros(size(pawTrajectory,1),numTrials);
         allTrajectories = NaN(size(pawTrajectory,1),size(pawTrajectory,2),size(pawTrajectory,3),numTrials);
         
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
@@ -201,15 +202,17 @@ for i_rat = 4 : numRatFolders
             end
             invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
             
-            [mcpAngle,pipAngle,digitAngle] = determineDirectPawOrientation(direct_pts,direct_bp,invalid_direct,pawPref);
+            [mcpAngle,pipAngle,digitAngle,pawAngle] = determineDirectPawOrientation(final_direct_pts,direct_bp,invalid_direct,pawPref);
             if length(mcpAngle) < size(all_mcpAngle,1)
                 mcpAngle(end+1:size(all_mcpAngle,1)) = 0;
                 pipAngle(end+1:size(all_pipAngle,1)) = 0;
                 digitAngle(end+1:size(all_digitAngle,1)) = 0;
+                pawAngle(end+1:size(all_pawAngle,1)) = 0;
             end
             all_mcpAngle(:,iTrial) = mcpAngle;
             all_pipAngle(:,iTrial) = pipAngle;
             all_digitAngle(:,iTrial) = digitAngle;
+            all_pawAngle(:,iTrial) = pawAngle;
             
             [~,~,~,mirror_pawdorsum_idx,~,pellet_idx,~] = group_DLC_bodyparts(mirror_bp,pawPref);
             [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
@@ -328,7 +331,7 @@ for i_rat = 4 : numRatFolders
             'normalized_pd_trajectories','normalized_digit_trajectories',...
             'smoothed_pd_trajectories','smoothed_digit_trajectories',...
             'interp_pd_trajectories','interp_digit_trajectories',...
-            'all_mcpAngle','all_pipAngle','all_digitAngle',...
+            'all_mcpAngle','all_pipAngle','all_digitAngle','all_pawAngle',...
             'all_endPts','all_partEndPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','thisRatInfo','thisSessionType','slot_z');
         

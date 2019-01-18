@@ -10,7 +10,7 @@ maxReprojError = 10;
 % parameters for find_invalid_DLC_points
 maxDistPerFrame = 30;
 min_valid_p = 0.85;
-min_certain_p = 0.96;
+min_certain_p = 0.97;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
