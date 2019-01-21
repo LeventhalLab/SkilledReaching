@@ -13,7 +13,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
+skipTrialPlots = false;
 skipSessionSummaryPlots = false;
 
 % REACHING SCORES:
@@ -164,7 +164,7 @@ for i_rat = 4:numRatFolders
     varApertures = cell(1,numSessions);
     endApertures = cell(1,numSessions);
     apertureTrajectories = cell(1,numSessions);
-    numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
+%     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
     for iSession = 1 : numSessions
         
@@ -243,9 +243,12 @@ for i_rat = 4:numRatFolders
         [endApertures{iSession},apertureTrajectories{iSession}] = collectApertures(all_aperture,all_paw_through_slot_frame,all_endPtFrame);
         [meanApertures{iSession},varApertures{iSession}] = summarizeApertures(apertureTrajectories{iSession});
         
-        numReachingFrames{iSession}.postSlot = all_endPtFrame - all_paw_through_slot_frame;
-        numReachingFrames{iSession}.preSlot = all_paw_through_slot_frame - all_firstPawDorsumFrame;
-        numReachingFrames{iSession}.total = all_endPtFrame - all_firstPawDorsumFrame;
+        numReachingFrames(iSession).postSlot = all_endPtFrame - all_paw_through_slot_frame;
+        numReachingFrames(iSession).preSlot = all_paw_through_slot_frame - all_firstPawDorsumFrame;
+        numReachingFrames(iSession).total = all_endPtFrame - all_firstPawDorsumFrame;
+        
+        PL_summary(iSession) = collectTrajectoryLengths(trajectoryLengths);
+        
         if ~skipSessionSummaryPlots
             [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),...
                 'var_lim',var_lim,'pawframelim',pawFrameLim);
@@ -358,7 +361,7 @@ end
     
     [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
         mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,paw_endAngle,meanOrientations,mean_MRL,...
-        endApertures,meanApertures,varApertures,numReachingFrames);
+        endApertures,meanApertures,varApertures,numReachingFrames,PL_summary);
     
     pdfName_ratSummary = sprintf('%s_trajectories_summary.pdf',ratID);
     pdfName_ratSummary = fullfile(ratRootFolder,pdfName_ratSummary);

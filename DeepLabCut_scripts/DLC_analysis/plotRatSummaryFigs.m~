@@ -1,6 +1,6 @@
 function [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
     mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle,meanOrientations,mean_MRL,...
-    endApertures,meanApertures,varApertures)
+    endApertures,meanApertures,varApertures,numReachingFrames)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -183,6 +183,13 @@ for iSession = 1 : numSessions
     hold on
 
     axes(ratSummary_h_axes(4,5))
+    % mean number of frames per reach
+    mean_reachDuration = nanmean(numReachingFrames{iSession}.total);
+    scatter(iSession,mean_reachDuration,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
+    hold on
+    title('mean duration of reaches in frames')
+    
+    axes(ratSummary_h_axes(4,5))
     % final mean paw aperture
     curApertures = sqrt(sum(endApertures{iSession}.^2,2));
     session_meanAperture = nanmean(curApertures);
@@ -210,8 +217,17 @@ for iSession = 1 : numSessions
     hold on
     title('final mean paw orientation')
     
-    axes(ratSummary_h_axes(3,3))
+    axes(ratSummary_h_axes(3,4))
+    toPlot = meanApertures{iSession};
+    plot(toPlot,'color',plotColor);
+    hold on
+    title('mean aperture vs frame')
     
+    axes(ratSummary_h_axes(3,5))
+    toPlot = varApertures{iSession};
+    plot(toPlot,'color',plotColor);
+    hold on
+    title('aperture variance vs frame')
 end
             
 axes(ratSummary_h_axes(4,1))
