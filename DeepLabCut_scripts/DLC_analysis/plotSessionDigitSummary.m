@@ -3,7 +3,7 @@ function [h_fig,h_axes,h_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_end
 x_lim = [-30 10];
 y_lim = [-15 10];
 z_lim = [-5 50];
-
+apertureLims = [0 15];
 % to plot:
 %   mean distance from mean trajectory at each point for all, correct, no
 %       pellet, and other trials (along with n)
@@ -67,11 +67,16 @@ axes(h_axes{1}(1,3));
 for iTrial = 1 : length(pawOrientationTrajectories)
     plot(pawOrientationTrajectories{iTrial})
     hold on
+%     plot(pawOrientationTrajectories{iTrial} + 2*pi)
 end
 plot(meanOrientations,'color','k','linewidth',2)
+% plot(meanOrientations+2*pi,'color','k','linewidth',2)
+title('paw orientation after slot vs frame')
+set(gca,'ylim',[-pi,pi]);
 
 axes(h_axes{1}(1,4));
 plot(mean_MRL)
+title('mean paw orientation MRL after slot vs frame')
 % plot(trialNumbers,all_paw_through_slot_frame);
 % title('paw through slot frame frame')
 % set(gca,'ylim',pawFrameLim);
@@ -86,12 +91,14 @@ end
 plot(meanApertures,'color','k','linewidth',2);
 plot(meanApertures+varApertures,'k:');
 plot(meanApertures-varApertures,'k:');
+set(gca,'ylim',apertureLims);
 title('aperture vs frames')
 
 axes(h_axes{1}(2,5));
 toPlot = sqrt(sum(endApertures.^2,2));
 plot(trialNumbers(:,2),toPlot);
 title('aperture at reach end vs trials')
+set(gca,'ylim',apertureLims);
 
 % plot mean trajectories for each digit, for each joint
 for iJoint = 1 : 3

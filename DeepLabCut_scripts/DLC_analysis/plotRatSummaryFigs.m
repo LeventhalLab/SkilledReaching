@@ -1,5 +1,6 @@
 function [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
-    mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle,meanOrientations,mean_MRL)
+    mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle,meanOrientations,mean_MRL,...
+    endApertures,meanApertures,varApertures,numReachingFrames)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -83,10 +84,14 @@ for iSession = 1 : numSessions
     % paw orientation once through slot
     toPlot = meanOrientations{iSession};
     plot(toPlot,'color',plotColor);
+    hold on
+    title('mean paw orientation')
     
     axes(ratSummary_h_axes(3,2))
     toPlot = mean_MRL{iSession};
     plot(toPlot,'color',plotColor);
+    hold on
+    title('mean paw orientation MRL')
 end
 axes(ratSummary_h_axes(1,4))
 title('mean trajectory in 3D');
@@ -98,11 +103,6 @@ set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
 axes(ratSummary_h_axes(2,4))
 title('mean euc distance from mean trajectory')
 
-axes(ratSummary_h_axes(3,1))
-title('mean paw orientation')
-
-axes(ratSummary_h_axes(3,2))
-title('mean paw orientation MRL')
 
 for iDim = 1 : 3
     axes(ratSummary_h_axes(1,iDim))
@@ -183,6 +183,21 @@ for iSession = 1 : numSessions
     hold on
 
     axes(ratSummary_h_axes(4,5))
+    % final mean paw aperture
+    curApertures = sqrt(sum(endApertures{iSession}.^2,2));
+    session_meanAperture = nanmean(curApertures);
+    scatter(iSession,session_meanAperture,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
+    hold on
+    title('mean aperture at reach end')
+    
+    axes(ratSummary_h_axes(5,5))
+    % variance in final aperture
+    session_varAperture = nanvar(curApertures);
+    scatter(iSession,session_varAperture,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
+    hold on
+    title('aperture variance at reach end')
+    
+    axes(ratSummary_h_axes(3,3))
     MRL = circ_r(digit_endAngle{iSession});
     mean_endAngle = circ_mean(digit_endAngle{iSession});
     try
@@ -193,6 +208,19 @@ for iSession = 1 : numSessions
     h_line = compass(toPlot);
     h_line.Color = plotColor;
     hold on
+    title('final mean paw orientation')
+    
+    axes(ratSummary_h_axes(3,4))
+    toPlot = meanApertures{iSession};
+    plot(toPlot,'color',plotColor);
+    hold on
+    title('mean aperture vs frame')
+    
+    axes(ratSummary_h_axes(3,5))
+    toPlot = varApertures{iSession};
+    plot(toPlot,'color',plotColor);
+    hold on
+    title('aperture variance vs frame')
 end
             
 axes(ratSummary_h_axes(4,1))
@@ -207,8 +235,7 @@ title('final mean z')
 axes(ratSummary_h_axes(4,4))
 title('final mean dist from pellet')
 
-axes(ratSummary_h_axes(4,5))
-title('final mean paw orientation')
+
 
 axes(ratSummary_h_axes(5,1))
 title('final var x')
