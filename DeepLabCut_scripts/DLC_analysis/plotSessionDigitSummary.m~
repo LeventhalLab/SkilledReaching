@@ -78,25 +78,21 @@ plot(mean_MRL)
 
 axes(h_axes{1}(1,5));
 for iTrial = 1 : length(apertureTrajectories)
-    curApertureTrajectory = apertureTrajectories{iTrial};
-    toPlot = sqrt(sum(curApertureTrajectory.^2,2));
+    toPlot = sqrt(sum(apertureTrajectories.^2,2));
     plot(toPlot);
-    hold on
 end
-plot(meanApertures,'color','k','linewidth',2);
-plot(meanApertures+varApertures,'k:');
-plot(meanApertures-varApertures,'k:');
-title('aperture vs frames')
+plot(meanApertures);
+title('aperture across frames')
 
 axes(h_axes{1}(2,5));
-toPlot = sqrt(sum(endApertures.^2,2));
-plot(trialNumbers(:,2),toPlot);
-title('aperture at reach end vs trials')
+toPlot = sqrt(sum(endApertures.^,2);   % av
+endApertures,meanApertures,varApertures,
 
 % plot mean trajectories for each digit, for each joint
 for iJoint = 1 : 3
     for iDim = 1 : 3
         axes(h_axes{1}(iJoint + 1,iDim));
+        % plot all mean MCP trajectories
         for iDigit = 1 : 4
             curDigit = (iJoint-1)*4 + iDigit;
             toPlot = squeeze(mean_session_digit_trajectories(curDigit,:,iDim,1));

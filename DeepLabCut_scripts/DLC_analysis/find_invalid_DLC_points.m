@@ -1,4 +1,4 @@
-function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, varargin)
+function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, bodyparts, pawPref, varargin)
 %
 % function to find points that are likely to be invalid in DLC output.
 % Strategy is to 1) find points with p-values that are very high and are
@@ -20,11 +20,12 @@ function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, 
 
 maxDistPerFrame = 30;
 min_valid_p = 0.85;
-min_certain_p = 0.96;
+min_certain_p = 0.97;
+maxNeighborDist = 70;
 %maxNeighborSeparation = 30;   % to be used to make sure points that should
 %be near each other are near each other
 
-for iarg = 1 : nargin - 2
+for iarg = 1 : nargin - 4
     switch lower(varargin{iarg})
         case 'maxdistperframe'
             maxDistPerFrame = varargin{iarg + 1};
@@ -32,9 +33,13 @@ for iarg = 1 : nargin - 2
             min_valid_p = varargin{iarg + 1};   % p values below this are considered to indicate poorly determined points (and exclude from subsequent analysis)
         case 'min_certain_p'
             min_certain_p = varargin{iarg + 1};   % p values above this are considered to be well-determined points (and include in subsequent analysis)
+        case 'maxneighbordist'
+            maxNeighborDist = varargin{iarg + 1};
     end
 end
 
+[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
+reachingPawParts = [mcpIdx;pipIdx;digIdx;pawDorsumIdx];
 
 num_frames = size(parts_loc, 2);
 num_bodyparts = size(parts_loc, 1);
@@ -45,6 +50,7 @@ certainPoints = p > min_certain_p;
 diff_per_frame = zeros(num_bodyparts, num_frames-1);
 poss_too_far = false(num_bodyparts,num_frames);
 
+numFrames = size(parts_loc,2);
 for iBodyPart = 1 : num_bodyparts
     
 %     invalidPoints_bp = squeeze(invalidPoints(iBodyPart,:,:));
@@ -75,3 +81,35 @@ invalidPoints = invalidPoints | poss_too_far;
 
 % could also add a check to see if points that should be near each other
 % are near each other
+
+% throw out any points on the reaching paw that are too far away from the
+% cluster of other points
+for iFrame = 1 : numFrames
+    
+    curValidIdx = find(~invalidPoints(reachingPawParts,iFrame));
+    numValidPoints = length(curValidIdx);
+    
+    if numValidPoints > 3   % if at least 4 points found, discard any point that is an outlier
+    
+        curReachingPawCoords = squeeze(parts_loc(reachingPawParts,iFrame,:));
+    	validPawCoords = curReachingPawCoords(curValidIdx,:);
+        
+        for iPoint = 1 : numValidPoints
+            testIdx = false(numValidPoints,1);
+            testIdx(iPoint) = true;
+            testPoint = validPawCoords(testIdx,:);
+            otherPoints = validPawCoords(~testIdx,:);
+        
+            [nndist,~] = findNearestNeighbor(testPoint,otherPoints);
+            
+            if nndist > maxNeighborDist
+                
+                invalidateIdx = curValidIdx(iPoint);
+                invalidPoints(reachingPawParts(invalidateIdx),iFrame) = true;
+                
+            end
+        end
+    end
+    
+    
+end
