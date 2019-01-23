@@ -22,7 +22,7 @@ rightLabel = 'right';
 mcpLabel = 'mcp';
 pipLabel = 'pip';
 digitLabel = 'digit';
-pawDorsumLabel = 'pawdorsum';
+pawDorsumLabel = 'paw';
 noseLabel = 'nose';
 pelletLabel = 'pellet';
 

@@ -105,7 +105,11 @@ for i_bp = 1 : length(parts_to_show)
 %     currentPt = undistortPoints(currentPt, boxCal.cameraParams);
     currentPt = final_direct_pt(i_directBP,:);
     
+    try
     markerColor = getMarkerColor(direct_bp{i_directBP}, bodypartColor, pawPref);
+    catch
+        keyboard
+    end
 
     if isPointValid{1}(i_directBP)
         if direct_p(i_directBP) > p_cutoff

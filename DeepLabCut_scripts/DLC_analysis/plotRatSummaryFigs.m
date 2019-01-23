@@ -200,11 +200,25 @@ for iSession = 1 : numSessions
     scatter(iSession,mean_postSlotreachDuration,'markeredgecolor','g','markerfacecolor',plotColor);
     errorbar(iSession,mean_preSlotreachDuration,std_preSlotreachDuration,'color','k')
     errorbar(iSession,mean_postSlotreachDuration,std_postSlotreachDuration,'color','g')
-    title('mean tota,pre/post-slot reach duration (s)')
+    title('mean total,pre/post-slot reach duration (s)')
     
     axes(ratSummary_h_axes(2,5))
     % mean trajectory length
     % WORKING HERE...
+    mean_preSlotLength = nanmean(PL_summary(iSession).pd_pre_slot);
+    std_preSlotLength  = nanstd(PL_summary(iSession).pd_pre_slot);
+    scatter(iSession,mean_preSlotLength,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
+    hold on
+    errorbar(iSession,mean_preSlotLength,std_preSlotLength)
+    
+    mean_postSlotLength = nanmean(PL_summary(iSession).digit_traj_length);
+    std_postSlotLength  = nanstd(PL_summary(iSession).digit_traj_length);
+    scatter(iSession,mean_postSlotLength,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
+    hold on
+    errorbar(iSession,mean_postSlotLength,std_postSlotLength)
+    title('pre- and post-slot path lengths')
+    
+    
     
     axes(ratSummary_h_axes(4,5))
     % final mean paw aperture

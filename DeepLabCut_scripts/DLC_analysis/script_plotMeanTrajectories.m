@@ -13,8 +13,8 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = false;
-skipSessionSummaryPlots = false;
+skipTrialPlots = true;
+skipSessionSummaryPlots = true;
 
 % REACHING SCORES:
 %
@@ -183,7 +183,6 @@ for i_rat = 4:numRatFolders
         try
             load(sessionSummaryName);
         catch
-%             keyboard
             fprintf('no session summary found for %s\n', sessionDirectories{iSession});
             continue
         end

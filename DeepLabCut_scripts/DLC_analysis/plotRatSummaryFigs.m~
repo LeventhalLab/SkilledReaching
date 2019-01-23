@@ -1,6 +1,6 @@
 function [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
     mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle,meanOrientations,mean_MRL,...
-    endApertures,meanApertures,varApertures,numReachingFrames)
+    endApertures,meanApertures,varApertures,numReachingFrames,PL_summary)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -182,12 +182,30 @@ for iSession = 1 : numSessions
     scatter(iSession,toPlot,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
     hold on
 
-    axes(ratSummary_h_axes(4,5))
+    axes(ratSummary_h_axes(1,5))
     % mean number of frames per reach
-    mean_reachDuration = nanmean(numReachingFrames{iSession}.total);
+    mean_reachDuration = nanmean(numReachingFrames(iSession).total) / 300;   % assume frame rate is 300 fps
+    std_reachDuration = nanstd(numReachingFrames(iSession).total/300);   % assume frame rate is 300 fps
     scatter(iSession,mean_reachDuration,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
     hold on
-    title('mean duration of reaches in frames')
+    errorbar(iSession,mean_reachDuration,std_reachDuration)
+
+    % mean number of frames per reach, pre and post-slot
+    mean_preSlotreachDuration = nanmean(numReachingFrames(iSession).preSlot) / 300;   % assume frame rate is 300 fps
+    std_preSlotreachDuration = nanstd(numReachingFrames(iSession).preSlot/300);   % assume frame rate is 300 fps
+    mean_postSlotreachDuration = nanmean(numReachingFrames(iSession).postSlot) / 300;   % assume frame rate is 300 fps
+    std_postSlotreachDuration = nanstd(numReachingFrames(iSession).postSlot/300);   % assume frame rate is 300 fps    
+    scatter(iSession,mean_preSlotreachDuration,'markeredgecolor','k','markerfacecolor',plotColor);
+    hold on
+    scatter(iSession,mean_postSlotreachDuration,'markeredgecolor','g','markerfacecolor',plotColor);
+    errorbar(iSession,mean_preSlotreachDuration,std_preSlotreachDuration,'color','k')
+    errorbar(iSession,mean_postSlotreachDuration,std_postSlotreachDuration,'color','g')
+    title('mean total,pre/post-slot reach duration (s)')
+    
+    axes(ratSummary_h_axes(2,5))
+    % mean trajectory length
+    % WORKING HERE...
+    mean_
     
     axes(ratSummary_h_axes(4,5))
     % final mean paw aperture

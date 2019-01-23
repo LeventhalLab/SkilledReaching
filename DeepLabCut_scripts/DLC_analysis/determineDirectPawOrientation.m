@@ -35,6 +35,7 @@ for iFrame = 1 : numFrames
     farthestMCPidx(iFrame,:) = findFarthestDigits(mcpIdx,~invalid_direct(:,iFrame));
     if all(farthestMCPidx(iFrame,:) > 0)
         MCPpts = squeeze(direct_pts(farthestMCPidx(iFrame,:),iFrame,:));
+        MCPpts = flipud(MCPpts);   % to make the angle point the easier-to-interpret direction
         
         % need to keep in mind that angles will be different for right and
         % left paws
@@ -44,6 +45,7 @@ for iFrame = 1 : numFrames
     farthestPIPidx(iFrame,:) = findFarthestDigits(pipIdx,~invalid_direct(:,iFrame));
     if all(farthestPIPidx(iFrame,:) > 0)
         PIPpts = squeeze(direct_pts(farthestPIPidx(iFrame,:),iFrame,:));
+        PIPpts = flipud(PIPpts);   % to make the angle point the easier-to-interpret direction
         
         % need to keep in mind that angles will be different for right and
         % left paws
@@ -53,6 +55,7 @@ for iFrame = 1 : numFrames
     farthestDIGidx(iFrame,:) = findFarthestDigits(digIdx,~invalid_direct(:,iFrame));
     if all(farthestDIGidx(iFrame,:) > 0)
         DIGpts = squeeze(direct_pts(farthestDIGidx(iFrame,:),iFrame,:));
+        DIGpts = flipud(DIGpts);   % to make the angle point the easier-to-interpret direction
         % need to keep in mind that angles will be different for right and
         % left paws
         digitAngle(iFrame) = pointsAngle(DIGpts);
