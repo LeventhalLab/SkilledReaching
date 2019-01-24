@@ -22,8 +22,8 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 9;
-iSession = 19;
+i_rat = 4;
+iSession = 1;
 iVid = 1;
 
 ratID = ratFolders(i_rat).name;
@@ -64,7 +64,7 @@ vidDirectory = fullfile(ratVidPath,sessionDirectories{iSession});
 
 cd(fullSessionDir);
 
-matList = dir([ratID '_*_3dtrajectory.mat']);
+matList = dir([ratID '_*_3dtrajectory_new.mat']);
 matList(iVid).name
 
 load(matList(iVid).name); 

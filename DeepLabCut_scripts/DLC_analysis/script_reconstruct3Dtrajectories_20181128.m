@@ -56,7 +56,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 1 : numRatFolders
+for i_rat = 4 : numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -90,7 +90,7 @@ for i_rat = 1 : numRatFolders
     else
         startSession = 1;
     end
-    for iSession = startSession : 3 : numSessions
+    for iSession = startSession : 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -204,15 +204,17 @@ for i_rat = 1 : numRatFolders
                 continue;
             end
 
-            trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory.mat', directVid_ratID(i_directcsv),...
+%             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory.mat', directVid_ratID(i_directcsv),...
+%                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
+            trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-            if exist(fullTrajName,'file')
-                % already did this calculation
-                continue;
-            end
+%             if exist(fullTrajName,'file')
+%                 % already did this calculation
+%                 continue;
+%             end
             
             cd(mirViewFolder)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
@@ -234,11 +236,13 @@ for i_rat = 1 : numRatFolders
             direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams,~invalid_direct);
             mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams,~invalid_mirror);
 
+            boxCal_fromVid = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref);
+            
             [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
                 calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
-                                      vidROI, boxCal, pawPref, frameSize,...
+                                      vidROI, boxCal_fromVid, pawPref, frameSize,...
                                       'maxdistfromneighbor',maxDistFromNeighbor);
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal, pawPref);
@@ -252,7 +256,7 @@ for i_rat = 1 : numRatFolders
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
 %                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
-                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid');
+                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','boxCal_fromVid','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid');
 %             end
             
         end
