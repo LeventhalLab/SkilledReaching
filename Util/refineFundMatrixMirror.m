@@ -1,6 +1,6 @@
 function [F,maxError] = refineFundMatrixMirror(mp1,mp2,imSize,varargin)
 
-matchTolerance = 1;    % pixels
+matchTolerance = 5;    % pixels
 maxIterations = 50;
 
 maxError = matchTolerance + 1;
@@ -12,7 +12,11 @@ while maxError > matchTolerance && numIterations < maxIterations
     
     F = fundMatrix_mirror(cur_mp1, cur_mp2);
     
+    try
     epiLines = epipolarLine(F,cur_mp1);
+    catch
+        keyboard
+    end
     borderPts = lineToBorderPoints(epiLines,imSize);
     
     distFromEpiLine = zeros(size(epiLines,1),1);

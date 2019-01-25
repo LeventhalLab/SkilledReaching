@@ -1,6 +1,6 @@
 function [boxCal_fromVid,mp_direct,mp_mirror,bp_idx,frameList] = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref,varargin)
 
-min_valid_p = 5;
+min_valid_p = 1;
 boxCal_fromVid = boxCal;
 
 imSize = [1024,2040];
@@ -61,8 +61,8 @@ for i_bp = 2 : num_direct_bp
     new_direct = squeeze(direct_pts_ud(i_bp,validPoints(i_bp,:),:));
     new_mirror = squeeze(mirror_pts_ud(mirror_bpMatch_idx(i_bp),validPoints(mirror_bpMatch_idx(i_bp),:),:));
     
-    if isrow(new_direct);new_direct = new_direct';end
-    if isrow(new_mirror);new_mirror = new_mirror';end
+    if iscolumn(new_direct);new_direct = new_direct';end
+    if iscolumn(new_mirror);new_mirror = new_mirror';end
 
     mp_direct = [mp_direct;new_direct];
     mp_mirror = [mp_mirror;new_mirror];
