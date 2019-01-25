@@ -81,7 +81,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 315;
+iFrame = 310;
 
 %%
 while hasFrame(vidIn)
@@ -110,8 +110,17 @@ while hasFrame(vidIn)
         direct_bp, mirror_bp, bodyparts, frameEstimate, ...
         boxCal, pawPref,isPointValid);
     
+    curFrame_out2 = overlayDLCreconstruction_b(curFrame_ud, points3D, ...
+        direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
+        direct_bp, mirror_bp, bodyparts, frameEstimate, ...
+        boxCal_fromVid, pawPref,isPointValid);
+    
     figure(1)
     imshow(curFrame_out);
+    set(gcf,'name',sprintf('%s, frame %d',vidName,iFrame));
+    
+        figure(2)
+    imshow(curFrame_out2);
     set(gcf,'name',sprintf('%s, frame %d',vidName,iFrame));
 
     % summarize how many times high probability points are

@@ -134,7 +134,7 @@ for i_rat = 4 : numRatFolders
         sessionReachScores = reachScores(dateNums_from_scores_table == sessionDateNum).scores;
         
         % find the pawTrajectory files
-        pawTrajectoryList = dir('R*3dtrajectory.mat');
+        pawTrajectoryList = dir('R*3dtrajectory_new.mat');
         if isempty(pawTrajectoryList)
             continue
         end

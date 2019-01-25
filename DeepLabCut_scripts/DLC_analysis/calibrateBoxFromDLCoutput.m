@@ -1,12 +1,16 @@
-function boxCal_fromVid = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref,varargin)
+function [boxCal_fromVid,mp_direct,mp_mirror,bp_idx,frameList] = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref,varargin)
 
 min_valid_p = 1;
 boxCal_fromVid = boxCal;
 
-for iarg = 1 : 2 : nargin - 9
+imSize = [1024,2040];
+
+for iarg = 1 : 2 : nargin - 11
     switch lower(varargin{iarg})
         case 'min_valid_p'
             min_valid_p = varargin{iarg + 1};
+        case 'imsize'
+            imSize = varargin{iarg + 1};
     end
 end
 
@@ -40,24 +44,36 @@ numFrames = size(direct_pts_ud,2);
 valid_mp_direct = zeros(1,2);
 valid_mp_mirror = zeros(1,2);
 
-valid_direct = (direct_p >= min_valid_p) & ~isnan(direct_pts_ud(:,:,1));
-valid_mirror = (mirror_p >= min_valid_p) & ~isnan(mirror_pts_ud(:,:,1));
+valid_direct = (direct_p >= min_valid_p) & ~isnan(direct_pts_ud(:,:,1)) & ~invalid_direct;
+valid_mirror = (mirror_p >= min_valid_p) & ~isnan(mirror_pts_ud(:,:,1)) & ~invalid_mirror;
 
 validPoints = (valid_direct & valid_mirror);
 
 % create arrays of confidently matched points between the views
 mp_direct = squeeze(direct_pts_ud(1,validPoints(1,:),:));
 mp_mirror = squeeze(mirror_pts_ud(mirror_bpMatch_idx(1),validPoints(mirror_bpMatch_idx(1),:),:));
+bp_idx = ones(size(mp_direct,1),1);
+frameList = find(validPoints(1,:))';
 for i_bp = 2 : num_direct_bp
 
-    mp_direct = [mp_direct;squeeze(direct_pts_ud(i_bp,validPoints(i_bp,:),:))];
-    mp_mirror = [mp_mirror;squeeze(mirror_pts_ud(mirror_bpMatch_idx(i_bp),validPoints(mirror_bpMatch_idx(i_bp),:),:))];
+    new_direct = squeeze(direct_pts_ud(i_bp,validPoints(i_bp,:),:));
+    new_mirror = squeeze(mirror_pts_ud(mirror_bpMatch_idx(i_bp),validPoints(mirror_bpMatch_idx(i_bp),:),:));
+    
+    mp_direct = [mp_direct;new_direct];
+    mp_mirror = [mp_mirror;new_mirror];
+    
+    bp_idx = [bp_idx;i_bp*ones(size(new_direct,1),1)];
+    
+    frameList = [frameList;find(validPoints(i_bp,:))'];
     
 end
-    
-        
 
-F = fundMatrix_mirror(mp_direct, mp_mirror);
+[F,maxError] = refineFundMatrixMirror(mp_direct,mp_mirror,imSize);
+% F = fundMatrix_mirror(mp_direct, mp_mirror);
+
+
+F2 = estimateFundamentalMatrix(mp_direct,mp_mirror);
+
 E = K * F * K';
 [rot,t] = EssentialMatrixToCameraMatrix(E);
 [cRot,cT,~] = SelectCorrectEssentialCameraMatrix_mirror(...
