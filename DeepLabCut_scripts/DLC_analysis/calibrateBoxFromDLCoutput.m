@@ -1,6 +1,6 @@
 function [boxCal_fromVid,mp_direct,mp_mirror,bp_idx,frameList] = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref,varargin)
 
-min_valid_p = 1;
+min_valid_p = 5;
 boxCal_fromVid = boxCal;
 
 imSize = [1024,2040];
@@ -56,9 +56,14 @@ bp_idx = ones(size(mp_direct,1),1);
 frameList = find(validPoints(1,:))';
 for i_bp = 2 : num_direct_bp
 
+    if ~any(validPoints(i_bp,:));continue;end
+    
     new_direct = squeeze(direct_pts_ud(i_bp,validPoints(i_bp,:),:));
     new_mirror = squeeze(mirror_pts_ud(mirror_bpMatch_idx(i_bp),validPoints(mirror_bpMatch_idx(i_bp),:),:));
     
+    if isrow(new_direct);new_direct = new_direct';end
+    if isrow(new_mirror);new_mirror = new_mirror';end
+
     mp_direct = [mp_direct;new_direct];
     mp_mirror = [mp_mirror;new_mirror];
     
@@ -70,9 +75,6 @@ end
 
 [F,maxError] = refineFundMatrixMirror(mp_direct,mp_mirror,imSize);
 % F = fundMatrix_mirror(mp_direct, mp_mirror);
-
-
-F2 = estimateFundamentalMatrix(mp_direct,mp_mirror);
 
 E = K * F * K';
 [rot,t] = EssentialMatrixToCameraMatrix(E);
