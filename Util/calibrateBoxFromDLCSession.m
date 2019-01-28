@@ -139,7 +139,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     
 end
 
-[F,maxError] = refineFundMatrixMirror(mp_direct,mp_mirror,imSize);
+[F,~] = refineFundMatrixMirror(mp_direct,mp_mirror,imSize);
 % F = fundMatrix_mirror(mp_direct, mp_mirror);
 
 E = K * F * K';
@@ -149,9 +149,10 @@ E = K * F * K';
 Ptemp = [cRot,cT];
 Pn = Ptemp';
 
-boxCal_fromVid.F(:,:,cam_matrix_idx) = F;
-boxCal_fromVid.E(:,:,cam_matrix_idx) = E;
-boxCal_fromVid.Pn(:,:,cam_matrix_idx) = Pn;
+boxCal_fromSession.F(:,:,cam_matrix_idx) = F;
+boxCal_fromSession.E(:,:,cam_matrix_idx) = E;
+boxCal_fromSession.Pn(:,:,cam_matrix_idx) = Pn;
+
 end
         
         

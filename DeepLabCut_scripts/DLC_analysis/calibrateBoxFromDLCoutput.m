@@ -47,8 +47,8 @@ validPoints = (valid_direct & valid_mirror);
 % create arrays of confidently matched points between the views
 mp_direct = squeeze(direct_pts_ud(1,validPoints(1,:),:));
 mp_mirror = squeeze(mirror_pts_ud(mirror_bpMatch_idx(1),validPoints(mirror_bpMatch_idx(1),:),:));
-if iscolumn(new_direct);new_direct = new_direct';end
-if iscolumn(new_mirror);new_mirror = new_mirror';end
+if iscolumn(mp_direct);mp_direct = mp_direct';end
+if iscolumn(mp_mirror);mp_mirror = mp_mirror';end
     
 bp_idx = ones(size(mp_direct,1),1);
 frameList = find(validPoints(1,:))';

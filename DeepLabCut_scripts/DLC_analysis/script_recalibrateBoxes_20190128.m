@@ -96,7 +96,7 @@ for i_rat = 4 : numRatFolders
     end
     
     
-    for iSession = startSession : 4 : numSessions
+    for iSession = startSession : 1 : numSessions
         
         if exist('boxCal_fromSession','var')
             clear boxCal_fromSession;
@@ -129,10 +129,17 @@ for i_rat = 4 : numRatFolders
             error('no calibration file found on or prior to %s\n',directVidDate{i_directcsv});
         end
         
-        if exist('boxCal_fromSession','var')
-            numValidSessions = length(boxCal_fromSession) + 1;
+        if isfield(boxCal,'boxCal_fromSession')
+            temp = boxCal.boxCal_fromSession;
+            sessionList = {temp.sessionName};
+            
+            if any(strcmpi(sessionList,sessionDirectories{iSession}))
+                sessionIdx = find(strcmpi(sessionList,sessionDirectories{iSession}));
+            else
+                sessionIdx = length(temp) + 1;
+            end
         else
-            numValidSessions = 1;
+            sessionIdx = 1;
         end
         
         switch pawPref
@@ -151,7 +158,7 @@ for i_rat = 4 : numRatFolders
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
         tic
-        [boxCal_fromSession(numValidSessions),~,~] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,ROIs,'imsize',frameSize);
+        [boxCal_fromSession(sessionIdx),~,~] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,ROIs,'imsize',frameSize);
         toc
 %         boxCal_fromSession(numValidSessions).sessionName = 
         

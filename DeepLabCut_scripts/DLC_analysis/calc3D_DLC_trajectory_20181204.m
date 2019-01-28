@@ -68,14 +68,6 @@ numFrames = size(final_direct_pts, 2);
                            % points be before the algorithm says there must
                            % be a mismatch?
 
-% for iarg = 1 : 2 : nargin - 10
-%     switch lower(varargin{iarg})
-%         case 'maxdistfromepipole'
-%             maxDistFromEpipole = varargin{iarg + 1};
-%     end
-% end
-
-% [~,epipole] = isEpipoleInImage(F,imSize);
 
 [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
 

@@ -83,7 +83,7 @@ invalidPoints = invalidPoints | poss_too_far;
 % are near each other
 
 % throw out any points on the reaching paw that are too far away from the
-% cluster of other points
+% cluster of other points, except for the paw dorsum
 for iFrame = 1 : numFrames
     
     curValidIdx = find(~invalidPoints(reachingPawParts,iFrame));
@@ -105,7 +105,9 @@ for iFrame = 1 : numFrames
             if nndist > maxNeighborDist
                 
                 invalidateIdx = curValidIdx(iPoint);
-                invalidPoints(reachingPawParts(invalidateIdx),iFrame) = true;
+                if invalidateIdx ~= pawDorsumIdx
+                    invalidPoints(reachingPawParts(invalidateIdx),iFrame) = true;
+                end
                 
             end
         end
