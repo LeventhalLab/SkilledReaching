@@ -79,6 +79,9 @@ numFrames = size(final_direct_pts, 2);
 
 [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
 
+% WORKING HERE - PROBLEM WITH THROWING OUT THE WRONG POINTS WHEN THE
+% OPPOSITE PAW COMES THROUGH THE SLOT AND IS MISTAKEN FOR THE "CORRECT"
+% REACHING PAW
 % match body parts between direct and mirror views
 mirror_bpMatch_idx = [];
 direct_bpMatch_idx = [];

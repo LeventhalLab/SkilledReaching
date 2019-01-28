@@ -39,11 +39,6 @@ switch pawPref
 end
 K = cameraParams.IntrinsicMatrix;
 
-numFrames = size(direct_pts_ud,2);
-
-valid_mp_direct = zeros(1,2);
-valid_mp_mirror = zeros(1,2);
-
 valid_direct = (direct_p >= min_valid_p) & ~isnan(direct_pts_ud(:,:,1)) & ~invalid_direct;
 valid_mirror = (mirror_p >= min_valid_p) & ~isnan(mirror_pts_ud(:,:,1)) & ~invalid_mirror;
 
@@ -52,6 +47,9 @@ validPoints = (valid_direct & valid_mirror);
 % create arrays of confidently matched points between the views
 mp_direct = squeeze(direct_pts_ud(1,validPoints(1,:),:));
 mp_mirror = squeeze(mirror_pts_ud(mirror_bpMatch_idx(1),validPoints(mirror_bpMatch_idx(1),:),:));
+if iscolumn(new_direct);new_direct = new_direct';end
+if iscolumn(new_mirror);new_mirror = new_mirror';end
+    
 bp_idx = ones(size(mp_direct,1),1);
 frameList = find(validPoints(1,:))';
 for i_bp = 2 : num_direct_bp

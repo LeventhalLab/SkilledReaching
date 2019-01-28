@@ -139,14 +139,13 @@ for i_rat = 4 : numRatFolders
     
 %         fullSessionDir = fullfile(ratRootFolder,sessionDirectories(iSession).name);
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
-        [directViewDir,mirrorViewDir,direct_csvList,mirror_csvList] = getDLC_csvList(fullSessionDir);
-%         cd(fullSessionDir);
+        cd(fullSessionDir);
         
 %         directViewDir = fullfile(fullSessionDir, [sessionDirectories(iSession).name '_direct']);
-%         directViewDir = fullfile(fullSessionDir, [sessionDirectories{iSession} '_direct']);
+        directViewDir = fullfile(fullSessionDir, [sessionDirectories{iSession} '_direct']);
         
-%         cd(directViewDir);
-%         direct_csvList = dir('R*.csv');
+        cd(directViewDir);
+        direct_csvList = dir('R*.csv');
         if isempty(direct_csvList)
             continue;
         end
@@ -159,14 +158,16 @@ for i_rat = 4 : numRatFolders
         % find all the direct view videos that are available
         uniqueDateList = {};
         for ii = 1 : numMarkedVids   
-%             C = textscan(direct_csvList(ii).name,'R%04d_%8c_%8c_%03d');
+            C = textscan(direct_csvList(ii).name,'R%04d_%8c_%8c_%03d');
 
-            [directVid_ratID(ii),directVidDate{ii},directVidTime{ii},directVidNum(ii)] = ...
-                extractDLC_CSV_identifiers(direct_csvList(ii).name);
-%             directVid_ratID(ii) = C{1};
-%             directVidDate{ii} = C{2};
-%             directVidTime{ii} = C{3};
-%             directVidNum(ii) = C{4};
+            directVid_ratID(ii) = C{1};
+            directVidDate{ii} = C{2};
+            directVidTime{ii} = C{3};
+            directVidNum(ii) = C{4};
+            directVid_ratID(ii) = C{1};
+            directVidDate{ii} = C{2};
+            directVidTime{ii} = C{3};
+            directVidNum(ii) = C{4};
 
             if isempty(uniqueDateList)
                 uniqueDateList{1} = directVidDate{ii};
@@ -177,33 +178,32 @@ for i_rat = 4 : numRatFolders
     
 %         sessionViewDirs = dir([sessionDirectories(iSession).name '_*']);
 %         sessionViewDirs = listFolders([sessionDirectories{iSession} '_*']);
-%         cd(fullSessionDir);
-%         for iView = 1 : numViews
-% %             possibleMirrorDir = [sessionDirectories(iSession).name '_' vidView{iView}];
-%             possibleMirrorDir = [sessionDirectories{iSession} '_' vidView{iView}];
-%             if ~exist(possibleMirrorDir,'dir') || contains(lower(possibleMirrorDir),'direct')
-%                 % if this view doesn't exist or if it's the direct view, skip
-%                 % forward (already found the direct view files)
-%                 continue;
-%             end
-%             mirViewFolder = fullfile(fullSessionDir, possibleMirrorDir);
-%             break
-%         end
+        cd(fullSessionDir);
+        for iView = 1 : numViews
+%             possibleMirrorDir = [sessionDirectories(iSession).name '_' vidView{iView}];
+            possibleMirrorDir = [sessionDirectories{iSession} '_' vidView{iView}];
+            if ~exist(possibleMirrorDir,'dir') || contains(lower(possibleMirrorDir),'direct')
+                % if this view doesn't exist or if it's the direct view, skip
+                % forward (already found the direct view files)
+                continue;
+            end
+            mirViewFolder = fullfile(fullSessionDir, possibleMirrorDir);
+            break
+        end
 
-        cd(mirrorViewDir)
-%         mirror_csvList = dir('R*.csv');
+        cd(mirViewFolder)
+        mirror_csvList = dir('R*.csv');
 
         for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
-            [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
-%             C = textscan(mirror_csvList(i_mirrorcsv).name,'R%04d_%8c_%8c_%03d');
+            C = textscan(mirror_csvList(i_mirrorcsv).name,'R%04d_%8c_%8c_%03d');
             foundMatch = false;
             for i_directcsv = 1 : numMarkedVids
-                if mirror_ratID == ratIDnum && ...      % match ratID
-                   strcmp(mirror_vidDate, sessionDate) && ...  % match date
-                   strcmp(mirror_vidTime, directVidTime{i_directcsv}) && ...  % match time
-                   mirror_vidNum == directVidNum(i_directcsv)                % match vid number
+                if C{1} == ratIDnum && ...      % match ratID
+                   strcmp(C{2}, sessionDate) && ...  % match date
+                   strcmp(C{3}, directVidTime{i_directcsv}) && ...  % match time
+                   C{4} == directVidNum(i_directcsv)                % match vid number
                     foundMatch = true;
                     break;
                 end
@@ -224,7 +224,7 @@ for i_rat = 4 : numRatFolders
 %                 continue;
 %             end
             
-            cd(mirrorViewDir)
+            cd(mirViewFolder)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
