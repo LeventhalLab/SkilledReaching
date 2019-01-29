@@ -90,7 +90,7 @@ for i_rat = 5 : 12%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 5
-        startSession = 9;
+        startSession = 10;
     else
         startSession = 1;
     end
@@ -136,7 +136,7 @@ for i_rat = 5 : 12%numRatFolders
             if any(strcmpi(sessionList,sessionDirectories{iSession}))
                 sessionIdx = find(strcmpi(sessionList,sessionDirectories{iSession}));
             else
-                sessionIdx = length(temp) + 1;
+                sessionIdx = length(boxCal_fromSession) + 1;
             end
             boxCal = rmfield(boxCal,'boxCal_fromSession');    
         else

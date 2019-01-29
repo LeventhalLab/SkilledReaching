@@ -60,7 +60,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 4 : 12%numRatFolders
+for i_rat = 13 : 13%numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -90,7 +90,7 @@ for i_rat = 4 : 12%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 5
-        startSession = 1;
+        startSession = 10;
     else
         startSession = 1;
     end
@@ -130,14 +130,15 @@ for i_rat = 4 : 12%numRatFolders
         end
         
         if isfield(boxCal,'boxCal_fromSession')
-            temp = boxCal.boxCal_fromSession;
-            sessionList = {temp.sessionName};
+            boxCal_fromSession = boxCal.boxCal_fromSession;
+            sessionList = {boxCal_fromSession.sessionName};
             
             if any(strcmpi(sessionList,sessionDirectories{iSession}))
                 sessionIdx = find(strcmpi(sessionList,sessionDirectories{iSession}));
             else
-                sessionIdx = length(temp) + 1;
+                sessionIdx = length(boxCal_fromSession) + 1;
             end
+            boxCal = rmfield(boxCal,'boxCal_fromSession');    
         else
             sessionIdx = 1;
         end
