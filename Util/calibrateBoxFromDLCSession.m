@@ -1,7 +1,19 @@
 function [boxCal_fromSession,mp_direct,mp_mirror] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,ROIs,varargin)
 
 min_valid_p_for_calibration = 1;
+
+if isfield(boxCal,'boxCal_fromSession')
+    boxCal = rmfield(boxCal,'boxCal_fromSession');
+end
 boxCal_fromSession = boxCal;
+% temp = fieldnames(boxCal);
+% for iField = 1 : length(temp)
+%     if strcmpi(temp{iField},'boxcal_fromsession')
+%         continue
+%     else
+%         boxCal_fromSession.(temp{iField}) = boxCal.(temp{iField});
+%     end
+% end
 
 % parameters for find_invalid_DLC_points
 maxDistPerFrame = 30;

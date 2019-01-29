@@ -1,15 +1,25 @@
-function slot_z = find_slot_z(trajectoryDir)
+function slot_z = find_slot_z(trajectoryDir,varargin)
 
-reachBorders = [160,220];
+reachBorders = [160,230];
 binWidth = 2;
 
 binEdges = reachBorders(1):binWidth:reachBorders(2);
 
 currentDir = pwd;
 cd(trajectoryDir);
+trajectory_file_name = 'R*3dtrajectory_new.mat';
 
+for iarg = 1 : 2 : nargin - 1
+    switch lower(varargin{iarg})
+        case 'trajectory_file_name'
+            trajectory_file_name = varargin{iarg + 1};
+    end
+end
+            
 % find the pawTrajectory files
-pawTrajectoryList = dir('R*3dtrajectory.mat');
+pawTrajectoryList = dir(trajectory_file_name);
+
+
 if isempty(pawTrajectoryList)
     slot_z = [];
     return;

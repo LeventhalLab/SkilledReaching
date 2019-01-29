@@ -13,7 +13,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
+skipTrialPlots = false;
 skipSessionSummaryPlots = false;
 
 % REACHING SCORES:
@@ -197,7 +197,7 @@ for i_rat = 4:numRatFolders
         for iType = 1 : numTrialTypes_to_analyze
             trialTypeIdx(:,iType) = extractTrialTypes(all_trialOutcomes,validTrialTypes{iType});
         end
-        matList = dir([ratID '_*_3dtrajectory.mat']);
+        matList = dir([ratID '_*_3dtrajectory_new.mat']);
 
         numTrials = size(allTrajectories,4);
         numFrames = size(allTrajectories, 1);

@@ -1,5 +1,8 @@
 % script_calculateKinematics_20181128
 
+% template name for viable trajectory files (for searching)
+trajectory_file_name = 'R*3dtrajectory_new.mat';
+
 % parameter for function trajectory_wrt_pellet:
 maxReprojError = 10;
 
@@ -134,7 +137,7 @@ for i_rat = 4 : numRatFolders
         sessionReachScores = reachScores(dateNums_from_scores_table == sessionDateNum).scores;
         
         % find the pawTrajectory files
-        pawTrajectoryList = dir('R*3dtrajectory_new.mat');
+        pawTrajectoryList = dir(trajectory_file_name);
         if isempty(pawTrajectoryList)
             continue
         end
@@ -181,8 +184,8 @@ for i_rat = 4 : numRatFolders
         trialNumbers(:,2) = resolveDuplicateTrialNumbers(trialNumbers(:,1));
         invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
         
-        slot_z = find_slot_z(fullSessionDir);
-        if slot_z < 160 || slot_z > 210
+        slot_z = find_slot_z(fullSessionDir,'trajectory_file_name',trajectory_file_name);
+        if slot_z < 160 || slot_z > 230
             keyboard
         end
         
