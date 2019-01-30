@@ -1,4 +1,4 @@
-function [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal, pawPref, varargin)
+function [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, pawPref, varargin)
 %
 % INPUTS:
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
@@ -55,7 +55,7 @@ function [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality
 % labeled invalid
 p_cutoff = 0.9;
 
-for iarg = 1 : 2 : nargin - 12
+for iarg = 1 : 2 : nargin - 11
     switch lower(varargin{iarg})
         case 'pcutoff'
             p_cutoff = varargin{iarg + 1};
@@ -67,9 +67,9 @@ high_p_mirror = mirror_p > p_cutoff;
 
 numFrames = size(pawTrajectory, 1);
 num_bp = size(pawTrajectory,3);
-% [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p);
-% [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p);
             
+[bodyparts,direct_bpMatch_idx,mirror_bpMatch_idx] = matchBodyPartIndices(direct_bp,mirror_bp);
+
 high_p_invalid = false(length(bodyparts), numFrames, 2);
 high_p_invalid(:,:,1) = high_p_direct & invalid_direct;
 high_p_invalid(:,:,2) = high_p_mirror & invalid_mirror;
@@ -92,11 +92,13 @@ end
 unscaled_trajectory = pawTrajectory / sf;
 reproj_error = zeros(num_bp,numFrames,2);
 
+
+
 for i_bp = 1 : num_bp
     
-    bpName = bodyparts{i_bp};
-    direct_bp_idx = strcmpi(direct_bp, bpName);
-    mirror_bp_idx = strcmpi(mirror_bp, bpName);
+%     bpName = bodyparts{i_bp};
+    direct_bp_idx = direct_bpMatch_idx(i_bp);%strcmpi(direct_bp, bpName);
+    mirror_bp_idx = mirror_bpMatch_idx(i_bp);%strcmpi(mirror_bp, bpName);
 
     current3D = squeeze(unscaled_trajectory(:,:,i_bp));
     
@@ -108,7 +110,11 @@ for i_bp = 1 : num_bp
     mirror_proj = projectPoints_DL(current3D, Pn);
     mirror_proj = unnormalize_points(mirror_proj,K);
     cur_mirror_pts = squeeze(final_mirror_pts(mirror_bp_idx,:,:));
+    try
     mirror_error = mirror_proj - cur_mirror_pts;
+    catch
+        keyboard
+    end
     
     reproj_error(i_bp,:,1) = sqrt(sum(direct_error.^2,2));
     reproj_error(i_bp,:,2) = sqrt(sum(mirror_error.^2,2));

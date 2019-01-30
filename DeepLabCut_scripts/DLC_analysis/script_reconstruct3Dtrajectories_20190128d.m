@@ -89,8 +89,8 @@ for i_rat = 5 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 6
-        startSession = 4;
+    if i_rat == 5
+        startSession = 12;
     else
         startSession = 4;
     end
@@ -231,7 +231,7 @@ for i_rat = 5 : numRatFolders
                                       vidROI, activeBoxCal, pawPref, frameSize,...
                                       'maxdistfromneighbor',maxDistFromNeighbor);
                                   
-            [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, activeBoxCal, pawPref);
+            [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
             
 %             [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
 %             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...

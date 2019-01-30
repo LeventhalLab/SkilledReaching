@@ -75,21 +75,23 @@ numFrames = size(final_direct_pts, 2);
 % OPPOSITE PAW COMES THROUGH THE SLOT AND IS MISTAKEN FOR THE "CORRECT"
 % REACHING PAW
 % match body parts between direct and mirror views
-mirror_bpMatch_idx = [];
-direct_bpMatch_idx = [];
-num_direct_bp = length(direct_bp);
-numValid_bp = 0;
-bodyparts = {};
-for i_bp = 1 : num_direct_bp
-    
-    if isempty(strcmpi(mirror_bp, direct_bp{i_bp}))
-        continue;
-    end
-    numValid_bp = numValid_bp + 1;
-    mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
-    direct_bpMatch_idx(numValid_bp) = i_bp;
-    bodyparts{numValid_bp} = direct_bp{i_bp};
-end
+% mirror_bpMatch_idx = [];
+% direct_bpMatch_idx = [];
+% num_direct_bp = length(direct_bp);
+% numValid_bp = 0;
+% bodyparts = {};
+% for i_bp = 1 : num_direct_bp
+%     
+%     if isempty(strcmpi(mirror_bp, direct_bp{i_bp}))
+%         continue;
+%     end
+%     numValid_bp = numValid_bp + 1;
+%     mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
+%     direct_bpMatch_idx(numValid_bp) = i_bp;
+%     bodyparts{numValid_bp} = direct_bp{i_bp};
+% end
+[bodyparts,direct_bpMatch_idx,mirror_bpMatch_idx] = matchBodyPartIndices(direct_bp,mirror_bp);
+numValid_bp = length(bodyparts);
 
 pawTrajectory = zeros(numFrames, 3, numValid_bp);
 % dist_from_epipole = zeros(numFrames, numValid_bp);
