@@ -79,7 +79,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : numRatFolders
+for i_rat = 6 : 8%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -116,7 +116,7 @@ for i_rat = 4 : numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 1 : numSessions
+    for iSession = 10 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
@@ -185,9 +185,9 @@ for i_rat = 4 : numRatFolders
         invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
         
         slot_z = find_slot_z(fullSessionDir,'trajectory_file_name',trajectory_file_name);
-        if slot_z < 160 || slot_z > 230
-            keyboard
-        end
+%         if slot_z < 160 || slot_z > 230
+%             keyboard
+%         end
         
         for iTrial = 1 : numTrials
             

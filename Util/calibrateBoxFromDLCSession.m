@@ -6,6 +6,17 @@ if isfield(boxCal,'boxCal_fromSession')
     boxCal = rmfield(boxCal,'boxCal_fromSession');
 end
 boxCal_fromSession = boxCal;
+
+[~,sessionName,~] = fileparts(fullSessionDir);
+
+% for R0189, 10171002, a reflection in the mirror view is often mistaken
+% for the pellet. So don't use the pellet for calibration in that session.
+if strcmpi(sessionName,'r0189_20171002a')
+    skipPelletForCalibration = true;
+else
+    skipPelletForCalibration = false;
+end
+
 % temp = fieldnames(boxCal);
 % for iField = 1 : length(temp)
 %     if strcmpi(temp{iField},'boxcal_fromsession')
@@ -149,6 +160,12 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     validPoints = (valid_direct & valid_mirror);
 
     for i_bp = 1 : num_direct_bp
+        
+        if strcmpi(direct_bp{i_bp},'pellet') && skipPelletForCalibration
+            % for R0189, 10171002, a reflection in the mirror view is often mistaken
+            % for the pellet. So don't use the pellet for calibration in that session.
+            continue
+        end
         if ~any(validPoints(i_bp,:));continue;end
         
         new_direct = squeeze(direct_pts_ud(i_bp,validPoints(i_bp,:),:));

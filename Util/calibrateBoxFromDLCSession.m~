@@ -6,6 +6,11 @@ if isfield(boxCal,'boxCal_fromSession')
     boxCal = rmfield(boxCal,'boxCal_fromSession');
 end
 boxCal_fromSession = boxCal;
+
+[~,sessionName,~] = fileparts(fullSessionDir);
+
+% for R0189, 10171002, a reflection in the mirror view is often mistaken
+% for the pellet. So don't use the pel
 % temp = fieldnames(boxCal);
 % for iField = 1 : length(temp)
 %     if strcmpi(temp{iField},'boxcal_fromsession')
@@ -113,18 +118,24 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     bodyparts = {};
     for i_bp = 1 : num_direct_bp
 
-        if ~any(strcmpi(mirror_bp, direct_bp{i_bp}))
-            % accept 'leftpaw' and 'leftpawdorsum' or 'righpaw' and
-            % 'rightpawdorsum' as the same thing
-            if strcmpi(direct_bp{i_bp
-            continue;
-        end
+%         if ~any(strcmpi(mirror_bp, direct_bp{i_bp}))
+%             % accept 'leftpaw' and 'leftpawdorsum' or 'righpaw' and
+%             % 'rightpawdorsum' as the same thing
+%             continue;
+%         end
+%         numValid_bp = numValid_bp + 1;
+%         try
+%         mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
+%         catch
+%             keyboard
+%         end
+        % hard coding for now that bodypart labels are in the same order in
+        % the direct and mirror views, should fix this later to make the
+        % algorithm more robust to human error
+        
         numValid_bp = numValid_bp + 1;
-        try
-        mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
-        catch
-            keyboard
-        end
+        
+        mirror_bpMatch_idx(numValid_bp) = i_bp;
         direct_bpMatch_idx(numValid_bp) = i_bp;
         bodyparts{numValid_bp} = direct_bp{i_bp};
     end

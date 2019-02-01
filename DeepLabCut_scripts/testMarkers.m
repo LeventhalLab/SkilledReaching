@@ -22,9 +22,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 4;
-iSession = 1;
-iVid = 2;
+i_rat = 6;
+iSession = 10;
+iVid = 1;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));
@@ -72,6 +72,18 @@ pawPref = thisRatInfo.pawPref;
 if iscell(pawPref)
     pawPref = pawPref{1};
 end
+
+% find the appropriate box calibration for this session
+temp = boxCal.boxCal_fromSession;
+calibratedSessionNames = {temp.sessionName};
+if any(strcmpi(calibratedSessionNames,sessionDirectories{iSession}))
+    sessionIdx = find(strcmpi(calibratedSessionNames,sessionDirectories{iSession}));
+    activeBoxCal = boxCal.boxCal_fromSession(sessionIdx);
+else
+    activeBoxCal = boxCal;
+end
+% activeBoxCal = boxCal;
+            
 [mirror_invalid_points, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p);
 [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
@@ -81,7 +93,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 260;
+iFrame = 300;
 
 %%
 while hasFrame(vidIn)
@@ -113,7 +125,7 @@ while hasFrame(vidIn)
     curFrame_out2 = overlayDLCreconstruction_b(curFrame_ud, points3D, ...
         direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
         direct_bp, mirror_bp, bodyparts, frameEstimate, ...
-        boxCal_fromVid, pawPref,isPointValid);
+        activeBoxCal, pawPref,isPointValid);
     
 %     figure(1)
 %     imshow(curFrame_out);

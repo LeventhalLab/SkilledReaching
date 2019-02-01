@@ -56,7 +56,7 @@ all_z = all_z(all_z > 0);
 % all z values should have a bimodal distribution, with a minimum where the
 % slot is (can't find the paw in the mirror view at the slot). Use Otsu's
 % method to find that minimum
-norm_thresh = graythresh(all_z / 255);
+[norm_thresh,EM] = graythresh(all_z / 255);
 slot_z = norm_thresh * 255;
 
 % figure(2);
