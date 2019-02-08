@@ -1,33 +1,11 @@
-% script_calculateKinematics_20181128
+% script_writeReachParametersToTable
 
 % template name for viable trajectory files (for searching)
 trajectory_file_name = 'R*3dtrajectory_new.mat';
 
-% parameter for function trajectory_wrt_pellet:
-maxReprojError = 10;
+% template name for reach summary files
+kinematics_summary_name = 'R*_kinematicsSummary.mat';
 
-% parameters for function interpolateTrajectories
-num_pd_TrajectoryPoints = 100;
-num_digit_TrajectoryPoints = 100;
-start_z_pawdorsum = 46;
-smoothWindow = 3;
-
-% parameters for find_invalid_DLC_points
-maxDistPerFrame = 30;
-min_valid_p = 0.85;
-min_certain_p = 0.97;
-maxDistFromNeighbor_invalid = 70;
-
-% parameters for function findFirstPawDorsumFrames:
-min_consec_frames = 5;
-pThresh = 0.98; 
-max_consecutive_misses = 50;
-maxReprojError_pawDorsum = 10;    % if paw dorsum found in both views, only count it if they are more or less on the same epipolar line
-% slot_z = 200;   % only count it if the paw dorsum was found on the far side of the reaching slot
-
-% parameters for findReachEndpoint
-smoothSize = 3;
-% slot_z_wrt_pellet = 25;
 
 % REACHING SCORES:
 %
@@ -42,25 +20,6 @@ smoothSize = 3;
 % 8 - Used only contralateral paw
 % 9 - Laser fired at the wrong time
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
-
-% parameter for initPelletLocation
-time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
-
-% calculate the following kinematic parameters:
-% 1. max velocity
-% 2. average trajectory for a session
-% 3. deviation from that trajectory for a session
-% 4. distance between trajectories
-% 5. closest distance paw to pellet
-% 6. minimum z
-
-% hard-coded in info about each rat including handedness
-% script_ratInfo_for_deepcut;
-% ratInfo_IDs = [ratInfo.ratID];
-
-% use the pellet as the origin for all trajectories. That way it should be
-% easy to make left vs right-pawed trajectories overlap - just reflect
-% across x = 0. I think this will be OK. -DL 20181015
 
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 % shouldn't need this - calibration should be included in the pawTrajectory
@@ -79,7 +38,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 11 : 11%numRatFolders
+for i_rat = 9 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
