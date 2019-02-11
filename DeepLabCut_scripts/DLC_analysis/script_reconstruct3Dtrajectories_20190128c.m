@@ -90,11 +90,11 @@ for i_rat = 11 : 11%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 11
-        startSession = 3;
+        startSession = 21;
     else
-        startSession = 3;
+        startSession = 1;
     end
-    for iSession = startSession : 4 : numSessions
+    for iSession = startSession : 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};

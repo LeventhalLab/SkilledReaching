@@ -116,7 +116,7 @@ for i_rat = 11 : 11%numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 11:11 %1 : numSessions
+    for iSession = 20:20%1 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
