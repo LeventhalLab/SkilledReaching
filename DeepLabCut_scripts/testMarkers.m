@@ -22,9 +22,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 13;
-iSession = 10;
-iVid = 1;
+i_rat = 8;
+iSession = 7;
+iVid = 23;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));
@@ -93,7 +93,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 300;
+iFrame = 219;
 
 %%
 while hasFrame(vidIn)
@@ -127,13 +127,13 @@ while hasFrame(vidIn)
         direct_bp, mirror_bp, bodyparts, frameEstimate, ...
         activeBoxCal, pawPref,isPointValid);
     
-%     figure(1)
-%     imshow(curFrame_out);
-%     set(gcf,'name',sprintf('%s, frame %d',vidName,iFrame));
-    
-        figure(2)
+    figure(1)
     imshow(curFrame_out2);
     set(gcf,'name',sprintf('%s, frame %d',vidName,iFrame));
+    
+%         figure(2)
+%     imshow(curFrame_out2);
+%     set(gcf,'name',sprintf('%s, frame %d',vidName,iFrame));
 
     % summarize how many times high probability points are
     % declared invalid
