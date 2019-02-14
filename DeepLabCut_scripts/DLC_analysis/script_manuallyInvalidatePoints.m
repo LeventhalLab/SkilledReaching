@@ -112,6 +112,11 @@ for i_rat = 4 : 13%numRatFolders
             % second dimension for mirror view)
             
             % find all frames/bodyparts with distMoved > max3Ddist_perFrame
-            
-    
+            poss_pawTooLarge = pawSpan > maxPawSpan;
+            poss_movedTooFar = distMoved > max3Ddist_perFrame;
+            % note that distMoved has one fewer point than the number of
+            % frames. Potential bad frames include the frame at the index
+            % of poss_movedTooFar and the next one.
+            for iFrame = 1 : numFrames
+    %   WORKING HERE...
     
