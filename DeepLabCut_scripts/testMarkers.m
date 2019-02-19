@@ -22,9 +22,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 8;
-iSession = 7;
-iVid = 23;
+i_rat = 4;
+iSession = 5;
+iVid = 12;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));
@@ -93,7 +93,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 219;
+iFrame = 658;
 
 %%
 while hasFrame(vidIn)
@@ -127,7 +127,7 @@ while hasFrame(vidIn)
         direct_bp, mirror_bp, bodyparts, frameEstimate, ...
         activeBoxCal, pawPref,isPointValid);
     
-    figure(1)
+    figure(2)
     imshow(curFrame_out2);
     set(gcf,'name',sprintf('%s, frame %d',vidName,iFrame));
     

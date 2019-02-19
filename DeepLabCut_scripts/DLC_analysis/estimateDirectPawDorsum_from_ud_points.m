@@ -67,26 +67,58 @@ for iFrame = 1 : numFrames
         % first look for valid mcp's, then valid pip's, then valid digit
         % tips
         foundValidPoints = false;
-        validTest = ~invalid_direct(direct_mcp_idx,iFrame);
-        if any(validTest)   % at least one mcp was identified
-            digitPts = squeeze(direct_pts_ud(direct_mcp_idx(validTest),iFrame,:));
+%         validTest = ~invalid_direct(direct_mcp_idx,iFrame);
+        validMCP = ~invalid_direct(direct_mcp_idx,iFrame);
+        validPIP = ~invalid_direct(direct_pip_idx,iFrame);
+        validDigits = ~invalid_direct(direct_digit_idx,iFrame);
+        if (validMCP(2) && validMCP(3)) || (validMCP(1) && validMCP(4))
+            digitPts = squeeze(direct_pts_ud(direct_mcp_idx,iFrame,:));
+            validPts = validMCP;
+            foundValidPoints = true;
+        elseif (validPIP(2) && validPIP(3)) || (validPIP(1) && validPIP(4))
+            digitPts = squeeze(direct_pts_ud(direct_pip_idx,iFrame,:));
+            validPts = validPIP;
+            foundValidPoints = true;
+        elseif (validDigits(2) && validDigits(3)) || (validDigits(1) && validDigits(4))
+            digitPts = squeeze(direct_pts_ud(direct_digit_idx,iFrame,:));
+            validPts = validDigits;
+            foundValidPoints = true;
+        elseif any(validMCP)
+            digitPts = squeeze(direct_pts_ud(direct_mcp_idx,iFrame,:));
+            validPts = validMCP;
+            foundValidPoints = true;
+        elseif any(validPIP)
+            digitPts = squeeze(direct_pts_ud(direct_pip_idx,iFrame,:));
+            validPts = validPIP;
+            foundValidPoints = true;
+        elseif any(validDigits)
+            digitPts = squeeze(direct_pts_ud(direct_digit_idx,iFrame,:));
+            validPts = validDigits;
             foundValidPoints = true;
         end
-        if ~foundValidPoints
-            validTest = ~invalid_direct(direct_pip_idx,iFrame);
-            if any(validTest)   % at least one pip was identified
-                digitPts = squeeze(direct_pts_ud(direct_pip_idx(validTest),iFrame,:));
-                foundValidPoints = true;
-            end
-        end
-        if ~foundValidPoints
-            validTest = ~invalid_direct(direct_digit_idx,iFrame);
-            if any(validTest)    % at least one digit tip was identified
-                digitPts = squeeze(direct_pts_ud(direct_digit_idx(validTest),iFrame,:));
-                foundValidPoints = true;
-            end
-        end
         if foundValidPoints && ~invalid_mirrorPawDorsum(iFrame)
+            digitsMidpoint = findDigitsMidpoint(digitPts,validPts);
+
+%         if any(validTest)   % at least one mcp was identified
+%             
+%             digitPts = squeeze(direct_pts_ud(direct_mcp_idx(validTest),iFrame,:));
+%             foundValidPoints = true;
+%         end
+%         if ~foundValidPoints
+%             validTest = ~invalid_direct(direct_pip_idx,iFrame);
+%             if any(validTest)   % at least one pip was identified
+%                 digitPts = squeeze(direct_pts_ud(direct_pip_idx(validTest),iFrame,:));
+%                 foundValidPoints = true;
+%             end
+%         end
+%         if ~foundValidPoints
+%             validTest = ~invalid_direct(direct_digit_idx,iFrame);
+%             if any(validTest)    % at least one digit tip was identified
+%                 digitPts = squeeze(direct_pts_ud(direct_digit_idx(validTest),iFrame,:));
+%                 foundValidPoints = true;
+%             end
+%         end
+        
             % does the epipolar line intersect the region bounded by the
             % identified points?
             if size(validDirectPoints,1) == 1    % only one valid point in the direct view
@@ -103,30 +135,26 @@ for iFrame = 1 : numFrames
             epiPts = lineToBorderPoints(epiLine, frameSize);
             epiPts = [epiPts(1:2);epiPts(3:4)];
 
-            if iscolumn(digitPts)
-                digitPts = digitPts';
-            end
-%             if size(digitPts,1) == numel(digitPts)
-%                 % if digitPts is a column vector, convert to row vector
+%             if iscolumn(digitPts)
 %                 digitPts = digitPts';
 %             end
                     
             % find index of digitPts that is closest to the epipolar line
-            [nndist, nnidx] = findNearestPointToLine(epiPts, digitPts);
+%             [nndist, nnidx] = findNearestPointToLine(epiPts, digitPts);
                 
             if isempty(intersectPoints)
-                % find the knuckle closest to the epipolar line
+                
+                [np,d] = findNearestPointOnLine(epiPts,digitsMidpoint);
+                
+                if d < maxDistFromNeighbor   % if the estimated point is too far from identified points, ignore it
+                    % find the point on the epipolar line closest to the
+                    % digits midpoint
 
-                if nndist < maxDistFromNeighbor   % if the estimated point is too far from identified points, ignore it
-                    % find the point on the epipolar line closest to any of the
-                    % identified digit points
-
-                    np = findNearestPointOnLine(epiPts,digitPts(nnidx,:));
                     final_directPawDorsum_pts(iFrame,:) = np;
                     isEstimate(iFrame) = true;
                 end
             else
-                [nndist2,nnidx2] = findNearestNeighbor(digitPts(nnidx,:), intersectPoints);
+                [nndist2,nnidx2] = findNearestNeighbor(digitsMidpoint, intersectPoints);
                 if nndist2 < maxDistFromNeighbor
                     np = intersectPoints(nnidx2,:);
                     final_directPawDorsum_pts(iFrame,:) = np;

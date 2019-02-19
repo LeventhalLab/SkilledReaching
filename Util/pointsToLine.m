@@ -6,6 +6,10 @@ function lineOut = pointsToLine(X)
 % INPUTS:
 %   X - either a 2 x 2 array where each row is an (x,y) pair, or a
 %       4-element vector of (x1,y1,x2,y2)
+%
+% OUTPUTS:
+%   lineOut - [A,B,C] triple such that Ax + By + C = 0 is a line that
+%       passes through both points in X
 
 A = 1;
 

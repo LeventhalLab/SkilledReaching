@@ -3,14 +3,15 @@
 trajectory_file_name = 'R*3dtrajectory_new.mat';
 
 max3Ddist_perFrame = 10;   % mm
-maxPawSpan = 20;
+maxPawSpan = 22;
 
 maxDistPerFrame = 30;
 min_valid_p = 0.85;
 min_certain_p = 0.97;
 
 % whether or not to take advantage of previously invalidated points so they
-% can be skipped this time trhou
+% can be skipped this time through. May set to false if think a mistake was
+% made previously
 use_previously_invalidated_points = true;
 
 % REACHING SCORES:
@@ -111,7 +112,7 @@ for i_rat = 4 : 13%numRatFolders
         
         numTrials = length(pawTrajectoryList);
         
-        for iTrial = 2 : numTrials
+        for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
             
@@ -122,7 +123,10 @@ for i_rat = 4 : 13%numRatFolders
             numFrames = size(direct_p,2);
             num_bodyparts = length(bodyparts);
 
-            manually_invalidated_points = false(numFrames,num_bodyparts,2);
+            % if points weren't previously invalidated, or if 
+            if ~use_previously_invalidated_points || ~exist('manually_invalidated_points','var')
+                manually_invalidated_points = false(numFrames,num_bodyparts,2);
+            end
                 
             if any(poss_pawTooLarge) || any(poss_movedTooFar(:))   % there's at least one suspicious point...
                 
@@ -148,15 +152,35 @@ for i_rat = 4 : 13%numRatFolders
                     % not going to care about frame 1 anyway, and this way
                     % don't have to worry about indexing < 1
 
+%                     if any(manually_invalidated_points(iFrame,:))
+%                         % already identified points to skip in this frame
+%                         continue;
+%                     end
                     if poss_pawTooLarge(iFrame) || any(poss_movedTooFar(iFrame,:)) || any(poss_movedTooFar(iFrame-1,:))
                         
                         if poss_pawTooLarge(iFrame)
                             max_span_bodypartidx = find(maxSpanIdx(:,iFrame));
-                            fprintf('large paw for frame %d, paw parts %s and %s  \n', ...
-                                iFrame, bodyparts{max_span_bodypartidx(1)}, bodyparts{max_span_bodypartidx(2)});
+                            if manually_invalidated_points(iFrame,max_span_bodypartidx) % already marked this point invalid
+                                skipPossTooLarge = true;
+                            else
+                                fprintf('large paw for frame %d, paw parts %s and %s  \n', ...
+                                    iFrame, bodyparts{max_span_bodypartidx(1)}, bodyparts{max_span_bodypartidx(2)});
+                                skipPossTooLarge = false;
+                            end
                         end
                         if any(poss_movedTooFar(iFrame,:))
+%                             if any(manually_invalidated_points(iFrame+1,:))
+%                                 continue;
+%                             end
                             excessJumpParts_idx = find(poss_movedTooFar(iFrame,:));
+                            for ii = 1 : length(excessJumpParts_idx)
+                                if manually_invalidated_points(iFrame,excessJumpParts_idx) || manually_invalidated_points(iFrame+1,excessJumpParts_idx)
+                                    excessJumpParts_idx(ii) = [];
+                                end
+                            end
+                            if isempty(excessJumpParts_idx)
+                                skipPossTooFar(1) = true;
+                            else
                             partsString = bodyparts{excessJumpParts_idx(1)};
                             if length(excessJumpParts_idx) > 1
                                 for ii = 2 : length(excessJumpParts_idx)
@@ -167,7 +191,10 @@ for i_rat = 4 : 13%numRatFolders
                                 partsString, iFrame, iFrame + 1);
                         end
                         if any(poss_movedTooFar(iFrame-1,:))
-                            excessJumpParts_idx = find(poss_movedTooFar(iFrame,:));
+                            if any(manually_invalidated_points(iFrame-1,:))
+                                continue;
+                            end
+                            excessJumpParts_idx = find(poss_movedTooFar(iFrame-1,:));
                             partsString = bodyparts{excessJumpParts_idx(1)};
                             if length(excessJumpParts_idx) > 1
                                 for ii = 2 : length(excessJumpParts_idx)

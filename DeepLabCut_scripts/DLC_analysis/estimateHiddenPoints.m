@@ -244,15 +244,41 @@ else
         epiBorderPts = lineToBorderPoints(epiLine, imSize);
         epiBorderPts = [epiBorderPts(1:2);epiBorderPts(3:4)];
 
-        if any(isnan(nextDigitKnuckles(:)))
-            % Look for the closest point in the intersection of the
-            % epipolar line with the same knuckle on the neighboring digits
-            [~, nnidx] = findNearestPointToLine(epiBorderPts, nextDigitKnuckles);
-            [nndist, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
-            if nndist < maxDistFromNeighbor
-                np = intersectPoints(nnidx2,:);
+        if any(~isnan(nextDigitKnuckles(:)))
+            % at least one knuckle on a neighboring digit was found
+            % is this digit 2 or 3, and were both neighboring digits found?
+            if all(~isnan(nextDigitKnuckles(:)))
+                % both neighboring digits were found
+                % find the intersection between the epipolar line and the
+                % segment connecting the two adjacent knuckles
+                [knuckleIntersectPoint,isPtBetweenKnuckles] = findIntersection(nextDigitKnuckles, epiLine);
+                if isPtBetweenKnuckles(1)
+                    np = knuckleIntersectPoint;
+                else
+                    % the intersection between the epipolar line and the
+                    % line defined by the neighboring knuckles is not
+                    % between those knuckles. Find the closest point on the
+                    % epipolar line to one of the neighboring knuckles
+                    [~, nnidx] = findNearestPointToLine(epiBorderPts, nextDigitKnuckles);
+                    [nndist, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
+                    if nndist < maxDistFromNeighbor
+                        np = intersectPoints(nnidx2,:);
+                    else
+                        np = [];
+                    end
+                end
             else
-                np = [];
+                % only one neighboring digit was found
+                
+                % Look for the closest point in the intersection of the
+                % epipolar line with the same knuckle on the neighboring digits
+                [~, nnidx] = findNearestPointToLine(epiBorderPts, nextDigitKnuckles);
+                [nndist, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
+                if nndist < maxDistFromNeighbor
+                    np = intersectPoints(nnidx2,:);
+                else
+                    np = [];
+                end
             end
         else
             % the neighboring digits for the same knuckle weren't found

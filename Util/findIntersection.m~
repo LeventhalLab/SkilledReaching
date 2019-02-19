@@ -7,7 +7,9 @@ function int_pt = findIntersection(line1,line2)
 %       OR...
 %       two 2x2 matrices containing x,y points that define two lines
 %       OR...
-%       one of each
+%       a 4-element vector of (x1,y1,x2,y2)
+%       OR...
+%       any combination of the above
 %
 % OUTPUTS:
 %   int_pt - intersection point [x,y]
@@ -16,9 +18,25 @@ function int_pt = findIntersection(line1,line2)
 
 int_pt = zeros(1,2);
 
-if all(size(line1) == 2)
-    % input 1 is a 2 x 2 a
+if all(size(line1) == 2) || length(line1) == 4
+    % input 1 is a 2 x 2 array or a 4-element vector
+    a = pointsToLine(line1);
+else
+    a = line1;
+end
+if all(size(line2) == 2) || length(line2) == 4
+    % input 2 is a 2 x 2 array
+    
+else
+    b = line2;
+end
 
+int_pt(2) = (line2(3)/line2(1) - a(3)/a(1)) / ...
+                (a(2)/a(1) - line2(2)/line2(1));
+
+int_pt(1) = (-a(3) - a(2)*int_pt(2)) / a(1);
+    
+    
 if length(line1) == 3 && length(line2) == 3
     % both inputs are [A,B,C] coefficients such that Ax + By + C = 0
     int_pt(2) = (line2(3)/line2(1) - line1(3)/line1(1)) / ...

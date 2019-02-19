@@ -152,44 +152,84 @@ for i_rat = 4 : 13%numRatFolders
                     % not going to care about frame 1 anyway, and this way
                     % don't have to worry about indexing < 1
 
-                    if any(manually_invalidated_points(iFrame,:))
-                        % already identified points to skip in this frame
-                        continue;
-                    end
+%                     if any(manually_invalidated_points(iFrame,:))
+%                         % already identified points to skip in this frame
+%                         continue;
+%                     end
+                    skipPossTooLarge = true;
+                    skipPossTooFar = true(1,2);
                     if poss_pawTooLarge(iFrame) || any(poss_movedTooFar(iFrame,:)) || any(poss_movedTooFar(iFrame-1,:))
                         
                         if poss_pawTooLarge(iFrame)
                             max_span_bodypartidx = find(maxSpanIdx(:,iFrame));
-                            fprintf('large paw for frame %d, paw parts %s and %s  \n', ...
-                                iFrame, bodyparts{max_span_bodypartidx(1)}, bodyparts{max_span_bodypartidx(2)});
+                            temp = squeeze(manually_invalidated_points(iFrame,max_span_bodypartidx,:));
+                            if any(temp(:)) % already marked this point invalid
+                                skipPossTooLarge = true;
+                            else
+                                fprintf('large paw for frame %d, paw parts %s and %s  \n', ...
+                                    iFrame, bodyparts{max_span_bodypartidx(1)}, bodyparts{max_span_bodypartidx(2)});
+                                skipPossTooLarge = false;
+                            end
                         end
                         if any(poss_movedTooFar(iFrame,:))
-                            if any(manually_invalidated_points(iFrame+1,:))
-                                continue;
-                            end
+%                             if any(manually_invalidated_points(iFrame+1,:))
+%                                 continue;
+%                             end
                             excessJumpParts_idx = find(poss_movedTooFar(iFrame,:));
-                            partsString = bodyparts{excessJumpParts_idx(1)};
-                            if length(excessJumpParts_idx) > 1
-                                for ii = 2 : length(excessJumpParts_idx)
-                                    partsString = [partsString ', ' bodyparts{excessJumpParts_idx(ii)}];
+                            toRemove = [];
+                            for ii = 1 : length(excessJumpParts_idx)
+                                temp1 = squeeze(manually_invalidated_points(iFrame,excessJumpParts_idx,:));
+                                temp2 = squeeze(manually_invalidated_points(iFrame+1,excessJumpParts_idx,:));
+                                if any(temp1(:)) || any(temp2(:))
+                                    toRemove = [toRemove,ii];
                                 end
                             end
-                            fprintf('part(s) %s jumped too far between frames %d and %d\n',...
-                                partsString, iFrame, iFrame + 1);
+                            excessJumpParts_idx(toRemove) = [];
+                            if isempty(excessJumpParts_idx)
+                                skipPossTooFar(1) = true;
+                            else
+                                partsString = bodyparts{excessJumpParts_idx(1)};
+                                if length(excessJumpParts_idx) > 1
+                                    for ii = 2 : length(excessJumpParts_idx)
+                                        partsString = [partsString ', ' bodyparts{excessJumpParts_idx(ii)}];
+                                    end
+                                end
+                                fprintf('part(s) %s jumped too far between frames %d and %d\n',...
+                                    partsString, iFrame, iFrame + 1);
+                                skipPossTooFar(1) = false;
+                            end
                         end
                         if any(poss_movedTooFar(iFrame-1,:))
-                            if any(manually_invalidated_points(iFrame-1,:))
-                                continue;
-                            end
+%                             if any(manually_invalidated_points(iFrame-1,:))
+%                                 continue;
+%                             end
                             excessJumpParts_idx = find(poss_movedTooFar(iFrame-1,:));
-                            partsString = bodyparts{excessJumpParts_idx(1)};
-                            if length(excessJumpParts_idx) > 1
-                                for ii = 2 : length(excessJumpParts_idx)
-                                    partsString = [partsString ', ' bodyparts{excessJumpParts_idx(ii)}];
+                            toRemove = [];
+                            for ii = 1 : length(excessJumpParts_idx)
+                                temp1 = squeeze(manually_invalidated_points(iFrame,excessJumpParts_idx,:));
+                                temp2 = squeeze(manually_invalidated_points(iFrame-1,excessJumpParts_idx,:));
+                                if any(temp1(:)) || any(temp2(:))
+                                    toRemove = [toRemove,ii];
                                 end
                             end
-                            fprintf('part(s) %s jumped too far between frames %d and %d\n',...
-                                partsString, iFrame-1, iFrame);
+                            excessJumpParts_idx(toRemove) = [];
+                            if isempty(excessJumpParts_idx)
+                                skipPossTooFar(2) = true;
+                            else
+                                partsString = bodyparts{excessJumpParts_idx(1)};
+                                if length(excessJumpParts_idx) > 1
+                                    for ii = 2 : length(excessJumpParts_idx)
+                                        partsString = [partsString ', ' bodyparts{excessJumpParts_idx(ii)}];
+                                    end
+                                end
+                                fprintf('part(s) %s jumped too far between frames %d and %d\n',...
+                                    partsString, iFrame-1, iFrame);
+                                skipPossTooFar(2) = false;
+                            end
+                        end
+                        
+                        if skipPossTooLarge && all(skipPossTooFar)
+                            continue;
                         end
                         % there's a concerning point in this frame
                         vidIn.CurrentTime = (iFrame)/vidIn.FrameRate;

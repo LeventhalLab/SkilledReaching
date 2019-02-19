@@ -96,7 +96,7 @@ for i_rat = 8 : 8%numRatFolders
     end
     
     
-    for iSession = 19:numSessions%startSession : 1 : numSessions
+    for iSession = 20:numSessions%startSession : 1 : numSessions
         
         if exist('boxCal_fromSession','var')
             clear boxCal_fromSession;
