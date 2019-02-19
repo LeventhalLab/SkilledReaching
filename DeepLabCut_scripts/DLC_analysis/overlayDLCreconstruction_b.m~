@@ -52,7 +52,6 @@ colorTextLabels{4} = 'digit 4 - green';
 colorTextLabels{5} = 'proximal dark-->distal light';
 
 topLeftTextPosition = [20,20];
-topLeftTextPosition2 = [1800,20];
 textFontSize = 20;
 textRowSpacing = textFontSize + 8;
 textColor = 'black';
@@ -237,15 +236,13 @@ if makeKey
     img_out = insertText(img_out,textPosition,textStr,'fontsize',textFontSize,'textcolor',textColor);
     
     textStr = cell(length(bodyparts),1);
-    textColor2 = zeros(length(bodyparts),3);
     textPosition2 = zeros(length(textStr), 2);
     for ii = 1 : length(textStr)
         textStr{ii} = sprintf('%d - %s',ii,bodyparts{ii});
-        textPosition2(ii,1) = topLeftTextPosition2(1);
-        textPosition2(ii,2) = topLeftTextPosition2(2) + (ii-1)*textRowSpacing;
-        textColor2(ii,:) = getMarkerColor(bodyparts{ii}, bodypartColor, pawPref);
+        textPosition(ii,1) = topLeftTextPosition(1);
+        textPosition2(ii,2) = topLeftTextPosition(2) + (iRow-1)*textRowSpacing;
     end
-    img_out = insertText(img_out,textPosition2,textStr,'fontsize',textFontSize,'textcolor',textColor2);
+    img_out = insertText(img_out,textPosition,textStr,'fontsize',textFontSize,'textcolor',textColor);
 end
 
 end

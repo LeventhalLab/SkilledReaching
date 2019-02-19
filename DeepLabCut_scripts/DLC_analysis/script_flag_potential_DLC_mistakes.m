@@ -50,7 +50,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : 13%numRatFolders
+for i_rat = 13 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -139,7 +139,7 @@ for i_rat = 4 : 13%numRatFolders
             % at least one of the identified points is a mistake)?
             partsTrajectory = nanTrajectory(:,:,pawParts);
             pawSpan = zeros(numFrames,1);
-            maxSpanIdx = false(length(pawParts),numFrames,length(pawParts));
+            maxSpanIdx = false(length(pawParts),numFrames);
             for iFrame = 1 : numFrames
                 temp = squeeze(partsTrajectory(iFrame,:,:))';
                 [pawSpan(iFrame),maxSpanIdx(:,iFrame)]= findFarthestPoints(temp);

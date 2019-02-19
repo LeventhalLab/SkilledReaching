@@ -3,7 +3,31 @@
 % template name for viable trajectory files (for searching)
 trajectory_file_name = 'R*3dtrajectory_new.mat';
 
-max3Ddist_perFrame = 5;   % mm
+% parameter for function trajectory_wrt_pellet:
+maxReprojError = 10;
+
+% parameters for function interpolateTrajectories
+num_pd_TrajectoryPoints = 100;
+num_digit_TrajectoryPoints = 100;
+start_z_pawdorsum = 46;
+smoothWindow = 3;
+
+% parameters for find_invalid_DLC_points
+maxDistPerFrame = 30;
+min_valid_p = 0.85;
+min_certain_p = 0.97;
+maxDistFromNeighbor_invalid = 70;
+
+% parameters for function findFirstPawDorsumFrames:
+min_consec_frames = 5;
+pThresh = 0.98; 
+max_consecutive_misses = 50;
+maxReprojError_pawDorsum = 10;    % if paw dorsum found in both views, only count it if they are more or less on the same epipolar line
+% slot_z = 200;   % only count it if the paw dorsum was found on the far side of the reaching slot
+
+% parameters for findReachEndpoint
+smoothSize = 3;
+% slot_z_wrt_pellet = 25;
 
 % REACHING SCORES:
 %
@@ -92,7 +116,7 @@ for i_rat = 8 : 8%numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 4:11%3 : numSessions
+    for iSession = 14:numSessions%3 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
@@ -120,40 +144,105 @@ for i_rat = 8 : 8%numRatFolders
         
         numTrials = length(pawTrajectoryList);
         
-        for iTrial = 12 : numTrials
+        load(pawTrajectoryList(1).name);
+        
+%         all_v = zeros(size(pawTrajectory,1)-1,3,size(pawTrajectory,3),numTrials);
+%         all_a = zeros(size(pawTrajectory,1)-2,3,size(pawTrajectory,3),numTrials);
+%         all_dist_from_pellet = zeros(size(pawTrajectory,1),size(pawTrajectory,3),numTrials);
+        all_mcpAngle = zeros(size(pawTrajectory,1),numTrials);
+        all_pipAngle = zeros(size(pawTrajectory,1),numTrials);
+        all_digitAngle = zeros(size(pawTrajectory,1),numTrials);
+        all_pawAngle = zeros(size(pawTrajectory,1),numTrials);
+        allTrajectories = NaN(size(pawTrajectory,1),size(pawTrajectory,2),size(pawTrajectory,3),numTrials);
+        
+        [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
+        numReachingPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
+        all_endPts = zeros(numReachingPawParts, 3, numTrials);
+        all_partEndPts = zeros(numReachingPawParts, 3, numTrials);
+        all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
+        all_paw_through_slot_frame = zeros(numTrials,1);
+        all_firstPawDorsumFrame = zeros(numTrials,1);
+        all_aperture = NaN(size(pawTrajectory,1),3,numTrials);
+        all_initPellet3D = NaN(numTrials, 3);
+        all_endPtFrame = NaN(numTrials,1);
+        all_trialOutcomes = NaN(numTrials,1);
+        all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
+        vidNum = zeros(numTrials,1);
+        
+        pelletMissingFlag = false(numTrials,1);
+        % sometimes the session restarted and we get duplicate trial
+        % numbers. The first column of trialNumbers will contain the trial
+        % numbers from the file names. The second column will contain trial
+        % numbers as recorded in the csv scoring tables.
+        trialNumbers = zeros(numTrials,2);
+        for iTrial = 1 : numTrials
+            C = textscan(pawTrajectoryList(iTrial).name, [ratID '_' sessionDateString '_%d-%d-%d_%d_3dtrajectory.mat']); 
+            trialNumbers(iTrial,1) = C{4};
+        end
+        % necessary because if the skilled reaching VI restarted, need to
+        % account for renumbering the videos
+        trialNumbers(:,2) = resolveDuplicateTrialNumbers(trialNumbers(:,1));
+        invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
+        
+        slot_z = find_slot_z(fullSessionDir,'trajectory_file_name',trajectory_file_name);
+%         if slot_z < 160 || slot_z > 230
+%             keyboard
+%         end
+        
+        for iTrial = 1 : numTrials
             
             load(pawTrajectoryList(iTrial).name);
-            numFrames = size(direct_p,2);
-            num_bodyparts = length(bodyparts);
-            nanTrajectory = pawTrajectory;
+            % occasionally there's a video that's too short - truncated
+            % during recording? maybe VI turned off in mid-recording?
+            % if that's the case, pad with false values
+            if size(isEstimate,2) < size(all_isEstimate,2)
+                isEstimate(:,end+1:size(all_isEstimate,2),:) = false;
+            end 
+            all_isEstimate(:,:,:,iTrial) = isEstimate;
+
+            trialOutcome = sessionReachScores(trialNumbers(iTrial,2));
+            all_trialOutcomes(iTrial) = trialOutcome;
             
-            nanTrajectory(nanTrajectory == 0) = NaN;
-            % calculate distance between points in adjacent frames; if
-            % point jumped too far, flag as a possible error
-            distMoved = zeros(numFrames-1,num_bodyparts);
-            move_too_far_flag = false(numFrames,num_bodyparts);
-            for i_bp = 1 : num_bodyparts
-                partTrajectory = squeeze(nanTrajectory(:,:,i_bp));
-                distMoved(:,i_bp) = sqrt(sum(diff(partTrajectory).^2,2));
-                move_too_far_flag(2:end,i_bp) = distMoved(:,i_bp) > max3Ddist_perFrame;
-            end
-                
-            [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
-            pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
-            % are there frames where the paw is too big (presumably because
-            % at least one of the identified points is a mistake)?
-            partsTrajectory = nanTrajectory(:,:,pawParts);
-            for iFrame = 1 : numFrames
-                temp = squeeze(partsTrajectory(iFrame,:,:));
-                [farthestDist,ptsIdx]= findFarthestPoints(temp);
-            end
+%             invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
+%             invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
+            
+            
             [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
             
-
+            if size(invalid_direct,2) < size(invalid3Dpoints,2)
+                % make any points that aren't in a truncated video invalid
+                invalid_direct(:,end+1:size(invalid3Dpoints,2)) = true;
+                invalid_mirror(:,end+1:size(invalid3Dpoints,2)) = true;
+            end
+            invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
             
+            if exist('','var')
+                invalid3Dpoints(:,:,iTrial) = invalid3Dpoints(:,:,iTrial) | manually_invalidated_points
+            end
+            
+            [mcpAngle,pipAngle,digitAngle,pawAngle] = determineDirectPawOrientation(final_direct_pts,direct_bp,invalid_direct,pawPref);
+            if length(mcpAngle) < size(all_mcpAngle,1)
+                mcpAngle(end+1:size(all_mcpAngle,1)) = 0;
+                pipAngle(end+1:size(all_pipAngle,1)) = 0;
+                digitAngle(end+1:size(all_digitAngle,1)) = 0;
+                pawAngle(end+1:size(all_pawAngle,1)) = 0;
+            end
+            all_mcpAngle(:,iTrial) = mcpAngle;
+            all_pipAngle(:,iTrial) = pipAngle;
+            all_digitAngle(:,iTrial) = digitAngle;
+            all_pawAngle(:,iTrial) = pawAngle;
+            
+            [~,~,~,mirror_pawdorsum_idx,~,pellet_idx,~] = group_DLC_bodyparts(mirror_bp,pawPref);
+            [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
+            
+            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            
+            pellet_reproj_error = squeeze(reproj_error(pellet_idx,:,:));
+            initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,pellet_reproj_error,...
+                'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
 
             if ~isempty(initPellet3D)
                 % most likely, pellet wasn't brought up by the delivery arm

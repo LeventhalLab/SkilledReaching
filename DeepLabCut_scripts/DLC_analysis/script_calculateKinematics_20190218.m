@@ -79,7 +79,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 8 : 8%numRatFolders
+for i_rat = 4 : 4%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -116,7 +116,7 @@ for i_rat = 8 : 8%numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 14:16%3 : numSessions
+    for iSession = 1:numSessions%3 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
@@ -218,6 +218,11 @@ for i_rat = 8 : 8%numRatFolders
                 invalid_mirror(:,end+1:size(invalid3Dpoints,2)) = true;
             end
             invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
+            
+            if exist('manually_invalidated_points','var')
+                temp_manually_invalidated = squeeze(manually_invalidated_points(:,:,1))' | squeeze(manually_invalidated_points(:,:,2))';
+                invalid3Dpoints(:,:,iTrial) = invalid3Dpoints(:,:,iTrial) | temp_manually_invalidated;
+            end
             
             [mcpAngle,pipAngle,digitAngle,pawAngle] = determineDirectPawOrientation(final_direct_pts,direct_bp,invalid_direct,pawPref);
             if length(mcpAngle) < size(all_mcpAngle,1)
