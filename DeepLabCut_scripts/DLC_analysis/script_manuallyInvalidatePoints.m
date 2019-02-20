@@ -144,7 +144,8 @@ for i_rat = 4 : 13%numRatFolders
                 [direct_invalid_points, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
                                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p);
 
-
+                direct_invalid_points = direct_invalid_points | squeeze(manually_invalidated_points(:,:,1))';
+                mirror_invalid_points = mirror_invalid_points | squeeze(manually_invalidated_points(:,:,2))';
                 % note that distMoved has one fewer point than the number of
                 % frames. Potential bad frames include the frame at the index
                 % of poss_movedTooFar and the next one.
@@ -259,7 +260,7 @@ for i_rat = 4 : 13%numRatFolders
                         if tf
                             manually_invalidated_points(iFrame,invalid_pt_idx,1) = true;
                         end
-                        [invalid_pt_idx,tf] = listdlg('promptstring','INVALID MIRROR VIEW POIINTS','liststring',mirror_bp);
+                        [invalid_pt_idx,tf] = listdlg('promptstring','INVALID MIRROR VIEW POINTS','liststring',mirror_bp);
                         if tf
                             manually_invalidated_points(iFrame,invalid_pt_idx,2) = true;
                         end

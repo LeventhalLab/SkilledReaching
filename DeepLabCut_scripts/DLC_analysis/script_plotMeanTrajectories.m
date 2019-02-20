@@ -166,7 +166,7 @@ for i_rat = 8:8%:numRatFolders
     apertureTrajectories = cell(1,numSessions);
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
-    for iSession = 18:18%1:numSessions
+    for iSession = 16:20%numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDateString = C{1};

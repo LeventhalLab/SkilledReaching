@@ -92,11 +92,11 @@ for i_rat = 4:4%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 4
-        startSession = 5;
+        startSession = 1;
     else
-        startSession = 3;
+        startSession = 1;
     end
-    for iSession = startSession : 4 : numSessions
+    for iSession = startSession : 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -166,7 +166,7 @@ for i_rat = 4:4%numRatFolders
 
         cd(mirrorViewDir)
 
-        for i_mirrorcsv = 12 : length(mirror_csvList)
+        for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
@@ -194,14 +194,9 @@ for i_rat = 4:4%numRatFolders
                 % already did this calculation
                 if repeatCalculations
                     load(fullTrajName)
-                    if ~exist('manually_invalidated_points','var')
-                        manually_invalidated_points = false(numFrames,num_bodyparts,2);
-                    end
                 else
                     continue;
                 end
-            else
-                manually_invalidated_points = false(numFrames,num_bodyparts,2);
             end
             
             cd(mirrorViewDir)
@@ -209,6 +204,12 @@ for i_rat = 4:4%numRatFolders
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
+            if ~exist('manually_invalidated_points','var')
+                numFrames = size(direct_p,2);
+                num_bodyparts = length(direct_bp);
+                manually_invalidated_points = false(numFrames,num_bodyparts,2);
+            end
+                    
             numDirectFrames = size(direct_p,1);
             numMirrorFrames = size(mirror_p,1);
     

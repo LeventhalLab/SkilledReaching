@@ -1,5 +1,13 @@
 function [boxCal_fromSession,mp_direct,mp_mirror] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,ROIs,varargin)
+%
+%
+%
+% INPUTS:
+%
+% OUTPUTS:
+%
 
+usePriorTrajFile = true;   % whether or not to use previously calculated trajectory info and manually invalidated points
 min_valid_p_for_calibration = 1;
 
 if isfield(boxCal,'boxCal_fromSession')
@@ -17,22 +25,13 @@ else
     skipPelletForCalibration = false;
 end
 
-% temp = fieldnames(boxCal);
-% for iField = 1 : length(temp)
-%     if strcmpi(temp{iField},'boxcal_fromsession')
-%         continue
-%     else
-%         boxCal_fromSession.(temp{iField}) = boxCal.(temp{iField});
-%     end
-% end
-
 % parameters for find_invalid_DLC_points
 maxDistPerFrame = 30;
 min_valid_p = 0.85;
 min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
-imSize = [1024,2040];
+imSize = [1024,2040];   % hard-coded for now
 
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -45,9 +44,11 @@ for iarg = 1 : 2 : nargin - 5
         case 'min_certain_p'
             min_certain_p = varargin{iarg + 1};   % p values above this are considered to be well-determined points (and include in subsequent analysis)
         case 'maxneighbordist'
-            maxNeighborDist = varargin{iarg + 1};
+            maxDistFromNeighbor_invalid = varargin{iarg + 1};
         case 'imsize'
             imSize = varargin{iarg + 1};
+        case 'usepriortrajfile'
+            usePriorTrajFile = varargin{iarg + 1};
     end
 end
 
@@ -97,25 +98,57 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     
     [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
 
-    foundMatch = false;
-    for i_directcsv = 1 : numMarkedVids
-        if mirror_ratID == ratIDnum && ...      % match ratID
-           strcmp(mirror_vidDate, sessionDate) && ...  % match date
-           strcmp(mirror_vidTime, directVidTime{i_directcsv}) && ...  % match time
-           mirror_vidNum == directVidNum(i_directcsv)                % match vid number
-            foundMatch = true;
-            break;
+    % is there a corresponding paw trajectory file for this video? If so,
+    % may want to find manually invalidated points, and can skip the direct
+    % and mirror points undistortion because they're already in the file
+    trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', mirror_ratID,...
+                mirror_vidDate,mirror_vidTime,mirror_vidNum);
+	fullTrajName = fullfile(fullSessionDir,trajName);
+    if exist(fullTrajName,'file') && usePriorTrajFile
+        load(fullTrajName);
+        direct_pts_ud = final_direct_pts;
+        mirror_pts_ud = final_mirror_pts;
+        num_direct_bp = length(direct_bp);
+        
+        [invalid_mirror, ~] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
+            'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
+        [invalid_direct, ~] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
+            'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
+        invalid_mirror = invalid_mirror | squeeze(manually_invalidated_points(:,:,2))';
+        invalid_direct = invalid_direct | squeeze(manually_invalidated_points(:,:,1))';
+    else
+        % if points haven't been previously undistorted, do so now
+        
+        foundMatch = false;
+        for i_directcsv = 1 : numMarkedVids
+            if mirror_ratID == ratIDnum && ...      % match ratID
+               strcmp(mirror_vidDate, sessionDate) && ...  % match date
+               strcmp(mirror_vidTime, directVidTime{i_directcsv}) && ...  % match time
+               mirror_vidNum == directVidNum(i_directcsv)                % match vid number
+                foundMatch = true;
+                break;
+            end
         end
-    end
-    if ~foundMatch
-        continue;
+        if ~foundMatch
+            continue;
+        end
+        cd(mirrorViewDir)
+        [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
+        cd(directViewDir)
+        [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
+        
+        [invalid_mirror, ~] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
+            'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
+        [invalid_direct, ~] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
+            'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
+    
+        direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),cameraParams,~invalid_direct);
+        mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),cameraParams,~invalid_mirror);
+        numFrames = size(direct_p,2);
+        num_bodyparts = length(direct_bp);
+        manually_invalidated_points = false(numFrames,num_bodyparts,2);
     end
 
-    cd(mirrorViewDir)
-    [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
-    cd(directViewDir)
-    [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
-            
     % match body parts between direct and mirror views
     mirror_bpMatch_idx = [];
     direct_bpMatch_idx = [];
@@ -123,7 +156,6 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     numValid_bp = 0;
     bodyparts = {};
     for i_bp = 1 : num_direct_bp
-
 %         if ~any(strcmpi(mirror_bp, direct_bp{i_bp}))
 %             % accept 'leftpaw' and 'leftpawdorsum' or 'righpaw' and
 %             % 'rightpawdorsum' as the same thing
@@ -135,24 +167,16 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
 %         catch
 %             keyboard
 %         end
-        % hard coding for now that bodypart labels are in the same order in
-        % the direct and mirror views, should fix this later to make the
-        % algorithm more robust to human error
-        
+    % hard coding for now that bodypart labels are in the same order in
+    % the direct and mirror views, should fix this later to make the
+    % algorithm more robust to human error
+
         numValid_bp = numValid_bp + 1;
-        
+
         mirror_bpMatch_idx(numValid_bp) = i_bp;
         direct_bpMatch_idx(numValid_bp) = i_bp;
         bodyparts{numValid_bp} = direct_bp{i_bp};
     end
-
-    [invalid_mirror, ~] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
-        'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
-    [invalid_direct, ~] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
-        'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
-            
-    direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),cameraParams,~invalid_direct);
-    mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),cameraParams,~invalid_mirror);
     
     valid_direct = (direct_p >= min_valid_p_for_calibration) & ~isnan(direct_pts_ud(:,:,1)) & ~invalid_direct;
     valid_mirror = (mirror_p >= min_valid_p_for_calibration) & ~isnan(mirror_pts_ud(:,:,1)) & ~invalid_mirror;

@@ -153,8 +153,12 @@ for i_bp = 1 : length(parts_to_show)
 
     if isPointValid{2}(i_mirrorBP)
         if mirror_p(i_mirrorBP) > p_cutoff
+            try
             img_out = insertMarker(img_out, currentPt, DLC_highProbMarkerType,...
                 'color',markerColor,'size',markerSize);
+            catch
+                keyboard
+            end
         else
             img_out = insertMarker(img_out, currentPt, DLC_lowProbMarkerType,...
                 'color',markerColor,'size',markerSize);

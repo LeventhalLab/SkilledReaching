@@ -4,7 +4,7 @@
 trajectory_file_name = 'R*3dtrajectory_new.mat';
 
 % parameter for function trajectory_wrt_pellet:
-maxReprojError = 10;
+maxReprojError = 15;
 
 % parameters for function interpolateTrajectories
 num_pd_TrajectoryPoints = 100;
@@ -116,7 +116,7 @@ for i_rat = 8 : 8%numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 18:18%:numSessions%3 : numSessions
+    for iSession = 1:1%:numSessions%3 : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
@@ -161,6 +161,8 @@ for i_rat = 8 : 8%numRatFolders
         all_partEndPts = zeros(numReachingPawParts, 3, numTrials);
         all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
         all_paw_through_slot_frame = zeros(numTrials,1);
+        all_first_pawPart_outside_box = zeros(numReachingPawParts, numTrials);
+        all_firstSlotBreak = zeros(numReachingPawParts, numTrials);
         all_firstPawDorsumFrame = zeros(numTrials,1);
         all_aperture = NaN(size(pawTrajectory,1),3,numTrials);
         all_initPellet3D = NaN(numTrials, 3);
@@ -203,10 +205,6 @@ for i_rat = 8 : 8%numRatFolders
             trialOutcome = sessionReachScores(trialNumbers(iTrial,2));
             all_trialOutcomes(iTrial) = trialOutcome;
             
-%             invalid_direct = find_invalid_DLC_points(direct_pts, direct_p);
-%             invalid_mirror = find_invalid_DLC_points(mirror_pts, mirror_p);
-            
-            
             [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
@@ -238,8 +236,30 @@ for i_rat = 8 : 8%numRatFolders
             
             [~,~,~,mirror_pawdorsum_idx,~,pellet_idx,~] = group_DLC_bodyparts(mirror_bp,pawPref);
             [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
+            pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
             
-            [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            numFrames = size(direct_p,2);
+            num_bodyparts = length(bodyparts);
+            nanTrajectory = pawTrajectory;
+            
+            nanTrajectory(nanTrajectory == 0) = NaN;
+            distMoved = zeros(numFrames-1,num_bodyparts);
+
+            for i_bp = 1 : num_bodyparts
+                partTrajectory = squeeze(nanTrajectory(:,:,i_bp));
+                distMoved(:,i_bp) = sqrt(sum(diff(partTrajectory).^2,2));
+            end
+            % are there frames where the paw is too big (presumably because
+            % at least one of the identified points is a mistake)?
+            partsTrajectory = nanTrajectory(:,:,pawParts);
+            pawSpan = zeros(numFrames,1);
+            maxSpanIdx = false(length(pawParts),numFrames);
+            for iFrame = 1 : numFrames
+                temp = squeeze(partsTrajectory(iFrame,:,:))';
+                [pawSpan(iFrame),maxSpanIdx(:,iFrame)]= findFarthestPoints(temp);
+            end
+            
+            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
             
             pellet_reproj_error = squeeze(reproj_error(pellet_idx,:,:));
             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,pellet_reproj_error,...
@@ -250,14 +270,6 @@ for i_rat = 8 : 8%numRatFolders
                 % on this trial
                 all_initPellet3D(iTrial,:) = initPellet3D;
             end
-            
-%             paw_through_slot_frame = min(firstSlotBreak(digIdx));
-%             if isnan(paw_through_slot_frame)
-%                 paw_through_slot_frame = min(firstSlotBreak(pipIdx));
-%             end
-%             if isnan(paw_through_slot_frame)
-%                 paw_through_slot_frame = min(firstSlotBreak(mcpIdx));
-%             end
 
             pawDorsum_p = squeeze(mirror_p(mirror_pawdorsum_idx,:));
             paw_z = squeeze(pawTrajectory(:,3,pawdorsum_idx));
@@ -266,6 +278,8 @@ for i_rat = 8 : 8%numRatFolders
                 'pthresh',pThresh,'min_consec_frames',min_consec_frames,'max_consecutive_misses',max_consecutive_misses,...
                 'slot_z',slot_z,'maxreprojerror',maxReprojError_pawDorsum);
             all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
+            all_first_pawPart_outside_box(:,iTrial) = first_pawPart_outside_box;
+            all_firstSlotBreak(:,iTrial) = firstSlotBreak;
             
 %             if isempty(firstPawDorsumFrame)
 %                 all_firstPawDorsumFrame(iTrial) = NaN;
@@ -338,8 +352,8 @@ for i_rat = 8 : 8%numRatFolders
             save(pawTrajectoryList(iTrial).name,'trajectory',...
                 'mcpAngle','pipAngle','digitAngle','partEndPts',...
                 'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
-                'firstPawDorsumFrame','trialOutcome','paw_through_slot_frame',...
-                'initPellet3D','aperture','-append');
+                'firstPawDorsumFrame','trialOutcome','firstSlotBreak','paw_through_slot_frame','first_pawPart_outside_box',...
+                'initPellet3D','aperture','pawSpan','maxSpanIdx','distMoved','-append');
         end
 
         allTrajectories(allTrajectories == 0) = NaN;
@@ -364,7 +378,7 @@ for i_rat = 8 : 8%numRatFolders
             'interp_pd_trajectories','interp_digit_trajectories',...
             'all_mcpAngle','all_pipAngle','all_digitAngle','all_pawAngle','all_aperture',...
             'all_endPts','all_partEndPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
-            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame',...
+            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame',...
             'trajectoryLengths','thisRatInfo','thisSessionType','slot_z');
         
     end

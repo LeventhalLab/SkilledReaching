@@ -194,14 +194,9 @@ for i_rat = 8:8%numRatFolders
                 % already did this calculation
                 if repeatCalculations
                     load(fullTrajName)
-                    if ~exist('manually_invalidated_points','var')
-                        manually_invalidated_points = false(numFrames,num_bodyparts,2);
-                    end
                 else
                     continue;
                 end
-            else
-                manually_invalidated_points = false(numFrames,num_bodyparts,2);
             end
             
             cd(mirrorViewDir)
@@ -209,6 +204,12 @@ for i_rat = 8:8%numRatFolders
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
+            if ~exist('manually_invalidated_points','var')
+                numFrames = size(direct_p,2);
+                num_bodyparts = length(direct_bp);
+                manually_invalidated_points = false(numFrames,num_bodyparts,2);
+            end
+                    
             numDirectFrames = size(direct_p,1);
             numMirrorFrames = size(mirror_p,1);
     

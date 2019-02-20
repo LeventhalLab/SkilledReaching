@@ -1,4 +1,4 @@
-function [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
+function [paw_through_slot_frame,firstSlotBreak,first_paw_outside_box] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
 %
 % INPUTS
 %   pawTrajectory
@@ -96,7 +96,7 @@ end
 
 % find the first time the paw moves in front of the slot
 firstSlotBreak = NaN(numPawParts,1);
-first_pawPart_outside_box = NaN(numPawParts,1);
+
 % assume that one of the digit tips has to be the first visible paw part
 % through the slot, but only after the paw dorsum has been found behind the
 % slot
@@ -104,34 +104,23 @@ for iDigit = 1 : length(digIdx)
     
     temp = z_coords(:,digIdx(iDigit));
     tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot
-    all_tempFrame = temp < slot_z;   % all frames, including before the paw dorsum was found inside the box
-    through_slot_borders = findConsecutiveEntries(tempFrame);   % look for consecutive frames with the paw outside the box after paw dorsum found inside the box
-    past_slot_borders = findConsecutiveEntries(all_tempFrame);  % same, but including before the paw dorsum was found inside the box
-    if ~isempty(through_slot_borders)
-        % WILL SKIP THIS IF... SEGMENT IF
+    all_tempFrame = temp < slot_first_paw_outside_box
+    through_slot_borders = findConsecutiveEntries(tempFrame);
+    if isempty(through_slot_borders)
         % couldn't find this digit AFTER the paw dorsum was found behind
         % the slot. On a handful of trials, the paw through the slot
         % already at frame 1, then the rat pulled it back and never reached
         % again.
         
-        streakLengths = through_slot_borders(:,2) - through_slot_borders(:,1) + 1;
-        streak_idx = find(streakLengths > min_consec_frames,1);
-
-        if isempty(streak_idx)
-            firstSlotBreak(digIdx(iDigit)) = find(tempFrame,1);
-        else
-            firstSlotBreak(digIdx(iDigit)) = through_slot_borders(streak_idx,1);
-        end
+        continue;
     end
-    if ~isempty(past_slot_borders)
-        streakLengths = past_slot_borders(:,2) - past_slot_borders(:,1) + 1;
-        streak_idx = find(streakLengths > min_consec_frames,1);
-
-        if isempty(streak_idx)
-            first_pawPart_outside_box(digIdx(iDigit)) = find(all_tempFrame,1);
-        else
-            first_pawPart_outside_box(digIdx(iDigit)) = past_slot_borders(streak_idx,1);
-        end
+    streakLengths = through_slot_borders(:,2) - through_slot_borders(:,1) + 1;
+    streak_idx = find(streakLengths > min_consec_frames,1);
+    
+    if isempty(streak_idx)
+        firstSlotBreak(digIdx(iDigit)) = find(tempFrame,1);
+    else
+        firstSlotBreak(digIdx(iDigit)) = through_slot_borders(streak_idx,1);
     end
 end
     
@@ -145,29 +134,17 @@ for iPart = 1 : numPawParts
     %     temp(temp == 0) = NaN;
     %     tempFrame = find(temp < slot_z,1,'first');
         tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot
-        all_tempFrame = temp < slot_z;   % all frames, including before the paw dorsum was found inside the box
         through_slot_borders = findConsecutiveEntries(tempFrame);
-        through_slot_borders = findConsecutiveEntries(tempFrame);   % look for consecutive frames with the paw outside the box after paw dorsum found inside the box
-        past_slot_borders = findConsecutiveEntries(all_tempFrame);  % same, but including before the paw dorsum was found inside the box
-        if ~isempty(through_slot_borders)
-            streakLengths = through_slot_borders(:,2) - through_slot_borders(:,1) + 1;
-            streak_idx = find(streakLengths > min_consec_frames,1);
-
-            if isempty(streak_idx)
-                firstSlotBreak(iPart) = find(tempFrame,1);
-            else
-                firstSlotBreak(iPart) = through_slot_borders(streak_idx,1);
-            end
+        if isempty(through_slot_borders)
+            continue;
         end
-        if ~isempty(past_slot_borders)
-            streakLengths = past_slot_borders(:,2) - past_slot_borders(:,1) + 1;
-            streak_idx = find(streakLengths > min_consec_frames,1);
+        streakLengths = through_slot_borders(:,2) - through_slot_borders(:,1) + 1;
+        streak_idx = find(streakLengths > min_consec_frames,1);
 
-            if isempty(streak_idx)
-                first_pawPart_outside_box(iPart) = find(all_tempFrame,1);
-            else
-                first_pawPart_outside_box(iPart) = past_slot_borders(streak_idx,1);
-            end
+        if isempty(streak_idx)
+            firstSlotBreak(iPart) = find(tempFrame,1);
+        else
+            firstSlotBreak(iPart) = through_slot_borders(streak_idx,1);
         end
 
     end
