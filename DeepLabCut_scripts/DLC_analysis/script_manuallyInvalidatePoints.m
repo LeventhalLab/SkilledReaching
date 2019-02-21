@@ -46,7 +46,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 5 : 13%numRatFolders
+for i_rat = 4 : 13%numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -83,7 +83,12 @@ for i_rat = 5 : 13%numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 1 : numSessions
+    if i_rat == 4
+        startSession = 4;
+    else
+        startSession = 1;
+    end
+    for iSession = startSession : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         vidDirectory = fullfile(ratVidPath,sessionDirectories{iSession});
@@ -123,7 +128,9 @@ for i_rat = 5 : 13%numRatFolders
             numFrames = size(direct_p,2);
             num_bodyparts = length(bodyparts);
 
-            % if points weren't previously invalidated, or if 
+            % if points weren't previously invalidated, or if not supposed
+            % to use previously invalidated points, make a new
+            % manually_invalidated_points matrix
             if ~use_previously_invalidated_points || ~exist('manually_invalidated_points','var')
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
             end
@@ -272,6 +279,7 @@ for i_rat = 5 : 13%numRatFolders
                         imshow(curFrame_out2);
                         set(gcf,'name',sprintf('%s, frame %d',vidName,iFrame));
                         
+                        keyboard
                         [invalid_pt_idx,tf] = listdlg('promptstring','INVALID DIRECT VIEW POINTS','liststring',direct_bp);
                         if tf
                             manually_invalidated_points(iFrame,invalid_pt_idx,1) = true;

@@ -106,10 +106,16 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
 	fullTrajName = fullfile(fullSessionDir,trajName);
     if exist(fullTrajName,'file') && usePriorTrajFile
         load(fullTrajName);
+        
         direct_pts_ud = final_direct_pts;
         mirror_pts_ud = final_mirror_pts;
         num_direct_bp = length(direct_bp);
         
+        if ~exist('manually_invalidated_points','var')
+            numFrames = size(direct_p,2);
+            manually_invalidated_points = false(numFrames,num_direct_bp,2);
+        end
+
         [invalid_mirror, ~] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
             'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
         [invalid_direct, ~] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...

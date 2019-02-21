@@ -116,7 +116,13 @@ for i_rat = 4 : numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 1 : numSessions
+    
+    if i_rat == 4
+        startSession = 13;
+    else
+        startSession = 1;
+    end
+    for iSession = startSession : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
@@ -193,6 +199,9 @@ for i_rat = 4 : numRatFolders
         
         for iTrial = 1 : numTrials
             
+            if exist('manually_invalidated_points','var')
+                clear manually_invalidated_points
+            end
             load(pawTrajectoryList(iTrial).name);
             % occasionally there's a video that's too short - truncated
             % during recording? maybe VI turned off in mid-recording?
@@ -237,27 +246,6 @@ for i_rat = 4 : numRatFolders
             [~,~,~,mirror_pawdorsum_idx,~,pellet_idx,~] = group_DLC_bodyparts(mirror_bp,pawPref);
             [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
             pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
-            
-            numFrames = size(direct_p,2);
-            num_bodyparts = length(bodyparts);
-            nanTrajectory = pawTrajectory;
-            
-            nanTrajectory(nanTrajectory == 0) = NaN;
-            distMoved = zeros(numFrames-1,num_bodyparts);
-
-            for i_bp = 1 : num_bodyparts
-                partTrajectory = squeeze(nanTrajectory(:,:,i_bp));
-                distMoved(:,i_bp) = sqrt(sum(diff(partTrajectory).^2,2));
-            end
-            % are there frames where the paw is too big (presumably because
-            % at least one of the identified points is a mistake)?
-            partsTrajectory = nanTrajectory(:,:,pawParts);
-            pawSpan = zeros(numFrames,1);
-            maxSpanIdx = false(length(pawParts),numFrames);
-            for iFrame = 1 : numFrames
-                temp = squeeze(partsTrajectory(iFrame,:,:))';
-                [pawSpan(iFrame),maxSpanIdx(:,iFrame)]= findFarthestPoints(temp);
-            end
             
             [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
             
@@ -348,6 +336,27 @@ for i_rat = 4 : numRatFolders
                 aperture(end+1:size(all_aperture,1),:) = NaN;
             end 
             all_aperture(:,:,iTrial) = aperture;
+            
+            num_bodyparts = length(bodyparts);
+            nanTrajectory = trajectory;
+            numFrames = size(nanTrajectory,1);
+            
+            nanTrajectory(nanTrajectory == 0) = NaN;
+            distMoved = zeros(numFrames-1,num_bodyparts);
+
+            for i_bp = 1 : num_bodyparts
+                partTrajectory = squeeze(nanTrajectory(:,:,i_bp));
+                distMoved(:,i_bp) = sqrt(sum(diff(partTrajectory).^2,2));
+            end
+            % are there frames where the paw is too big (presumably because
+            % at least one of the identified points is a mistake)?
+            partsTrajectory = nanTrajectory(:,:,pawParts);
+            pawSpan = zeros(numFrames,1);
+            maxSpanIdx = false(length(pawParts),numFrames);
+            for iFrame = 1 : numFrames
+                temp = squeeze(partsTrajectory(iFrame,:,:))';
+                [pawSpan(iFrame),maxSpanIdx(:,iFrame)]= findFarthestPoints(temp);
+            end
             
             save(pawTrajectoryList(iTrial).name,'trajectory',...
                 'mcpAngle','pipAngle','digitAngle','partEndPts',...
