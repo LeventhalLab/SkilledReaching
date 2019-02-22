@@ -83,7 +83,12 @@ for i_rat = 4 : 13%numRatFolders
     numSessions = length(sessionDirectories);
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for iSession = 1 : numSessions
+    if i_rat == 4
+        startSession = 6;
+    else
+        startSession = 1;
+    end
+    for iSession = startSession : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         vidDirectory = fullfile(ratVidPath,sessionDirectories{iSession});
