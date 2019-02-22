@@ -10,7 +10,11 @@ virus = thisRatInfo.Virus;
 if iscell(virus)
     virus = virus{1};
 end
-    
+laserTiming = thisRatInfo.laserTiming;
+if iscell(laserTiming)
+    laserTiming = laserTiming{1};
+end
+
 bodypart_idx_toPlot = find(findStringMatchinCellArray(bodyparts, bodypart_to_plot));
 
 ratSummary_figProps.m = 5;
@@ -291,7 +295,7 @@ title('final var z')
 
 
     
-textString{1} = sprintf('%s trajectory summary, Stim type: %s, Virus: %s', ratID,thisRatInfo.laserTiming,thisRatInfo.Virus);
+textString{1} = sprintf('%s trajectory summary, Stim type: %s, Virus: %s', ratID,laserTiming,virus);
 textString{2} = 'black - baseline; blue - laser stim; red - occlusion';
 textString{3} = 'row 1 - mean trajectories, row 2 - mean deviation from mean trajectories, row 4 - mean reach endpoints';
 axes(ratSummary_h_figAxis);

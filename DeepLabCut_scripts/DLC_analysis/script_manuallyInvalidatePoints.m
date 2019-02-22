@@ -84,7 +84,7 @@ for i_rat = 4 : 13%numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     if i_rat == 4
-        startSession = 7;
+        startSession = 9;
     else
         startSession = 1;
     end
