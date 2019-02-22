@@ -78,8 +78,8 @@ end
 
 session_h_figAxis = createFigAxes(session_h_fig);
 
-textString{1} = sprintf('%s all trial 3D trajectories; %s, day %d, %d days left in block, Virus: %s', ...
-    curSession, curSessionType.type, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock,virus);
+textString{1} = sprintf('%s all trial 3D trajectories; %s (%s on score sheet), day %d, %d days left in block, Virus: %s', ...
+    curSession, curSessionType.type, curSessionType.typeFromScoreSheet, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock,virus);
 textString{2} = sprintf('trial types: %s', validTypeNames{1});
 for ii = 2 : length(validTypeNames)
     textString{2} = sprintf('%s, %s', textString{2}, validTypeNames{ii});

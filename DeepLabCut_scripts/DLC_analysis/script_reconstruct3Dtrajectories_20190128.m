@@ -3,7 +3,7 @@
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
-repeatCalculations = false;
+repeatCalculations = true;
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
@@ -62,7 +62,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 12:12%numRatFolders
+for i_rat = 4:2:numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -91,12 +91,12 @@ for i_rat = 12:12%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 12
-        startSession = 1;
+    if i_rat == 4
+        startSession = 13;
     else
         startSession = 1;
     end
-    for iSession = startSession : 4 : numSessions
+    for iSession = startSession : 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -221,7 +221,15 @@ for i_rat = 12:12%numRatFolders
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
-                                  
+            
+            frames_in_this_vid = size(invalid_mirror,2);
+            frames_in_other_vids = size(manually_invalidated_points,1);
+            if frames_in_this_vid < frames_in_other_vids
+                % pad invalid_mirror and/or invalid_direct because of a
+                % video that's too short for some reason
+                invalid_mirror(:,frames_in_this_vid+1:frames_in_other_vids) = false;
+                invalid_direct(:,frames_in_this_vid+1:frames_in_other_vids) = false;
+            end
             invalid_mirror = invalid_mirror | squeeze(manually_invalidated_points(:,:,2))';
             invalid_direct = invalid_direct | squeeze(manually_invalidated_points(:,:,1))';
             
@@ -266,17 +274,11 @@ for i_rat = 12:12%numRatFolders
     end
     
 end
-% USE REPROJECTION ERROR TO INVALIDATE POINTS BEFORE ESTIMATING HIDDEN
-% LOCATION
-
-% WORK ON PAW DORSUM RECONSTRUCTION IN DIRECT VIEW - SOMETIMES WOBBLES...
-% SEE RAT 187, SESSION 1, VID 1 AROUND FRAME 265 (I THINK)
 
 
-% RUN script_calculateKinematics 
-% then run script_summaryDLCstatistics
-
-
-% MODIFY ESTIMATEHIDDENPOINTS SO THAT ESTIMATED POINTS CAN'T BE TOO FAR
-% FROM THE REST OF THE PAW
+% RUN script_recalibrateBoxes_20190128 once .csv files with DLC output from
+%   both views are loaded into appropriate folders
+% RUN this script
+% RUN script_calculateKinematics_20190218 
+% RUN script_plotMeanTrajectories
 

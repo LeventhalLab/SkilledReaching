@@ -60,6 +60,8 @@ for iCol = 2 : numCols
      end
 
      reachScores(numValidSessions).date = sessionDate;
+     temp = table2cell(scoresTable(2,iCol));
+     reachScores(numValidSessions).sessionType = temp{1};
      
      temp = table2cell(scoresTable(3:end,iCol));
      reachScores(numValidSessions).scores = NaN(length(temp),1);

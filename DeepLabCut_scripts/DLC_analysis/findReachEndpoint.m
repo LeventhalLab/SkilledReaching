@@ -32,7 +32,6 @@ function [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachE
 
 smoothSize = 3;
 slot_z = 25;
-% slot_z = 200;    % distance from the camera to the slot. hard-coded for now, eventually should mark this somehow in the video
 
 if iscategorical(pawPref)
     pawPref = char(pawPref);

@@ -158,8 +158,8 @@ for iFig = 1 : length(h_fig)
     h_figAxis(iFig) = createFigAxes(h_fig(iFig));
 end
 
-textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block, Virus: %s', ...
-    curSession, curSessionType.type, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock, virus);
+textString{1} = sprintf('%s session summary; %s (%s on score sheet), day %d, %d days left in block, Virus: %s', ...
+    curSession, curSessionType.type, curSessionType.typeFromScoreSheet, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock, virus);
 textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
 textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
 axes(h_figAxis(1));

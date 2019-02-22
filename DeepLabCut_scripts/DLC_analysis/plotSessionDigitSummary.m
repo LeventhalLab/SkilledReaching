@@ -134,8 +134,8 @@ for iFig = 1 : length(h_fig)
     h_figAxis(iFig) = createFigAxes(h_fig(iFig));
 end
 
-textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block, Virus: %s', ...
-    curSession, curSessionType.type, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock,virus);
+textString{1} = sprintf('%s session summary; %s (%s on score sheet), day %d, %d days left in block, Virus: %s', ...
+    curSession, curSessionType.type, curSessionType.typeFromScoreSheet, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock,virus);
 textString{2} = 'rows 2-4: mean digit trajectories for MCP, PIP, tips in x, y, z';
 textString{3} = '';
 axes(h_figAxis(1));
