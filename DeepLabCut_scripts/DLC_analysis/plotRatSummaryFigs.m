@@ -1,10 +1,12 @@
 function [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
     mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle,meanOrientations,mean_MRL,...
-    endApertures,meanApertures,varApertures,numReachingFrames,PL_summary)
+    endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,thisRatInfo)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
 z_lim = [-5 50];
+
+virus = thisRatInfo.Virus;
 
 bodypart_idx_toPlot = find(findStringMatchinCellArray(bodyparts, bodypart_to_plot));
 
@@ -286,7 +288,7 @@ title('final var z')
 
 
     
-textString{1} = sprintf('%s trajectory summary', ratID);
+textString{1} = sprintf('%s trajectory summary, Stim type: %s, Virus: %s', ratID,thisRatInfo.laserTiming,thisRatInfo.Virus);
 textString{2} = 'black - baseline; blue - laser stim; red - occlusion';
 textString{3} = 'row 1 - mean trajectories, row 2 - mean deviation from mean trajectories, row 4 - mean reach endpoints';
 axes(ratSummary_h_figAxis);

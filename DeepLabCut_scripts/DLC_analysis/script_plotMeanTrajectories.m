@@ -136,6 +136,7 @@ for i_rat = 8:8%:numRatFolders
     else
         pawPref = thisRatInfo.pawPref;
     end
+    virus = thisRatInfo.Virus;
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     reachScoresFile = [ratID '_scores.csv'];
@@ -249,9 +250,9 @@ for i_rat = 8:8%:numRatFolders
         PL_summary(iSession) = collectTrajectoryLengths(trajectoryLengths);
         
         if ~skipSessionSummaryPlots
-            [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),...
+            [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),...
                 'var_lim',var_lim,'pawframelim',pawFrameLim);
-            [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle{iSession},mean_session_digit_trajectories,pawOrientationTrajectories{iSession},meanOrientations{iSession},mean_MRL{iSession},apertureTrajectories{iSession},endApertures{iSession},meanApertures{iSession},varApertures{iSession},mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx));
+            [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle{iSession},mean_session_digit_trajectories,pawOrientationTrajectories{iSession},meanOrientations{iSession},mean_MRL{iSession},apertureTrajectories{iSession},endApertures{iSession},meanApertures{iSession},varApertures{iSession},mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),thisRatInfo);
             [session_h_fig,session_h_axes,session_h_figAxis] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx,...
                 sessionDirectories{iSession},sessionType(allSessionIdx),validTypeNames);
 
@@ -336,8 +337,8 @@ if ~skipTrialPlots
             xlabel('x');ylabel('z');zlabel('y');
             
             if (trial_rowNum == trajectory_figProps.m)|| iTrial == numTrials
-                textString{1} = sprintf('%s individual trial 3D trajectories; %s, day %d, %d days left in block', ...
-                    sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock);
+                textString{1} = sprintf('%s individual trial 3D trajectories; %s, day %d, %d days left in block, Virus: %s', ...
+                    sessionDirectories{iSession}, sessionType(allSessionIdx).type, sessionType(allSessionIdx).sessionsInBlock, sessionType(allSessionIdx).sessionsLeftInBlock,virus);
                 textString{2} = sprintf('trial numbers: %d', currentTrialList(1));
                 for ii = 2 : length(currentTrialList)
                     textString{2} = sprintf('%s, %d', textString{2}, currentTrialList(ii));
