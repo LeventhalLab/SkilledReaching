@@ -5,6 +5,9 @@ y_lim = [-15 10];
 z_lim = [-5 50];
 
 virus = thisRatInfo.Virus;
+if iscell(virus)
+    virus = virus{1};
+end
 
 numTrialTypes_to_analyze = size(mean_pd_trajectory,3);
 numTrials = size(normalized_pd_trajectories,3);

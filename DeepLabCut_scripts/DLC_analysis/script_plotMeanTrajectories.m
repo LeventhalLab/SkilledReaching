@@ -116,7 +116,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 8:8%:numRatFolders
+for i_rat = 12:12%:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -137,6 +137,9 @@ for i_rat = 8:8%:numRatFolders
         pawPref = thisRatInfo.pawPref;
     end
     virus = thisRatInfo.Virus;
+    if iscell(virus)
+        virus = virus{1};
+    end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     reachScoresFile = [ratID '_scores.csv'];

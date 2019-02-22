@@ -12,7 +12,10 @@ if iscell(pawPref)
 end
 
 virus = thisRatInfo.Virus;
-        
+if iscell(virus)
+    virus = virus{1};
+end
+
 figProps.m = 5;
 figProps.n = 5;
 

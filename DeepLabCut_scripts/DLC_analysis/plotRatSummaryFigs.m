@@ -7,7 +7,10 @@ y_lim = [-15 10];
 z_lim = [-5 50];
 
 virus = thisRatInfo.Virus;
-
+if iscell(virus)
+    virus = virus{1};
+end
+    
 bodypart_idx_toPlot = find(findStringMatchinCellArray(bodyparts, bodypart_to_plot));
 
 ratSummary_figProps.m = 5;

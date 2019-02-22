@@ -6,7 +6,9 @@ z_lim = [-5 50];
 apertureLims = [0 15];
 
 virus = thisRatInfo.Virus;
-
+if iscell(virus)
+    virus = virus{1};
+end
 % to plot:
 %   mean distance from mean trajectory at each point for all, correct, no
 %       pellet, and other trials (along with n)
