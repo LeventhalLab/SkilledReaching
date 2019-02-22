@@ -257,7 +257,7 @@ for i_rat = 12:12%:numRatFolders
                 'var_lim',var_lim,'pawframelim',pawFrameLim);
             [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle{iSession},mean_session_digit_trajectories,pawOrientationTrajectories{iSession},meanOrientations{iSession},mean_MRL{iSession},apertureTrajectories{iSession},endApertures{iSession},meanApertures{iSession},varApertures{iSession},mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),thisRatInfo);
             [session_h_fig,session_h_axes,session_h_figAxis] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx,...
-                sessionDirectories{iSession},sessionType(allSessionIdx),validTypeNames);
+                sessionDirectories{iSession},sessionType(allSessionIdx),validTypeNames,thisRatInfo);
 
             pdfName_sessionTrials = sprintf('%s_3dtrajectories_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionTrials = fullfile(ratRootFolder,pdfName_sessionTrials);
