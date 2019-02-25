@@ -68,6 +68,10 @@ high_p_mirror = mirror_p > p_cutoff;
 numFrames = size(pawTrajectory, 1);
 num_bp = size(pawTrajectory,3);
             
+if size(invalid_direct,2) > numFrames
+    invalid_direct = invalid_direct(:,1:numFrames);
+    invalid_mirror = invalid_mirror(:,1:numFrames);
+end
 [bodyparts,direct_bpMatch_idx,mirror_bpMatch_idx] = matchBodyPartIndices(direct_bp,mirror_bp);
 
 high_p_invalid = false(length(bodyparts), numFrames, 2);

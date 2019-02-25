@@ -68,9 +68,13 @@ cd(calImageDir);
 [csvFiles_from_same_date, csv_dateList] = group_csv_files_by_date(csvList);
 numDates = length(csv_dateList);
 
-for iDate = 11 : numDates
+for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
+    
+    if ~any(strcmp({'20180206','20180208','20180209','20180210'}, curDate))
+        continue;
+    end
     
     fprintf('working on %s\n',curDate);
     num_csvPerDate = length(csvFiles_from_same_date{iDate});

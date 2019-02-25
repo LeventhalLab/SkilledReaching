@@ -18,16 +18,24 @@ translated_pts = NaN(size(pts));
 for i_coord = 1 : 2
     translated_pts(:,:,i_coord) = pts(:,:,i_coord) + ROI(i_coord) - 1;
 end
-
+numFrames = size(pts,2);
 for i_part = 1 : size(points_ud,1)
+    
+    % sometimes, valid_pts is too large for this video because frames got
+    % cut off this video. If so, only use validFrames up to the last frame
+    % of the current video
 
-    validFrames = valid_pts(i_part,:);
+    validFrames = valid_pts(i_part,1:numFrames);
     if any(validFrames)
+        try
         cur_translated_pts = squeeze(translated_pts(i_part,validFrames,:));
+        catch
+            keyboard
+        end
         if iscolumn(cur_translated_pts)
             cur_translated_pts = cur_translated_pts';
         end
-        points_ud(i_part,valid_pts(i_part,:),:) = undistortPoints(cur_translated_pts,cameraParams);
+        points_ud(i_part,validFrames,:) = undistortPoints(cur_translated_pts,cameraParams);
     end
 
 end

@@ -13,6 +13,9 @@ P = eye(4,3);
 for iMat = 1 : length(matList)
     
     load(matList(iMat).name);
+    if ~any(strcmp({'20180206','20180208','20180209','20180210'}, curDate))
+        continue;
+    end
     K = cameraParams.IntrinsicMatrix;
     
     numBoards = size(directChecks,3);

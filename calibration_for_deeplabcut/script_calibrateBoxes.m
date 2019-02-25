@@ -22,6 +22,9 @@ P = eye(4,3);
 for iMat = 1 : length(all_pt_matList)
     
     load(all_pt_matList(iMat).name);
+    if ~any(strcmp({'20180206','20180208','20180209','20180210'}, curDate))
+        continue;
+    end
     fprintf('working on %s\n',curDate);
     % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each
     %   totalNumPts x 2 subarray contains (x,y) points for each matched
