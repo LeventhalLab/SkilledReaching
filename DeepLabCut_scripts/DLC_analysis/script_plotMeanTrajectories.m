@@ -13,8 +13,8 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
-skipSessionSummaryPlots = true;
+skipTrialPlots = false;
+skipSessionSummaryPlots = false;
 
 % REACHING SCORES:
 %
@@ -116,7 +116,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 13:numRatFolders
+for i_rat = 13:13%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -174,7 +174,7 @@ for i_rat = 13:numRatFolders
     apertureTrajectories = cell(1,numSessions);
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
-    for iSession = 1:numSessions
+    for iSession = 26:numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDateString = C{1};

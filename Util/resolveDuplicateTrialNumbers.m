@@ -14,7 +14,11 @@ end
     
 for i_reset = 1 : length(resetIdx)
     
-    realignedTrialNumbers(resetIdx(i_reset)+1:end) = ...
-        realignedTrialNumbers(resetIdx(i_reset)+1:end) + realignedTrialNumbers(resetIdx(i_reset));
-    
+    if i_reset == length(resetIdx)
+        realignedTrialNumbers(resetIdx(i_reset)+1:end) = ...
+            realignedTrialNumbers(resetIdx(i_reset)+1:end) + realignedTrialNumbers(resetIdx(i_reset));
+    else
+        realignedTrialNumbers(resetIdx(i_reset)+1:resetIdx(i_reset+1)) = ...
+            realignedTrialNumbers(resetIdx(i_reset)+1:resetIdx(i_reset+1)) + realignedTrialNumbers(resetIdx(i_reset));
+    end
 end
