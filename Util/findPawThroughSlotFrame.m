@@ -114,7 +114,11 @@ for iDigit = 1 : length(digIdx)
     
     % find the frame where this digit is closest to the camera
     maxReachExtent = min(temp);
-    maxDigitReachFrame(iDigit) = find(temp == maxReachExtent,1);
+    if isnan(maxReachExtent)
+        maxDigitReachFrame(iDigit) = NaN;
+    else
+        maxDigitReachFrame(iDigit) = find(temp == maxReachExtent,1);
+    end
 
     tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot
     all_tempFrame = temp < slot_z;   % all frames, including before the paw dorsum was found inside the box

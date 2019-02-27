@@ -83,7 +83,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 15:15%6 : numRatFolders
+for i_rat = 4 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -296,6 +296,9 @@ for i_rat = 15:15%6 : numRatFolders
                 end
                 allTrajectories(:,:,:,iTrial) = trajectory;
             end
+            save(pawTrajectoryList(iTrial).name,'mcpAngle','pipAngle','digitAngle','partEndPts',...
+                'firstPawDorsumFrame','trialOutcome','firstSlotBreak','paw_through_slot_frame','first_pawPart_outside_box',...
+                'initPellet3D','-append');
         end
         
         mean_initPellet3D = nanmean(all_initPellet3D);

@@ -1,4 +1,4 @@
-function [h_fig,h_axes,h_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,curSession,curSessionType,varargin)
+function [h_fig,h_axes,h_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,validTypeNames,curSession,curSessionType,varargin)
 
 % to plot:
 %   mean distance from mean trajectory at each point for all, correct, no
@@ -40,7 +40,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-for iarg = 1 : 2 : nargin - 13
+for iarg = 1 : 2 : nargin - 14
     switch lower(varargin{iarg})
         case 'var_lim'
             var_lim = varargin{iarg + 1};
@@ -66,6 +66,9 @@ plot(trialNumbers(:,2),all_paw_through_slot_frame);
 
 % axes(h_axes{1}(1,3));
 plot(trialNumbers(:,2),all_endPtFrame);
+
+maxReachFrames = max(all_maxDigitReachFrame');
+plot(trialNumbers(:,2),maxReachFrames);
 title('event frames')
 set(gca,'ylim',pawFrameLim);
 
