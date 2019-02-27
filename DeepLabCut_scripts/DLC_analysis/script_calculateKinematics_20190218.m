@@ -121,8 +121,8 @@ for i_rat = 4 : numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 15
-        startSession = 1;
+    if i_rat == 4
+        startSession = 14;
     else
         startSession = 1;
     end
@@ -175,7 +175,7 @@ for i_rat = 4 : numRatFolders
         all_firstSlotBreak = zeros(numReachingPawParts, numTrials);
         all_firstPawDorsumFrame = zeros(numTrials,1);
         all_aperture = NaN(size(pawTrajectory,1),3,numTrials);
-        all_maxDigitReachFrame = zeros(numTrials,4);
+        all_maxDigitReachFrame = zeros(numTrials,1);
         all_initPellet3D = NaN(numTrials, 3);
         all_endPtFrame = NaN(numTrials,1);
         all_trialOutcomes = NaN(numTrials,1);
@@ -208,6 +208,7 @@ for i_rat = 4 : numRatFolders
                 clear manually_invalidated_points
             end
             load(pawTrajectoryList(iTrial).name);
+
             % occasionally there's a video that's too short - truncated
             % during recording? maybe VI turned off in mid-recording?
             % if that's the case, pad with false values
@@ -232,8 +233,11 @@ for i_rat = 4 : numRatFolders
             invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
             
             if exist('manually_invalidated_points','var')
-                temp_manually_invalidated = squeeze(manually_invalidated_points(:,:,1))' | squeeze(manually_invalidated_points(:,:,2))';
+                num_frames = min(size(invalid3Dpoints,2),size(manually_invalidated_points,1));
+                temp_manually_invalidated = squeeze(manually_invalidated_points(1:num_frames,:,1))' | squeeze(manually_invalidated_points(1:num_frames,:,2))';
                 invalid3Dpoints(:,:,iTrial) = invalid3Dpoints(:,:,iTrial) | temp_manually_invalidated;
+                invalid_direct = invalid_direct | squeeze(manually_invalidated_points(1:num_frames,:,1))';
+                invalid_mirror = invalid_mirror | squeeze(manually_invalidated_points(1:num_frames,:,2))';
             end
             
             [mcpAngle,pipAngle,digitAngle,pawAngle] = determineDirectPawOrientation(final_direct_pts,direct_bp,invalid_direct,pawPref);
@@ -253,7 +257,7 @@ for i_rat = 4 : numRatFolders
             pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
             
             [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
-            all_maxDigitReachFrame(iTrial,:) = maxDigitReachFrame;
+            all_maxDigitReachFrame(iTrial) = maxDigitReachFrame;
             
             pellet_reproj_error = squeeze(reproj_error(pellet_idx,:,:));
             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,pellet_reproj_error,...

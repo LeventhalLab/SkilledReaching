@@ -104,20 +104,18 @@ end
 firstSlotBreak = NaN(numPawParts,1);
 first_pawPart_outside_box = NaN(numPawParts,1);
 
+digit_z = z_coords(:,digIdx);
+% find the farthest z-coordinate of any of the digits
+min_digit_z = min(digit_z(:));
 % assume that one of the digit tips has to be the first visible paw part
 % through the slot, but only after the paw dorsum has been found behind the
 % slot
-maxDigitReachFrame = zeros(1,length(digIdx));
 for iDigit = 1 : length(digIdx)
     
     temp = z_coords(:,digIdx(iDigit));
     
-    % find the frame where this digit is closest to the camera
-    maxReachExtent = min(temp);
-    if isnan(maxReachExtent)
-        maxDigitReachFrame(iDigit) = NaN;
-    else
-        maxDigitReachFrame(iDigit) = find(temp == maxReachExtent,1);
+    if any(temp == min_digit_z)
+        maxDigitReachFrame = find(temp == min_digit_z,1);   % only take the first time the paw got out that far, though seems unlikely it would get to the exact same z-coordinate twice
     end
 
     tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot

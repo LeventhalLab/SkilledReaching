@@ -67,8 +67,7 @@ plot(trialNumbers(:,2),all_paw_through_slot_frame);
 % axes(h_axes{1}(1,3));
 plot(trialNumbers(:,2),all_endPtFrame);
 
-maxReachFrames = max(all_maxDigitReachFrame');
-plot(trialNumbers(:,2),maxReachFrames);
+plot(trialNumbers(:,2),all_maxDigitReachFrame);
 title('event frames')
 set(gca,'ylim',pawFrameLim);
 
