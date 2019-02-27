@@ -1,8 +1,5 @@
 % script_calculateKinematics_20181128
 
-% ADD IN A SOMETHING TO FIND THE FARTHEST POINT OF EXTENSION, NOT JUST THE
-% FIRST POINT WHERE THE PAW MOVES BACKWARDS
-
 % REVIEW VELOCITY PROFILES
 
 % UNDERSTAND WHAT CAUSES DIFFERENCES IN REACH DURATION
@@ -125,11 +122,11 @@ for i_rat = 15:15%6 : numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     if i_rat == 15
-        startSession = 3;
+        startSession = 1;
     else
         startSession = 1;
     end
-    for iSession = startSession : startSession%numSessions
+    for iSession = startSession : numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         
@@ -178,6 +175,7 @@ for i_rat = 15:15%6 : numRatFolders
         all_firstSlotBreak = zeros(numReachingPawParts, numTrials);
         all_firstPawDorsumFrame = zeros(numTrials,1);
         all_aperture = NaN(size(pawTrajectory,1),3,numTrials);
+        all_maxDigitReachFrame = zeros(numTrials,4);
         all_initPellet3D = NaN(numTrials, 3);
         all_endPtFrame = NaN(numTrials,1);
         all_trialOutcomes = NaN(numTrials,1);
@@ -254,7 +252,8 @@ for i_rat = 15:15%6 : numRatFolders
             [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
             pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
             
-            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            all_maxDigitReachFrame(iTrial,:) = maxDigitReachFrame;
             
             pellet_reproj_error = squeeze(reproj_error(pellet_idx,:,:));
             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,pellet_reproj_error,...
@@ -394,7 +393,8 @@ for i_rat = 15:15%6 : numRatFolders
             'interp_pd_trajectories','interp_digit_trajectories',...
             'all_mcpAngle','all_pipAngle','all_digitAngle','all_pawAngle','all_aperture',...
             'all_endPts','all_partEndPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
-            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box','all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame',...
+            'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box',...
+            'all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','all_maxDigitReachFrame',...
             'trajectoryLengths','thisRatInfo','thisSessionType','slot_z');
         
     end

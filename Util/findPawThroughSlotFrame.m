@@ -1,11 +1,17 @@
-function [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
+function [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
 %
 % INPUTS
-%   pawTrajectory
+%   pawTrajectory - 
 %   bodyparts
 %   pawPref - 'right' or 'left'
+%   invalid_direct
+%   invalid_mirror
+%
 % OUTPUTS
 %   paw_through_slot_frame - the first 
+%   firstSlotBreak
+%   first_pawPart_outside_box
+%   maxPawReachFrame
 
 slot_z = 200; 
 maxReprojError = 10;
@@ -97,12 +103,19 @@ end
 % find the first time the paw moves in front of the slot
 firstSlotBreak = NaN(numPawParts,1);
 first_pawPart_outside_box = NaN(numPawParts,1);
+
 % assume that one of the digit tips has to be the first visible paw part
 % through the slot, but only after the paw dorsum has been found behind the
 % slot
+maxDigitReachFrame = zeros(1,length(digIdx));
 for iDigit = 1 : length(digIdx)
     
     temp = z_coords(:,digIdx(iDigit));
+    
+    % find the frame where this digit is closest to the camera
+    maxReachExtent = min(temp);
+    maxDigitReachFrame(iDigit) = find(temp == maxReachExtent,1);
+
     tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot
     all_tempFrame = temp < slot_z;   % all frames, including before the paw dorsum was found inside the box
     through_slot_borders = findConsecutiveEntries(tempFrame);   % look for consecutive frames with the paw outside the box after paw dorsum found inside the box

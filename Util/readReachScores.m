@@ -45,14 +45,15 @@ for iCol = 2 : numCols
      if isempty(temp)
          continue;
      end
-     numValidSessions = numValidSessions + 1;
      
      sessionDate = temp{1};
      if ~isdatetime(sessionDate)
          if ischar(sessionDate)
              sessionDate = datetime(sessionDate,'inputformat',csvDateFormat);
+             numValidSessions = numValidSessions + 1;
          else
-             sessionDate = NaT;
+             continue;
+%              sessionDate = NaT;
          end
      end
      if sessionDate.Year < 100
