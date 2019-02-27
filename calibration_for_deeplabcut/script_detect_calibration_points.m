@@ -53,6 +53,9 @@ numDates = length(dateList);
 for iDate = 1 : numDates
     
     curDate = dateList{iDate};
+    if ~any(strcmp({'20180314'}, curDate))
+        continue;
+    end
     fprintf('processing %s\n',curDate);
     numFilesPerDate = length(imFiles_from_same_date{iDate});
     img = cell(1, numFilesPerDate);

@@ -14,6 +14,16 @@ function [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboar
 % OUTPUTS
 %   new_directChecks, new_mirrorChecks
 
+% in case some of the undistorted points move off the original image
+% xlims = zeros(1,2);
+% ylims = zeros(1,2);
+% 
+% xlims(1) = min(min(newPoints(:,1)),1);
+% xlims(2) = max(max(newPoints(:,1)),size(directBorderMask,2));
+% 
+% ylims(1) = min(min(newPoints(:,2)),1);
+% ylims(2) = max(max(newPoints(:,2)),size(directBorderMask,1));
+
 num_newPoints = size(newPoints, 1);
 numDirectBoards = size(directBorderMask,3);   % this is one binary array instead of the cell structure that holds one array for each different image
 new_directChecks = NaN(prod(anticipatedBoardSize-1), 2, numDirectBoards);

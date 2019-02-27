@@ -1,5 +1,12 @@
 % script_calculateKinematics_20181128
 
+% ADD IN A SOMETHING TO FIND THE FARTHEST POINT OF EXTENSION, NOT JUST THE
+% FIRST POINT WHERE THE PAW MOVES BACKWARDS
+
+% REVIEW VELOCITY PROFILES
+
+% UNDERSTAND WHAT CAUSES DIFFERENCES IN REACH DURATION
+
 % template name for viable trajectory files (for searching)
 trajectory_file_name = 'R*3dtrajectory_new.mat';
 
@@ -79,7 +86,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 13:13%6 : numRatFolders
+for i_rat = 15:15%6 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -117,12 +124,12 @@ for i_rat = 13:13%6 : numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 13
-        startSession = 26;
+    if i_rat == 15
+        startSession = 3;
     else
         startSession = 1;
     end
-    for iSession = startSession : numSessions
+    for iSession = startSession : startSession%numSessions
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession})
         

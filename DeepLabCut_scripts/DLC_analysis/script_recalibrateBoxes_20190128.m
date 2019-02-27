@@ -90,13 +90,13 @@ for i_rat = 15:15%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 15
-        startSession = 9;
+        startSession = 19;
     else
         startSession = 1;
     end
     
     
-    for iSession = startSession : 1 : numSessions
+    for iSession = startSession : numSessions
         
         if exist('boxCal_fromSession','var')
             clear boxCal_fromSession;

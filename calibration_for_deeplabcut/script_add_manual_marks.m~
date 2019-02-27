@@ -72,7 +72,7 @@ for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
     
-    if ~any(strcmp({'20180301'}, curDate))
+    if ~any(strcmp({'20180225','20180226','20180227'}, curDate))
         continue;
     end
     
@@ -93,9 +93,7 @@ for iDate = 1 : numDates
         csvNumList(i_csv) = C{1};
         csvData{i_csv} = readFIJI_csv(cur_csvName);
         
-        if contains(cur_csvName,'distorted')
-            csvData{i_csv} = undistortPoints(csvData{i_csv},cameraParams);
-        end
+        if contains(cur_csvName
     end
     
     % load images, but only ones for which there is a .csv file
