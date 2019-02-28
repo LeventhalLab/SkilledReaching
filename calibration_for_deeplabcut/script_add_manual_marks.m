@@ -72,7 +72,7 @@ for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
     
-    if ~any(strcmp({'20180301'}, curDate))
+    if ~any(strcmp({'20180302'}, curDate))
         continue;
     end
     

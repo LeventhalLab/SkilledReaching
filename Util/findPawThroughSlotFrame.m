@@ -32,6 +32,8 @@ for iarg = 1 : 2 : nargin - 6
     end
 end
 
+maxDigitReachFrame = NaN;
+
 [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 
 % only look for paw coming through the slot after the paw has been

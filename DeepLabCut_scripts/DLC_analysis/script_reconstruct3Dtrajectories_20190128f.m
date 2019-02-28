@@ -92,11 +92,11 @@ for i_rat = 15:numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 15
-        startSession = 17;
+        startSession = 20;
     else
         startSession = 1;
     end
-    for iSession = startSession : 2 : numSessions
+    for iSession = startSession : 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -210,8 +210,8 @@ for i_rat = 15:numRatFolders
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
             end
                     
-            numDirectFrames = size(direct_p,1);
-            numMirrorFrames = size(mirror_p,1);
+            numDirectFrames = size(direct_p,2);
+            numMirrorFrames = size(mirror_p,2);
     
             if numDirectFrames ~= numMirrorFrames
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
