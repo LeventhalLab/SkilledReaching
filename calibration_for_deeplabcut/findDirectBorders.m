@@ -218,7 +218,7 @@ for iImg = 1 : num_img
         otherBorderMask_filled = imfill(otherBorderMask,'holes');
         otherBorderMask_cropped = otherBorderMask_filled(bBox(2):bBox(2) + bBox(4),...
                                 bBox(1):bBox(1) + bBox(3));
-        cropped_overlay = imoverlay(cropped_img,otherBorderMask_cropped,'k');
+        cropped_overlay = imoverlay(cropped_img,otherBorderMask_cropped,[0,0,0]);
         cropped_stretch = decorrstretch(cropped_overlay);
         cropped_hsv = rgb2hsv(cropped_stretch);
         

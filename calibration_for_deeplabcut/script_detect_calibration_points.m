@@ -2,9 +2,9 @@
 
 % calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 % calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
 
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
 
@@ -110,8 +110,9 @@ for iDate = 1 : numDates
     if saveMarkedImages
         for iImg = 1 : numFilesPerDate
             
-            newImg = undistortImage(img{iImg},cameraParams);
-            
+%            newImg = undistortImage(img{iImg},cameraParams);
+            newImg=img{iImg};
+
             for iBoard = 1 : numBoards
                 
                 if dir_foundValidPoints(iBoard,iImg)

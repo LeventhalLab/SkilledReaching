@@ -149,7 +149,8 @@ for iImg = 1 : num_img
         end
 
         if foundValidPoints(iBoard,iImg)
-            final_boardPoints(:,:,iBoard,iImg) = undistortPoints(boardPoints,cameraParams);
+%            final_boardPoints(:,:,iBoard,iImg) = undistortPoints(boardPoints,cameraParams);
+            final_boardPoints(:,:,iBoard,iImg) = boardPoints;
         end
     end
 
