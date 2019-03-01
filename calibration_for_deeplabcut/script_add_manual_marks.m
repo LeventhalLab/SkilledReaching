@@ -3,9 +3,9 @@
 % calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 % calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 % calImageDir = '/Users/dleventh/Documents/deeplabcut images/cal images to review';
-calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
 
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
 
@@ -68,7 +68,7 @@ cd(calImageDir);
 [csvFiles_from_same_date, csv_dateList] = group_csv_files_by_date(csvList);
 numDates = length(csv_dateList);
 
-for iDate = 11 : numDates
+for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
     
@@ -88,6 +88,8 @@ for iDate = 11 : numDates
         C = textscan(cur_csvName,['GridCalibration_' curDate '_%d.csv']);
         csvNumList(i_csv) = C{1};
         csvData{i_csv} = readFIJI_csv(cur_csvName);
+        % Undistort points in csv file
+        csvData{i_csv}=undistortPoints(csvData{i_csv},cameraParams);
     end
     
     % load images, but only ones for which there is a .csv file
@@ -141,6 +143,23 @@ for iDate = 11 : numDates
         directChecks = NaN(prod(boardSize-1),2,size(directBorderMask{1},3),numImgPerDate);
         mirrorChecks = NaN(prod(boardSize-1),2,size(mirrorBorderMask{1},3),numImgPerDate);
     end
+    
+    % Undistort points found during the automatic process
+    for iUndistImgs = 1:size(directChecks,3)
+        for iUndistBrds = 1:size(directChecks,4)
+            if ~isnan(directChecks(:,:,iUndistImgs,iUndistBrds))
+                directChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(directChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
+            end
+        end
+    end
+    for iUndistImgs = 1:size(mirrorChecks,3)
+        for iUndistBrds = 1:size(mirrorChecks,4)
+            if ~isnan(mirrorChecks(:,:,iUndistImgs,iUndistBrds))
+                mirrorChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(mirrorChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
+            end
+        end
+    end
+    
     old_directChecks = directChecks;
     old_mirrorChecks = mirrorChecks;
     % now loop through .csv files
@@ -177,6 +196,8 @@ for iDate = 11 : numDates
         end
             
     end
+    
+    %directChecks(:,:,1,1)=undistortPoints(directChecks(:,:,1,1),cameraParams);
     
     allMatchedPoints = NaN(points_per_board * numImgPerDate, 2, 2, numBoards);
     for iImg = 1 : numImgPerDate
@@ -249,7 +270,7 @@ for iDate = 11 : numDates
                 end
                 
             end
-            figure(1)
+            figure;
             imshow(newImg);
             newImgName = strrep(curImgName,'.png','_all_marked.png');
             set(gcf,'name',newImgName);
