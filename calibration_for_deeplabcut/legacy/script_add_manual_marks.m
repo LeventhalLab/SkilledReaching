@@ -1,16 +1,13 @@
 % add manually marked calibration images to automatically marked calibration images
 
-% calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
-% camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
-
+% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+% calImageDir = '/Users/dleventh/Documents/deeplabcut images/cal images to review';
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-load(camParamFile);
 
-pointsStillDistorted = true;
-% in this version, undistorting points is the last thing that happens. in
-% older versions, points were undistorted by this point; need to note that
-% for the script_calibrateBoxes script
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
+load(camParamFile);
 
 saveMarkedImages = true;
 markRadius = 5;
@@ -74,7 +71,8 @@ numDates = length(csv_dateList);
 for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
-    if ~any(strcmp({'20180228'}, curDate))
+    
+    if ~any(strcmp({'20180320'}, curDate))
         continue;
     end
     
@@ -94,8 +92,10 @@ for iDate = 1 : numDates
         C = textscan(cur_csvName,['GridCalibration_' curDate '_%d.csv']);
         csvNumList(i_csv) = C{1};
         csvData{i_csv} = readFIJI_csv(cur_csvName);
-        % Undistort points in csv file
-%         csvData{i_csv}=undistortPoints(csvData{i_csv},cameraParams);
+        
+        if contains(cur_csvName,'distorted')
+            csvData{i_csv} = undistortPoints(csvData{i_csv},cameraParams);
+        end
     end
     
     % load images, but only ones for which there is a .csv file
@@ -126,17 +126,17 @@ for iDate = 1 : numDates
             'maxcheckerboardarea', maxMirrorCheckerboardArea, 'sesize', SEsize, 'minsolidity', minSolidity);
     
     % undistort masks - assume points were marked on the undistorted images
-%     for ii = 1 : length(directBorderMask)
-%         for jj = 1 : size(directBorderMask{ii},3)
-%             directBorderMask{ii}(:,:,jj) = undistortImage(squeeze(directBorderMask{ii}(:,:,jj)), cameraParams);
-%         end
-%     end
-%     for ii = 1 : length(mirrorBorderMask)
-%         for jj = 1 : size(mirrorBorderMask{ii},3)
-%             mirrorBorderMask{ii}(:,:,jj) = undistortImage(squeeze(mirrorBorderMask{ii}(:,:,jj)), cameraParams);
-%         end
-%     end
-%     
+    for ii = 1 : length(directBorderMask)
+        for jj = 1 : size(directBorderMask{ii},3)
+            directBorderMask{ii}(:,:,jj) = undistortImage(squeeze(directBorderMask{ii}(:,:,jj)), cameraParams);
+        end
+    end
+    for ii = 1 : length(mirrorBorderMask)
+        for jj = 1 : size(mirrorBorderMask{ii},3)
+            mirrorBorderMask{ii}(:,:,jj) = undistortImage(squeeze(mirrorBorderMask{ii}(:,:,jj)), cameraParams);
+        end
+    end
+    
     % read in corresponding .mat file if it exists
     matFileName = ['GridCalibration_' csv_dateList{iDate} '_auto.mat'];
     foundMatFile = false;
@@ -149,23 +149,6 @@ for iDate = 1 : numDates
         directChecks = NaN(prod(boardSize-1),2,size(directBorderMask{1},3),numImgPerDate);
         mirrorChecks = NaN(prod(boardSize-1),2,size(mirrorBorderMask{1},3),numImgPerDate);
     end
-    
-    % Undistort points found during the automatic process
-%     for iUndistImgs = 1:size(directChecks,3)
-%         for iUndistBrds = 1:size(directChecks,4)
-%             if ~isnan(directChecks(:,:,iUndistImgs,iUndistBrds))
-%                 directChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(directChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
-%             end
-%         end
-%     end
-%     for iUndistImgs = 1:size(mirrorChecks,3)
-%         for iUndistBrds = 1:size(mirrorChecks,4)
-%             if ~isnan(mirrorChecks(:,:,iUndistImgs,iUndistBrds))
-%                 mirrorChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(mirrorChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
-%             end
-%         end
-%     end
-    
     old_directChecks = directChecks;
     old_mirrorChecks = mirrorChecks;
     % now loop through .csv files
@@ -176,7 +159,8 @@ for iDate = 1 : numDates
         
         % fill out the directChecks and mirrorChecks arrays. Assume that
         % the image number is the correct index to use. Note that
-        % previously labeled images should be used in Fiji
+        % previously labeled images should be used in Fiji, so the image
+        % should already be undistorted
 
         [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboards(directBorderMask{img_idx}, ...
                                                 mirrorBorderMask{img_idx}, ...
@@ -227,7 +211,7 @@ for iDate = 1 : numDates
     
     matSaveFileName = ['GridCalibration_' csv_dateList{iDate} '_all.mat'];
     imFileList = imFiles_from_same_date{img_date_idx};
-    save(matSaveFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList','curDate','pointsStillDistorted');
+    save(matSaveFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList','curDate');
     
     if saveMarkedImages
         for iImg = 1 : numImgPerDate
@@ -235,8 +219,7 @@ for iDate = 1 : numDates
             % was there a previously marked image?
             curImgName = imFiles_from_same_date{img_date_idx}{iImg};
             oldImg = imread(curImgName,'png');
-%             newImg = undistortImage(oldImg,cameraParams);
-            newImg = oldImg;
+            newImg = undistortImage(oldImg,cameraParams);
             
             for iBoard = 1 : numBoards
                 
@@ -274,7 +257,7 @@ for iDate = 1 : numDates
                 end
                 
             end
-            figure;
+            figure(1)
             imshow(newImg);
             newImgName = strrep(curImgName,'.png','_all_marked.png');
             set(gcf,'name',newImgName);

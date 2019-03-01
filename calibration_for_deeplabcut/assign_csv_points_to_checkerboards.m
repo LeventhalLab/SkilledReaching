@@ -14,9 +14,6 @@ function [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboar
 % OUTPUTS
 %   new_directChecks, new_mirrorChecks
 
-% in case some of the undistorted points move off the original image
-% xlims = zeros(1,2);
-% ylims = zeros(1,2);
 % 
 % xlims(1) = min(min(newPoints(:,1)),1);
 % xlims(2) = max(max(newPoints(:,1)),size(directBorderMask,2));
@@ -88,6 +85,11 @@ for i_pt = 1 : num_newPoints
     pointAssigned = false;
     for iBoard = 1 : numDirectBoards
         % recall first index is y, second is x in the masks
+        try
+            filledDirectMask(testPoint(2),testPoint(1),iBoard);
+        catch
+            keyboard
+        end
         if filledDirectMask(testPoint(2),testPoint(1),iBoard)
             pointAssigned = true;
             num_newChecks(iBoard,1) = num_newChecks(iBoard,1) + 1;

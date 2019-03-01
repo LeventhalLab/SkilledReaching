@@ -1,15 +1,11 @@
 % detect checkerboard calibration images, 20180605
 
+% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-
-% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
-
-% camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
-% camParamFile = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
+% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
 
 saveMarkedImages = true;
@@ -51,19 +47,15 @@ mirrorOrientation = {'top','left','right'};
    
 cd(calImageDir);
 
-% NOTE: the function groupCalibrationImagesbyDate removes any .png files
-% with "marked" in their filename, so that this only operates on the
-% originally acquired .png files
 [imFiles_from_same_date, dateList] = groupCalibrationImagesbyDate(imgList);
 numDates = length(dateList);
 
 for iDate = 1 : numDates
     
     curDate = dateList{iDate};
-    if ~any(strcmp({'20180323'}, curDate))
+    if ~any(strcmp({'20180320','20180323'}, curDate))
         continue;
     end
-    
     fprintf('processing %s\n',curDate);
     numFilesPerDate = length(imFiles_from_same_date{iDate});
     img = cell(1, numFilesPerDate);
@@ -73,6 +65,13 @@ for iDate = 1 : numDates
         img{iImg} = imread(curImgName);
         
     end
+%         if ~isempty(strfind(imgList(iImg).name,'marked'))
+%             continue;
+%         end
+
+%         dImg = A(ROIs(1,2):ROIs(1,2)+ROIs(1,4),ROIs(1,1):ROIs(1,1)+ROIs(1,3),:);
+%         lImg = A(ROIs(3,2):ROIs(3,2)+ROIs(3,4),ROIs(3,1):ROIs(3,1)+ROIs(3,3),:);
+%         rImg = A(ROIs(4,2):ROIs(4,2)+ROIs(4,4),ROIs(4,1):ROIs(4,1)+ROIs(4,3),:);
     
     [directBorderMask, initDirBorderMask] = findDirectBorders(img, direct_hsvThresh, ROIs);
     [mirrorBorderMask, initMirBorderMask] = findMirrorBorders(img, mirror_hsvThresh, ROIs);
@@ -114,9 +113,8 @@ for iDate = 1 : numDates
     if saveMarkedImages
         for iImg = 1 : numFilesPerDate
             
-%            newImg = undistortImage(img{iImg},cameraParams);
-            newImg=img{iImg};
-
+            newImg = undistortImage(img{iImg},cameraParams);
+            
             for iBoard = 1 : numBoards
                 
                 if dir_foundValidPoints(iBoard,iImg)
