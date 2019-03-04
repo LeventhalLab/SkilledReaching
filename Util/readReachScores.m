@@ -47,6 +47,9 @@ for iCol = 2 : numCols
      end
      
      sessionDate = temp{1};
+     if isnumeric(sessionDate)
+         sessionDate = num2str(sessionDate);
+     end
      if ~isdatetime(sessionDate)
          if ischar(sessionDate)
              sessionDate = datetime(sessionDate,'inputformat',csvDateFormat);

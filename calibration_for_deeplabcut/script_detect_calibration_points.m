@@ -60,7 +60,7 @@ numDates = length(dateList);
 for iDate = 1 : numDates
     
     curDate = dateList{iDate};
-    if ~any(strcmp({'20180323'}, curDate))
+    if ~any(strcmp({'20190215'}, curDate))
         continue;
     end
     

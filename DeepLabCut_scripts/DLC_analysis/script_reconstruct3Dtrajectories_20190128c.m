@@ -62,7 +62,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 11:11%4:2:numRatFolders
+for i_rat = 22:numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -91,8 +91,8 @@ for i_rat = 11:11%4:2:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 11
-        startSession = 6;
+    if i_rat == 22
+        startSession = numSessions;
     else
         startSession = 1;
     end
@@ -210,8 +210,8 @@ for i_rat = 11:11%4:2:numRatFolders
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
             end
                     
-            numDirectFrames = size(direct_p,1);
-            numMirrorFrames = size(mirror_p,1);
+            numDirectFrames = size(direct_p,2);
+            numMirrorFrames = size(mirror_p,2);
     
             if numDirectFrames ~= numMirrorFrames
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);

@@ -74,7 +74,7 @@ numDates = length(csv_dateList);
 for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
-    if ~any(strcmp({'20180228'}, curDate))
+    if ~any(strcmp({'20190215'}, curDate))
         continue;
     end
     
@@ -274,11 +274,12 @@ for iDate = 1 : numDates
                 end
                 
             end
-            figure;
+            h_fig = figure;
             imshow(newImg);
             newImgName = strrep(curImgName,'.png','_all_marked.png');
             set(gcf,'name',newImgName);
             imwrite(newImg,newImgName,'png');
+            close(h_fig)
         end       
     end
 end

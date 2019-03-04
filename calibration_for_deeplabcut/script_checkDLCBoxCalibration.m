@@ -13,7 +13,7 @@ P = eye(4,3);
 for iMat = 1 : length(matList)
     
     load(matList(iMat).name);
-    if ~any(strcmp({'20180228'}, curDate))
+    if ~any(strcmp({'20190215'}, curDate))
         continue;
     end
     K = cameraParams.IntrinsicMatrix;

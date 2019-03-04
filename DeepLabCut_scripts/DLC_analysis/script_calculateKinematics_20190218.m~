@@ -31,11 +31,6 @@ maxReprojError_pawDorsum = 10;    % if paw dorsum found in both views, only coun
 
 % parameters for findReachEndpoint
 smoothSize = 3;
-
-% paramaeters for readReachScores
-csvDateFormat = 'MM/dd/yyyy';
-ratIDs_with_new_date_format = [284];
-
 % slot_z_wrt_pellet = 25;
 
 % REACHING SCORES:
@@ -106,13 +101,10 @@ for i_rat = 22 : numRatFolders
         pawPref = pawPref{1};
     end
     
-    if any(ratIDs_with_new_date_format == ratIDnum)
-        csvDateFormat = 'yyyyMMdd';
-    end
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     reachScoresFile = [ratID '_scores.csv'];
     reachScoresFile = fullfile(ratRootFolder,reachScoresFile);
-    reachScores = readReachScores(reachScoresFile,'csvdateformat',csvDateFormat);
+    reachScores = readReachScores(reachScoresFile,'csvdate);
     allSessionDates = [reachScores.date]';
     
     

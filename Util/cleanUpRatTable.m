@@ -3,6 +3,8 @@ function ratTable_out = cleanUpRatTable(ratTable_in)
 % make sure all numeric data are entered as numbers and not strings/cells.
 % Also turn appropriate cell arrays into categorical data
 
+dateFormat = 'MM/dd/yyyy';
+
 numericFields = {'ratID'};
     
 categoricalFields = {'Sex',...
@@ -13,6 +15,16 @@ categoricalFields = {'Sex',...
                      'pawPref',...
                      'digitColors',...
                      'virusLot'};
+                 
+dateFields = {'virusDate',...
+              'fiberDate',...
+              'firstDatePretraining',...
+              'firstDateTraining',...
+              'lastDateRetraining',...
+              'firstDateLaser',...
+              'lastDateLaser',...
+              'firstDateOcclusion',...
+              'lastDateOcclusion'};
                  
 ratTable_out = ratTable_in;
 
@@ -27,6 +39,17 @@ for iField = 1 : length(numericFields)
     
 end
 
+for iField = 1 : length(dateFields)
+    
+    if iscell(ratTable_in.(dateFields{iField}))
+        
+        ratTable_out.(dateFields{iField}) = ...
+            datetime(ratTable_in.(dateFields{iField}),'inputformat',dateFormat);
+        
+    end
+    
+end
+
 for iField = 1 : length(categoricalFields)
         
         ratTable_out.(categoricalFields{iField}) = ...
@@ -34,23 +57,12 @@ for iField = 1 : length(categoricalFields)
     
 end
 
-% for iField = 1 : size(ratTable_in,2)
-%     
-%     fieldName = ratTable_in.Properties.VariableNames{iField};
-%     
-%     if isdatetime(ratTable_in.(fieldName))
-%         
-%        ratTable_out.(fieldName).Year(ratTable_in.(fieldName).Year < 100) = ...
-%            ratTable_in.(fieldName).Year(ratTable_in.(fieldName).Year < 100) + 2000;
-%     end
-% end
-
 for iCol = 1 : size(ratTable_in,2)
     
-    if isdatetime(ratTable_in{:,iCol})
-        
-        ratTable_out{:,iCol}.Year(ratTable_in{:,iCol}.Year < 100) = ...
-            ratTable_in{:,iCol}.Year(ratTable_in{:,iCol}.Year < 100) + 2000;
+    if isdatetime(ratTable_out{:,iCol})
+
+        ratTable_out{:,iCol}.Year(ratTable_out{:,iCol}.Year < 100) = ...
+            ratTable_out{:,iCol}.Year(ratTable_out{:,iCol}.Year < 100) + 2000;
         
     end
     
