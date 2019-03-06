@@ -64,8 +64,19 @@ fprintf('working on session %s\n', sessionDirectories{iSession});
 
 for iFrame = 1 : length(frameList)
     
-    vidIn.CurrentTime = (iFrame)/vidIn.FrameRate;
+    curFrameNum = frameList(iFrame);
+    
+    vidIn.CurrentTime = (curFrameNum)/vidIn.FrameRate;
     curFrame = readFrame(vidIn);
+    
+    points3D = squeeze(pawTrajectory(curFrameNum,:,:))';
+    direct_pt = squeeze(final_direct_pts(:,curFrameNum,:));
+    mirror_pt = squeeze(final_mirror_pts(:,curFrameNum,:));
+    frame_direct_p = squeeze(direct_p(:,curFrameNum));
+    frame_mirror_p = squeeze(mirror_p(:,curFrameNum));
+    isPointValid{1} = ~direct_invalid_points(:,curFrameNum);
+    isPointValid{2} = ~mirror_invalid_points(:,curFrameNum);
+    frameEstimate = squeeze(isEstimate(:,curFrameNum,:));
     
     
     
