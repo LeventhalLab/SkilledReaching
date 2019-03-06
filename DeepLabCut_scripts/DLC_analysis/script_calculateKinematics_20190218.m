@@ -88,7 +88,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 22 : numRatFolders
+for i_rat = 15 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -131,7 +131,7 @@ for i_rat = 22 : numRatFolders
     
     if i_rat == 22
         startSession = 1;
-        endSession = 3;
+        endSession = numSessions;
     else
         startSession = 1;
         endSession = numSessions;
@@ -154,7 +154,7 @@ for i_rat = 22 : numRatFolders
         sessionDateNum = datenum(sessionDateString,'yyyymmdd');
         % figure out index of reachScores array for this session
 
-        sessionReachScores = reachScores(dateNums_from_scores_table == sessionDateNum).scores;
+        sessionReachScores = reachScores(allSessionIdx).scores;
         
         % find the pawTrajectory files
         pawTrajectoryList = dir(trajectory_file_name);

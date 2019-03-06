@@ -70,7 +70,11 @@ for iCol = 2 : numCols
      temp = table2cell(scoresTable(3:end,iCol));
      reachScores(numValidSessions).scores = NaN(length(temp),1);
      for ii = 1 : length(temp)
-         reachScores(numValidSessions).scores(ii) = str2double(temp{ii});
+         if ischar(temp{ii})
+             reachScores(numValidSessions).scores(ii) = str2double(temp{ii});
+         else
+             reachScores(numValidSessions).scores(ii) = temp{ii};
+         end
      end
      
 end

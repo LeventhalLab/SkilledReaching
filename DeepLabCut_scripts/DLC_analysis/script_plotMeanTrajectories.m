@@ -13,8 +13,12 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = false;
-skipSessionSummaryPlots = false;
+skipTrialPlots = true;
+skipSessionSummaryPlots = true;
+
+% paramaeters for readReachScores
+csvDateFormat = 'MM/dd/yyyy';
+ratIDs_with_new_date_format = [284];
 
 % REACHING SCORES:
 %
@@ -116,7 +120,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 6:15%numRatFolders
+for i_rat = 22:22%numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -141,10 +145,13 @@ for i_rat = 6:15%numRatFolders
         virus = virus{1};
     end
     
+    if any(ratIDs_with_new_date_format == ratIDnum)
+        csvDateFormat = 'yyyyMMdd';
+    end
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     reachScoresFile = [ratID '_scores.csv'];
     reachScoresFile = fullfile(ratRootFolder,reachScoresFile);
-    reachScores = readReachScores(reachScoresFile);
+    reachScores = readReachScores(reachScoresFile,'csvdateformat',csvDateFormat);
     allSessionDates = [reachScores.date]';
     
     cd(ratRootFolder);
@@ -369,14 +376,14 @@ end
             
     end
     
-    try
+%     try
     [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
         mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,paw_endAngle,meanOrientations,mean_MRL,...
         endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,thisRatInfo);
-    catch
-        close all
-        continue;
-    end
+%     catch
+%         close all
+%         continue;
+%     end
     pdfName_ratSummary = sprintf('%s_trajectories_summary.pdf',ratID);
     pdfName_ratSummary = fullfile(ratRootFolder,pdfName_ratSummary);
     print(ratSummary_h_fig,pdfName_ratSummary,'-dpdf');

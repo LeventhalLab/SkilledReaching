@@ -72,7 +72,7 @@ for iSession = 1 : numSessions
     end
 
     if sessionTypeUnknown
-        plotColor = plot_colmap(iSession,:);
+        plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
     else
         plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
     end
@@ -177,13 +177,7 @@ for iSession = 1 : numSessions
             plot_colmap = colormap(autumn);
     %                 plotColor = [1,0,0];
     end
-
-    if sessionTypeUnknown
-        plotColor = plot_colmap(iSession,:);
-    else
-        plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
-    end
-
+    plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
     for iDim = 1 : 3
         axes(ratSummary_h_axes(4,iDim))
         % find reach end points for the bodypart of interest for all
