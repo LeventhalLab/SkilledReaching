@@ -1,15 +1,23 @@
-% script to perform 3D reconstruction on videos
+% by Dan Leventhal, updated 3/6/2019
 
-% slot_z = 200;    % distance from camera of slot in mm. hard coded for now
-% time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
+% script to perform 3D reconstruction on videos acquired using an automated
+% skilled reaching chamber (Ellens et al, "An automated rat single pellet
+% reaching system with high-speed video capture", J Neuroscience Methods,
+% 2016).
 
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
-load(camParamFile);
+repeatCalculations = false;   % flag for whether to skip if .mat files
+% storing results already exist, false = skip, true = repeat calculations
 
-% parameter for calc3D_DLC_trajectory_20181204
+% file containing intrinsic camera parameters. This can be obtained using
+% Matlab's computer vision toolbox
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/cameraParameters.mat';
+
+% parameter for calc3D_DLC_trajectory
 maxDistFromNeighbor = 40;   % maximum distance an estimated point can be from its neighbor
-maxReprojError = 10;
+maxReprojError = 10;   % maximum allowable error when 3D reconstruction is
+                       % reprojected back onto the original view. If they
+                       % deviate too much, at least one of them was
+                       % misidentified
 
 % parameters for find_invalid_DLC_points
 maxDistPerFrame = 30;
@@ -17,37 +25,59 @@ min_valid_p = 0.85;
 min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
+% master directory containing the deeplabcut output
+labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
+% ANTICIPATED DIRECTORY STRUCTURE:
+%  For each rat, a folder called ratID (i.e., 'R0100'). Each of these
+%  direcories should start with 'R' - that's what the code looks for.
+%  Under that, a directory for each session (i.e., 'R0100_yyyymmdd')
+%  Under that, a directory for each view (i.e., 'R0100_yyyymmdd_direct', 
+%     'R0100_yyyymmdd_left', or 'R0100_yyyymmdd_right' )
+%  In each of those folders, the appropriate deeplabcut output files. There
+%  should be matching files in each folder for each video
+
+% directory containing a .csv file, which contains a table of information
+% about each rat (paw preference, training dates, etc.)
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
 csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
 
-ratInfo = readtable(csvfname);
-ratInfo_IDs = [ratInfo.ratID];
-
-labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
+% directory containing the box calibration files
+% ('SR_boxCalibration_DATE.mat')
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
-% change this if the videos were cropped at different coordinates
+% change this if the videos were cropped at different coordinates; these
+% are the coordinates of the cropped videos fed into deeplabcut
 vidROI = [750,450,550,550;
           1,450,450,400;
           1650,435,390,400];
-triggerTime = 1;    % seconds
+triggerTime = 1;    % seconds, time at which video trigger should have occurred during acquisition
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
 frameRate = 300;
 
 frameSize = [1024,2040];
 % would be nice to have these parameters stored with DLC output so they can
-% be read in directly. Might they be in the .h files?
+% be read in directly. Someday...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
+vidView = {'direct','right','left'};
+numViews = length(vidView);
+
+% END HEADER
+
+
+
+% read in the table of rat information.
+ratInfo = readtable(csvfname);
+ratInfo_IDs = [ratInfo.ratID];
+
+% load the intrinsic camera parameters
+load(camParamFile);
+
 cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
-
-vidView = {'direct','right','left'};
-numViews = length(vidView);
 
 % find the list of calibration files
 cd(calImageDir);
@@ -60,8 +90,8 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 4 : numRatFolders
-% for i_rat = 8 : numRatFolders
+% change this loop depending on which rats you want to process
+for i_rat = 1:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -82,19 +112,17 @@ for i_rat = 4 : numRatFolders
     end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
-    
     cd(ratRootFolder);
     
-%     sessionDirectories = dir([ratID '_*']);
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 6
+    if i_rat == 15
         startSession = 1;
     else
         startSession = 1;
     end
-    for iSession = startSession : 4 : numSessions
+    for iSession = startSession : 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -187,18 +215,29 @@ for i_rat = 4 : numRatFolders
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-%             if exist(fullTrajName,'file')
-%                 % already did this calculation
-%                 continue;
-%             end
+            
+            if exist(fullTrajName,'file')
+                % already did this calculation
+                if repeatCalculations
+                    load(fullTrajName)
+                else
+                    continue;
+                end
+            end
             
             cd(mirrorViewDir)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
-            numDirectFrames = size(direct_p,1);
-            numMirrorFrames = size(mirror_p,1);
+            if ~exist('manually_invalidated_points','var')
+                numFrames = size(direct_p,2);
+                num_bodyparts = length(direct_bp);
+                manually_invalidated_points = false(numFrames,num_bodyparts,2);
+            end
+                    
+            numDirectFrames = size(direct_p,2);
+            numMirrorFrames = size(mirror_p,2);
     
             if numDirectFrames ~= numMirrorFrames
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
@@ -208,20 +247,41 @@ for i_rat = 4 : numRatFolders
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
-                                  
+            
+            frames_in_this_vid = size(invalid_mirror,2);
+            frames_in_other_vids = size(manually_invalidated_points,1);
+            if frames_in_this_vid < frames_in_other_vids
+                % pad invalid_mirror and/or invalid_direct because of a
+                % video that's too short for some reason
+                invalid_mirror(:,frames_in_this_vid+1:frames_in_other_vids) = false;
+                invalid_direct(:,frames_in_this_vid+1:frames_in_other_vids) = false;
+            end
+            invalid_mirror = invalid_mirror | squeeze(manually_invalidated_points(:,:,2))';
+            invalid_direct = invalid_direct | squeeze(manually_invalidated_points(:,:,1))';
+            
             direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams,~invalid_direct);
             mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams,~invalid_mirror);
 
-            boxCal_fromVid = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref);
+%             boxCal_fromVid = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref);
+            
+            % find the appropriate box calibration for this session
+            temp = boxCal.boxCal_fromSession;
+            calibratedSessionNames = {temp.sessionName};
+            if any(strcmpi(calibratedSessionNames,sessionDirectories{iSession}))
+                sessionIdx = find(strcmpi(calibratedSessionNames,sessionDirectories{iSession}));
+                activeBoxCal = boxCal.boxCal_fromSession(sessionIdx);
+            else
+                activeBoxCal = boxCal;
+            end
             
             [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
                 calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
-                                      vidROI, boxCal_fromVid, pawPref, frameSize,...
+                                      vidROI, activeBoxCal, pawPref, frameSize,...
                                       'maxdistfromneighbor',maxDistFromNeighbor);
                                   
-            [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal_fromVid, pawPref);
+            [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
             
 %             [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
 %             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
@@ -232,7 +292,7 @@ for i_rat = 4 : numRatFolders
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
 %                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
-                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','boxCal_fromVid','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid');
+                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
 %             end
             
         end
@@ -240,17 +300,11 @@ for i_rat = 4 : numRatFolders
     end
     
 end
-% USE REPROJECTION ERROR TO INVALIDATE POINTS BEFORE ESTIMATING HIDDEN
-% LOCATION
-
-% WORK ON PAW DORSUM RECONSTRUCTION IN DIRECT VIEW - SOMETIMES WOBBLES...
-% SEE RAT 187, SESSION 1, VID 1 AROUND FRAME 265 (I THINK)
 
 
-% RUN script_calculateKinematics 
-% then run script_summaryDLCstatistics
-
-
-% MODIFY ESTIMATEHIDDENPOINTS SO THAT ESTIMATED POINTS CAN'T BE TOO FAR
-% FROM THE REST OF THE PAW
+% RUN script_recalibrateBoxes_20190128 once .csv files with DLC output from
+%   both views are loaded into appropriate folders
+% RUN this script
+% RUN script_calculateKinematics_20190218 
+% RUN script_plotMeanTrajectories
 
