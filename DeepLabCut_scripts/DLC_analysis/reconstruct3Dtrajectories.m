@@ -21,7 +21,7 @@ maxReprojError = 10;   % maximum allowable error when 3D reconstruction is
 
 % parameters for find_invalid_DLC_points
 maxDistPerFrame = 30;
-min_valid_p = 0.85;
+min_valid_p = 0.85;     % 'p' is the certainty value output from deeplabcut
 min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
@@ -164,7 +164,7 @@ for i_rat = 1:numRatFolders
         end
         
         numMarkedVids = length(direct_csvList);
-        % ratID, date, etc. for each individual video
+        % arrays to store ratID, date, etc. for each individual video
         directVidTime = cell(1, numMarkedVids);
         directVidNum = zeros(numMarkedVids,1);
 
@@ -187,7 +187,8 @@ for i_rat = 1:numRatFolders
         for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
-            [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
+            [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = ...
+                extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
             foundMatch = false;
             for i_directcsv = 1 : numMarkedVids
                 if mirror_ratID == ratIDnum && ...      % match ratID
@@ -202,12 +203,14 @@ for i_rat = 1:numRatFolders
                 continue;
             end
 
+            % name for storing the reconstructed 3D trajectories and
+            % metadata
             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
             fullTrajName = fullfile(fullSessionDir, trajName);
             
-%             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-            
+            % skip this set of files if already done, unless the
+            % repeatCalculations flag at the top was set to true
             if exist(fullTrajName,'file')
                 % already did this calculation
                 if repeatCalculations
@@ -222,12 +225,15 @@ for i_rat = 1:numRatFolders
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
+            % this was added in so that the user can manually mark points
+            % that are mislabeled, if needed
             if ~exist('manually_invalidated_points','var')
                 numFrames = size(direct_p,2);
                 num_bodyparts = length(direct_bp);
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
             end
                     
+            % these should be the same
             numDirectFrames = size(direct_p,2);
             numMirrorFrames = size(mirror_p,2);
     
@@ -235,6 +241,9 @@ for i_rat = 1:numRatFolders
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
             end
     
+            % find invalid points based on: low probability values from
+            % DLC, jumping too far between frames, neighboring points being
+            % too far from each other
             [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
