@@ -52,6 +52,9 @@ for iCol = 2 : numCols
      end
      if ~isdatetime(sessionDate)
          if ischar(sessionDate)
+             if strcmp(sessionDate,'NaN')
+                 continue;
+             end
              sessionDate = datetime(sessionDate,'inputformat',csvDateFormat);
              numValidSessions = numValidSessions + 1;
          else

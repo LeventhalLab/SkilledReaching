@@ -5,12 +5,12 @@
 % reaching system with high-speed video capture", J Neuroscience Methods,
 % 2016).
 
-repeatCalculations = false;   % flag for whether to skip if .mat files
+repeatCalculations = true;   % flag for whether to skip if .mat files
 % storing results already exist, false = skip, true = repeat calculations
 
 % file containing intrinsic camera parameters. This can be obtained using
 % Matlab's computer vision toolbox
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/cameraParameters.mat';
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 
 % parameter for calc3D_DLC_trajectory
 maxDistFromNeighbor = 40;   % maximum distance an estimated point can be from its neighbor
@@ -262,8 +262,6 @@ for i_rat = 1:numRatFolders
             
             direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams,~invalid_direct);
             mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams,~invalid_mirror);
-
-%             boxCal_fromVid = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref);
             
             % find the appropriate box calibration for this session
             temp = boxCal.boxCal_fromSession;
@@ -276,7 +274,7 @@ for i_rat = 1:numRatFolders
             end
             
             [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
-                calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
+                calc3D_DLC_trajectory(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
                                       vidROI, activeBoxCal, pawPref, frameSize,...

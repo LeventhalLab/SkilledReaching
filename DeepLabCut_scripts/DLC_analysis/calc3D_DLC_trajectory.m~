@@ -20,8 +20,7 @@ function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstima
 %   imSize - 2-element vector with frame height x width
 %
 % VARARGS:
-%   maxdistfromneighbor - maximum allowable distance betweeen points that
-%       should be near each other (i.e., on the same paw)
+%   maxdistfromneighbor - 
 %
 % OUTPUTS:
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFrames x 3

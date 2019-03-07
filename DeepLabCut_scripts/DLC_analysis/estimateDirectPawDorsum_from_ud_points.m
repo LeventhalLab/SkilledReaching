@@ -2,6 +2,23 @@ function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_
 %
 % estimate the location of the paw dorsum in the direct view given its
 % location in the mirror view and the locations of associated points
+%
+% INPUTS:
+%   direct_pts_ud - m x n x 2 array where m is the number of body parts and
+%       n is the number of frames. Each (x,y) pair is an undistorted point,
+%       where the point (1,1) is the upper left corner of the full frame
+%       including mirror and direct views
+%   mirror_pts_ud - same as direct_pts_ud for the mirror view
+%   invalid_direct - 
+%   invalid_mirror - same as invalid_direct for the mirror view
+%   direct_bp
+%   mirror_bp - same as direct_bp for the mirror view
+%   boxCal - 
+%   frameSize - 
+%
+% OUTPUTS:
+%   final_directPawDorsum_pts
+%   isEstimate
 
 % first find all valid direct view paw dorsum points
 
@@ -67,7 +84,7 @@ for iFrame = 1 : numFrames
         % first look for valid mcp's, then valid pip's, then valid digit
         % tips
         foundValidPoints = false;
-%         validTest = ~invalid_direct(direct_mcp_idx,iFrame);
+
         validMCP = ~invalid_direct(direct_mcp_idx,iFrame);
         validPIP = ~invalid_direct(direct_pip_idx,iFrame);
         validDigits = ~invalid_direct(direct_digit_idx,iFrame);
@@ -98,26 +115,6 @@ for iFrame = 1 : numFrames
         end
         if foundValidPoints && ~invalid_mirrorPawDorsum(iFrame)
             digitsMidpoint = findDigitsMidpoint(digitPts,validPts);
-
-%         if any(validTest)   % at least one mcp was identified
-%             
-%             digitPts = squeeze(direct_pts_ud(direct_mcp_idx(validTest),iFrame,:));
-%             foundValidPoints = true;
-%         end
-%         if ~foundValidPoints
-%             validTest = ~invalid_direct(direct_pip_idx,iFrame);
-%             if any(validTest)   % at least one pip was identified
-%                 digitPts = squeeze(direct_pts_ud(direct_pip_idx(validTest),iFrame,:));
-%                 foundValidPoints = true;
-%             end
-%         end
-%         if ~foundValidPoints
-%             validTest = ~invalid_direct(direct_digit_idx,iFrame);
-%             if any(validTest)    % at least one digit tip was identified
-%                 digitPts = squeeze(direct_pts_ud(direct_digit_idx(validTest),iFrame,:));
-%                 foundValidPoints = true;
-%             end
-%         end
         
             % does the epipolar line intersect the region bounded by the
             % identified points?
@@ -134,13 +131,6 @@ for iFrame = 1 : numFrames
             
             epiPts = lineToBorderPoints(epiLine, frameSize);
             epiPts = [epiPts(1:2);epiPts(3:4)];
-
-%             if iscolumn(digitPts)
-%                 digitPts = digitPts';
-%             end
-                    
-            % find index of digitPts that is closest to the epipolar line
-%             [nndist, nnidx] = findNearestPointToLine(epiPts, digitPts);
                 
             if isempty(intersectPoints)
                 

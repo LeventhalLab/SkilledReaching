@@ -11,10 +11,26 @@ function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, 
 %   parts_loc - m x n x 2 array where m is the number of body parts, n is
 %       the number of frames in the video. each bodypart-frame entry is an
 %       x,y coordinate pair
-%   p - 
+%   p - number of body parts x number of frames array
+%       containing p-values for how confident DLC is that a body part was
+%       correctly identified
+%   bodyparts - cell array containing lis of body part descriptors
+%   pawPref - 'left' or 'right'
+%
+% VARARGS:
+%   maxdistperframe - maximum distance a point can travel per frame before
+%       flagging as a possible mistake
+%   min_valid_p - minimum certainty score from DLC above which the point
+%       may (or may not) be accurate
+%   min_certain_p - minimum certainty score from DLC above which the point
+%       is assumed to be accurate
+%   maxneighbordist - maximum distance a point can be from a neighboring
+%       point before flagging as a possible mistake
 %
 % OUTPUTS:
-%   invalidPoints - 
+%   invalidPoints - bodyparts x numframes boolean array where true values
+%       indicate that a bodypart in a given frame was (probably) not
+%       correctly identified
 %   diff_per_frame - num_bodyparts x numframes-1 array containing the
 %       distance (in pixels) that a point moved on each frame
 
@@ -22,8 +38,6 @@ maxDistPerFrame = 30;
 min_valid_p = 0.85;
 min_certain_p = 0.97;
 maxNeighborDist = 70;
-%maxNeighborSeparation = 30;   % to be used to make sure points that should
-%be near each other are near each other
 
 for iarg = 1 : nargin - 4
     switch lower(varargin{iarg})
@@ -53,12 +67,10 @@ poss_too_far = false(num_bodyparts,num_frames);
 numFrames = size(parts_loc,2);
 for iBodyPart = 1 : num_bodyparts
     
-%     invalidPoints_bp = squeeze(invalidPoints(iBodyPart,:,:));
-    
     individual_part_loc = squeeze(parts_loc(iBodyPart,:,:));
     individual_part_loc(invalidPoints(iBodyPart,:)',:) = NaN;
     
-    diff_per_frame(iBodyPart,:) = vecnorm(diff(individual_part_loc),2,2);
+    diff_per_frame(iBodyPart,:) = vecnorm(diff(individual_part_loc),2,2);   % euclidean distance traveled between frames for each bodypart
     
     poss_too_far(iBodyPart,1:end-1) = diff_per_frame(iBodyPart,:) > maxDistPerFrame;
     poss_too_far(iBodyPart,2:end) = poss_too_far(iBodyPart,1:end-1) | poss_too_far(iBodyPart,2:end);
@@ -78,9 +90,6 @@ for iBodyPart = 1 : num_bodyparts
 end
 
 invalidPoints = invalidPoints | poss_too_far;
-
-% could also add a check to see if points that should be near each other
-% are near each other
 
 % throw out any points on the reaching paw that are too far away from the
 % cluster of other points, except for the paw dorsum

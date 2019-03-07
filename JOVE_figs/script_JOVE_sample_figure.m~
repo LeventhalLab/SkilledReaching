@@ -140,10 +140,8 @@ end
 
 h_fig = figure(1);imshow(finalImg)
 set(gcf,'units','centimeters','position',[1 1 8*2.54 3.5*2.54]);
-fname = fullfile(sessionFolder, 'sampleImages');
+fname = fullfile(sessionFolder, 'sampleImages.pdf');
 print(h_fig,fname,'-dpdf');
-
-savefig(h_fig,fname);
 
 %%
 % plot the average trajectories and individual trajectory for this rat
@@ -190,6 +188,5 @@ for iPlot = 1 : 2
     xlabel('x (mm)');ylabel('z (mm)');zlabel('y (mm)');
 end
 
-fname = fullfile(sessionFolder, 'sampleTrajectories');
+fname = fullfile(sessionFolder, 'sampleTrajectories.pdf');
 print(h_fig2,fname,'-dpdf');
-savefig(h_fig2,fname);

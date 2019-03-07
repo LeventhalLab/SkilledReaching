@@ -66,11 +66,20 @@ isEstimate = false(size(final_direct_pts,1),size(final_mirror_pts,2),2);
 numDigits = length(direct_mcp_idx);
 for iFrame = 1 : numFrames
     allDirectPts = squeeze(final_direct_pts(allDirectParts_idx,iFrame,:));
+    try
     allMirrorPts = squeeze(final_mirror_pts(allMirrorParts_idx,iFrame,:));
+    catch
+        keyboard
+    end
     
     validDirectPoints = allDirectPts(~invalid_direct(allDirectParts_idx,iFrame),:);
     validMirrorPoints = allMirrorPts(~invalid_mirror(allMirrorParts_idx,iFrame),:);
     
+%     directCVboundary_idx = boundary(validDirectPoints);
+%     mirrorCVboundary_idx = boundary(validMirrorPoints);
+    
+%     directCVboundary_pts = validDirectPoints(directCVboundary_idx,:);
+%     mirrorCVboundary_pts = validMirrorPoints(mirrorCVboundary_idx,:);
     % work on digits first
     for i_digitPart = 1 : 3
         switch i_digitPart
@@ -185,6 +194,7 @@ for iFrame = 1 : numFrames
             end
 
             np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize, maxDistFromNeighbor);
+%             np = estimatePawPart(known_pt, other_pts, F, imSize);
             if isempty(np); continue; end
             
             if invalid_direct(direct_part_idx,iFrame)
@@ -197,7 +207,19 @@ for iFrame = 1 : numFrames
                 isEstimate(mirror_part_idx,iFrame,2) = true;   % mirror point for this body part in this frame is estimated
             end
 
-        end
+    end
+    
+%     for i_pawPart = 1 : length(direct_pip_idx)
+% 
+% %         direct_part_idx = direct_pip_idx(i_pawPart);
+% %         mirror_part_idx = mirror_pip_idx(i_pawPart);
+%     end
+%     
+%     for i_pawPart = 1 : length(direct_digit_idx)
+% 
+%     end
+%     direct_part_idx = direct_indices(i_pawPart);
+%     mirror_part_idx = mirror_indices(i_pawPart);
         
     end
     
