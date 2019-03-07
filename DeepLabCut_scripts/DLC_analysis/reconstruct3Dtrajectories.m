@@ -117,12 +117,7 @@ for i_rat = 1:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 15
-        startSession = 1;
-    else
-        startSession = 1;
-    end
-    for iSession = startSession : 1 : numSessions
+    for iSession = 1 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -130,18 +125,14 @@ for i_rat = 1:numRatFolders
         fprintf('working on session %s_%s\n',ratID,sessionDate);
         
         % find the calibration file for this date
-        % find the calibration file
         cd(calImageDir);
         curDateNum = str2double(sessionDate);
         dateDiff = curDateNum - calDateNums;
 
         % find the most recent date compared to the current file for which a
-        % calibration file exists. Later, write code so files are stored by
-        % date so that this file can be found before entering the loop through
-        % DLC csv files
+        % calibration file exists.
 
         lastValidCalDate = min(dateDiff(dateDiff >= 0));
-            
         calFileIdx = find(dateDiff == lastValidCalDate);
 
         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
@@ -167,6 +158,7 @@ for i_rat = 1:numRatFolders
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         [directViewDir,mirrorViewDir,direct_csvList,mirror_csvList] = getDLC_csvList(fullSessionDir);
 
+        %
         if isempty(direct_csvList)
             continue;
         end

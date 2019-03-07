@@ -1,4 +1,7 @@
 function [directViewDir,mirrorViewDir,direct_csvList,mirror_csvList] = getDLC_csvList(fullSessionDir)
+%
+% function to find all the deeplabcut-generated .csv files in a folder
+%
 
 vidView = {'direct','right','left'};
 numViews = length(vidView);
