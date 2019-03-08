@@ -6,6 +6,9 @@ function firstPawDorsumFrame = findFirstPawDorsumFrame(pawDorsum_p,paw_z,paw_thr
 %       bodyparts
 %   paw_z
 %   pawDorsum_p
+%
+% OUPTUTS
+%   firstPawDorsumFrame - 
 
 if isnan(paw_through_slot_frame)
     firstPawDorsumFrame = NaN;
@@ -98,7 +101,5 @@ valid_z_idx = validPawDorsumBorders(streak_idx,1) : validPawDorsumBorders(streak
 max_z_idx = find(paw_z(valid_z_idx) == max(paw_z(valid_z_idx)),1);
 
 firstPawDorsumFrame = valid_z_idx(max_z_idx);
-
-% firstPawDorsumFrame = validPawDorsumBorders(streak_idx,1);
 
 end

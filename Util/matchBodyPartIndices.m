@@ -1,4 +1,25 @@
 function [bodyparts,direct_bpMatch_idx,mirror_bpMatch_idx] = matchBodyPartIndices(direct_bp,mirror_bp)
+%
+% match the indices of the bodyparts from the mirror and direct view DLC
+% output. If you're thinking ahead, you'll keep them in the same order. If
+% not, at least make sure the names are the same so this function can match
+% them up.
+%
+% INPUTS
+%   direct_bp, mirror_bp - cell array containing lis of body part
+%       descriptors for the direct/mirror view
+%
+% OUTPUTS
+%   bodyparts - cell array containing the list of bodyparts (taken from the
+%       direct view list). These labels will be in the same order as the
+%       arrays containing the 3D data (e.g., pawTrajectory output from 
+%       calc3D_DLC_trajectory
+%	direct_bpMatch_idx, mirror_bpMatch_idx - indices into the direct_bp
+%       and mirror_bp arrays that match. For example, if
+%       direct_bpMatch_idx(1) = 1 and mirror_bpMatch_idx(1) = 3, that means
+%       that the first direct bodypart matches with the third mirror
+%       bodypart
+
 
 mirror_bpMatch_idx = [];
 direct_bpMatch_idx = [];

@@ -1,5 +1,7 @@
 function [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, pawPref, varargin)
 %
+% function to assess how well 3D reconstructed points match with each other
+%
 % INPUTS:
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
 %       matrix contains x,y,z points for each bodypart
@@ -96,8 +98,6 @@ end
 unscaled_trajectory = pawTrajectory / sf;
 reproj_error = zeros(num_bp,numFrames,2);
 
-
-
 for i_bp = 1 : num_bp
     
     direct_bp_idx = direct_bpMatch_idx(i_bp);
@@ -113,11 +113,7 @@ for i_bp = 1 : num_bp
     mirror_proj = projectPoints_DL(current3D, Pn);
     mirror_proj = unnormalize_points(mirror_proj,K);
     cur_mirror_pts = squeeze(final_mirror_pts(mirror_bp_idx,:,:));
-    try
     mirror_error = mirror_proj - cur_mirror_pts;
-    catch
-        keyboard
-    end
     
     reproj_error(i_bp,:,1) = sqrt(sum(direct_error.^2,2));
     reproj_error(i_bp,:,2) = sqrt(sum(mirror_error.^2,2));

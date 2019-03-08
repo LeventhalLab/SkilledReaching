@@ -1,4 +1,4 @@
-% by Dan Leventhal, updated 3/6/2019
+% by Dan Leventhal, updated 3/8/2019
 
 % script to perform 3D reconstruction on videos acquired using an automated
 % skilled reaching chamber (Ellens et al, "An automated rat single pellet
@@ -205,7 +205,7 @@ for i_rat = 1:numRatFolders
 
             % name for storing the reconstructed 3D trajectories and
             % metadata
-            trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
+            trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory.mat', directVid_ratID(i_directcsv),...
                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
             fullTrajName = fullfile(fullSessionDir, trajName);
             
@@ -262,48 +262,21 @@ for i_rat = 1:numRatFolders
             
             direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams,~invalid_direct);
             mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams,~invalid_mirror);
-            
-            % find the appropriate box calibration for this session
-            temp = boxCal.boxCal_fromSession;
-            calibratedSessionNames = {temp.sessionName};
-            if any(strcmpi(calibratedSessionNames,sessionDirectories{iSession}))
-                sessionIdx = find(strcmpi(calibratedSessionNames,sessionDirectories{iSession}));
-                activeBoxCal = boxCal.boxCal_fromSession(sessionIdx);
-            else
-                activeBoxCal = boxCal;
-            end
-            
+                        
             [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
                 calc3D_DLC_trajectory(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
-                                      vidROI, activeBoxCal, pawPref, frameSize,...
+                                      boxCal, pawPref, frameSize,...
                                       'maxdistfromneighbor',maxDistFromNeighbor);
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
             
-%             [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
-%             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
-%                 'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
             cd(fullSessionDir)
-            
-%             if exist(trajName,'file')
-%                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
-%             else
-%                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
-                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
-%             end
+            save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
             
         end
         
     end
     
 end
-
-
-% RUN script_recalibrateBoxes_20190128 once .csv files with DLC output from
-%   both views are loaded into appropriate folders
-% RUN this script
-% RUN script_calculateKinematics_20190218 
-% RUN script_plotMeanTrajectories
-

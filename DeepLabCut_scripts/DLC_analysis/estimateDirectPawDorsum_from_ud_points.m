@@ -1,4 +1,4 @@
-function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_ud_points(direct_pts_ud, mirror_pts_ud, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, frameSize, pawPref,varargin)
+function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_ud_points(direct_pts_ud, mirror_pts_ud, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,varargin)
 %
 % estimate the location of the paw dorsum in the direct view given its
 % location in the mirror view and the locations of associated points
@@ -9,26 +9,41 @@ function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_
 %       where the point (1,1) is the upper left corner of the full frame
 %       including mirror and direct views
 %   mirror_pts_ud - same as direct_pts_ud for the mirror view
-%   invalid_direct - 
+%   invalid_direct - num bodyparts x numFrames boolean array containing
+%       whether each bodypart identified in each frame is "valid" (false)
+%       or "invalid" (true) (i.e., low probability, not aligned with other
+%       view)
 %   invalid_mirror - same as invalid_direct for the mirror view
-%   direct_bp
+%   direct_bp - cell array containing the bodypart labels for the direct
+%       view (from DLC)
 %   mirror_bp - same as direct_bp for the mirror view
-%   boxCal - 
-%   frameSize - 
+%   boxCal - box calibration structure with the following fields:
+%       .E - essential matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .F - fundamental matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .Pn - camera matrices assuming the direct view is eye(4,3). 4 x 3 x
+%           numViews array
+%       .P - direct camera matrix (eye(4,3))
+%       .cameraParams
+%       .curDate - YYYYMMDD format date the data were collected
+%   imSize - 2-element vector with frame height x width
 %
 % OUTPUTS:
-%   final_directPawDorsum_pts
-%   isEstimate
-
-% first find all valid direct view paw dorsum points
+%   final_directPawDorsum_pts - numFrames x 2 array where each row is an
+%       (x,y) pair with updates locations of the paw dorsum in the direct
+%       view
+%   isEstimate - column vector with length numFrames indicates whether each
+%       direct paw dorsum coordinate in final_directPawDorsum_pts was
+%       estimated based on the location in the mirror view (true) or was
+%       directly determined by DLC (false)
 
 % look at all invalid direct view points
 % 1) is the mirror view point valid? If so, can calculate an epipolar line
 % along which the direct view paw dorsum must lie
 %
-% 2) which digit points are valid?
-
-% figure out the index of the paw dorsum in the direct and mirror views
+% 2) which digit points are valid? can use them to figure out the general
+% vicinity of where the paw dorsum should be
 
 maxDistFromNeighbor = 60;  % how far the estimated point is allowed to be from its nearest identified neighbor
 
@@ -129,7 +144,7 @@ for iFrame = 1 : numFrames
                 intersectPoints = lineConvexHullIntersect(epiLine,boundary_pts);
             end
             
-            epiPts = lineToBorderPoints(epiLine, frameSize);
+            epiPts = lineToBorderPoints(epiLine, imSize);
             epiPts = [epiPts(1:2);epiPts(3:4)];
                 
             if isempty(intersectPoints)

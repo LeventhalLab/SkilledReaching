@@ -1,4 +1,4 @@
-function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref, varargin)
+function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref, varargin)
 %
 % function to estimate the locations of hidden points given knowledge of
 % nearby points and epipolar geometry
@@ -16,9 +16,17 @@ function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(f
 %   direct_bp - cell array containing lis of body part descriptors for the
 %       direct view
 %   mirror_bp - same as direct_bp for the mirror view
-%   boxCal
-%   ROIs
-%   imSize
+%   boxCal - box calibration structure with the following fields:
+%       .E - essential matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .F - fundamental matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .Pn - camera matrices assuming the direct view is eye(4,3). 4 x 3 x
+%           numViews array
+%       .P - direct camera matrix (eye(4,3))
+%       .cameraParams
+%       .curDate - YYYYMMDD format date the data were collected
+%   imSize - 2-element vector with frame height x width
 %   pawPref - 'left' or 'right'
 %
 % VARARGS:
@@ -37,7 +45,7 @@ function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(f
 %       direct, 2 = mirror) was estimated or identified directly by DLC
 
 maxDistFromNeighbor = 60;  % how far the estimated point is allowed to be from its nearest identified neighbor
-for iarg = 1 : 2 : nargin - 10
+for iarg = 1 : 2 : nargin - 9
     switch lower(varargin{iarg})
         case 'maxdistfromneighbor'    % how far the estimated point is allowed to be from its nearest identified neighbor
             maxDistFromNeighbor = varargin{iarg + 1};
@@ -229,7 +237,7 @@ if isempty(intersectPoints)
     epiBorderPts = [epiBorderPts(1:2);epiBorderPts(3:4)];
     
     if isempty(other_knuckle_pts)
-        % first option is to find the point on the epipolar line closest to
+        % try to find the point on the epipolar line closest to
         % the next digit over; if that isn't available, find the point on
         % the epipolar line closest to the next knuckle up the same digit
         [nndist, nnidx] = findNearestPointToLine(epiBorderPts, nextKnucklePt);

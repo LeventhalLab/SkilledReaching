@@ -1,5 +1,5 @@
 function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
-    calc3D_DLC_trajectory(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
+    calc3D_DLC_trajectory(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, pawPref, imSize, varargin)
 %
 % INPUTS:
 %   final_direct_pts, final_mirror_pts - number of body parts x number of frames x 2
@@ -10,10 +10,6 @@ function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstima
 %       correctly identified
 %   direct_bp, mirror_bp - cell arrays containing lists of body parts
 %       descriptors
-%   ROIs - 3 x 4 array where each row is a [left,top,width,height] vector
-%       defining a rectangular region of interest. First row is the direct
-%       view, second row is the left mirror view, third row is the right
-%       mirror view
 %   boxCal - structure with the following fields:
 %       cameraParams - matlab camera parameters structure
 %   pawPref - 'right' or 'left'
@@ -46,7 +42,7 @@ function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstima
 % misidentified
 maxDistFromNeighbor = 60;
 
-for iarg = 1 : 2 : nargin - 10
+for iarg = 1 : 2 : nargin - 9
     switch lower(varargin{iarg})
         case 'maxdistfromneighbor'
             maxDistFromNeighbor = varargin{iarg + 1};
@@ -58,18 +54,16 @@ cameraParams = boxCal.cameraParams;
 
 switch pawPref
     case 'right'
-        ROIs = ROIs(1:2,:);
         Pn = squeeze(boxCal.Pn(:,:,2));
         scaleFactor = mean(boxCal.scaleFactor(2,:));
     case 'left'
-        ROIs = ROIs([1,3],:);
         Pn = squeeze(boxCal.Pn(:,:,3));
         scaleFactor = mean(boxCal.scaleFactor(3,:));
 end
 K = cameraParams.IntrinsicMatrix;
 
 [final_direct_pts,final_mirror_pts,isEstimate] = ...
-    estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
+    estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
 numFrames = size(final_direct_pts,2);
 if size(invalid_direct,2) > numFrames
     % sometimes invalid_direct/mirror has more frames than the video

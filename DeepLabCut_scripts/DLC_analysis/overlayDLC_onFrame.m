@@ -217,48 +217,13 @@ for i_bp = 1 : length(parts_to_show)
     end
 end
 
-textStr = sprintf('frame # %03d',frameNumber);
-mirrorImg = insertText(mirrorImg,[20,10],textStr,'fontsize',24,'textcolor','w',...
-    'boxopacity',0);
+% textStr = sprintf('frame # %03d',frameNumber);
+% mirrorImg = insertText(mirrorImg,[20,10],textStr,'fontsize',24,'textcolor','w',...
+%     'boxopacity',0);
 
 if connectDigits
     % connect the first and fourth digits in the direct view
 end
-    
-% insert text that gives a key for symbols and colors
-% if makeKey
-%     textStr = cell(5,1);
-%     textStr{1} = sprintf('is marker estimate: %s', DLC_isEstimateType);
-%     textStr{2} = sprintf('invalid marker: %s', DLC_invalidMarkerType);
-%     textStr{3} = sprintf('marker for p > %0.2f: %s', p_cutoff, DLC_highProbMarkerType);
-%     textStr{4} = sprintf('marker for p < %0.2f: %s', p_cutoff, DLC_lowProbMarkerType);
-%     textStr{5} = sprintf('reconstructed from 3D position: %s', DLC_reprojMarkerType);
-%     for ii = 6 : 10
-%         textStr{ii} = colorTextLabels{ii-5};
-%     end
-%     
-%     
-%     textPosition = zeros(length(textStr), 2);
-%     
-% 
-%     for iRow = 1 : size(textPosition,1)
-%         textPosition(iRow,1) = topLeftTextPosition(1);
-%         textPosition(iRow,2) = topLeftTextPosition(2) + (iRow-1)*textRowSpacing;
-%     end
-%     img_out = insertText(img_out,textPosition,textStr,'fontsize',textFontSize,'textcolor',textColor);
-%     
-%     textStr = cell(length(bodyparts),1);
-%     textColor2 = zeros(length(bodyparts),3);
-%     textPosition2 = zeros(length(textStr), 2);
-%     for ii = 1 : length(textStr)
-%         textStr{ii} = sprintf('%d - %s',ii,bodyparts{ii});
-%         textPosition2(ii,1) = topLeftTextPosition2(1);
-%         textPosition2(ii,2) = topLeftTextPosition2(2) + (ii-1)*textRowSpacing;
-%         textColor2(ii,:) = getMarkerColor(bodyparts{ii}, bodypartColor, pawPref);
-%     end
-%     img_out = insertText(img_out,textPosition2,textStr,'fontsize',textFontSize,'textcolor',textColor2);
-% end
-% 
-% end
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%
+% histogram of trigger frames for 2 separate sessions
