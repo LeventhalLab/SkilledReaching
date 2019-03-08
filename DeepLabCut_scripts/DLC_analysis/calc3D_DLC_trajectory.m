@@ -10,8 +10,16 @@ function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstima
 %       correctly identified
 %   direct_bp, mirror_bp - cell arrays containing lists of body parts
 %       descriptors
-%   boxCal - structure with the following fields:
-%       cameraParams - matlab camera parameters structure
+%   boxCal - box calibration structure with the following fields:
+%       .E - essential matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .F - fundamental matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .Pn - camera matrices assuming the direct view is eye(4,3). 4 x 3 x
+%           numViews array
+%       .P - direct camera matrix (eye(4,3))
+%       .cameraParams
+%       .curDate - YYYYMMDD format date the data were collected
 %   pawPref - 'right' or 'left'
 %   imSize - 2-element vector with frame height x width
 %

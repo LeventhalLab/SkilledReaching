@@ -39,10 +39,10 @@ function [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality
 %   pcutoff - p-value to use as a cutoff for high vs low probability points
 %
 % OUTPUTS:
-%   reproj_error - num_bodyparts x numFrames x 2 x 2 array where
-%       reproj_error(bodypart,frame,:,1) is the difference in x,y
-%       coordinates between the reprojected 3D point and originally
-%       measured direct view poiint. reproj_error(bodypart,frame,:,2) is
+%   reproj_error - num_bodyparts x numFrames x 2 array where
+%       reproj_error(bodypart,frame,1) is the euclidean distance
+%       between the reprojected 3D point and originally
+%       measured direct view point. reproj_error(bodypart,frame,2) is
 %       the same for the mirror view
 %   high_p_invalid - num_bodyparts x numFrames x 2 boolean array where true
 %       entries indicate that DLC thought the point was identified with

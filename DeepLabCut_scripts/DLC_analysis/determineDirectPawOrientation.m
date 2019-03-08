@@ -1,21 +1,21 @@
 function [mcpAngle,pipAngle,digitAngle,pawAngle] = determineDirectPawOrientation(direct_pts,direct_bp,invalid_direct,pawPref)
 %
-% function to determine the angle of the paw in the direct view with
-% respect to horizontal (vertical?)
+% function to determine the angle of the paw in the direct view 
 %
 % INPUTS
-%   direct_pts
-%   direct_bp
-%   direct_p
+%   direct_pts - num bodyparts x numFrames x 2 array containing (x,y)
+%       coordinates of bodyparts in the direct vie
+%   direct_bp - cell array containing the bodypart labels corresponding to
+%       direct_pts
+%   direct_p - num bodyparts x numFrames containing certainty values output
+%       by DLC
 %   pawPref - 'left' or 'right' indicating the preferred reaching paw
 %
 % OUTPUTS
 %   mcpAngle, pipAngle, digitAngle - angle in radians in the direct view of
 %       the paw. pi (or -pi) is horizontal; pi/2 is vertical
 %
-% [invalid_direct,~] = find_invalid_DLC_points(direct_pts, direct_p);
-% hard code strings that only occur in bodyparts that are part of the
-% reaching paw
+
 [mcpIdx,pipIdx,digIdx,~] = findReachingPawParts(direct_bp,pawPref);
 
 % calculate paw orientation at each time point based on mcp, pip, and digit

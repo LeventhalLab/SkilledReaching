@@ -1,17 +1,39 @@
-function [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
+function [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = ...
+    findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
+%
+% find the first time the paw broke through the reaching slot
 %
 % INPUTS
-%   pawTrajectory - 
-%   bodyparts
+%   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
+%       matrix contains x,y,z points for each bodypart
+%   bodyparts - cell array containing strings describing each bodypart in
+%       the same order as in the pawTrajectory array
 %   pawPref - 'right' or 'left'
-%   invalid_direct
-%   invalid_mirror
+%   invalid_direct - bodyparts x numframes boolean array where true values
+%       indicate that a bodypart in a given frame was (probably) not
+%       correctly identified
+%   invalid_mirror - same as invalid_direct for the mirror view
+%   reproj_error - num_bodyparts x numFrames x 2 array where
+%       reproj_error(bodypart,frame,1) is the euclidean distance
+%       between the reprojected 3D point and originally
+%       measured direct view point. reproj_error(bodypart,frame,2) is
+%       the same for the mirror view
 %
+% VARARGS
+%   maxreprojerror - maximum tolerable reprojection error from 3D points
+%       back to original images
+%   
 % OUTPUTS
-%   paw_through_slot_frame - the first 
-%   firstSlotBreak
-%   first_pawPart_outside_box
-%   maxPawReachFrame
+%   paw_through_slot_frame - the first frame where the paw appears through
+%       the slot, after it was seen inside the box (excludes the occcasional
+%       video where the paw started outside the box - missed trigger)
+%   firstSlotBreak - vector containing the first frame that each paw part
+%       first appeared outside the box after it was found inside the box
+%   first_pawPart_outside_box - same as firstSlotBreak, but without the
+%       requirement that the paw is found inside the box first. This
+%       detects videos where the paw started outside the box
+%   maxDigitReachFrame - the frame at which any of the digit tips got
+%       closest to the camera (doesn't have to be just the first reach)
 
 slot_z = 200; 
 maxReprojError = 10;
@@ -159,11 +181,8 @@ for iPart = 1 : numPawParts
     if ~any(ismember(digIdx,iPart))    % don't redo the digit tips
         
         temp = z_coords(:,iPart);
-    %     temp(temp == 0) = NaN;
-    %     tempFrame = find(temp < slot_z,1,'first');
         tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot
         all_tempFrame = temp < slot_z;   % all frames, including before the paw dorsum was found inside the box
-        through_slot_borders = findConsecutiveEntries(tempFrame);
         through_slot_borders = findConsecutiveEntries(tempFrame);   % look for consecutive frames with the paw outside the box after paw dorsum found inside the box
         past_slot_borders = findConsecutiveEntries(all_tempFrame);  % same, but including before the paw dorsum was found inside the box
         if ~isempty(through_slot_borders)
@@ -188,7 +207,5 @@ for iPart = 1 : numPawParts
         end
 
     end
-%     if ~isempty(tempFrame)
-%         firstSlotBreak(iPart) = tempFrame;
-%     end
+
 end

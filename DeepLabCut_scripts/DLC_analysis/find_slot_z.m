@@ -1,4 +1,14 @@
 function slot_z = find_slot_z(trajectoryDir,varargin)
+%
+% INPUTS
+%   trajectoryDir - directory containing the paw trajectory files
+%
+% VARARGS
+%   trajectory_file_name - string containing characters that define the
+%       names of the paw trajectory files
+%
+% OUTPUTS
+%   slot_z - estimate of the z-coordinate of the reaching slot/front panel
 
 reachBorders = [160,230];
 binWidth = 2;
@@ -18,8 +28,6 @@ end
             
 % find the pawTrajectory files
 pawTrajectoryList = dir(trajectory_file_name);
-
-
 if isempty(pawTrajectoryList)
     slot_z = [];
     return;
@@ -29,7 +37,7 @@ numTrials = length(pawTrajectoryList);
 
 load(pawTrajectoryList(1).name);
 
-pawPref = thisRatInfo.pawPref;
+pawPref = thisRatInfo.pawPref;   % contained in paw trajectory file
 if iscategorical(pawPref)
     pawPref = char(pawPref);
 end
@@ -41,7 +49,6 @@ allTrajectories = NaN(size(pawTrajectory,1),size(pawTrajectory,2),size(pawTrajec
 allTrajectories(:,:,:,1) = pawTrajectory;
 [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 reachingPawIdx = [mcpIdx;pipIdx;digIdx;pawDorsumIdx];
-% numPawParts = length(reachingPawIdx);
 
 for iTrial = 2 : numTrials
     load(pawTrajectoryList(iTrial).name);
@@ -56,19 +63,8 @@ all_z = all_z(all_z > 0);
 % all z values should have a bimodal distribution, with a minimum where the
 % slot is (can't find the paw in the mirror view at the slot). Use Otsu's
 % method to find that minimum
-[norm_thresh,EM] = graythresh(all_z / 255);
+[norm_thresh,~] = graythresh(all_z / 255);   % from image processing toolbox
 slot_z = norm_thresh * 255;
-
-% figure(2);
-% histogram(all_z,binEdges)
-% N = histcounts(all_z(:),binEdges);
-% reshaped_z = zeros(size(all_z,1),size(all_z,2)*size(all_z,3));
-% for iTrial = 1 : numTrials
-%     start_idx = (iTrial-1) * numPawParts + 1;
-%     end_idx = iTrial * numPawParts;
-%     reshaped_z(:,start_idx:end_idx) = squeeze(all_z(:,:,iTrial));
-% end
-% slot_z_estimate = 200;
 
 cd(currentDir);
 

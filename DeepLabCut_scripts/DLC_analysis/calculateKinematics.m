@@ -159,15 +159,15 @@ for i_rat = 1:numRatFolders
         all_endPtFrame = NaN(numTrials,1);                       % frame at which maximum extension of digit 2 was achieved on the initial reach
         all_partEndPts = zeros(numReachingPawParts, 3, numTrials); % farthest reach extension for each individual body part (first reach only)
         all_partEndPtFrame = zeros(numReachingPawParts, numTrials);  % frame at which full extension occurred for each part
-        all_paw_through_slot_frame = zeros(numTrials,1);    % frame where paw is first identified in front of the slot AFTER it was identified behind the slot
+        all_paw_through_slot_frame = zeros(numTrials,1);    % frame where digit 2 is first identified in front of the slot AFTER it was identified behind the slot
+        all_firstSlotBreak = zeros(numReachingPawParts, numTrials); % frame where each paw part is first identified in front of the slot AFTER it was identified behind the slot
         all_first_pawPart_outside_box = zeros(numReachingPawParts, numTrials);   % same as above, but includes if paw started outside box
-        all_firstSlotBreak = zeros(numReachingPawParts, numTrials);
-        all_firstPawDorsumFrame = zeros(numTrials,1);
+        all_firstPawDorsumFrame = zeros(numTrials,1);       % first frame in which the paw dorsum was reliably identified in both views
         all_aperture = NaN(size(pawTrajectory,1),3,numTrials);   % distance between tips of first and fourth digits
         all_maxDigitReachFrame = zeros(numTrials,1);             % frame for maximum extension in the entire video (not just initial reach)
         all_initPellet3D = NaN(numTrials, 3);                    % 3D location of the pellet
         all_trialOutcomes = NaN(numTrials,1);                    % based on reach scores
-        all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
+        all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);  % concatenation of isEstimate arrays for each trial
         vidNum = zeros(numTrials,1);
         
         pelletMissingFlag = false(numTrials,1);
@@ -185,10 +185,9 @@ for i_rat = 1:numRatFolders
         trialNumbers(:,2) = resolveDuplicateTrialNumbers(trialNumbers(:,1));
         invalid3Dpoints = false(size(pawTrajectory,3),size(pawTrajectory,1),numTrials);
         
+        % look for the break in z-coordinates, which is where the paw is
+        % obscured in the mirror view by the front panel
         slot_z = find_slot_z(fullSessionDir,'trajectory_file_name',trajectory_file_name);
-%         if slot_z < 160 || slot_z > 230
-%             keyboard
-%         end
         
         for iTrial = 1 : numTrials
             
@@ -244,7 +243,8 @@ for i_rat = 1:numRatFolders
             [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
             pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
             
-            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = ...
+                findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
             all_maxDigitReachFrame(iTrial) = maxDigitReachFrame;
             
             pellet_reproj_error = squeeze(reproj_error(pellet_idx,:,:));
@@ -267,12 +267,9 @@ for i_rat = 1:numRatFolders
             all_first_pawPart_outside_box(:,iTrial) = first_pawPart_outside_box;
             all_firstSlotBreak(:,iTrial) = firstSlotBreak;
             
-%             if isempty(firstPawDorsumFrame)
-%                 all_firstPawDorsumFrame(iTrial) = NaN;
-%             else
-                all_firstPawDorsumFrame(iTrial) = firstPawDorsumFrame;
-%             end
+            all_firstPawDorsumFrame(iTrial) = firstPawDorsumFrame;
             
+            % 
             trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
             
             if isempty(trajectory)
