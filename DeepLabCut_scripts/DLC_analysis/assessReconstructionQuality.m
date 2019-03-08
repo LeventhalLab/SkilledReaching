@@ -100,9 +100,8 @@ reproj_error = zeros(num_bp,numFrames,2);
 
 for i_bp = 1 : num_bp
     
-%     bpName = bodyparts{i_bp};
-    direct_bp_idx = direct_bpMatch_idx(i_bp);%strcmpi(direct_bp, bpName);
-    mirror_bp_idx = mirror_bpMatch_idx(i_bp);%strcmpi(mirror_bp, bpName);
+    direct_bp_idx = direct_bpMatch_idx(i_bp);
+    mirror_bp_idx = mirror_bpMatch_idx(i_bp);
 
     current3D = squeeze(unscaled_trajectory(:,:,i_bp));
     
@@ -123,6 +122,4 @@ for i_bp = 1 : num_bp
     reproj_error(i_bp,:,1) = sqrt(sum(direct_error.^2,2));
     reproj_error(i_bp,:,2) = sqrt(sum(mirror_error.^2,2));
 end
-    
-% reproj_error = calculatePawReprojectionErrors(pawTrajectory, direct_pts, mirror_pts, bodyparts, direct_bp, mirror_bp, pawPref, boxCal, ROIs);
 
