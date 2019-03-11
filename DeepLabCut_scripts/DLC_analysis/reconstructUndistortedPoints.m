@@ -27,11 +27,9 @@ for i_part = 1 : size(points_ud,1)
 
     validFrames = valid_pts(i_part,1:numFrames);
     if any(validFrames)
-        try
+
         cur_translated_pts = squeeze(translated_pts(i_part,validFrames,:));
-        catch
-            keyboard
-        end
+
         if iscolumn(cur_translated_pts)
             cur_translated_pts = cur_translated_pts';
         end

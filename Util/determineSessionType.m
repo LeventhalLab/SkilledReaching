@@ -1,19 +1,29 @@
 function [sessionType] = determineSessionType(thisRatInfo, sessionDates, varargin)
 %
 % INPUTS
+%   thisRatInfo - information about this rat extracted from the rat info 
+%       table
+%   sessionDates - 
+%
+% VARARGS
+%   csvdateformat - format string for converting strings to datetime
+%       objects
 %
 % OUTPUTS
-%
-% 'pretraining'
-% 'training'
-% 'laser_during'
-% 'laser_between'
-% 'occlusion'
-% 'alternating'
-% 'post_occlusion'
-
-possSessionTypes = {'pretraining','training','laser_during','laser_between','occlusion','alternating','post_occlusion'};
-% possSessionTypes = categorical(possSessionTypes);
+%   sessionType - structure with an element for each sessionDate, with the
+%       following fields:
+%       .date - date for that session (datetime object)
+%       .type - what type of session? possibilities in Leventhal lab are
+%               'pretraining'
+%               'training'
+%               'laser_during'
+%               'laser_between'
+%               'occlusion'
+%               'alternating'
+%               'post_occlusion'
+%       .sessionsInBlock - number of sessions performed of the same type in
+%           the current block
+%       
 
 csvDateFormat = '';
 for iarg = 1 : 2 : nargin - 2
@@ -70,17 +80,13 @@ for iSession = 1 : numSessions
 % is this a training session?
 % re-work this later once the ratInfo table is completely filled in; for
 % now, consider anything before lastDateRetraining as "training"
-% comment the next line back in later
-% if ~isnat(firstDateTraining) && ~isnat(lastDateRetraining)
     
     if ~isnat(lastDateRetraining)
         % comment below line back in once rat table is filled out
-    %     if sessionDate >= firstDateTraining && sessionDate <= lastDateRetraining
         if sessionDate <= lastDateRetraining
             sessionType(iSession).type = 'training';
             numTrainingSessions = numTrainingSessions + 1;
             sessionType(iSession).sessionsInBlock = numTrainingSessions;
-%             sessionType(iSession).sessionsLeftInBlock = days(lastDateRetraining - sessionDate);
             continue
         end
     end
@@ -96,7 +102,6 @@ for iSession = 1 : numSessions
             end
             numLaserSessions = numLaserSessions + 1;
             sessionType(iSession).sessionsInBlock = numLaserSessions;
-%             sessionType(iSession).sessionsLeftInBlock = days(lastDateLaser - sessionDate);
             continue;
         end
 

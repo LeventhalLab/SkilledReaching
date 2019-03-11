@@ -69,7 +69,7 @@ numFrames = size(final_direct_pts, 2);
                            % be a mismatch?
 
 
-[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
+[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
 numFrames = size(final_direct_pts,2);
 if size(invalid_direct,2) > numFrames
     % sometimes invalid_direct/mirror has more frames than the video

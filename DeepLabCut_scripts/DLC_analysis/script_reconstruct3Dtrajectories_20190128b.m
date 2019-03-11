@@ -3,7 +3,7 @@
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
-repeatCalculations = true;
+repeatCalculations = false;
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
@@ -62,8 +62,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 13:2:numRatFolders
-% for i_rat = 8 : numRatFolders
+for i_rat = 14:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -91,12 +90,12 @@ for i_rat = 13:2:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 13
-        startSession = 19;
+    if i_rat == 14
+        startSession = 2;
     else
-        startSession = 1;
+        startSession = 2;
     end
-    for iSession = startSession : 1 : numSessions
+    for iSession = startSession : 4 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -210,8 +209,8 @@ for i_rat = 13:2:numRatFolders
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
             end
                     
-            numDirectFrames = size(direct_p,1);
-            numMirrorFrames = size(mirror_p,1);
+            numDirectFrames = size(direct_p,2);
+            numMirrorFrames = size(mirror_p,2);
     
             if numDirectFrames ~= numMirrorFrames
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);

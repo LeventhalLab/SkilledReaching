@@ -1,4 +1,16 @@
 function truncated_trajectory = find_trajectory_start_point(init_trajectory, start_z)
+%
+% when doing the trajectory interpolation, find the first time the current
+% trajectory passes start_z
+%
+% INPUTS
+%   init_trajectory - numFrames x 3 matrix containing coordinates of the
+%       paw part
+%   start_z - farthest point in the z-dimension from the camera to start
+%       the trajectory
+%
+% OUTPUTS
+%   truncated_trajectory - points in init_trajectory after the start point
 
 z = init_trajectory(:,3);
 

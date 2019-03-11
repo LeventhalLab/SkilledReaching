@@ -1,8 +1,9 @@
 function [farthestDist,ptsIdx]= findFarthestPoints(X)
 %
+% find the most widely separated points in a matrix
+%
 % INPUTS
 %   X - m x n matrix containing m points of dimension n
-%
 %
 % OUTPUTS
 %   farthestDist - farthest euclidean distance between any 2 points in X

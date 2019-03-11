@@ -1,4 +1,4 @@
-function [points3d,reprojectedPoints,errors] = triangulate_DL(mp1, mp2, P1, P2, varargin)
+function [points3d,reprojectedPoints,reprojectionErrors] = triangulate_DL(mp1, mp2, P1, P2, varargin)
 %
 % modified from matlab's computer vision toolbox to perform nonlinear
 % optimization of reprojection errors after initial closed form solutions
@@ -12,6 +12,9 @@ function [points3d,reprojectedPoints,errors] = triangulate_DL(mp1, mp2, P1, P2, 
 %   P2 - camera matrix for camera 2
 %
 % VARARGs:
+%   refineestimates - whether or not to perform nonlineaer optimization on
+%       the initial estimates. for the most part, it doesn't seem to make
+%       much difference
 %
 % OUTPUTS:
 %   points3d - m x 3 array where each row is an [x,y,z] triple. Answer is
@@ -36,7 +39,7 @@ cameraMatrices = cat(3, P1, P2);
 
 points3d = zeros(numPoints, 3, 'like', points2d);
 reprojectedPoints = zeros(numPoints, 2, 2, 'like', points2d);
-% reprojectionErrors = zeros(numPoints, 1, 'like', points2d);
+reprojectionErrors = zeros(numPoints, 1, 'like', points2d);
 
 for iPoint = 1 : numPoints
     curPts = squeeze(points2d(iPoint, :, :))';
@@ -45,7 +48,7 @@ for iPoint = 1 : numPoints
     end
     [points3d(iPoint, :), reprojection, errors] = ...
         triangulateOnePoint_DL(cameraMatrices, curPts, refine_estimates);
-%     reprojectionErrors(iPoint) = mean(hypot(errors(:, 1), errors(:, 2)));
+    reprojectionErrors(iPoint) = mean(hypot(errors(:, 1), errors(:, 2)));
     reprojectedPoints(iPoint,:,1) = reprojection(1,:);
     reprojectedPoints(iPoint,:,2) = reprojection(2,:);
 end

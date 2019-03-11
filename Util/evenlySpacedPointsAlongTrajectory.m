@@ -1,4 +1,17 @@
 function pts_out = evenlySpacedPointsAlongTrajectory(trajectory, varargin)
+%
+% divide a 3-d trajectory into evenly spaced points
+%
+% INPUTS
+%   trajectory - m x 3 array containing the trajectory
+%
+% VARARGIN
+%   num_pts_out - number of points to divide the trajectory into
+%
+% OUTPUTS
+%   pts_out - num_pts_out x 3 array containing the initial trajectory
+%       divided into num_pts_out points. 
+
 
 num_pts_out = 100;
 
@@ -25,11 +38,7 @@ for i_outPt = 2 : num_pts_out-1
         if dist_along_trajectory == 0
             cur_pt = startPt;
         else
-            try
             cur_pt = trajectory(cur_trajectory_idx-1,:);
-            catch
-                keyboard
-            end
         end
         
         prev_dist_along_trajectory = dist_along_trajectory;

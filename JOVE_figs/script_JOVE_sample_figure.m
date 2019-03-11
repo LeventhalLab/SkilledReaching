@@ -9,6 +9,12 @@ bodypartColor.paw_dorsum = [0 0 1];
 bodypartColor.pellet = [0 0 0];
 bodypartColor.nose = [0.8 0.8 0.8];
 
+% parameters for find_invalid_DLC_points
+maxDistPerFrame = 30;
+min_valid_p = 0.85;
+min_certain_p = 0.97;
+maxDistFromNeighbor_invalid = 70;
+
 figROI = [800   500   450   400
           001   500   450   400];
 ratIDnum = 284;
@@ -139,9 +145,9 @@ for iFrame = 1 : numFrames
 end
 
 h_fig = figure(1);imshow(finalImg)
-set(gcf,'units','centimeters','position',[1 1 8*2.54 3.5*2.54]);
+set(gcf,'units','inches','position',[1 1 6.5 9]);
 fname = fullfile(sessionFolder, 'sampleImages');
-print(h_fig,fname,'-dpdf');
+print(h_fig,fname,'-dpdf','-r300');
 
 savefig(h_fig,fname);
 
@@ -188,8 +194,69 @@ for iPlot = 1 : 2
     set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
         'view',viewOrientations(iPlot,:))
     xlabel('x (mm)');ylabel('z (mm)');zlabel('y (mm)');
+    set(gca,'fontsize',20,'fontname','arial')
 end
 
 fname = fullfile(sessionFolder, 'sampleTrajectories');
-print(h_fig2,fname,'-dpdf');
+print(h_fig2,fname,'-dpdf','-r300');
+savefig(h_fig2,fname);
+
+%%
+% histogram of frames at which paw is detected through the slot
+
+sessionName1 = 'R0284_20190215a';
+sessionName2 = 'R0284_20190218a';
+
+sessionDate1 = sessionName1(7:14);
+sessionDate2 = sessionName2(7:14);
+
+ratFolder = fullfile(labeledBodypartsFolder,ratID);
+sessionFolder1 = fullfile(ratFolder,sessionName1);
+sessionFolder2 = fullfile(ratFolder,sessionName2);
+
+sessionSummaryFile1 = sprintf('%s_%s_kinematicsSummary.mat',ratID,sessionDate1);
+sessionSummaryFile2 = sprintf('%s_%s_kinematicsSummary.mat',ratID,sessionDate2);
+
+sessionSummaryFile1 = fullfile(sessionFolder1,sessionSummaryFile1);
+sessionSummaryFile2 = fullfile(sessionFolder2,sessionSummaryFile2);
+
+summary{1} = load(sessionSummaryFile1);
+summary{2} = load(sessionSummaryFile2);
+
+binEdges = 250:2.5:500;
+x = binEdges(1:end-1) + diff(binEdges)/2;
+h_fig3 = figure(3);
+hold off
+plotCols = [1 0 0;0 1 0;0 0 1];
+for iSession = 1 : 2
+    [firstPawDorsum_n{iSession},~] = histcounts(summary{iSession}.all_firstPawDorsumFrame,binEdges);
+    [paw_through_slot_n{iSession},~] = histcounts(summary{iSession}.all_paw_through_slot_frame,binEdges);
+    [endPtFrame_n{iSession},~] = histcounts(summary{iSession}.all_endPtFrame,binEdges);
+    
+    if iSession == 1
+        lineweight = 2;
+        col_to_use = plotCols * 0.5;
+        linestyle = '-';
+    else
+        lineweight = 0.5;
+        col_to_use = plotCols;
+        linestyle = ':';
+    end
+    toPlot = firstPawDorsum_n{iSession} / sum(firstPawDorsum_n{iSession});
+    plot(x,toPlot,'linewidth',lineweight,'color',col_to_use(1,:),'linestyle',linestyle);
+    hold on
+    toPlot = paw_through_slot_n{iSession} / sum(paw_through_slot_n{iSession});
+    plot(x,toPlot,'linewidth',lineweight,'color',col_to_use(2,:),'linestyle',linestyle);
+    toPlot = endPtFrame_n{iSession} / sum(endPtFrame_n{iSession});
+    plot(x,toPlot,'linewidth',lineweight,'color',col_to_use(3,:),'linestyle',linestyle);
+    
+    hold on
+end
+set(gca,'ylim',[0 1],'ytick',0:0.5:1,'xtick',250:50:500,'fontsize',20,'fontname','arial');
+legend('first paw detection','paw through slot','max extension','location','northeast')
+xlabel('frame number')
+ylabel('normalized count')
+
+fname = fullfile(sessionFolder, 'framehistograms');
+print(h_fig3,fname,'-dpdf','-r300');
 savefig(h_fig2,fname);

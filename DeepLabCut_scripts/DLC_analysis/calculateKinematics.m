@@ -292,6 +292,9 @@ for i_rat = 1:numRatFolders
         
         mean_initPellet3D = nanmean(all_initPellet3D);
             
+        % cycle back through the trials so that any trial where a pellet
+        % wasn't grabbed, we can estimate the paw trajectory with respect
+        % to where the pellet should be
         for iTrial = 1 : numTrials
             if pelletMissingFlag(iTrial)
                 load(pawTrajectoryList(iTrial).name);
@@ -309,19 +312,11 @@ for i_rat = 1:numRatFolders
                 trajectory = squeeze(allTrajectories(:,:,:,iTrial));
             end
             
-            % should velocity be calculated based on smoothed position?
-%             v = pawVelocity(trajectory,frameRate);
-%             all_v(:,:,:,iTrial) = v;
-            
-            % should acceleration be calculated based on smoothed velocity?
-%             a = pawVelocity(v,frameRate);
-%             all_a(:,:,:,iTrial) = a;
-            
             aperture = calcAperture(trajectory,bodyparts,pawPref);
             slot_z_wrt_pellet = slot_z - mean_initPellet3D(3);
             
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = ...
-                findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
+                findReachEndpoint(trajectory, bodyparts,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
                 'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet);
             all_endPts(:,:,iTrial) = endPts;
             all_partEndPts(:,:,iTrial) = partEndPts;
@@ -364,22 +359,16 @@ for i_rat = 1:numRatFolders
         end
 
         allTrajectories(allTrajectories == 0) = NaN;
-        try
         [normalized_pd_trajectories,smoothed_pd_trajectories,interp_pd_trajectories,normalized_digit_trajectories,smoothed_digit_trajectories,interp_digit_trajectories] = ...
             interpolateTrajectories(allTrajectories,pawPartsList,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,pawPref,...
             'num_pd_TrajectoryPoints',num_pd_TrajectoryPoints,'num_digit_TrajectoryPoints',num_digit_TrajectoryPoints,'start_z_pawdorsum',start_z_pawdorsum,'smoothwindow',smoothWindow,...
             'start_z_digits',slot_z-mean_initPellet3D(3));
         trajectoryLengths = calculateTrajectoryLengths(normalized_pd_trajectories,normalized_digit_trajectories,slot_z_wrt_pellet);
-        catch
-            keyboard
-        end
-%         smoothed_pawOrientations = calcSmoothedPawOrientations(smoothed_pd_trajectories,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,pawPref);
         
-        [all_paw_xyz_v,all_paw_tangential_v] = calculatePawVelocity(smoothed_pd_trajectories,frameRate);
         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
         thisSessionType = sessionType(allSessionIdx);
         
-        save(sessionSummaryName,'bodyparts','allTrajectories','all_paw_xyz_v','all_paw_tangential_v',...
+        save(sessionSummaryName,'bodyparts','allTrajectories',...
             'normalized_pd_trajectories','normalized_digit_trajectories',...
             'smoothed_pd_trajectories','smoothed_digit_trajectories',...
             'interp_pd_trajectories','interp_digit_trajectories',...

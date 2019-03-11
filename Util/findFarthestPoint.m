@@ -1,7 +1,5 @@
 function [fpdist, fpidx] = findFarthestPoint(x, y, varargin)
 %
-% usage: 
-%
 % function to find the point(s) in y farthest from a single point "x"
 %
 % INPUTS:
@@ -30,13 +28,6 @@ dist = zeros(size(y,1),1);
 for ii = 1 : length(dist)
     dist(ii) = norm(y(ii,:) - x);
 end
-
-% diffMatrix = zeros(size(y));
-% for ii = 1 : size(x, 2)
-%     diffMatrix(:,ii) = x(ii) - y(:,ii);
-% end
-
-% dist = sum(diffMatrix.^2, 2);
 
 [distsort, sortidx] = sort(dist,'descend');
 fpdist = distsort(1:numNeighbors);

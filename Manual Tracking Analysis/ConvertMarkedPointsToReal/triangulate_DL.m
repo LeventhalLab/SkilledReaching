@@ -1,8 +1,12 @@
-function [points3d,reprojectedPoints,errors] = triangulate_DL(mp1, mp2, P1, P2, varargin)
+function [points3d,reprojectedPoints,reprojectionErrors] = triangulate_DL(mp1, mp2, P1, P2, varargin)
 %
 % modified from matlab's computer vision toolbox to perform nonlinear
 % optimization of reprojection errors after initial closed form solutions
 % are found
+%
+% INPUTS
+%   mp1, mp2
+%   P1, P2
 
 refine_estimates = true;
 

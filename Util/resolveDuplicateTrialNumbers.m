@@ -1,4 +1,17 @@
 function realignedTrialNumbers = resolveDuplicateTrialNumbers(trialNumbers)
+%
+% INPUTS
+%   trialNumbers - list of trial number labels for individual trials in a
+%       session. Sometimes if the session was restarted in LabVIEW, trial
+%       number labeling starts over. This is to make sure that each video
+%       is analyzed separately
+%
+% OUTPUTS
+%   realignedTrialNumbers - renumbered trials such that if the session was
+%       restarted, trial numbering picks up where it left off. For example,
+%       suppose after trial 10, the session restarted. Then trials labeled
+%       numbers 2,5,7 after the reset would be identified as 12,15,17 in 
+%       realignedTrialNumbers
 
 realignedTrialNumbers = trialNumbers;
 

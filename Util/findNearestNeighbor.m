@@ -1,7 +1,5 @@
 function [nndist, nnidx] = findNearestNeighbor(x, y, varargin)
 %
-% usage: 
-%
 % function to find the point(s) in y closest to a single point "x"
 %
 % INPUTS:
@@ -33,7 +31,6 @@ dist = zeros(size(y,1),1);
 for ii = 1 : length(dist)
     dist(ii) = norm(y(ii,:) - x);
 end
-
 
 [distsort, sortidx] = sort(dist);
 nndist = distsort(1:numNeighbors);

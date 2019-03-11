@@ -1,17 +1,26 @@
-function [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachEndpoint(pawTrajectory, bodyparts,frameRate,frameTimeLimits,pawPref,paw_through_slot_frame,isEstimate,varargin)
+function [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = ...
+    findReachEndpoint(pawTrajectory, bodyparts,pawPref,paw_through_slot_frame,isEstimate,varargin)
+%
+% find the reach endpoint frames for the initial reach
 %
 % INPUTS
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFrame x 3
-%       matrix contains x,y,z points for each bodypart
+%       matrix contains x,y,z points for each bodypart. For this function,
+%       assume the origin is at the pellet, not the camera lens
 %   bodyparts - cell array containing strings describing each bodypart in
 %       the same order as in the pawTrajectory array
-%   frameRate - frame rate in frames per second
-%   frameTimeLimits - time of initial and final frames with respect to the
-%       trigger event (generally, when the paw is detected by LabView).
-%       Use negative times to indicate times before the trigger event
-%       (e.g., the first entry should be negative if the first frame is
-%       before the trigger event)
-%   isEstimate - 
+%   pawPref - 'left' or 'right'
+%   paw_through_slot_frame - 
+%   isEstimate - num bodyparts x numFrames x 2 array indicating whether
+%       each trajectory point was detected by DLC (false) or estimated
+%       later (true). isEstimate(:,:,1) is for the direct view,
+%       isEstimate(:,:,2) is for the mirror view
+%
+% VARARGS
+%   smoothsize - size of the smoothing window used for finding
+%       zero-crossings of the z-position of the paw
+%   slot_z - location of the front panel of the reaching box with respect
+%       to the pellet location
 %
 % OUTPUTS
 %   partEndPts - m x 3 matrix where m is the number of paw parts and each
@@ -31,13 +40,14 @@ function [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = findReachE
 %       numeric arrays above
 
 smoothSize = 3;
-slot_z = 25;
+slot_z = 25;   % guess w.r.t. the pellet, but now have a way to find the
+               % slot z-coordinate earlier in the process
 
 if iscategorical(pawPref)
     pawPref = char(pawPref);
 end
 
-for iarg = 1 : 2 : nargin - 7
+for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
         case 'smoothsize'
             smoothSize = varargin{iarg + 1};
@@ -46,15 +56,9 @@ for iarg = 1 : 2 : nargin - 7
     end
 end
 
-video_triggerFrame = round((-frameTimeLimits(1)) * frameRate);
-% replace trigger frame as assessed by number of frames before video
-% trigger with the first frame where the paw is in front of the slot
-% (below)
-
 [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 
 pawDorsum_z = squeeze(pawTrajectory(:,3,pawDorsumIdx));
-% numFrames = length(pawDorsum_z);
 
 numPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
 
@@ -109,21 +113,8 @@ z_smooth = squeeze(xyz_smooth(:,3,:));
 localMins = islocalmin(z_smooth, 1);
 
 % find the first time the paw moves behind the slot after paw_through_slot_frame
-% paw_behind_slot_frames = find(pawDorsum_z > slot_z);
-% first_paw_return = paw_behind_slot_frames(paw_behind_slot_frames > paw_through_slot_frame);
-% if isempty(first_paw_return)
-%     first_paw_return = numFrames;
-% else
-%     first_paw_return = first_paw_return(1);
-% end
-
-try
 first_paw_return = findFirstPawReturnFrame(pawDorsum_z,z_smooth,paw_through_slot_frame,slot_z);
-catch
-    keyboard
-end
 
-% triggerFrame = min(paw_through_slot_frame,video_triggerFrame); % probably not necessary
 triggerFrame = paw_through_slot_frame; % probably not necessary
 partEndPts = zeros(numPawParts,3);
 partEndPtFrame = zeros(numPawParts,1);
@@ -163,7 +154,6 @@ if isnan(endPtFrame)
     endPtFrame = min(partEndPtFrame(pawDorsumIdx));
 end
 
-% endPtFrame = round(nanmedian(partEndPtFrame));
 endPts = zeros(numPawParts,3);
 
 if ~isnan(endPtFrame)
@@ -218,11 +208,5 @@ end
 first_digits_return = find(digits_behind_slot_frames,1);
 
 first_paw_return = min(first_digits_return,first_pd_return);
-
-% if isempty(first_paw_return)
-%     first_paw_return = length(pawDorsum_z);
-% else
-%     first_paw_return = first_paw_return(1);
-% end
 
 end
