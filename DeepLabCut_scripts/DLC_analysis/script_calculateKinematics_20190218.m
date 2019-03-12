@@ -88,7 +88,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : 15%numRatFolders
+for i_rat = 14 : 14%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -129,9 +129,9 @@ for i_rat = 4 : 15%numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 22
+    if i_rat == 14
         startSession = 1;
-        endSession = numSessions;
+        endSession = 13;
     else
         startSession = 1;
         endSession = numSessions;
@@ -346,7 +346,7 @@ for i_rat = 4 : 15%numRatFolders
             slot_z_wrt_pellet = slot_z - mean_initPellet3D(3);
             
             [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = ...
-                findReachEndpoint(trajectory, bodyparts,frameRate,frameTimeLimits,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
+                findReachEndpoint(trajectory, bodyparts,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
                 'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet);
             all_endPts(:,:,iTrial) = endPts;
             all_partEndPts(:,:,iTrial) = partEndPts;
