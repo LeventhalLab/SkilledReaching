@@ -13,8 +13,8 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = false;
-skipSessionSummaryPlots = false;
+skipTrialPlots = true;
+skipSessionSummaryPlots = true;
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
@@ -112,7 +112,7 @@ bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190315.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
@@ -120,7 +120,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 15:15%numRatFolders
+for i_rat = 16:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));

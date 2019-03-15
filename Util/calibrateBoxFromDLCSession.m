@@ -3,6 +3,11 @@ function [boxCal_fromSession,mp_direct,mp_mirror] = calibrateBoxFromDLCSession(f
 %
 %
 % INPUTS:
+%   fullSessionDir
+%   cameraParams
+%   boxCal
+%   pawPref - 'left' or 'right'
+%   ROIs
 %
 % OUTPUTS:
 %

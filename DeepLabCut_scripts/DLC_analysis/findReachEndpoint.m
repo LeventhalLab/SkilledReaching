@@ -80,11 +80,13 @@ for ii = 1 : length(digIdx)
     pawPartsList{curPartIdx} = bodyparts{digIdx(ii)};
     allPawPartsIdx(curPartIdx) = digIdx(ii);
 end
-for ii = 1 : length(pawDorsumIdx)
+% for ii = 1 : length(pawDorsumIdx)
     curPartIdx = curPartIdx + 1;
-    pawPartsList{curPartIdx} = bodyparts{pawDorsumIdx(ii)};
-    allPawPartsIdx(curPartIdx) = pawDorsumIdx(ii);
-end
+%     pawPartsList{curPartIdx} = bodyparts{pawDorsumIdx(ii)};
+%     allPawPartsIdx(curPartIdx) = pawDorsumIdx(ii);
+    pawPartsList{curPartIdx} = bodyparts{pawDorsumIdx};
+    allPawPartsIdx(curPartIdx) = pawDorsumIdx;
+% end
 
 if isnan(paw_through_slot_frame)
     % something happened that it couldn't find a clean movement of the paw
@@ -103,7 +105,10 @@ xyz_smooth = zeros(size(xyz_coords));
 % to use just the mirror frame?), and exclude them
 pawPartEstimates = squeeze(isEstimate(allPawPartsIdx,:,1)) | squeeze(isEstimate(allPawPartsIdx,:,2));
 for iPart = 1 : numPawParts
-    xyz_coords(pawPartEstimates(iPart,:)',:,iPart) = NaN;
+    if ~allPawPartsIdx(iPart) == pawDorsumIdx
+        % allow the paw dorsum to be an estimate
+        xyz_coords(pawPartEstimates(iPart,:)',:,iPart) = NaN;
+    end
     xyz_part = squeeze(xyz_coords(:,:,iPart));
     xyz_smooth(:,:,iPart) = smoothdata(xyz_part,1,'movmean',smoothSize);
 end

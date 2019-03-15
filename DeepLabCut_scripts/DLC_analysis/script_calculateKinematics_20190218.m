@@ -78,7 +78,7 @@ labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190315.csv');
 ratInfo = readRatInfoTable(csvfname);
 % ratInfo = cleanUpRatTable(ratInfo);
 
@@ -88,7 +88,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 14 : 14%numRatFolders
+for i_rat = 15 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -129,9 +129,9 @@ for i_rat = 14 : 14%numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 14
-        startSession = 1;
-        endSession = 13;
+    if i_rat == 15
+        startSession = 33;
+        endSession = numSessions;
     else
         startSession = 1;
         endSession = numSessions;
