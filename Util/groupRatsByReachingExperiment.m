@@ -1,4 +1,4 @@
-function tableOut = groupRatsByReachingExperiment(ratInfo,varargin)
+function tableOut = extractSubtable(ratInfo,varargin)
 %
 %
 %

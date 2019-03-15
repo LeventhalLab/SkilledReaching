@@ -63,10 +63,6 @@ time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reac
 % 5. closest distance paw to pellet
 % 6. minimum z
 
-% hard-coded in info about each rat including handedness
-% script_ratInfo_for_deepcut;
-% ratInfo_IDs = [ratInfo.ratID];
-
 % use the pellet as the origin for all trajectories. That way it should be
 % easy to make left vs right-pawed trajectories overlap - just reflect
 % across x = 0. I think this will be OK. -DL 20181015
@@ -80,7 +76,6 @@ xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Shee
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190315.csv');
 ratInfo = readRatInfoTable(csvfname);
-% ratInfo = cleanUpRatTable(ratInfo);
 
 ratInfo_IDs = [ratInfo.ratID];
 

@@ -1,0 +1,25 @@
+function summarizeRatReachEndPoints(ratFolder,sessionDates)
+
+[~,ratIDstring,~] = fileparts(ratFolder);
+
+for iDate = 1 : length(sessionDates)
+    curDate = sessionDates(iDate);
+    dateString = datestr(curDate,'yyyymmdd');
+    sessionName = sprintf('%s_%s*',ratIDstring,dateString);
+    
+    sessionFolders = listFolders(sessionName);
+    
+    if length(sessionFolders) > 1
+        keyboard
+        % more than one session from this date, figure out how to deal with
+        % this later.
+    end
+    if isempty(sessionFolders)
+        fprintf('
+    
+    sessionFolder = fullfile(ratFolder,sessionFolders{1});
+    sessionSummaryName = [sessionName '_kinematicsSummary.mat'];
+    
+    
+    
+end
