@@ -120,7 +120,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 16:numRatFolders
+for i_rat = 16:17%17:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -181,7 +181,18 @@ for i_rat = 16:numRatFolders
     apertureTrajectories = cell(1,numSessions);
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
-    for iSession = 1:numSessions
+    switch i_rat
+        case 16
+            startSession = 1;
+            endSession = numSessions;
+        case 17
+            startSession = 1;
+            endSession = 9;
+        otherwise
+            startSession = 1;
+            endSession = numSessions;
+    end
+    for iSession = startSession:endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDateString = C{1};
