@@ -1,5 +1,5 @@
-function [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,endPtFrame,pawPartsList] = ...
-    findReachEndpoint(pawTrajectory, bodyparts,pawPref,paw_through_slot_frame,isEstimate,varargin)
+function [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,endPtFrame,final_endPts,final_endPtFrame,pawPartsList,reachFrameIdx] = ...
+    findReachEndpoint_20190319(pawTrajectory, bodyparts,pawPref,paw_through_slot_frame,isEstimate,varargin)
 %
 % find the reach endpoint frames for the initial reach
 %
@@ -40,8 +40,17 @@ function [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,e
 %       change directions. Currently calculated as the maximum frame at
 %       which any of the last 3 digits (exclude index since often occluded)
 %       changes direction
+%   final_endPts - same as endPts, but for the last reach instead of the
+%       first
+%   final_endPtFrame - same as endPtFrame, but for the last reach instead
+%       of the first
 %   pawPartsList - the list of paw parts in the same order as for the
 %       numeric arrays above
+
+
+% NEXT THING TO DO: COUNT THE NUMBER OF REACHES BY COUNTING THE NUMBER OF
+% ZERO CROSSINGS BETWEEN THE FIRST AND LAST REACH
+
 
 smoothSize = 3;
 slot_z = 25;   % guess w.r.t. the pellet, but now have a way to find the
@@ -51,12 +60,17 @@ if iscategorical(pawPref)
     pawPref = char(pawPref);
 end
 
+min_z_diff_for_reach = 2;    % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
+
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
         case 'smoothsize'
             smoothSize = varargin{iarg + 1};
         case 'slot_z'
             slot_z = varargin{iarg + 1};
+        case 'min_z_diff_for_reach'
+            min_z_diff_for_reach = varargin{iarg + 1};
+            
     end
 end
 
@@ -130,22 +144,43 @@ partEndPts = zeros(numPawParts,3);
 partFinalEndPts = zeros(numPawParts,3);
 partEndPtFrame = zeros(numPawParts,1);
 partFinalEndPtFrame = zeros(numPawParts,1);
+reachFrameIdx = cell(numPawParts,1);
+extraFramesToExtract = 5;
 for iPart = 1 : numPawParts
     
     if any(localMins(triggerFrame+1:end,iPart))
-        partEndPtFrame(iPart) = triggerFrame + find(localMins(triggerFrame+1:end,iPart),1);
-        partFinalEndPtFrame(iPart) = triggerFrame + find(localMins(triggerFrame+1:end,iPart),1,'last');
+        startFrame = max(triggerFrame-extraFramesToExtract,1);
+        reachFrameIdx{iPart} = find_reaches(localMins(startFrame:end,iPart),z_smooth(startFrame:end,iPart),min_z_diff_for_reach);
+        if any(reachFrameIdx{iPart})
+            partEndPtFrame(iPart) = startFrame-1 + find(reachFrameIdx{iPart},1);
+            partFinalEndPtFrame(iPart) = startFrame-1 + find(reachFrameIdx{iPart},1,'last');
+            partEndPts(iPart,:) = squeeze(xyz_smooth(partEndPtFrame(iPart),:,iPart));
+            partFinalEndPts(iPart,:) = squeeze(xyz_smooth(partFinalEndPtFrame(iPart),:,iPart));
+        else
+            partEndPtFrame(iPart) = NaN;
+            partFinalEndPtFrame(iPart) = NaN;
+            partEndPts(iPart,:) = NaN(1,3);
+            partFinalEndPts(iPart,:) = NaN(1,3);
+        end
+%         partEndPtFrame(iPart) = triggerFrame + find(localMins(triggerFrame+1:end,iPart),1);
+%         partFinalEndPtFrame(iPart) = triggerFrame + find(localMins(triggerFrame+1:end,iPart),1,'last');
         % make sure we don't take a reach end point that occurs after the
         % paw has been retracted back behind the slot
-        if partEndPtFrame(iPart) > first_paw_return
-            partEndPtFrame(iPart) = first_paw_return;
-        end
-        partEndPts(iPart,:) = squeeze(xyz_smooth(partEndPtFrame(iPart),:,iPart));
-        partFinalEndPts(iPart,:) = squeeze(xyz_smooth(partFinalEndPtFrame(iPart),:,iPart));
+%         if partEndPtFrame(iPart) > first_paw_return
+%             partEndPtFrame(iPart) = first_paw_return;
+%         end
+%         try
+%         partEndPts(iPart,:) = squeeze(xyz_smooth(partEndPtFrame(iPart),:,iPart));
+%         catch
+%             keyboard
+%         end
+%         partFinalEndPts(iPart,:) = squeeze(xyz_smooth(partFinalEndPtFrame(iPart),:,iPart));
     end
     if all(partEndPts(iPart,:) == 0)
         partEndPtFrame(iPart) = NaN;
+        partFinalEndPtFrame(iPart) = NaN;
         partEndPts(iPart,:) = NaN(1,3);
+        partFinalEndPts(iPart,:) = NaN(1,3);
     end
     
 end
@@ -155,6 +190,7 @@ end
 % exclude the first digit, which is often obscured. also exclude 4th digit
 % (pinky) which sometimes moves independently of the rest of the digits
 endPtFrame = min(partEndPtFrame(digIdx(2:3)));
+final_endPtFrame = min(partFinalEndPtFrame(digIdx(2:3)));
 % second choice is the most advanced pip frame
 if isnan(endPtFrame)
     endPtFrame = min(partEndPtFrame(pipIdx(2:3)));
@@ -166,6 +202,17 @@ end
 % last choice is paw dorsum
 if isnan(endPtFrame)
     endPtFrame = min(partEndPtFrame(pawDorsumIdx));
+end
+if isnan(final_endPtFrame)
+    final_endPtFrame = min(partFinalEndPtFrame(pipIdx(2:3)));
+end
+% third choice is the most advanced pip frame
+if isnan(final_endPtFrame)
+    final_endPtFrame = min(partFinalEndPtFrame(mcpIdx(2:3)));
+end
+% last choice is paw dorsum
+if isnan(final_endPtFrame)
+    final_endPtFrame = min(partFinalEndPtFrame(pawDorsumIdx));
 end
 
 endPts = zeros(numPawParts,3);
@@ -181,6 +228,29 @@ if ~isnan(endPtFrame)
 else
     endPts(iPart,:) = zeros(1,3);
 end
+
+final_endPts = zeros(numPawParts,3);
+
+if ~isnan(final_endPtFrame)
+    for iPart = 1 : numPawParts
+        if all(squeeze(xyz_smooth(final_endPtFrame,:,iPart))==0)
+            final_endPts(iPart,:) = NaN(1,3);
+        else
+            final_endPts(iPart,:) = squeeze(xyz_smooth(final_endPtFrame,:,iPart));
+        end
+    end
+else
+    final_endPts(iPart,:) = zeros(1,3);
+end
+
+% extraFramesToExtract = 5;
+% if ~isnan(endPtFrame) && ~isnan(final_endPtFrame)
+%     validLocalMins = localMins(endPtFrame-extraFramesToExtract:final_endPtFrame+extraFramesToExtract,digIdx(2));
+%     valid_z_smooth = z_smooth(endPtFrame-extraFramesToExtract:final_endPtFrame+extraFramesToExtract,digIdx(2));
+%     
+%     reachIdx = find_reaches(validLocalMins,valid_z_smooth,min_z_diff_for_reach);
+% 
+% end
 
 end
 
@@ -222,5 +292,34 @@ end
 first_digits_return = find(digits_behind_slot_frames,1);
 
 first_paw_return = min(first_digits_return,first_pd_return);
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function reachIdx = find_reaches(localMins,z,min_z_diff_for_reach)
+
+pts_to_extract = 3;  % look pts_to_extract frames on either side of each z
+% local minimum, and see if z changed greater than min_z_for reach within that window
+
+poss_reach_idx = find(localMins);
+num_poss_reaches = length(poss_reach_idx);
+
+reachIdx = false(length(localMins),1);
+for i_possReach = 1 : num_poss_reaches
+
+    % extract z-coordinates near the current local minimum
+    if poss_reach_idx(i_possReach) - pts_to_extract < 1 || poss_reach_idx(i_possReach) + pts_to_extract > length(localMins)
+        continue;
+    end
+    z_at_min = z(poss_reach_idx(i_possReach));
+    test_z = z(poss_reach_idx(i_possReach) - pts_to_extract:poss_reach_idx(i_possReach) + pts_to_extract);
+    test_diff = test_z - z_at_min;
+    if any(test_diff > min_z_diff_for_reach)
+        reachIdx(poss_reach_idx(i_possReach)) = true;
+    end
+    
+end
 
 end

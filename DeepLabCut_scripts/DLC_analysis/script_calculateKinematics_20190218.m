@@ -83,7 +83,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 4 : 17%numRatFolders
+for i_rat = 4 : 4%17%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -124,9 +124,9 @@ for i_rat = 4 : 17%numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 17
-        startSession = 22;
-        endSession = 22;
+    if i_rat == 4
+        startSession = 4;
+        endSession = numSessions;
     else
         startSession = 1;
         endSession = numSessions;
@@ -173,8 +173,11 @@ for i_rat = 4 : 17%numRatFolders
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
         numReachingPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
         all_endPts = zeros(numReachingPawParts, 3, numTrials);
+        all_final_endPts = zeros(numReachingPawParts, 3, numTrials);
         all_partEndPts = zeros(numReachingPawParts, 3, numTrials);
+        all_partFinalEndPts = zeros(numReachingPawParts, 3, numTrials);
         all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
+        all_partFinalEndPtFrame = zeros(numReachingPawParts, numTrials);
         all_paw_through_slot_frame = zeros(numTrials,1);
         all_first_pawPart_outside_box = zeros(numReachingPawParts, numTrials);
         all_firstSlotBreak = zeros(numReachingPawParts, numTrials);
@@ -183,6 +186,8 @@ for i_rat = 4 : 17%numRatFolders
         all_maxDigitReachFrame = zeros(numTrials,1);
         all_initPellet3D = NaN(numTrials, 3);
         all_endPtFrame = NaN(numTrials,1);
+        all_final_endPtFrame = NaN(numTrials,1);
+        all_reachFrameIdx = cell(numTrials,1);
         all_trialOutcomes = NaN(numTrials,1);
         all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
         vidNum = zeros(numTrials,1);
@@ -313,6 +318,7 @@ for i_rat = 4 : 17%numRatFolders
         mean_initPellet3D = nanmean(all_initPellet3D);
             
         for iTrial = 1 : numTrials
+            iTrial
             if pelletMissingFlag(iTrial)
                 load(pawTrajectoryList(iTrial).name);
                 trajectory = trajectory_wrt_pellet(pawTrajectory, mean_initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
@@ -340,13 +346,18 @@ for i_rat = 4 : 17%numRatFolders
             aperture = calcAperture(trajectory,bodyparts,pawPref);
             slot_z_wrt_pellet = slot_z - mean_initPellet3D(3);
             
-            [partEndPts,partEndPtFrame,endPts,endPtFrame,pawPartsList] = ...
-                findReachEndpoint(trajectory, bodyparts,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
+            [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,endPtFrame,final_endPts,final_endPtFrame,pawPartsList,reachFrameIdx] = ...
+                findReachEndpoint_20190319(trajectory, bodyparts,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
                 'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet);
             all_endPts(:,:,iTrial) = endPts;
+            all_final_endPts(:,:,iTrial) = final_endPts;
             all_partEndPts(:,:,iTrial) = partEndPts;
-            all_partEndPtFrame (:,iTrial) = partEndPtFrame;
+            all_partFinalEndPts(:,:,iTrial) = partFinalEndPts;
+            all_partEndPtFrame(:,iTrial) = partEndPtFrame;
+            all_partFinalEndPtFrame(:,iTrial) = partFinalEndPtFrame;
             all_endPtFrame(iTrial) = endPtFrame;
+            all_final_endPtFrame(iTrial) = final_endPtFrame;
+            all_reachFrameIdx{iTrial} = reachFrameIdx;
             
             % in case this video is shorter than the others (happens every
             % now and then within a session)
@@ -377,9 +388,9 @@ for i_rat = 4 : 17%numRatFolders
             end
             
             save(pawTrajectoryList(iTrial).name,'trajectory',...
-                'mcpAngle','pipAngle','digitAngle','partEndPts',...
-                'partEndPtFrame','endPts','endPtFrame','pawPartsList',...
-                'firstPawDorsumFrame','trialOutcome','firstSlotBreak','paw_through_slot_frame','first_pawPart_outside_box',...
+                'mcpAngle','pipAngle','digitAngle','partEndPts','partFinalEndPts',...
+                'partEndPtFrame','partFinalEndPtFrame','endPts','final_endPts','endPtFrame','final_endPtFrame','pawPartsList',...
+                'reachFrameIdx','firstPawDorsumFrame','trialOutcome','firstSlotBreak','paw_through_slot_frame','first_pawPart_outside_box',...
                 'initPellet3D','aperture','pawSpan','maxSpanIdx','distMoved','-append');
         end
 
@@ -404,9 +415,10 @@ for i_rat = 4 : 17%numRatFolders
             'smoothed_pd_trajectories','smoothed_digit_trajectories',...
             'interp_pd_trajectories','interp_digit_trajectories',...
             'all_mcpAngle','all_pipAngle','all_digitAngle','all_pawAngle','all_aperture',...
-            'all_endPts','all_partEndPts','all_partEndPtFrame','pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
+            'all_endPts','all_final_endPts','all_partEndPts','all_partFinalEndPts','all_partEndPtFrame','all_partFinalEndPtFrame',...
+            'pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box',...
-            'all_isEstimate','all_endPtFrame','all_firstPawDorsumFrame','all_maxDigitReachFrame',...
+            'all_isEstimate','all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','all_firstPawDorsumFrame','all_maxDigitReachFrame',...
             'trajectoryLengths','thisRatInfo','thisSessionType','slot_z');
         
     end

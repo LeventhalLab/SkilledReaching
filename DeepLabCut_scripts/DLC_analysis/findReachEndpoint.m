@@ -1,4 +1,4 @@
-function [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,endPtFrame,final_endPts,final_endPtFrame,pawPartsList] = ...
+function [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,endPtFrame,final_endPts,final_endPtFrame,pawPartsList,numReaches] = ...
     findReachEndpoint(pawTrajectory, bodyparts,pawPref,paw_through_slot_frame,isEstimate,varargin)
 %
 % find the reach endpoint frames for the initial reach
@@ -60,12 +60,17 @@ if iscategorical(pawPref)
     pawPref = char(pawPref);
 end
 
+min_z_diff_for_reach = 2;    % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
+
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
         case 'smoothsize'
             smoothSize = varargin{iarg + 1};
         case 'slot_z'
             slot_z = varargin{iarg + 1};
+        case 'min_z_diff_for_reach'
+            min_z_diff_for_reach = varargin{iarg + 1};
+            
     end
 end
 
@@ -219,6 +224,15 @@ else
     final_endPts(iPart,:) = zeros(1,3);
 end
 
+extraFramesToExtract = 5;
+if ~isnan(endPtFrame) && ~isnan(final_endPtFrame)
+    validLocalMins = localMins(endPtFrame-extraFramesToExtract:final_endPtFrame+extraFramesToExtract,digIdx(2));
+    valid_z_smooth = z_smooth(endPtFrame-extraFramesToExtract:final_endPtFrame+extraFramesToExtract,digIdx(2));
+    
+    reachIdx = find_reaches(validLocalMins,valid_z_smooth,min_z_diff_for_reach);
+
+end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -259,5 +273,31 @@ end
 first_digits_return = find(digits_behind_slot_frames,1);
 
 first_paw_return = min(first_digits_return,first_pd_return);
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function reachIdx = find_reaches(localMins,z,min_z_diff_for_reach)
+
+pts_to_extract = 3;  % look pts_to_extract frames on either side of each z
+% local minimum, and see if z changed greater than min_z_for reach within that window
+
+poss_reach_idx = find(localMins);
+num_poss_reaches = length(poss_reaches);
+
+reachIdx = false(length(localMins),1);
+for i_possReach = 1 : num_poss_reaches
+
+    % extract z-coordinates near the current local minimum
+    z_at_min = z(poss_reach_idx(i_possReach));
+    test_z = z(poss_reach_idx(i_possReach) - pts_to_extract:poss_reach_idx(i_possReach) + pts_to_extract);
+    test_diff = test_z - z_at_min;
+    if any(test_diff > min_z_diff_for_reach)
+        reachIdx(poss_reach_idx(i_possReach)) = true;
+    end
+    
+end
 
 end
