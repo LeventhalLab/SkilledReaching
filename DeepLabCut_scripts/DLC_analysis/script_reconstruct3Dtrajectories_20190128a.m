@@ -91,9 +91,9 @@ for i_rat = 4:numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 16
-        startSession = 2;
+        startSession = 1;
     else
-        startSession = 2;
+        startSession = 1;
     end
     for iSession = startSession : 5 : numSessions
         

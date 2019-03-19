@@ -3,7 +3,7 @@
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
-repeatCalculations = false;
+repeatCalculations = true;
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
@@ -62,7 +62,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 16:numRatFolders
+for i_rat = 4:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -95,7 +95,7 @@ for i_rat = 16:numRatFolders
     else
         startSession = 3;
     end
-    for iSession = startSession : 4 : numSessions
+    for iSession = startSession : 5 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -184,7 +184,7 @@ for i_rat = 16:numRatFolders
             end
 
             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
-                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
+                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv))
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
@@ -203,11 +203,11 @@ for i_rat = 16:numRatFolders
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
-            if ~exist('manually_invalidated_points','var')
+%             if ~exist('manually_invalidated_points','var')
                 numFrames = size(direct_p,2);
                 num_bodyparts = length(direct_bp);
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
-            end
+%             end
                     
             numDirectFrames = size(direct_p,2);
             numMirrorFrames = size(mirror_p,2);

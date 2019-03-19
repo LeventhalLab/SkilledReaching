@@ -309,9 +309,7 @@ num_poss_reaches = length(poss_reach_idx);
 reachIdx = false(length(localMins),1);
 for i_possReach = 1 : num_poss_reaches
 
-    % throw out points near the very beginning or end of the time series of
-    % z-values (avoid errors, and should have allowed enough buffer when
-    % calling this function that these edge points aren't relevant).
+    % throw out points near the very beginning or end of the time seri
     if poss_reach_idx(i_possReach) - pts_to_extract < 1 || poss_reach_idx(i_possReach) + pts_to_extract > length(localMins)
         continue;
     end

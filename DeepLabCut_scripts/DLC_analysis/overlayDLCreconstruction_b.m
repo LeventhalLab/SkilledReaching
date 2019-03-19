@@ -112,7 +112,7 @@ for i_bp = 1 : length(parts_to_show)
         keyboard
     end
 
-    if isPointValid{1}(i_directBP)
+    if isPointValid{1}(i_directBP) && ~isnan(currentPt(1))
         if direct_p(i_directBP) > p_cutoff
             img_out = insertMarker(img_out, currentPt, DLC_highProbMarkerType,...
                 'color',markerColor,'size',markerSize);
@@ -151,7 +151,7 @@ for i_bp = 1 : length(parts_to_show)
     
     markerColor = getMarkerColor(mirror_bp{i_mirrorBP}, bodypartColor, pawPref);
 
-    if isPointValid{2}(i_mirrorBP)
+    if isPointValid{2}(i_mirrorBP)  && ~isnan(currentPt(1))
         if mirror_p(i_mirrorBP) > p_cutoff
             try
             img_out = insertMarker(img_out, currentPt, DLC_highProbMarkerType,...
