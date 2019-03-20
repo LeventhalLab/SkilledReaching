@@ -60,7 +60,11 @@ if iscategorical(pawPref)
     pawPref = char(pawPref);
 end
 
-min_z_diff_for_reach = 2;    % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
+min_z_diff_pre_reach = 2;     % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
+min_z_diff_post_reach = 1;     
+maxFramesPriorToAdvance = 10;   % if the paw extends further within this many frames after a local minimum, don't count it as a reach
+pts_to_extract = 10;  % look pts_to_extract frames on either side of each z
+% local minimum, and see if z changed greater than min_z_for reach within that window
 
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -68,8 +72,14 @@ for iarg = 1 : 2 : nargin - 5
             smoothSize = varargin{iarg + 1};
         case 'slot_z'
             slot_z = varargin{iarg + 1};
-        case 'min_z_diff_for_reach'
-            min_z_diff_for_reach = varargin{iarg + 1};
+        case 'min_z_diff_pre_reach'
+            min_z_diff_pre_reach = varargin{iarg + 1};
+        case 'min_z_diff_post_reach'
+            min_z_diff_post_reach = varargin{iarg + 1};
+        case 'maxframespriortoadvance'
+            maxFramesPriorToAdvance = varargin{iarg + 1};
+        case 'pts_to_extract'
+            pts_to_extract = varargin{iarg + 1};
             
     end
 end
@@ -131,10 +141,11 @@ for iPart = 1 : numPawParts
     xyz_smooth(:,:,iPart) = smoothdata(xyz_part,1,'movmean',smoothSize);
 end
 z_smooth = squeeze(xyz_smooth(:,3,:));
-
+z_reach = z_smooth;
+z_reach(z_reach > slot_z) = NaN;
 % z_smooth = smoothdata(z_coords,1,'movmean',smoothSize);
-localMins = islocalmin(z_smooth, 1);
-localMins = localMins & z_smooth < slot_z;    % only count zero velocity points in front of the reaching slot
+localMins = islocalmin(z_reach, 1);
+% localMins = localMins & z_smooth < slot_z;    % only count zero velocity points in front of the reaching slot
 
 % find the first time the paw moves behind the slot after paw_through_slot_frame
 first_paw_return = findFirstPawReturnFrame(pawDorsum_z,z_smooth,paw_through_slot_frame,slot_z);
@@ -145,22 +156,24 @@ partFinalEndPts = zeros(numPawParts,3);
 partEndPtFrame = zeros(numPawParts,1);
 partFinalEndPtFrame = zeros(numPawParts,1);
 reachFrameIdx = cell(numPawParts,1);
-extraFramesToExtract = 5;
+extraFramesToExtract = pts_to_extract+1;
 for iPart = 1 : numPawParts
     
     if any(localMins(triggerFrame+1:end,iPart))
         startFrame = max(triggerFrame-extraFramesToExtract,1);
-        reachFrameIdx{iPart} = find_reaches(localMins(startFrame:end,iPart),z_smooth(startFrame:end,iPart),min_z_diff_for_reach);
-        if any(reachFrameIdx{iPart})
-            partEndPtFrame(iPart) = startFrame-1 + find(reachFrameIdx{iPart},1);
-            partFinalEndPtFrame(iPart) = startFrame-1 + find(reachFrameIdx{iPart},1,'last');
+        reachFrameMarkers = find_reaches(localMins(startFrame:end,iPart),z_reach(startFrame:end,iPart),min_z_diff_pre_reach,min_z_diff_post_reach,maxFramesPriorToAdvance,extraFramesToExtract,pts_to_extract);
+        if any(reachFrameMarkers)
+            partEndPtFrame(iPart) = startFrame-1 + find(reachFrameMarkers,1);
+            partFinalEndPtFrame(iPart) = startFrame-1 + find(reachFrameMarkers,1,'last');
             partEndPts(iPart,:) = squeeze(xyz_smooth(partEndPtFrame(iPart),:,iPart));
             partFinalEndPts(iPart,:) = squeeze(xyz_smooth(partFinalEndPtFrame(iPart),:,iPart));
+            reachFrameIdx{iPart} = startFrame-1 + find(reachFrameMarkers);
         else
             partEndPtFrame(iPart) = NaN;
             partFinalEndPtFrame(iPart) = NaN;
             partEndPts(iPart,:) = NaN(1,3);
             partFinalEndPts(iPart,:) = NaN(1,3);
+            reachFrameIdx{iPart} = [];
         end
 %         partEndPtFrame(iPart) = triggerFrame + find(localMins(triggerFrame+1:end,iPart),1);
 %         partFinalEndPtFrame(iPart) = triggerFrame + find(localMins(triggerFrame+1:end,iPart),1,'last');
@@ -248,7 +261,7 @@ end
 %     validLocalMins = localMins(endPtFrame-extraFramesToExtract:final_endPtFrame+extraFramesToExtract,digIdx(2));
 %     valid_z_smooth = z_smooth(endPtFrame-extraFramesToExtract:final_endPtFrame+extraFramesToExtract,digIdx(2));
 %     
-%     reachIdx = find_reaches(validLocalMins,valid_z_smooth,min_z_diff_for_reach);
+%     reachIdx = find_reaches(validLocalMins,valid_z_smooth,min_z_diff_pre_reach);
 % 
 % end
 
@@ -298,12 +311,15 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function reachIdx = find_reaches(localMins,z,min_z_diff_for_reach)
+function reachIdx = find_reaches(localMins,z,min_z_diff_pre_reach,min_z_diff_post_reach,maxFramesPriorToAdvance,extraFramesExtracted,pts_to_extract)
 
-pts_to_extract = 3;  % look pts_to_extract frames on either side of each z
-% local minimum, and see if z changed greater than min_z_for reach within that window
+
 
 poss_reach_idx = find(localMins);
+poss_reach_idx = poss_reach_idx(poss_reach_idx > extraFramesExtracted);
+% extra frames prior to triggerFrame should be input to this function; but
+% don't allow poss_reach_idx to be returned as an actual reach if before
+% the trigger frame
 num_poss_reaches = length(poss_reach_idx);
 
 reachIdx = false(length(localMins),1);
@@ -312,15 +328,32 @@ for i_possReach = 1 : num_poss_reaches
     % throw out points near the very beginning or end of the time series of
     % z-values (avoid errors, and should have allowed enough buffer when
     % calling this function that these edge points aren't relevant).
-    if poss_reach_idx(i_possReach) - pts_to_extract < 1 || poss_reach_idx(i_possReach) + pts_to_extract > length(localMins)
+    if poss_reach_idx(i_possReach) - pts_to_extract < 1 || ...
+            poss_reach_idx(i_possReach) + max(pts_to_extract,maxFramesPriorToAdvance) > length(localMins)
         continue;
     end
     
     % extract z-coordinates near the current local minimum
     z_at_min = z(poss_reach_idx(i_possReach));
-    test_z = z(poss_reach_idx(i_possReach) - pts_to_extract:poss_reach_idx(i_possReach) + pts_to_extract);
-    test_diff = test_z - z_at_min;
-    if any(test_diff > min_z_diff_for_reach)
+    
+    % if the paw part advances past its current position, or there is another
+    % local minimum in the next maxFramesPriorToAdvance frames, don't count
+    % this as a reach
+    test_z = z(poss_reach_idx(i_possReach)+1:poss_reach_idx(i_possReach) + maxFramesPriorToAdvance);
+    if any(test_z < z_at_min) || any(localMins(poss_reach_idx(i_possReach)+1:poss_reach_idx(i_possReach) + maxFramesPriorToAdvance))
+        continue;
+    end
+    
+    % if the paw part retracted at least min_z_diff_pre_reach, count it as
+    % a reach. It must have also moved at least z_diff_for_reach forward
+    % prior to the reach and then pulled back that far after the reach.
+    % extract points prior to potential reach
+    test_z_backward = z(poss_reach_idx(i_possReach)-pts_to_extract:poss_reach_idx(i_possReach)-1);
+    test_diff_backward = test_z_backward - z_at_min;
+    
+    test_z_forward = z(poss_reach_idx(i_possReach)+1:poss_reach_idx(i_possReach)+pts_to_extract);
+    test_diff_forward = test_z_forward - z_at_min;
+    if any(test_diff_backward > min_z_diff_pre_reach) && any(test_diff_forward > min_z_diff_post_reach)
         reachIdx(poss_reach_idx(i_possReach)) = true;
     end
     

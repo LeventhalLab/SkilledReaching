@@ -13,7 +13,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = false;
+skipTrialPlots = true;
 skipSessionSummaryPlots = false;
 
 % paramaeters for readReachScores
@@ -182,9 +182,9 @@ for i_rat = 4:4%:17%17:numRatFolders
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
     switch i_rat
-        case 16
+        case 4
             startSession = 1;
-            endSession = numSessions;
+            endSession = 15;
         case 17
             startSession = 22;
             endSession = 22;
