@@ -13,7 +13,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
+skipTrialPlots = false;
 skipSessionSummaryPlots = false;
 
 % paramaeters for readReachScores
@@ -120,7 +120,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 4:4%:17%17:numRatFolders
+for i_rat = 4:5%:17%17:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -184,7 +184,7 @@ for i_rat = 4:4%:17%17:numRatFolders
     switch i_rat
         case 4
             startSession = 1;
-            endSession = 15;
+            endSession = numSessions;
         case 17
             startSession = 22;
             endSession = 22;
@@ -212,7 +212,8 @@ for i_rat = 4:4%:17%17:numRatFolders
             fprintf('no session summary found for %s\n', sessionDirectories{iSession});
             continue
         end
-        [reachEndPoints{iSession},distFromPellet{iSession}] = collectReachEndPoints(all_endPts,validTrialTypes,all_trialOutcomes);
+        [first_reachEndPoints{iSession},distFromPellet{iSession}] = collectFirstReachEndPoints(all_endPts,validTrialTypes,all_trialOutcomes);
+        [all_reachEndPoints{iSession},numReaches{iSession}] = collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,validTrialTypes,all_trialOutcomes);
 
         pawPref = thisRatInfo.pawPref;
         if iscell(pawPref)

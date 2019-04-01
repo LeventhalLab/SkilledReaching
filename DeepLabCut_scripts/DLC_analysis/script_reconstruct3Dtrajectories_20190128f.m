@@ -1,10 +1,8 @@
 % script to perform 3D reconstruction on videos
 
-% slot_z = 200;    % distance from camera of slot in mm. hard coded for now
-% time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
-
 repeatCalculations = false;
 
+% points to the camera parameter file with camera intrinsics
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
@@ -27,7 +25,7 @@ ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
-calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';   % where the calibration files are
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
@@ -62,8 +60,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 15:numRatFolders
-% for i_rat = 8 : numRatFolders
+for i_rat = 16:16%:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -91,8 +88,8 @@ for i_rat = 15:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 15
-        startSession = 20;
+    if i_rat == 16
+        startSession = 1;
     else
         startSession = 1;
     end
@@ -185,7 +182,7 @@ for i_rat = 15:numRatFolders
             end
 
             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
-                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
+                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv))
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
@@ -204,11 +201,11 @@ for i_rat = 15:numRatFolders
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
-            if ~exist('manually_invalidated_points','var')
+%             if ~exist('manually_invalidated_points','var')
                 numFrames = size(direct_p,2);
                 num_bodyparts = length(direct_bp);
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
-            end
+%             end
                     
             numDirectFrames = size(direct_p,2);
             numMirrorFrames = size(mirror_p,2);

@@ -3,7 +3,7 @@
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
-repeatCalculations = true;
+repeatCalculations = false;
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
@@ -62,7 +62,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 4:numRatFolders
+for i_rat = 17:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));

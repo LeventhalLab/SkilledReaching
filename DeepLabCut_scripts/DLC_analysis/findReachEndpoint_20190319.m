@@ -121,8 +121,13 @@ if isnan(paw_through_slot_frame)
     % through the reaching slot earlier
     partEndPtFrame = NaN(numPawParts,1);
     endPtFrame = NaN;
+    final_endPtFrame = NaN;
     partEndPts = zeros(numPawParts,3);
     endPts = zeros(numPawParts,3);
+    final_endPts = zeros(numPawParts,3);
+    partFinalEndPts = NaN(numPawParts,3);
+    partFinalEndPtFrame = NaN(numPawParts,1);
+    reachFrameIdx = cell(numPawParts,1);
     return
 end
 
