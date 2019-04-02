@@ -14,7 +14,7 @@ maxReprojError = 15;
 num_pd_TrajectoryPoints = 100;
 num_digit_TrajectoryPoints = 100;
 start_z_pawdorsum = 46;
-smoothWindow = 3;
+smoothWindow = 5;
 
 % parameters for find_invalid_DLC_points
 maxDistPerFrame = 30;
@@ -124,8 +124,8 @@ for i_rat = 4:15%numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 5
-        startSession = 22;
+    if i_rat == 4
+        startSession = 1;
         endSession = numSessions;
     else
         startSession = 1;
@@ -324,7 +324,7 @@ for i_rat = 4:15%numRatFolders
         mean_initPellet3D = nanmean(all_initPellet3D);
             
         for iTrial = 1 : numTrials
-            iTrial
+%             iTrial
             if pelletMissingFlag(iTrial)
                 load(pawTrajectoryList(iTrial).name);
                 trajectory = trajectory_wrt_pellet(pawTrajectory, mean_initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);

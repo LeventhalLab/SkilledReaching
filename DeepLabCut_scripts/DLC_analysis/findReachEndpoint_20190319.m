@@ -146,14 +146,17 @@ for iPart = 1 : numPawParts
     xyz_smooth(:,:,iPart) = smoothdata(xyz_part,1,'movmean',smoothSize);
 end
 z_smooth = squeeze(xyz_smooth(:,3,:));
+y_smooth = squeeze(xyz_smooth(:,2,:));
 z_reach = z_smooth;
 z_reach(z_reach > slot_z) = NaN;
+y_reach = y_smooth;
+y_reach(isnan(z_reach)) = NaN;
 % z_smooth = smoothdata(z_coords,1,'movmean',smoothSize);
 localMins = islocalmin(z_reach, 1);
 % localMins = localMins & z_smooth < slot_z;    % only count zero velocity points in front of the reaching slot
 
 % find the first time the paw moves behind the slot after paw_through_slot_frame
-first_paw_return = findFirstPawReturnFrame(pawDorsum_z,z_smooth,paw_through_slot_frame,slot_z);
+% first_paw_return = findFirstPawReturnFrame(pawDorsum_z,z_smooth,paw_through_slot_frame,slot_z);
 
 triggerFrame = paw_through_slot_frame; % probably not necessary
 partEndPts = zeros(numPawParts,3);
@@ -166,7 +169,7 @@ for iPart = 1 : numPawParts
     
     if any(localMins(triggerFrame+1:end,iPart))
         startFrame = max(triggerFrame-extraFramesToExtract,1);
-        reachFrameMarkers = find_reaches(localMins(startFrame:end,iPart),z_reach(startFrame:end,iPart),min_z_diff_pre_reach,min_z_diff_post_reach,maxFramesPriorToAdvance,extraFramesToExtract,pts_to_extract);
+        reachFrameMarkers = find_reaches(localMins(startFrame:end,iPart),z_reach(startFrame:end,iPart),y_reach(startFrame:end,iPart),min_z_diff_pre_reach,min_z_diff_post_reach,maxFramesPriorToAdvance,extraFramesToExtract,pts_to_extract);
         if any(reachFrameMarkers)
             partEndPtFrame(iPart) = startFrame-1 + find(reachFrameMarkers,1);
             partFinalEndPtFrame(iPart) = startFrame-1 + find(reachFrameMarkers,1,'last');
@@ -275,48 +278,48 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function first_paw_return = findFirstPawReturnFrame(pawDorsum_z,z_smooth,paw_through_slot_frame,slot_z)
-% find the first time the paw moves behind the slot after it has passed
-% through the slot. this is a little tricky - need to find the first frame
-% that the paw dorsum passes in front of the reaching slot, then the next
-% frame after that when the paw is behind the slot. the problem is that
-% many times the paw doesn't make it all the way through the slot...
-
-pd_behind_slot_frames = find(pawDorsum_z > slot_z);
-paw_through_slot_frame_mask = false(size(pawDorsum_z));
-paw_through_slot_frame_mask(paw_through_slot_frame:end) = true;
-pd_through_slot_frame = find((pawDorsum_z < slot_z) & paw_through_slot_frame_mask,1);
-
-if isempty(pd_through_slot_frame)
-    % if the paw dorsum didn't make it through the slot, use
-    % paw_through_slot_frame as the start of the search for when the paw
-    % moves back behind the slot. This still may not work if the paw dorsum
-    % never gets into the slot...
-    pd_through_slot_frame = paw_through_slot_frame;
-end
-
-digits_behind_slot_frames = true(size(z_smooth,1),12);
-for iDigitIdx = 1 : 12
-    digits_behind_slot_frames = digits_behind_slot_frames & ((z_smooth(:,iDigitIdx) > slot_z) | isnan(z_smooth(:,iDigitIdx)));
-end
-digits_behind_slot_frames = digits_behind_slot_frames & paw_through_slot_frame_mask;
-
-first_pd_return = pd_behind_slot_frames(pd_behind_slot_frames > pd_through_slot_frame);
-if isempty(first_pd_return)
-    first_pd_return = length(pawDorsum_z);
-else
-    first_pd_return = first_pd_return(1);
-end
-first_digits_return = find(digits_behind_slot_frames,1);
-
-first_paw_return = min(first_digits_return,first_pd_return);
-
-end
+% function first_paw_return = findFirstPawReturnFrame(pawDorsum_z,z_smooth,paw_through_slot_frame,slot_z)
+% % find the first time the paw moves behind the slot after it has passed
+% % through the slot. this is a little tricky - need to find the first frame
+% % that the paw dorsum passes in front of the reaching slot, then the next
+% % frame after that when the paw is behind the slot. the problem is that
+% % many times the paw doesn't make it all the way through the slot...
+% 
+% pd_behind_slot_frames = find(pawDorsum_z > slot_z);
+% paw_through_slot_frame_mask = false(size(pawDorsum_z));
+% paw_through_slot_frame_mask(paw_through_slot_frame:end) = true;
+% pd_through_slot_frame = find((pawDorsum_z < slot_z) & paw_through_slot_frame_mask,1);
+% 
+% if isempty(pd_through_slot_frame)
+%     % if the paw dorsum didn't make it through the slot, use
+%     % paw_through_slot_frame as the start of the search for when the paw
+%     % moves back behind the slot. This still may not work if the paw dorsum
+%     % never gets into the slot...
+%     pd_through_slot_frame = paw_through_slot_frame;
+% end
+% 
+% digits_behind_slot_frames = true(size(z_smooth,1),12);
+% for iDigitIdx = 1 : 12
+%     digits_behind_slot_frames = digits_behind_slot_frames & ((z_smooth(:,iDigitIdx) > slot_z) | isnan(z_smooth(:,iDigitIdx)));
+% end
+% digits_behind_slot_frames = digits_behind_slot_frames & paw_through_slot_frame_mask;
+% 
+% first_pd_return = pd_behind_slot_frames(pd_behind_slot_frames > pd_through_slot_frame);
+% if isempty(first_pd_return)
+%     first_pd_return = length(pawDorsum_z);
+% else
+%     first_pd_return = first_pd_return(1);
+% end
+% first_digits_return = find(digits_behind_slot_frames,1);
+% 
+% first_paw_return = min(first_digits_return,first_pd_return);
+% 
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function reachIdx = find_reaches(localMins,z,min_z_diff_pre_reach,min_z_diff_post_reach,maxFramesPriorToAdvance,extraFramesExtracted,pts_to_extract)
+function reachIdx = find_reaches(localMins,z,y,min_z_diff_pre_reach,min_z_diff_post_reach,maxFramesPriorToAdvance,extraFramesExtracted,pts_to_extract)
 
 
 
@@ -345,10 +348,21 @@ for i_possReach = 1 : num_poss_reaches
     % local minimum in the next maxFramesPriorToAdvance frames, don't count
     % this as a reach
     test_z = z(poss_reach_idx(i_possReach)+1:poss_reach_idx(i_possReach) + maxFramesPriorToAdvance);
-    if any(test_z < z_at_min) || any(localMins(poss_reach_idx(i_possReach)+1:poss_reach_idx(i_possReach) + maxFramesPriorToAdvance))
+    if any(test_z < z_at_min) %|| any(localMins(poss_reach_idx(i_possReach)+1:poss_reach_idx(i_possReach) + maxFramesPriorToAdvance))
         continue;
     end
     
+    % if the paw part is moving upwards, don't count it as a reach. It
+    % sometimes happens that the paw is resting on the bottom of the slot;
+    % to retract, the digits move towards the pellet and up, but this is
+    % clearly NOT a reach.
+    y_diff = diff(y(poss_reach_idx(i_possReach)-5:poss_reach_idx(i_possReach)));
+
+    % if the paw part is moving up AND there are no points where it was
+    % descending quickly, throw it out
+    if any(y_diff < 0) && ~any(y_diff > 0.4)
+        continue;
+    end
     % if the paw part retracted at least min_z_diff_pre_reach, count it as
     % a reach. It must have also moved at least z_diff_for_reach forward
     % prior to the reach and then pulled back that far after the reach.

@@ -110,7 +110,11 @@ for iTrial = 1 : numTrials
         interp_pd_trajectories{iTrial} = NaN;
         continue;
     end
+    try
     curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
+    catch
+        keyboard
+    end
     truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_pawdorsum);
     
     [normalized_pd_trajectories(:,:,iTrial),smoothed_pd_trajectories{iTrial},interp_pd_trajectories{iTrial}] = ...

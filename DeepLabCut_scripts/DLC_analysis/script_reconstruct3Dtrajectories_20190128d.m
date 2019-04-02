@@ -62,7 +62,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 17:numRatFolders
+for i_rat = 18:numRatFolders
 
     if i_rat == 6
         continue
@@ -93,8 +93,8 @@ for i_rat = 17:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 5
-        startSession = 21;
+    if i_rat == 18
+        startSession = 20;
     else
         startSession = 4;
     end
