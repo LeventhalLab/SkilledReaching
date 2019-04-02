@@ -1,11 +1,29 @@
 function firstPawDorsumFrame = findFirstPawDorsumFrame(pawDorsum_p,paw_z,paw_through_slot_frame,reproj_error,varargin)
 %
 % INPUTS
-%   trajectory - m x 3 x p array, where m is the number of frames, the
-%       second dimension is for x,y,z coordinates, and p is the number of
-%       bodyparts
-%   paw_z
-%   pawDorsum_p
+%   pawDorsum_p - numFrames length vector containing certainty values for
+%       paw dorsum identification in the mirror view from DLC
+%   paw_z - z-coordinates of the paw dorsum from the 3-D reconstruction
+%   paw_through_slot_frame - frame where the paw first appeared outside the
+%       box
+%   reproj_error - numFrames x 2 array containing the paw dorsum
+%       reprojection errors in the direct (reproj_error(:,1)) and mirror
+%       (reproj_error(:,2)) views
+%
+% VARARGS
+%   pthresh - minimum acceptable certainty value from DLC for identifying
+%       the paw dorsum in the mirror view
+%   min_consec_frames - minimum number of consecutive frames in which the
+%       paw dorsum must be found in the mirror view
+%   max_consecutive_misses - maximum number of consecutive frames for which
+%       there could be a gap where the paw isn't visible in the mirror view
+%   maxreprojerror - maximum tolerable reprojection error
+%
+% OUPTUTS
+%   firstPawDorsumFrame - first frame that the paw dorsum is reliably
+%       identified in the mirror view, and an acceptable match could be
+%       found in the direct view (even if just an estimate based on the
+%       location of the digits)
 
 if isnan(paw_through_slot_frame)
     firstPawDorsumFrame = NaN;
@@ -33,7 +51,6 @@ for iarg = 1 : 2 : nargin - 4
     end
 end
 
-% [~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
 pawDorsum_p = pawDorsum_p(1:paw_through_slot_frame);
 paw_z = paw_z(1:paw_through_slot_frame);
 reproj_error = reproj_error(1:paw_through_slot_frame,:);
@@ -48,7 +65,6 @@ end
 % pThresh and a valid trajectory point was found (so there must have also
 % been at least some points found in the direct view), and this is true for
 % at least min_consec_frames frames in a row
-% valid3d = ~isnan(trajectory(1:paw_through_slot_frame,1,mirror_pawdorsum_idx));
 
 validPawDorsumIdx = (pawDorsum_p > pThresh) & ... % only accept points identified with high probability
                     (paw_z > slot_z) & ...     % only accept points on the far side of the reaching slot
@@ -91,14 +107,9 @@ if isempty(streak_idx)
     return;
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% change this so it takes the maximum z-value instead of the first
-% recognized point
 valid_z_idx = validPawDorsumBorders(streak_idx,1) : validPawDorsumBorders(streak_idx,2);
 max_z_idx = find(paw_z(valid_z_idx) == max(paw_z(valid_z_idx)),1);
 
 firstPawDorsumFrame = valid_z_idx(max_z_idx);
-
-% firstPawDorsumFrame = validPawDorsumBorders(streak_idx,1);
 
 end

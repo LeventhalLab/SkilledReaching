@@ -1,5 +1,7 @@
 function [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, pawPref, varargin)
 %
+% function to assess how well 3D reconstructed points match with each other
+%
 % INPUTS:
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
 %       matrix contains x,y,z points for each bodypart
@@ -37,10 +39,10 @@ function [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality
 %   pcutoff - p-value to use as a cutoff for high vs low probability points
 %
 % OUTPUTS:
-%   reproj_error - num_bodyparts x numFrames x 2 x 2 array where
-%       reproj_error(bodypart,frame,:,1) is the difference in x,y
-%       coordinates between the reprojected 3D point and originally
-%       measured direct view poiint. reproj_error(bodypart,frame,:,2) is
+%   reproj_error - num_bodyparts x numFrames x 2 array where
+%       reproj_error(bodypart,frame,1) is the euclidean distance
+%       between the reprojected 3D point and originally
+%       measured direct view point. reproj_error(bodypart,frame,2) is
 %       the same for the mirror view
 %   high_p_invalid - num_bodyparts x numFrames x 2 boolean array where true
 %       entries indicate that DLC thought the point was identified with
@@ -68,6 +70,10 @@ high_p_mirror = mirror_p > p_cutoff;
 numFrames = size(pawTrajectory, 1);
 num_bp = size(pawTrajectory,3);
             
+if size(invalid_direct,2) > numFrames
+    invalid_direct = invalid_direct(:,1:numFrames);
+    invalid_mirror = invalid_mirror(:,1:numFrames);
+end
 [bodyparts,direct_bpMatch_idx,mirror_bpMatch_idx] = matchBodyPartIndices(direct_bp,mirror_bp);
 
 high_p_invalid = false(length(bodyparts), numFrames, 2);
@@ -92,13 +98,10 @@ end
 unscaled_trajectory = pawTrajectory / sf;
 reproj_error = zeros(num_bp,numFrames,2);
 
-
-
 for i_bp = 1 : num_bp
     
-%     bpName = bodyparts{i_bp};
-    direct_bp_idx = direct_bpMatch_idx(i_bp);%strcmpi(direct_bp, bpName);
-    mirror_bp_idx = mirror_bpMatch_idx(i_bp);%strcmpi(mirror_bp, bpName);
+    direct_bp_idx = direct_bpMatch_idx(i_bp);
+    mirror_bp_idx = mirror_bpMatch_idx(i_bp);
 
     current3D = squeeze(unscaled_trajectory(:,:,i_bp));
     
@@ -110,15 +113,9 @@ for i_bp = 1 : num_bp
     mirror_proj = projectPoints_DL(current3D, Pn);
     mirror_proj = unnormalize_points(mirror_proj,K);
     cur_mirror_pts = squeeze(final_mirror_pts(mirror_bp_idx,:,:));
-    try
     mirror_error = mirror_proj - cur_mirror_pts;
-    catch
-        keyboard
-    end
     
     reproj_error(i_bp,:,1) = sqrt(sum(direct_error.^2,2));
     reproj_error(i_bp,:,2) = sqrt(sum(mirror_error.^2,2));
 end
-    
-% reproj_error = calculatePawReprojectionErrors(pawTrajectory, direct_pts, mirror_pts, bodyparts, direct_bp, mirror_bp, pawPref, boxCal, ROIs);
 

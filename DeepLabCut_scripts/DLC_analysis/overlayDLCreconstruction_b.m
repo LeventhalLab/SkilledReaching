@@ -52,6 +52,7 @@ colorTextLabels{4} = 'digit 4 - green';
 colorTextLabels{5} = 'proximal dark-->distal light';
 
 topLeftTextPosition = [20,20];
+topLeftTextPosition2 = [1800,20];
 textFontSize = 20;
 textRowSpacing = textFontSize + 8;
 textColor = 'black';
@@ -111,7 +112,7 @@ for i_bp = 1 : length(parts_to_show)
         keyboard
     end
 
-    if isPointValid{1}(i_directBP)
+    if isPointValid{1}(i_directBP) && ~isnan(currentPt(1))
         if direct_p(i_directBP) > p_cutoff
             img_out = insertMarker(img_out, currentPt, DLC_highProbMarkerType,...
                 'color',markerColor,'size',markerSize);
@@ -150,10 +151,14 @@ for i_bp = 1 : length(parts_to_show)
     
     markerColor = getMarkerColor(mirror_bp{i_mirrorBP}, bodypartColor, pawPref);
 
-    if isPointValid{2}(i_mirrorBP)
+    if isPointValid{2}(i_mirrorBP)  && ~isnan(currentPt(1))
         if mirror_p(i_mirrorBP) > p_cutoff
+            try
             img_out = insertMarker(img_out, currentPt, DLC_highProbMarkerType,...
                 'color',markerColor,'size',markerSize);
+            catch
+                keyboard
+            end
         else
             img_out = insertMarker(img_out, currentPt, DLC_lowProbMarkerType,...
                 'color',markerColor,'size',markerSize);
@@ -234,6 +239,17 @@ if makeKey
         textPosition(iRow,2) = topLeftTextPosition(2) + (iRow-1)*textRowSpacing;
     end
     img_out = insertText(img_out,textPosition,textStr,'fontsize',textFontSize,'textcolor',textColor);
+    
+    textStr = cell(length(bodyparts),1);
+    textColor2 = zeros(length(bodyparts),3);
+    textPosition2 = zeros(length(textStr), 2);
+    for ii = 1 : length(textStr)
+        textStr{ii} = sprintf('%d - %s',ii,bodyparts{ii});
+        textPosition2(ii,1) = topLeftTextPosition2(1);
+        textPosition2(ii,2) = topLeftTextPosition2(2) + (ii-1)*textRowSpacing;
+        textColor2(ii,:) = getMarkerColor(bodyparts{ii}, bodypartColor, pawPref);
+    end
+    img_out = insertText(img_out,textPosition2,textStr,'fontsize',textFontSize,'textcolor',textColor2);
 end
 
 end

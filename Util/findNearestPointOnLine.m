@@ -1,4 +1,4 @@
-function np = findNearestPointOnLine(a,b,varargin)
+function [np,d] = findNearestPointOnLine(a,b,varargin)
 %
 % find the point on a line specified by Q1 and Q2 that is closest to Q0
 %
@@ -19,6 +19,7 @@ function np = findNearestPointOnLine(a,b,varargin)
 %
 % OUTPUTS:
 %   np - 2 or 3 element vector containing the nearest point on the line
+%   d - distance of the point from the line
 
 % parse inputs
 if nargin == 2
@@ -55,6 +56,8 @@ elseif length(Q1) == 3
 else
     error('must be 2D or 3D points')
 end
+
+d = sqrt(sum((np-Q0).^2));
 
 end
 

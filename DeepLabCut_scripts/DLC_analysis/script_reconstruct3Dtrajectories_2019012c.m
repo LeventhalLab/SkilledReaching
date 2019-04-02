@@ -3,6 +3,8 @@
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
+repeatCalculations = false;
+
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
@@ -60,7 +62,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 4 : numRatFolders
+for i_rat = 12:12%numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -89,10 +91,10 @@ for i_rat = 4 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 6
-        startSession = 1;
+    if i_rat == 12
+        startSession = 3;
     else
-        startSession = 1;
+        startSession = 3;
     end
     for iSession = startSession : 4 : numSessions
         
@@ -187,16 +189,27 @@ for i_rat = 4 : numRatFolders
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-%             if exist(fullTrajName,'file')
-%                 % already did this calculation
-%                 continue;
-%             end
+            
+            if exist(fullTrajName,'file')
+                % already did this calculation
+                if repeatCalculations
+                    load(fullTrajName)
+                else
+                    continue;
+                end
+            end
             
             cd(mirrorViewDir)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
+            if ~exist('manually_invalidated_points','var')
+                numFrames = size(direct_p,2);
+                num_bodyparts = length(direct_bp);
+                manually_invalidated_points = false(numFrames,num_bodyparts,2);
+            end
+                    
             numDirectFrames = size(direct_p,1);
             numMirrorFrames = size(mirror_p,1);
     
@@ -209,19 +222,32 @@ for i_rat = 4 : numRatFolders
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
                                   
+            invalid_mirror = invalid_mirror | squeeze(manually_invalidated_points(:,:,2))';
+            invalid_direct = invalid_direct | squeeze(manually_invalidated_points(:,:,1))';
+            
             direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams,~invalid_direct);
             mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams,~invalid_mirror);
 
-            boxCal_fromVid = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref);
+%             boxCal_fromVid = calibrateBoxFromDLCoutput(direct_pts_ud,mirror_pts_ud,direct_p,mirror_p,invalid_direct,invalid_mirror,direct_bp,mirror_bp,cameraParams,boxCal,pawPref);
+            
+            % find the appropriate box calibration for this session
+            temp = boxCal.boxCal_fromSession;
+            calibratedSessionNames = {temp.sessionName};
+            if any(strcmpi(calibratedSessionNames,sessionDirectories{iSession}))
+                sessionIdx = find(strcmpi(calibratedSessionNames,sessionDirectories{iSession}));
+                activeBoxCal = boxCal.boxCal_fromSession(sessionIdx);
+            else
+                activeBoxCal = boxCal;
+            end
             
             [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
                 calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
-                                      vidROI, boxCal_fromVid, pawPref, frameSize,...
+                                      vidROI, activeBoxCal, pawPref, frameSize,...
                                       'maxdistfromneighbor',maxDistFromNeighbor);
                                   
-            [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, bodyparts, boxCal_fromVid, pawPref);
+            [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
             
 %             [paw_through_slot_frame,firstSlotBreak] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
 %             initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,paw_through_slot_frame,...
@@ -232,7 +258,7 @@ for i_rat = 4 : numRatFolders
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
 %                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
-                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','boxCal_fromVid','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid');
+                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
 %             end
             
         end

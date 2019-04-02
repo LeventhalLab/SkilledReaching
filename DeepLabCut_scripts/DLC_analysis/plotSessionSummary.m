@@ -1,10 +1,21 @@
-function [h_fig,h_axes,h_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,curSession,curSessionType,varargin)
+function [h_fig,h_axes,h_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,validTypeNames,curSession,curSessionType,varargin)
 
 % to plot:
 %   mean distance from mean trajectory at each point for all, correct, no
 %       pellet, and other trials (along with n)
 %   all_firstPawDorsum, all_paw_through_slot_frame, and all_endPtFrame
 %   
+
+pawPref = thisRatInfo.pawPref;
+if iscell(pawPref)
+    pawPref = pawPref{1};
+end
+
+virus = thisRatInfo.Virus;
+if iscell(virus)
+    virus = virus{1};
+end
+
 figProps.m = 5;
 figProps.n = 5;
 
@@ -29,7 +40,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-for iarg = 1 : 2 : nargin - 13
+for iarg = 1 : 2 : nargin - 14
     switch lower(varargin{iarg})
         case 'var_lim'
             var_lim = varargin{iarg + 1};
@@ -55,6 +66,8 @@ plot(trialNumbers(:,2),all_paw_through_slot_frame);
 
 % axes(h_axes{1}(1,3));
 plot(trialNumbers(:,2),all_endPtFrame);
+
+plot(trialNumbers(:,2),all_maxDigitReachFrame);
 title('event frames')
 set(gca,'ylim',pawFrameLim);
 
@@ -147,8 +160,8 @@ for iFig = 1 : length(h_fig)
     h_figAxis(iFig) = createFigAxes(h_fig(iFig));
 end
 
-textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block', ...
-    curSession, curSessionType.type, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock);
+textString{1} = sprintf('%s session summary; %s (%s on score sheet), day %d, %d days left in block, Virus: %s', ...
+    curSession, curSessionType.type, curSessionType.typeFromScoreSheet, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock, virus);
 textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
 textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
 axes(h_figAxis(1));

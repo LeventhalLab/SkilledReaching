@@ -45,14 +45,21 @@ for iCol = 2 : numCols
      if isempty(temp)
          continue;
      end
-     numValidSessions = numValidSessions + 1;
      
      sessionDate = temp{1};
+     if isnumeric(sessionDate)
+         sessionDate = num2str(sessionDate);
+     end
      if ~isdatetime(sessionDate)
          if ischar(sessionDate)
+             if strcmp(sessionDate,'NaN')
+                 continue;
+             end
              sessionDate = datetime(sessionDate,'inputformat',csvDateFormat);
+             numValidSessions = numValidSessions + 1;
          else
-             sessionDate = NaT;
+             continue;
+%              sessionDate = NaT;
          end
      end
      if sessionDate.Year < 100
@@ -60,11 +67,17 @@ for iCol = 2 : numCols
      end
 
      reachScores(numValidSessions).date = sessionDate;
+     temp = table2cell(scoresTable(2,iCol));
+     reachScores(numValidSessions).sessionType = temp{1};
      
      temp = table2cell(scoresTable(3:end,iCol));
      reachScores(numValidSessions).scores = NaN(length(temp),1);
      for ii = 1 : length(temp)
-         reachScores(numValidSessions).scores(ii) = str2double(temp{ii});
+         if ischar(temp{ii})
+             reachScores(numValidSessions).scores(ii) = str2double(temp{ii});
+         else
+             reachScores(numValidSessions).scores(ii) = temp{ii};
+         end
      end
      
 end

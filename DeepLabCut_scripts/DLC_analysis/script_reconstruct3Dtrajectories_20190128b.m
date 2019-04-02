@@ -3,6 +3,8 @@
 % slot_z = 200;    % distance from camera of slot in mm. hard coded for now
 % time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
+repeatCalculations = false;
+
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
@@ -60,8 +62,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 11 : 11%numRatFolders
-% for i_rat = 8 : numRatFolders
+for i_rat = 17:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -89,12 +90,12 @@ for i_rat = 11 : 11%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 11
+    if i_rat == 16
         startSession = 2;
     else
         startSession = 2;
     end
-    for iSession = startSession : 4 : numSessions
+    for iSession = startSession : 5 : numSessions
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -183,13 +184,18 @@ for i_rat = 11 : 11%numRatFolders
             end
 
             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
-                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv));
+                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv))
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
+            
             if exist(fullTrajName,'file')
                 % already did this calculation
-                continue;
+                if repeatCalculations
+                    load(fullTrajName)
+                else
+                    continue;
+                end
             end
             
             cd(mirrorViewDir)
@@ -197,8 +203,14 @@ for i_rat = 11 : 11%numRatFolders
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
-            numDirectFrames = size(direct_p,1);
-            numMirrorFrames = size(mirror_p,1);
+%             if ~exist('manually_invalidated_points','var')
+                numFrames = size(direct_p,2);
+                num_bodyparts = length(direct_bp);
+                manually_invalidated_points = false(numFrames,num_bodyparts,2);
+%             end
+                    
+            numDirectFrames = size(direct_p,2);
+            numMirrorFrames = size(mirror_p,2);
     
             if numDirectFrames ~= numMirrorFrames
                 fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
@@ -208,7 +220,18 @@ for i_rat = 11 : 11%numRatFolders
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
-                                  
+            
+            frames_in_this_vid = size(invalid_mirror,2);
+            frames_in_other_vids = size(manually_invalidated_points,1);
+            if frames_in_this_vid < frames_in_other_vids
+                % pad invalid_mirror and/or invalid_direct because of a
+                % video that's too short for some reason
+                invalid_mirror(:,frames_in_this_vid+1:frames_in_other_vids) = false;
+                invalid_direct(:,frames_in_this_vid+1:frames_in_other_vids) = false;
+            end
+            invalid_mirror = invalid_mirror | squeeze(manually_invalidated_points(:,:,2))';
+            invalid_direct = invalid_direct | squeeze(manually_invalidated_points(:,:,1))';
+            
             direct_pts_ud = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams,~invalid_direct);
             mirror_pts_ud = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams,~invalid_mirror);
 
@@ -242,7 +265,7 @@ for i_rat = 11 : 11%numRatFolders
 %                 save(trajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','dist_from_epipole','lastValidCalDate','-append');
 %             else
 %                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
-                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid');
+                save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
 %             end
             
         end
@@ -250,17 +273,11 @@ for i_rat = 11 : 11%numRatFolders
     end
     
 end
-% USE REPROJECTION ERROR TO INVALIDATE POINTS BEFORE ESTIMATING HIDDEN
-% LOCATION
-
-% WORK ON PAW DORSUM RECONSTRUCTION IN DIRECT VIEW - SOMETIMES WOBBLES...
-% SEE RAT 187, SESSION 1, VID 1 AROUND FRAME 265 (I THINK)
 
 
-% RUN script_calculateKinematics 
-% then run script_summaryDLCstatistics
-
-
-% MODIFY ESTIMATEHIDDENPOINTS SO THAT ESTIMATED POINTS CAN'T BE TOO FAR
-% FROM THE REST OF THE PAW
+% RUN script_recalibrateBoxes_20190128 once .csv files with DLC output from
+%   both views are loaded into appropriate folders
+% RUN this script
+% RUN script_calculateKinematics_20190218 
+% RUN script_plotMeanTrajectories
 

@@ -3,10 +3,16 @@ function [mcp_idx,pip_idx,digit_idx,pawdorsum_idx,nose_idx,pellet_idx,otherpaw_i
 % INPUTS
 %   bodyparts - cell array containing strings describing each bodypart in
 %       the same order as in the pawTrajectory array
+%   pawPref - 'left' or 'right'
 %
 % OUTPUTS
-%   mcp_idx - 
-%   pip_idx - 
+%   mcp_idx - indices of mcp knuckles in bodyparts
+%   pip_idx - indices of pip knuckles in bodyparts
+%   digit_idx - indices of digit tips in bodyparts
+%   pawdorsum_idx - index of the reaching paw dorsum in bodyparts
+%   nose_idx - index of the nose in bodyparts
+%   pellet_idx - index of the pellet in bodyparts
+%   otherpaw_idx - index of the non-reaching paw in bodyparts
 
 numDigits = 4;
 mcp_idx = zeros(numDigits,1);
@@ -24,7 +30,6 @@ end
 
 nose_idx = find(findStringMatchinCellArray(bodyparts, 'nose'));
 pellet_idx = find(findStringMatchinCellArray(bodyparts, 'pellet'));
-% poss_paw_idx = find(findStringMatchinCellArray(bodyparts, 'paw'));
 
 if iscategorical(pawPref)
     pawPref = char(pawPref);
@@ -38,12 +43,5 @@ switch pawPref
 end
 pawdorsum_idx = find(findStringMatchinCellArray(bodyparts, [pawPref 'pawdorsum']));
 otherpaw_idx = find(findStringMatchinCellArray(bodyparts, otherPaw));
-% 
-% for ii = 1 : length(poss_paw_idx)
-%     if poss_paw_idx(ii) ~= pawdorsum_idx
-%         otherpaw_idx = poss_paw_idx(ii);
-%         break;
-%     end
-% end
 
 end

@@ -29,12 +29,6 @@ else
     error('Q0 must be a single point')
 end
 
-% if isvector(Q1) && isvector(Q2)
-%     if length(Q1) ~= length(Q2) || ...
-%        length(Q2) ~= length(Q0)
-%        error('vectors must be the same length')
-%     end
-% end
 if any(size(Q1) ~= size(Q2))
     error('Q1 and Q2 must be the same size')
 end

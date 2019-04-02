@@ -1,10 +1,51 @@
-function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref, varargin)
-
-% vidPath = '/Volumes/Tbolt_01/Skilled Reaching/R0186/R0186_20170813a';
-% video = VideoReader(fullfile(vidPath,'R0186_20170813_12-09-21_002.avi'));
+function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref, varargin)
+%
+% function to estimate the locations of hidden points given knowledge of
+% nearby points and epipolar geometry
+%
+% INPUTS
+%   final_direct_pts - num bodyparts x num frames x 2 array where each num
+%       frames x 2 subarray contains (x,y) coordinate pairs. This includes
+%       estimates of point locations based on the epipolar projection from
+%       the mirror view
+%   final_mirror_pts - same as final_direct_pts for the mirror view
+%   invalid_direct - bodyparts x numframes boolean array where true values
+%       indicate that a bodypart in a given frame was (probably) not
+%       correctly identified
+%   invalid_mirror - same as invalid_direct for the mirror view
+%   direct_bp - cell array containing lis of body part descriptors for the
+%       direct view
+%   mirror_bp - same as direct_bp for the mirror view
+%   boxCal - box calibration structure with the following fields:
+%       .E - essential matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .F - fundamental matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .Pn - camera matrices assuming the direct view is eye(4,3). 4 x 3 x
+%           numViews array
+%       .P - direct camera matrix (eye(4,3))
+%       .cameraParams
+%       .curDate - YYYYMMDD format date the data were collected
+%   imSize - 2-element vector with frame height x width
+%   pawPref - 'left' or 'right'
+%
+% VARARGS:
+%   maxdistfromneighbor - how far the estimated point is allowed to be from
+%       its nearest identified neighbor
+%
+% OUTPUTS
+%   final_direct_pts - num bodyparts x num frames x 2 array where each num
+%       frames x 2 subarray contains (x,y) coordinate pairs. This includes
+%       estimates of point locations based on the epipolar projection from
+%       the mirror view. Only now it includes the estimates of where hidden
+%       points are located
+%   final_mirror_pts - same as final_direct_pts for the mirror view
+%   isEstimate - num bodyparts x num frames x 2 array where each entry
+%       indicates whether that bodypart for that frame in that view (1 = 
+%       direct, 2 = mirror) was estimated or identified directly by DLC
 
 maxDistFromNeighbor = 60;  % how far the estimated point is allowed to be from its nearest identified neighbor
-for iarg = 1 : 2 : nargin - 10
+for iarg = 1 : 2 : nargin - 9
     switch lower(varargin{iarg})
         case 'maxdistfromneighbor'    % how far the estimated point is allowed to be from its nearest identified neighbor
             maxDistFromNeighbor = varargin{iarg + 1};
@@ -33,20 +74,11 @@ isEstimate = false(size(final_direct_pts,1),size(final_mirror_pts,2),2);
 numDigits = length(direct_mcp_idx);
 for iFrame = 1 : numFrames
     allDirectPts = squeeze(final_direct_pts(allDirectParts_idx,iFrame,:));
-    try
     allMirrorPts = squeeze(final_mirror_pts(allMirrorParts_idx,iFrame,:));
-    catch
-        keyboard
-    end
     
     validDirectPoints = allDirectPts(~invalid_direct(allDirectParts_idx,iFrame),:);
     validMirrorPoints = allMirrorPts(~invalid_mirror(allMirrorParts_idx,iFrame),:);
     
-%     directCVboundary_idx = boundary(validDirectPoints);
-%     mirrorCVboundary_idx = boundary(validMirrorPoints);
-    
-%     directCVboundary_pts = validDirectPoints(directCVboundary_idx,:);
-%     mirrorCVboundary_pts = validMirrorPoints(mirrorCVboundary_idx,:);
     % work on digits first
     for i_digitPart = 1 : 3
         switch i_digitPart
@@ -161,7 +193,6 @@ for iFrame = 1 : numFrames
             end
 
             np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize, maxDistFromNeighbor);
-%             np = estimatePawPart(known_pt, other_pts, F, imSize);
             if isempty(np); continue; end
             
             if invalid_direct(direct_part_idx,iFrame)
@@ -174,19 +205,7 @@ for iFrame = 1 : numFrames
                 isEstimate(mirror_part_idx,iFrame,2) = true;   % mirror point for this body part in this frame is estimated
             end
 
-    end
-    
-%     for i_pawPart = 1 : length(direct_pip_idx)
-% 
-% %         direct_part_idx = direct_pip_idx(i_pawPart);
-% %         mirror_part_idx = mirror_pip_idx(i_pawPart);
-%     end
-%     
-%     for i_pawPart = 1 : length(direct_digit_idx)
-% 
-%     end
-%     direct_part_idx = direct_indices(i_pawPart);
-%     mirror_part_idx = mirror_indices(i_pawPart);
+        end
         
     end
     
@@ -218,7 +237,7 @@ if isempty(intersectPoints)
     epiBorderPts = [epiBorderPts(1:2);epiBorderPts(3:4)];
     
     if isempty(other_knuckle_pts)
-        % first option is to find the point on the epipolar line closest to
+        % try to find the point on the epipolar line closest to
         % the next digit over; if that isn't available, find the point on
         % the epipolar line closest to the next knuckle up the same digit
         [nndist, nnidx] = findNearestPointToLine(epiBorderPts, nextKnucklePt);
@@ -244,15 +263,41 @@ else
         epiBorderPts = lineToBorderPoints(epiLine, imSize);
         epiBorderPts = [epiBorderPts(1:2);epiBorderPts(3:4)];
 
-        if any(isnan(nextDigitKnuckles(:)))
-            % Look for the closest point in the intersection of the
-            % epipolar line with the same knuckle on the neighboring digits
-            [~, nnidx] = findNearestPointToLine(epiBorderPts, nextDigitKnuckles);
-            [nndist, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
-            if nndist < maxDistFromNeighbor
-                np = intersectPoints(nnidx2,:);
+        if any(~isnan(nextDigitKnuckles(:)))
+            % at least one knuckle on a neighboring digit was found
+            % is this digit 2 or 3, and were both neighboring digits found?
+            if all(~isnan(nextDigitKnuckles(:)))
+                % both neighboring digits were found
+                % find the intersection between the epipolar line and the
+                % segment connecting the two adjacent knuckles
+                [knuckleIntersectPoint,isPtBetweenKnuckles] = findIntersection(nextDigitKnuckles, epiLine);
+                if isPtBetweenKnuckles(1)
+                    np = knuckleIntersectPoint;
+                else
+                    % the intersection between the epipolar line and the
+                    % line defined by the neighboring knuckles is not
+                    % between those knuckles. Find the closest point on the
+                    % epipolar line to one of the neighboring knuckles
+                    [~, nnidx] = findNearestPointToLine(epiBorderPts, nextDigitKnuckles);
+                    [nndist, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
+                    if nndist < maxDistFromNeighbor
+                        np = intersectPoints(nnidx2,:);
+                    else
+                        np = [];
+                    end
+                end
             else
-                np = [];
+                % only one neighboring digit was found
+                
+                % Look for the closest point in the intersection of the
+                % epipolar line with the same knuckle on the neighboring digits
+                [~, nnidx] = findNearestPointToLine(epiBorderPts, nextDigitKnuckles);
+                [nndist, nnidx2] = findNearestNeighbor(nextDigitKnuckles(nnidx,:), intersectPoints);
+                if nndist < maxDistFromNeighbor
+                    np = intersectPoints(nnidx2,:);
+                else
+                    np = [];
+                end
             end
         else
             % the neighboring digits for the same knuckle weren't found

@@ -14,6 +14,13 @@ function [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboar
 % OUTPUTS
 %   new_directChecks, new_mirrorChecks
 
+% 
+% xlims(1) = min(min(newPoints(:,1)),1);
+% xlims(2) = max(max(newPoints(:,1)),size(directBorderMask,2));
+% 
+% ylims(1) = min(min(newPoints(:,2)),1);
+% ylims(2) = max(max(newPoints(:,2)),size(directBorderMask,1));
+
 num_newPoints = size(newPoints, 1);
 numDirectBoards = size(directBorderMask,3);   % this is one binary array instead of the cell structure that holds one array for each different image
 new_directChecks = NaN(prod(anticipatedBoardSize-1), 2, numDirectBoards);
@@ -78,6 +85,11 @@ for i_pt = 1 : num_newPoints
     pointAssigned = false;
     for iBoard = 1 : numDirectBoards
         % recall first index is y, second is x in the masks
+        try
+            filledDirectMask(testPoint(2),testPoint(1),iBoard);
+        catch
+            keyboard
+        end
         if filledDirectMask(testPoint(2),testPoint(1),iBoard)
             pointAssigned = true;
             num_newChecks(iBoard,1) = num_newChecks(iBoard,1) + 1;

@@ -4,21 +4,20 @@ function new_trajectory = trajectory_wrt_pellet(pawTrajectory, initPellet3D, rep
 % x-axis so that left and right-pawed trajectories should line up
 %
 % INPUTS
-%   pawTrajectory - 
-%   bodyparts - cell array containing strings describing each bodypart in
-%       the same order as in the pawTrajectory array
-%   frameRate - frame rate in frames per second
-%   frameTimeLimits - 
-%   reproj_error - numFrames x numBodyparts x 2 array. reproj_error(:,:,1)
+%   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFrames x 3
+%       matrix contains x,y,z points for each bodypart
+%   initPellet3D - [x,y,z] coordinates of the pellet with respect to the
+%       camera lens
+%   reproj_error - numBodyparts x numFrames x 2 array. reproj_error(:,:,1)
 %       contains the reprojection error in the direct view (that is, the
 %       Euclidean distances between reconstructed 3D points projected back
 %       onto the original 2D image for the direct view. reproj_error(:,:,2)
-%       is the same for the mirror view. The second "bodypart" index is in
+%       is the same for the mirror view. The "bodypart" index is in
 %       the same order as pawTrajectory
 %   pawPref - 'left' or 'right'
 %
 % VARARGS:
-%   'maxreprojectionerror' - 
+%   maxreprojectionerror - maximum tolerated reprojection error
 %
 % OUTPUTS
 %   new_trajectory - pawTrajectory transformed so that it is the paw
@@ -36,9 +35,6 @@ for iarg = 1 : 2 : nargin - 4
     end
     
 end
-% if isempty(initPellet3D)
-%     initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,frameTimeLimits);
-% end
 
 if isempty(initPellet3D)
     disp('no pellet found for this trial')

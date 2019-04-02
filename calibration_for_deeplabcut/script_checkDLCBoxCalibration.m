@@ -13,6 +13,9 @@ P = eye(4,3);
 for iMat = 1 : length(matList)
     
     load(matList(iMat).name);
+    if ~any(strcmp({'20180303'}, curDate))
+        continue;
+    end
     K = cameraParams.IntrinsicMatrix;
     
     numBoards = size(directChecks,3);
@@ -39,6 +42,7 @@ for iMat = 1 : length(matList)
             curMirrorChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
             
             figure(iImg + numImg)
+            hold on
             scatter(curDirectChecks(1,1),curDirectChecks(1,2));
             scatter(curMirrorChecks(1,1),curMirrorChecks(1,2));
             

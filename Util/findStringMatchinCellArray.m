@@ -1,4 +1,13 @@
 function match_idx = findStringMatchinCellArray(cell_array, str_fragment)
+%
+% INPUTS
+%   cell_array - cell array of strings
+%   str_fragment - character array containing fragment of a string to look
+%       for in cell_array
+%
+% OUTPUTS
+%   match_idx - boolean vector with true for any element of cell_array that
+%       contains str_fragment
 
 stringSearch = strfind(cell_array,str_fragment);
 

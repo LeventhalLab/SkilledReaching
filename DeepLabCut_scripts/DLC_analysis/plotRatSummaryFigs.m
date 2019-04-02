@@ -1,10 +1,19 @@
 function [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
     mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle,meanOrientations,mean_MRL,...
-    endApertures,meanApertures,varApertures,numReachingFrames,PL_summary)
+    endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,thisRatInfo)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
 z_lim = [-5 50];
+
+virus = thisRatInfo.Virus;
+if iscell(virus)
+    virus = virus{1};
+end
+laserTiming = thisRatInfo.laserTiming;
+if iscell(laserTiming)
+    laserTiming = laserTiming{1};
+end
 
 bodypart_idx_toPlot = find(findStringMatchinCellArray(bodyparts, bodypart_to_plot));
 
@@ -38,6 +47,7 @@ for iSession = 1 : numSessions
     curSessionType = sessionType(allSessionIdx).type;
     sessionsLeftInBlock = sessionType(allSessionIdx).sessionsLeftInBlock;
     
+    sessionTypeUnknown = false;
     switch curSessionType
         case 'training'
             plotRow = 1;
@@ -55,9 +65,17 @@ for iSession = 1 : numSessions
             plotRow = 3;
             plot_colmap = colormap(autumn);
 %                 plotColor = [1,0,0];
+        otherwise
+            plotRow = 1;
+            plot_colmap = colormap(gray);
+            sessionTypeUnknown = true;
     end
 
-    plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
+    if sessionTypeUnknown
+        plotColor = plot_colmap(iSession,:);
+    else
+        plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
+    end
     for iDim = 1 : 3
         axes(ratSummary_h_axes(1,iDim))
         % plot mean for all trajectories
@@ -159,7 +177,13 @@ for iSession = 1 : numSessions
             plot_colmap = colormap(autumn);
     %                 plotColor = [1,0,0];
     end
-    plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
+
+    if sessionTypeUnknown
+        plotColor = plot_colmap(iSession,:);
+    else
+        plotColor = plot_colmap(sessionsLeftInBlock*3+1,:);
+    end
+
     for iDim = 1 : 3
         axes(ratSummary_h_axes(4,iDim))
         % find reach end points for the bodypart of interest for all
@@ -286,7 +310,7 @@ title('final var z')
 
 
     
-textString{1} = sprintf('%s trajectory summary', ratID);
+textString{1} = sprintf('%s trajectory summary, Stim type: %s, Virus: %s', ratID,laserTiming,virus);
 textString{2} = 'black - baseline; blue - laser stim; red - occlusion';
 textString{3} = 'row 1 - mean trajectories, row 2 - mean deviation from mean trajectories, row 4 - mean reach endpoints';
 axes(ratSummary_h_figAxis);

@@ -2,11 +2,57 @@ function [normalized_pd_trajectories,smoothed_pd_trajectories,interp_pd_trajecto
     normalized_digit_trajectories, smoothed_digit_trajectories, interp_digit_trajectories] = ...
         interpolateTrajectories(allTrajectories,pawPartsList,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,pawPref,varargin)
 %
-% INPUTS
-%   pdEstimate - 
+% function to interpolate 3D paw and digit trajectories, accounting for
+% missed frames/occlusions. Will divide each trajectory into evenly spaced
+% segments.
 %
+% INPUTS
+%   allTrajectories - numFrames x 3 x num bodyparts x numTrials array
+%       containing paw/digit trajectories with respect to the pellet
+%   pawPartsList - list of paw part names that are on the reaching paw
+%   all_firstPawDorsumFrame - numTrials length vector containing the frame
+%      in which the paw dorsum was first identified for each reach.
+%   all_paw_through_slot_frame - numTrials length vector containing the
+%       frame number where the paw first appeared through the slot
+%   all_endPtFrame - numTrials length vector containing the frame where the
+%       paw reached its maximum extension on the first reach
+%   pawPref - 'left' or 'right'
+%
+% VARARGS
+%   num_pd_trajectorypoints - number of points to divide the paw dorsum
+%       trajectory into
+%   num_digit_trajectorypoints - number of points to divide the digit
+%       trajectories into
+%   start_z_pawdorsum - farthest point from the pellet in the z-dimension
+%       to start the paw trajectory. useful because some for some videos
+%       the paw will be detected slightly earlier or later - this forces a
+%       common starting point
+%   start_z_digits - farthest point from the pellet in the z-dimension
+%       to start the digit trajectories. useful because some for some
+%       videos the digits will be detected slightly earlier or later - this
+%       forces a common starting point
+%   smoothwindow - smoothing window width for the trajectories
+%   
 % OUTPUTS
-%   meanTrajectory
+%   normalized_pd_trajectories - num_pd_trajectorypoints x 3 x
+%      numTrials array containing trajectories that were interpolated,
+%      smoothed, and divided into num_pd_trajectorypoints
+%   smoothed_pd_trajectories - numTrials x 1 cell array containing smoothed
+%       versions of interp_pd_trajectories
+%   interp_pd_trajectories - numTrials x 1 cell array containing
+%       trajectories with missing points interpolated. Only includes the
+%       points from the first time the paw dorsum was detected to full
+%       extension on the initial reach
+%   normalized_digit_trajectories - number of digit points (usually 12 - 3
+%      marks on each of 4 digits) x num_digit_trajectorypoints x 3 x
+%      numTrials array containing trajectories that were interpolated,
+%      smoothed, and divided into num_digit_trajectorypoints
+%   smoothed_digit_trajectories - numTrials x number of digit points cell 
+%       array containing smoothed versions of interp_pd_trajectories
+%   interp_digit_trajectories - numTrials x number of digit points cell 
+%       array containing trajectories with missing points interpolated.
+%       Only includes points from once the digits are through the reaching
+%       slot to full extension on the first reach
 
 smoothWindow = 3;
 num_pd_TrajectoryPoints = 100;
@@ -51,16 +97,6 @@ normalized_digit_trajectories = zeros(numTrackedDigitParts,num_digit_TrajectoryP
 smoothed_pd_trajectories = cell(numTrials,1);
 interp_pd_trajectories = cell(numTrials,1);
 normalized_pd_trajectories = zeros(num_pd_TrajectoryPoints,3,numTrials);
-% for iFig = 1 : 4
-%     figure(iFig);
-%     hold off
-%     figure(iFig+4);
-%     for ii = 1 : 3
-%         subplot(3,1,ii)
-%         hold off
-%     end
-% end
-
 
 for iTrial = 1 : numTrials
     
@@ -74,33 +110,11 @@ for iTrial = 1 : numTrials
         interp_pd_trajectories{iTrial} = NaN;
         continue;
     end
-    try
     curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
-    catch
-        keyboard
-    end
-
-%     trialEstimate = squeeze(pdEstimates(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,iTrial));
     truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_pawdorsum);
     
-    try
     [normalized_pd_trajectories(:,:,iTrial),smoothed_pd_trajectories{iTrial},interp_pd_trajectories{iTrial}] = ...
         smoothTrajectory(truncated_trajectory, 'numtrajectorypoints', num_pd_TrajectoryPoints,'smoothwindow',smoothWindow);
-    catch
-        keyboard
-    end
-
-%     figure(1)
-%     plot3(smoothed_pd_trajectories(:,1,iTrial),smoothed_pd_trajectories(:,3,iTrial),smoothed_pd_trajectories(:,2,iTrial))
-%     hold on
-%     xlabel('x');ylabel('z');zlabel('y')
-%     
-%     figure(5)
-%     for ii = 1 : 3
-%         subplot(3,1,ii)
-%         plot(smoothed_pd_trajectories(:,ii,iTrial))
-%         hold on
-%     end
     
     % for the digits, identify the first point after it breaks the slot
     % (recorded in firstSlotBreak) until max extension for the reach
@@ -145,34 +159,8 @@ for iTrial = 1 : numTrials
             [normalized_digit_trajectories(iDigit+8,:,:,iTrial),smoothed_digit_trajectories{iTrial,iDigit+8},interp_digit_trajectories{iTrial,iDigit+8}] = ...
                 smoothTrajectory(truncated_trajectory, 'numtrajectorypoints', num_pd_TrajectoryPoints,'smoothwindow',smoothWindow);
         end
-        
-%         figure(2)
-%         plot3(smoothed_digit_trajectories(iDigit,:,1,iTrial),smoothed_digit_trajectories(iDigit,:,3,iTrial),smoothed_digit_trajectories(iDigit,:,2,iTrial));
-%         hold on
-%         
-%         
-%         figure(3)
-%         plot3(smoothed_digit_trajectories(iDigit+4,:,1,iTrial),smoothed_digit_trajectories(iDigit+4,:,3,iTrial),smoothed_digit_trajectories(iDigit+4,:,2,iTrial));
-%         hold on
-%         
-%         figure(4)
-%         plot3(smoothed_digit_trajectories(iDigit+8,:,1,iTrial),smoothed_digit_trajectories(iDigit+8,:,3,iTrial),smoothed_digit_trajectories(iDigit+8,:,2,iTrial));
-%         hold on
-%         
 
     end
-%     figure(2);
-%     scatter3(0,0,0,25,'k','o','markerfacecolor','k')
-%     xlabel('x');ylabel('z');zlabel('y')
-%     hold off
-%     figure(3);
-%     scatter3(0,0,0,25,'k','o','markerfacecolor','k')
-%     xlabel('x');ylabel('z');zlabel('y')
-%     hold off
-%     figure(4);
-%     scatter3(0,0,0,25,'k','o','markerfacecolor','k')
-%     xlabel('x');ylabel('z');zlabel('y')
-%     hold off
     
 end
 

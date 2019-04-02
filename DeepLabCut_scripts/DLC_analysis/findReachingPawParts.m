@@ -1,18 +1,23 @@
 function [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref,varargin)
 %
+% find the indices of paw parts from the list output by DLC
+%
 % INPUTS
 %   bodyparts - cell array containing strings describing each bodypart in
 %       the same order as in the pawTrajectory array
-%   pawPref
+%   pawPref - 'left' or 'right'
 %
 % VARARGS:
-%   mcpstring
-%   pipstring
-%   digitstring
-%   pawdorsumstring
+%   mcpstring - string that defines mcp body part labels from DLC
+%   pipstring - string that defines pip body part labels from DLC
+%   digitstring - string that defines digit tip body part labels from DLC
+%   pawdorsumstring - string that defines paw dorsum lables from DLC
 %
 % OUTPUTS
-%
+%   mcpIdx - indices of mcp's in bodyparts
+%   pipIdx - indices of pip's in bodyparts
+%   digIdx - indices of digit tips in bodyparts
+%   pawDorsumIdx - index of reaching paw dorsum in bodyparts
 
 if iscategorical(pawPref)
     pawPref = char(pawPref);

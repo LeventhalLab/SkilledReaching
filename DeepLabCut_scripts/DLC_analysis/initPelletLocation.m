@@ -23,14 +23,6 @@ function initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,tri
 %   initPellet3D - mean x,y,z coordinates of the pellet averaged over
 %       timepriortoreach before the trigger event
 
-
-% OLD INPUT:
-%   frameTimeLimits - time of initial and final frames with respect to the
-%       trigger event (generally, when the paw is detected by LabView).
-%       Use negative times to indicate times before the trigger event
-%       (e.g., the first entry should be negative if the first frame is
-%       before the trigger event)
-
 maxReprojError = 20;    % if the pellet was misidentified in one of the views, the reprojection error will likely be large
 
 if isnan(triggerFrame)
@@ -59,7 +51,7 @@ end
 preTriggerFrame = triggerFrame - round(time_to_average_prior_to_reach * frameRate);
 if preTriggerFrame < 1
     % every now and then, the trigger is off and the paw actually broke
-    % through the slow very early in the video (usually after
+    % through the slot very early in the video (usually after
     % "bad-reaching" is established). In that case, ignore the pellet and
     % will rely on the average pellet location from the entire session in
     % subsquent analysis steps
@@ -70,10 +62,6 @@ pelletIdx3D = strcmpi(bodyparts,'pellet');
 
 pelletPts = squeeze(pawTrajectory(:,:,pelletIdx3D));
 
-% find frames where the pellet may have been mislabeled - for example,
-% for rat 189, 20171002, some reflections in the mirror view are
-% sometimes identified as the pellet. One way to check is that the
-% reprojection error isn't too big
 invalidPoints = (pellet_reproj_error(:,1) > maxReprojError)' | (pellet_reproj_error(:,2) > maxReprojError)';
 pelletPts(invalidPoints,:) = 0;
 % zeros in the pawTrajectory array represent points where the pellet wasn't

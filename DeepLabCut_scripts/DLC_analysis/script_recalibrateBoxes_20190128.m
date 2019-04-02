@@ -18,10 +18,9 @@ min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190315.csv');
 
-ratInfo = readtable(csvfname);
+ratInfo = readRatInfoTable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
@@ -60,7 +59,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 11 : 11%numRatFolders
+for i_rat = 18:18%4:13%numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -89,14 +88,16 @@ for i_rat = 11 : 11%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 13
-        startSession = 10;
+    if i_rat == 18
+        startSession = 16;
+        endSession = numSessions;
     else
         startSession = 1;
+        endSession = numSessions;
     end
     
     
-    for iSession = startSession : 1 : numSessions
+    for iSession = startSession : endSession
         
         if exist('boxCal_fromSession','var')
             clear boxCal_fromSession;

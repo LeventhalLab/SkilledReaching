@@ -1,30 +1,42 @@
-function [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_mirror_pts, isEstimate] = calc3D_DLC_trajectory(direct_pts, mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
+function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
+    calc3D_DLC_trajectory(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, pawPref, imSize, varargin)
 %
 % INPUTS:
-%   direct_pts, mirror_pts - number of body parts x number of frames x 2
-%       array
+%   final_direct_pts, final_mirror_pts - number of body parts x number of frames x 2
+%       array containing measured direct and mirror points that have been
+%       shifted into their respective ROIs and undistorted
 %   direct_p, mirror_p - number of body parts x number of frames array
 %       containing p-values for how confident DLC is that a body part was
 %       correctly identified
 %   direct_bp, mirror_bp - cell arrays containing lists of body parts
 %       descriptors
-%   ROIs - 3 x 4 array where each row is a [left,top,width,height] vector
-%       defining a rectangular region of interest. First row is the direct
-%       view, second row is the left mirror view, third row is the right
-%       mirror view
-%   boxCal - structure with the following fields:
-%       cameraParams - matlab camera parameters structure
+%   boxCal - box calibration structure with the following fields:
+%       .E - essential matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .F - fundamental matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .Pn - camera matrices assuming the direct view is eye(4,3). 4 x 3 x
+%           numViews array
+%       .P - direct camera matrix (eye(4,3))
+%       .cameraParams
+%       .curDate - YYYYMMDD format date the data were collected
 %   pawPref - 'right' or 'left'
 %   imSize - 2-element vector with frame height x width
 %
+% VARARGS:
+%   maxdistfromneighbor - maximum allowable distance betweeen points that
+%       should be near each other (i.e., on the same paw)
+%
 % OUTPUTS:
-%   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
+%   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFrames x 3
 %       matrix contains x,y,z points for each bodypart
 %   bodyparts - cell array containing strings describing each bodypart in
 %       the same order as in the pawTrajectory array
-%   dist_from_epipole - 
-%   final_direct_pts
-%	final_mirror_pts
+%   final_direct_pts - num bodyparts x num frames x 2 array where each num
+%       frames x 2 subarray contains (x,y) coordinate pairs. This includes
+%       estimates of point locations based on the epipolar projection from
+%       the mirror view
+%	final_mirror_pts - same as final_direct_pts for the mirror view
 %   isEstimate - m x n x 2 array of booleans, where m is the number of
 %       bodyparts, n is the number of frames, and the last index indicates
 %       whether it's the direct (1) or mirror (2) views. True indicates
@@ -33,103 +45,74 @@ function [pawTrajectory, bodyparts, dist_from_epipole, final_direct_pts, final_m
 
 % assume that direct and mirror body part labels are the same
 
-% points_still_distorted = true;   % set to false if vids were undistorted prior to running through deeplabcut
+% allowable distance for adjacent parts of the same paw to be separated. If
+% separation is too great, at least one of the points was probably
+% misidentified
+maxDistFromNeighbor = 60;
+
+for iarg = 1 : 2 : nargin - 9
+    switch lower(varargin{iarg})
+        case 'maxdistfromneighbor'
+            maxDistFromNeighbor = varargin{iarg + 1};
+    end
+end
+
+% intrinsic camera parameters
 cameraParams = boxCal.cameraParams;
 
 switch pawPref
     case 'right'
-        ROIs = ROIs(1:2,:);
         Pn = squeeze(boxCal.Pn(:,:,2));
         scaleFactor = mean(boxCal.scaleFactor(2,:));
-        F = squeeze(boxCal.F(:,:,2));
     case 'left'
-        ROIs = ROIs([1,3],:);
         Pn = squeeze(boxCal.Pn(:,:,3));
         scaleFactor = mean(boxCal.scaleFactor(3,:));
-        F = squeeze(boxCal.F(:,:,3));
 end
 K = cameraParams.IntrinsicMatrix;
 
-numFrames = size(direct_pts, 2);
-
-% maxDistFromEpipole = 10;   % how far away from the epipole can the line
-                           % connecting the matched direct and mirror
-                           % points be before the algorithm says there must
-                           % be a mismatch?
-
-% for iarg = 1 : 2 : nargin - 10
-%     switch lower(varargin{iarg})
-%         case 'maxdistfromepipole'
-%             maxDistFromEpipole = varargin{iarg + 1};
-%     end
-% end
-
-[~,epipole] = isEpipoleInImage(F,imSize);
-final_direct_pts = reconstructUndistortedPoints(direct_pts,ROIs(1,:),boxCal.cameraParams);
-final_mirror_pts = reconstructUndistortedPoints(mirror_pts,ROIs(2,:),boxCal.cameraParams);
-
-[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
-% [final_directPawDorsum_pts, isDirectPawDorsumEstimate] = estimateDirectPawDorsum(direct_pts, mirror_pts, direct_p, mirror_p, direct_bp, mirror_bp, boxCal, ROIs, imSize, pawPref);
-
-% [~,~,~,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
-
-% match body parts between direct and mirror views
-mirror_bpMatch_idx = [];
-direct_bpMatch_idx = [];
-num_direct_bp = length(direct_bp);
-numValid_bp = 0;
-bodyparts = {};
-for i_bp = 1 : num_direct_bp
-    
-    if isempty(strcmpi(mirror_bp, direct_bp{i_bp}))
-        continue;
-    end
-    numValid_bp = numValid_bp + 1;
-    mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
-    direct_bpMatch_idx(numValid_bp) = i_bp;
-    bodyparts{numValid_bp} = direct_bp{i_bp};
+[final_direct_pts,final_mirror_pts,isEstimate] = ...
+    estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
+numFrames = size(final_direct_pts,2);
+if size(invalid_direct,2) > numFrames
+    % sometimes invalid_direct/mirror has more frames than the video
+    % because one video in a session was truncated. If so, use only up to
+    % the number of frames in the current video for the analysis in this
+    % function
+    invalid_direct = invalid_direct(:,1:numFrames);
+    invalid_mirror = invalid_mirror(:,1:numFrames);
 end
 
+[bodyparts,direct_bpMatch_idx,mirror_bpMatch_idx] = matchBodyPartIndices(direct_bp,mirror_bp);
+numValid_bp = length(bodyparts);
+
 pawTrajectory = zeros(numFrames, 3, numValid_bp);
-dist_from_epipole = zeros(numFrames, numValid_bp);
+
 P = eye(4,3);
 for i_bp = 1 : numValid_bp
 
-%     if direct_bpMatch_idx(i_bp) == direct_pawdorsum_idx
-%         cur_direct_pts = final_directPawDorsum_pts;
-%     else
-        cur_direct_pts = squeeze(final_direct_pts(direct_bpMatch_idx(i_bp), :, :));
-        % adjust for the region of interest from which the cropped videos
-        % were pulled
-%         cur_direct_pts(cur_direct_pts==0) = NaN;
-%         cur_direct_pts(:,1) = cur_direct_pts(:,1) + ROIs(1,1) - 1;
-%         cur_direct_pts(:,2) = cur_direct_pts(:,2) + ROIs(1,2) - 1;
-%     end
-    cur_mirror_pts = squeeze(final_mirror_pts(mirror_bpMatch_idx(i_bp), :, :));
-%     cur_mirror_pts(cur_mirror_pts==0) = NaN;
-
-    % adjust for the region of interest from which the cropped videos
-    % were pulled
-%     cur_mirror_pts(:,1) = cur_mirror_pts(:,1) + ROIs(2,1) - 1;
-%     cur_mirror_pts(:,2) = cur_mirror_pts(:,2) + ROIs(2,2) - 1;
+    % only make calculations for points that are valid
+    valid_direct = ~invalid_direct(i_bp,:);valid_mirror = ~invalid_mirror(i_bp,:);
+    estimate_direct = squeeze(isEstimate(i_bp,:,1));estimate_mirror = squeeze(isEstimate(i_bp,:,2));
     
-    % undistort points
-%     if points_still_distorted
-%         for ii = 1 : size(cur_direct_pts,1)
-%             if ~isnan(cur_direct_pts(ii,1))
-%                 if direct_bpMatch_idx(i_bp) ~= direct_pawdorsum_idx   % already undistorted if using paw dorsum estimates
-%                     cur_direct_pts(ii,:) = undistortPoints(cur_direct_pts(ii,:),cameraParams);
-%                 end
-%             end
-%             if ~isnan(cur_mirror_pts(ii,1))
-%                 cur_mirror_pts(ii,:) = undistortPoints(cur_mirror_pts(ii,:),cameraParams);
-%             end
-%         end
-%     end
-        
+    validPoints = (valid_direct & valid_mirror) | ...
+                  (valid_direct & estimate_mirror) | ...
+                  (valid_mirror & estimate_direct);
     
-    dist_from_epipole(:,i_bp) = distanceToLine(cur_direct_pts,cur_mirror_pts,epipole);
+	% if there are no validPoints for this bodypart, skip this bodypart
+    if ~any(validPoints)
+        continue;
+    end
+    
+    cur_direct_pts = squeeze(final_direct_pts(direct_bpMatch_idx(i_bp),validPoints, :));
+    cur_mirror_pts = squeeze(final_mirror_pts(mirror_bpMatch_idx(i_bp),validPoints, :));
+    
+    if sum(validPoints) == 1    % only one validPoint, cur_pts arrays come out as column vectors instead of row vectors
+        cur_direct_pts = cur_direct_pts';
+        cur_mirror_pts = cur_mirror_pts';
+    end
 
+    % convert to homogeneous, then normalized points. see Hartley and
+    % Zisserman's textbook on computer stereo vision
     direct_hom = [cur_direct_pts, ones(size(cur_direct_pts,1),1)];
     direct_norm = (K' \ direct_hom')';
     direct_norm = bsxfun(@rdivide,direct_norm(:,1:2),direct_norm(:,3));
@@ -140,5 +123,5 @@ for i_bp = 1 : numValid_bp
 
     [wpts, ~]  = triangulate_DL(direct_norm, mirror_norm, P, Pn);
     
-    pawTrajectory(:, :, i_bp) = wpts * scaleFactor;
+    pawTrajectory(validPoints, :, i_bp) = wpts * scaleFactor;
 end

@@ -1,9 +1,14 @@
-function [h_fig,h_axes,h_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle,mean_session_digit_trajectories,pawOrientationTrajectories,meanOrientations,mean_MRL,apertureTrajectories,endApertures,meanApertures,varApertures,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,curSession,curSessionType,varargin)
+function [h_fig,h_axes,h_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle,mean_session_digit_trajectories,pawOrientationTrajectories,meanOrientations,mean_MRL,apertureTrajectories,endApertures,meanApertures,varApertures,mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,curSession,curSessionType,thisRatInfo,varargin)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
 z_lim = [-5 50];
 apertureLims = [0 15];
+
+virus = thisRatInfo.Virus;
+if iscell(virus)
+    virus = virus{1};
+end
 % to plot:
 %   mean distance from mean trajectory at each point for all, correct, no
 %       pellet, and other trials (along with n)
@@ -33,7 +38,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-for iarg = 1 : 2 : nargin - 21
+for iarg = 1 : 2 : nargin - 22
     switch lower(varargin{iarg})
         case 'var_lim'
             var_lim = varargin{iarg + 1};
@@ -129,8 +134,8 @@ for iFig = 1 : length(h_fig)
     h_figAxis(iFig) = createFigAxes(h_fig(iFig));
 end
 
-textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block', ...
-    curSession, curSessionType.type, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock);
+textString{1} = sprintf('%s session summary; %s (%s on score sheet), day %d, %d days left in block, Virus: %s', ...
+    curSession, curSessionType.type, curSessionType.typeFromScoreSheet, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock,virus);
 textString{2} = 'rows 2-4: mean digit trajectories for MCP, PIP, tips in x, y, z';
 textString{3} = '';
 axes(h_figAxis(1));

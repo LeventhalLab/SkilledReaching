@@ -1,17 +1,49 @@
-function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_ud_points(direct_pts_ud, mirror_pts_ud, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, frameSize, pawPref,varargin)
+function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_ud_points(direct_pts_ud, mirror_pts_ud, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,varargin)
 %
 % estimate the location of the paw dorsum in the direct view given its
 % location in the mirror view and the locations of associated points
-
-% first find all valid direct view paw dorsum points
+%
+% INPUTS:
+%   direct_pts_ud - m x n x 2 array where m is the number of body parts and
+%       n is the number of frames. Each (x,y) pair is an undistorted point,
+%       where the point (1,1) is the upper left corner of the full frame
+%       including mirror and direct views
+%   mirror_pts_ud - same as direct_pts_ud for the mirror view
+%   invalid_direct - num bodyparts x numFrames boolean array containing
+%       whether each bodypart identified in each frame is "valid" (false)
+%       or "invalid" (true) (i.e., low probability, not aligned with other
+%       view)
+%   invalid_mirror - same as invalid_direct for the mirror view
+%   direct_bp - cell array containing the bodypart labels for the direct
+%       view (from DLC)
+%   mirror_bp - same as direct_bp for the mirror view
+%   boxCal - box calibration structure with the following fields:
+%       .E - essential matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .F - fundamental matrix (3 x 3 x numViews) array where numViews is
+%           the number of different mirror views (3 for now)
+%       .Pn - camera matrices assuming the direct view is eye(4,3). 4 x 3 x
+%           numViews array
+%       .P - direct camera matrix (eye(4,3))
+%       .cameraParams
+%       .curDate - YYYYMMDD format date the data were collected
+%   imSize - 2-element vector with frame height x width
+%
+% OUTPUTS:
+%   final_directPawDorsum_pts - numFrames x 2 array where each row is an
+%       (x,y) pair with updates locations of the paw dorsum in the direct
+%       view
+%   isEstimate - column vector with length numFrames indicates whether each
+%       direct paw dorsum coordinate in final_directPawDorsum_pts was
+%       estimated based on the location in the mirror view (true) or was
+%       directly determined by DLC (false)
 
 % look at all invalid direct view points
 % 1) is the mirror view point valid? If so, can calculate an epipolar line
 % along which the direct view paw dorsum must lie
 %
-% 2) which digit points are valid?
-
-% figure out the index of the paw dorsum in the direct and mirror views
+% 2) which digit points are valid? can use them to figure out the general
+% vicinity of where the paw dorsum should be
 
 maxDistFromNeighbor = 60;  % how far the estimated point is allowed to be from its nearest identified neighbor
 
@@ -67,26 +99,38 @@ for iFrame = 1 : numFrames
         % first look for valid mcp's, then valid pip's, then valid digit
         % tips
         foundValidPoints = false;
-        validTest = ~invalid_direct(direct_mcp_idx,iFrame);
-        if any(validTest)   % at least one mcp was identified
-            digitPts = squeeze(direct_pts_ud(direct_mcp_idx(validTest),iFrame,:));
+
+        validMCP = ~invalid_direct(direct_mcp_idx,iFrame);
+        validPIP = ~invalid_direct(direct_pip_idx,iFrame);
+        validDigits = ~invalid_direct(direct_digit_idx,iFrame);
+        if (validMCP(2) && validMCP(3)) || (validMCP(1) && validMCP(4))
+            digitPts = squeeze(direct_pts_ud(direct_mcp_idx,iFrame,:));
+            validPts = validMCP;
+            foundValidPoints = true;
+        elseif (validPIP(2) && validPIP(3)) || (validPIP(1) && validPIP(4))
+            digitPts = squeeze(direct_pts_ud(direct_pip_idx,iFrame,:));
+            validPts = validPIP;
+            foundValidPoints = true;
+        elseif (validDigits(2) && validDigits(3)) || (validDigits(1) && validDigits(4))
+            digitPts = squeeze(direct_pts_ud(direct_digit_idx,iFrame,:));
+            validPts = validDigits;
+            foundValidPoints = true;
+        elseif any(validMCP)
+            digitPts = squeeze(direct_pts_ud(direct_mcp_idx,iFrame,:));
+            validPts = validMCP;
+            foundValidPoints = true;
+        elseif any(validPIP)
+            digitPts = squeeze(direct_pts_ud(direct_pip_idx,iFrame,:));
+            validPts = validPIP;
+            foundValidPoints = true;
+        elseif any(validDigits)
+            digitPts = squeeze(direct_pts_ud(direct_digit_idx,iFrame,:));
+            validPts = validDigits;
             foundValidPoints = true;
         end
-        if ~foundValidPoints
-            validTest = ~invalid_direct(direct_pip_idx,iFrame);
-            if any(validTest)   % at least one pip was identified
-                digitPts = squeeze(direct_pts_ud(direct_pip_idx(validTest),iFrame,:));
-                foundValidPoints = true;
-            end
-        end
-        if ~foundValidPoints
-            validTest = ~invalid_direct(direct_digit_idx,iFrame);
-            if any(validTest)    % at least one digit tip was identified
-                digitPts = squeeze(direct_pts_ud(direct_digit_idx(validTest),iFrame,:));
-                foundValidPoints = true;
-            end
-        end
         if foundValidPoints && ~invalid_mirrorPawDorsum(iFrame)
+            digitsMidpoint = findDigitsMidpoint(digitPts,validPts);
+        
             % does the epipolar line intersect the region bounded by the
             % identified points?
             if size(validDirectPoints,1) == 1    % only one valid point in the direct view
@@ -100,33 +144,22 @@ for iFrame = 1 : numFrames
                 intersectPoints = lineConvexHullIntersect(epiLine,boundary_pts);
             end
             
-            epiPts = lineToBorderPoints(epiLine, frameSize);
+            epiPts = lineToBorderPoints(epiLine, imSize);
             epiPts = [epiPts(1:2);epiPts(3:4)];
-
-            if iscolumn(digitPts)
-                digitPts = digitPts';
-            end
-%             if size(digitPts,1) == numel(digitPts)
-%                 % if digitPts is a column vector, convert to row vector
-%                 digitPts = digitPts';
-%             end
-                    
-            % find index of digitPts that is closest to the epipolar line
-            [nndist, nnidx] = findNearestPointToLine(epiPts, digitPts);
                 
             if isempty(intersectPoints)
-                % find the knuckle closest to the epipolar line
+                
+                [np,d] = findNearestPointOnLine(epiPts,digitsMidpoint);
+                
+                if d < maxDistFromNeighbor   % if the estimated point is too far from identified points, ignore it
+                    % find the point on the epipolar line closest to the
+                    % digits midpoint
 
-                if nndist < maxDistFromNeighbor   % if the estimated point is too far from identified points, ignore it
-                    % find the point on the epipolar line closest to any of the
-                    % identified digit points
-
-                    np = findNearestPointOnLine(epiPts,digitPts(nnidx,:));
                     final_directPawDorsum_pts(iFrame,:) = np;
                     isEstimate(iFrame) = true;
                 end
             else
-                [nndist2,nnidx2] = findNearestNeighbor(digitPts(nnidx,:), intersectPoints);
+                [nndist2,nnidx2] = findNearestNeighbor(digitsMidpoint, intersectPoints);
                 if nndist2 < maxDistFromNeighbor
                     np = intersectPoints(nnidx2,:);
                     final_directPawDorsum_pts(iFrame,:) = np;

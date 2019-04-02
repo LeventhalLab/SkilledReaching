@@ -21,7 +21,13 @@ all_pt_matList = dir('Grid*_all.mat');
 P = eye(4,3);
 for iMat = 1 : length(all_pt_matList)
     
+    if exist('pointsStillDistorted','var')
+        clear pointsStillDistorted
+    end
     load(all_pt_matList(iMat).name);
+    if ~any(strcmp({'20180303'}, curDate))
+        continue;
+    end
     fprintf('working on %s\n',curDate);
     % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each
     %   totalNumPts x 2 subarray contains (x,y) points for each matched
@@ -38,6 +44,7 @@ for iMat = 1 : length(all_pt_matList)
     E = NaN(3,3,numBoards);
     Pn = NaN(4,3,numBoards);
     scaleFactor = NaN(numBoards, num_img);
+    
     for iBoard = 1 : size(allMatchedPoints, 4)
         mp_direct = squeeze(allMatchedPoints(:,:,1,iBoard));
         mp_mirror = squeeze(allMatchedPoints(:,:,2,iBoard));
@@ -45,6 +52,28 @@ for iMat = 1 : length(all_pt_matList)
         valid_mp_direct = reshape(valid_mp_direct,size(valid_mp_direct,1)/2,2);
         valid_mp_mirror = mp_mirror(~isnan(mp_mirror));
         valid_mp_mirror = reshape(valid_mp_mirror,size(valid_mp_mirror,1)/2,2);
+        
+        if exist('pointsStillDistorted','var')    % this was added into the all_pt_matList files on 20190301 so that
+                                                  % point matching could be
+                                                  % performed prior to
+                                                  % undistortation; now
+                                                  % have to undistort here
+            if pointsStillDistorted  % points not undistorted yet
+                valid_mp_direct = undistortPoints(valid_mp_direct,cameraParams);
+                valid_mp_mirror = undistortPoints(valid_mp_mirror,cameraParams);
+                
+                for iImg = 1 : num_img
+                    curDirectChecks = squeeze(directChecks(:,:,iBoard,iImg));
+                    curMirrorChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
+                    
+                    curDirectChecks_ud = undistortPoints(curDirectChecks,cameraParams);
+                    curMirrorChecks_ud = undistortPoints(curMirrorChecks,cameraParams);
+                    
+                    directChecks(:,:,iBoard,iImg) = curDirectChecks_ud;
+                    mirrorChecks(:,:,iBoard,iImg) = curMirrorChecks_ud;
+                end
+            end
+        end
 %         if any(isnan(mp_direct(:))) || any(isnan(mp_mirror(:)))
         if isempty(valid_mp_direct) || isempty(valid_mp_mirror)
             % either didn't have marks for these images or the marks
