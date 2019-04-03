@@ -1,5 +1,4 @@
-function [all_reachEndPoints,numReaches_byPart,numReaches,reachFrames,reach_endPoints] = ...
-    collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,validTrialTypes,all_trialOutcomes,digIdx)
+function [all_reachEndPoints,numReaches_byPart,numReaches,reachFrames,reach_endPoints] = collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,validTrialTypes,all_trialOutcomes,digIdx)
 %UNTITLED5 Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -58,46 +57,17 @@ for iType = 1 : numTrialTypes_to_analyze
 %     
 end
 
-[numReaches,reachFrames,reach_endPoints] = assignOverallReachEndPoints(all_reachFrameIdx,allTrajectories,digIdx,minFrameSep);
-
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [numReaches,reachFrames,reach_endPoints] = assignOverallReachEndPoints(all_reachFrameIdx,allTrajectories,digIdx,minFrameSep)
+function [numReaches,reachFrames,reach_endPoints] = assignOverallReachEndPoints(all_reachFrameIdx,allTrajectories,digIdx)
 
 numTrials = length(all_reachFrameIdx);
 
 digitTipIdx = digIdx(2:3);    % 2nd and 3rd digit tips
-numReaches = zeros(numTrials,1);
-reach_endPoints = cell(numTrials,1);
-reachFrames = cell(numTrials,1);
 for iTrial = 1 : numTrials
     
     % find all frames in which either the digit 2 tip or digit 3 tip was
     % identified as executing a reach
     dig2_reachFrames = all_reachFrameIdx{iTrial}{digitTipIdx(1)};
-    dig3_reachFrames = all_reachFrameIdx{iTrial}{digitTipIdx(2)};
-    
-    if isempty(dig2_reachFrames)
-        trial_reachFrames = dig3_reachFrames;
-    elseif isempty(dig3_reachFrames)
-        trial_reachFrames = dig2_reachFrames;
-    else
-        trial_reachFrames = [all_reachFrameIdx{iTrial}{digitTipIdx(1)};all_reachFrameIdx{iTrial}{digitTipIdx(2)}];
-    end
-    
-    % make sure there aren't any reachFrames too close together
-    reachFrames{iTrial} = removeNearbyElementsFromArray(trial_reachFrames, minFrameSep);
-    numReaches(iTrial) = length(reachFrames{iTrial});
-    
-    reach_endPoints{iTrial} = zeros(2,3,numReaches(iTrial));
-    
-    for iReach = 1 : numReaches(iTrial)
-        for iDig = 1 : 2
-            reach_endPoints{iTrial}(iDig,:,iReach) = squeeze(allTrajectories(reachFrames{iTrial}(iReach),:,digIdx(iDig),iTrial));
-        end
-    end
-end
-end
-    
-    
+    reachFrames = [all_reachFrameIdx{iTrial}{digitTipIdx(1)};all_reachFrameIdx{iTrial}{digitTipIdx(2)}];

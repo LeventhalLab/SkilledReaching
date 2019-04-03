@@ -1,4 +1,4 @@
-function [h_fig,h_axes,h_figAxis] = plot_multiReachInfo(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,validTypeNames,curSession,curSessionType,varargin)
+function [h_fig,h_axes,h_figAxis] = plot_multiReachInfo(reachFrames,reach_endPoints,bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,trialTypeIdx,validTypeNames,curSession,curSessionType,trialTypeColors,varargin)
 
 % to plot:
 %   
@@ -50,12 +50,26 @@ end
 
 % first row, plot 1 - number of reaches for each trial. color code by trial
 % reported outcome
-
+axes(h_axes{1}(1,1));
+for iTrial = 1 : 
+for iType = 2 : numTrialTypes_to_analyze
+    if trialTypeIdx(iTrial,iType)
+        plotColor = trialTypeColors{iType};
+        break;
+    else
+        plotColor = 'y';   % if not one of the trials we defined at the top of the script
+    end
+    plotTrialNumbers = trialNumbers(trialTypeIdx(:,iType),1);
+    
+    for iTrial = 1 : length(plotTrialNumbers)
+        
+        scatter(plotTrialNumbers(iTrial),
+end
 
 
 
 % first row, plot 2 - all reach endpoints for each trial
-axes(h_axes{1}(1,1));
+axes(h_axes{1}(1,2));
 plot(trialNumbers(:,2),all_firstPawDorsumFrame);
 % title('first paw dorsum frame')
 % set(gca,'ylim',pawFrameLim);
@@ -169,4 +183,10 @@ axes(h_figAxis(1));
 text(figProps.leftMargin,figProps.height-0.75,textString,'units','centimeters','interpreter','none');
 
 end
-        
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function plotCols = assignTrialTypeColor(trialTypeIdx)
+
+end

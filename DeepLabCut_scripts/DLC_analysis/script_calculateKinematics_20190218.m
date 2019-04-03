@@ -124,7 +124,7 @@ for i_rat = 4:15%numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 4
+    if i_rat == 6
         startSession = 1;
         endSession = numSessions;
     else

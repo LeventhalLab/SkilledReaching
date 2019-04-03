@@ -220,9 +220,8 @@ for i_rat = 4:5%17:numRatFolders
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
         
         [first_reachEndPoints{iSession},distFromPellet{iSession}] = collectFirstReachEndPoints(all_endPts,validTrialTypes,all_trialOutcomes);
-        [all_reachEndPoints{iSession},numReaches_byPart{iSession},numReaches{iSession},reachFrames{iSession},reach_endPoints{iSession}] = ...
-            collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,validTrialTypes,all_trialOutcomes,digIdx);
-
+        [all_reachEndPoints{iSession},numReaches_byPart{iSession},numReaches{iSession},reachFrames{iSession},reach_endPoints{iSession}] = collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,validTrialTypes,all_trialOutcomes,digIdx);
+[all_reachEndPoints,numReaches_byPart,numReaches,reachFrames,reach_endPoints]
         
         trialTypeIdx = false(length(all_trialOutcomes),numTrialTypes_to_analyze);
         for iType = 1 : numTrialTypes_to_analyze
