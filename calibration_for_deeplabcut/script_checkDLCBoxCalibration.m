@@ -1,15 +1,12 @@
 % script to check if calibration points are appropriately triangulated
 
-% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Documents/deeplabcut images/cal images to review';
-calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+allParams = setParams;
 
-cd(calImageDir);
 colList = 'rgb';
-matList = dir('SR_boxCalibration_*.mat');
+matList = dir([allParams.calImageDir 'boxCalibration_*.mat']);
 P = eye(4,3);
 % close all
+
 for iMat = 1 : length(matList)
     
     load(matList(iMat).name);

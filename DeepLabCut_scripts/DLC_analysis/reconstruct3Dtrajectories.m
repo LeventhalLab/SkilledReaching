@@ -10,7 +10,7 @@ repeatCalculations = true;   % flag for whether to skip if .mat files
 
 % file containing intrinsic camera parameters. This can be obtained using
 % Matlab's computer vision toolbox
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+camParamFile = '/home/kkrista/Documents/SkilledReaching/cameraParameters_box1.mat';
 
 % parameter for calc3D_DLC_trajectory
 maxDistFromNeighbor = 40;   % maximum distance an estimated point can be from its neighbor
@@ -26,7 +26,7 @@ min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
 % master directory containing the deeplabcut output
-labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/media/kkrista/KRISTAEHD/DLCSR/rightPaw_Scored_Analyzed';
 % ANTICIPATED DIRECTORY STRUCTURE:
 %  For each rat, a folder called ratID (i.e., 'R0100'). Each of these
 %  direcories should start with 'R' - that's what the code looks for.
@@ -38,25 +38,25 @@ labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 
 % directory containing a .csv file, which contains a table of information
 % about each rat (paw preference, training dates, etc.)
-xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
+% xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+% csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
 
 % directory containing the box calibration files
-% ('SR_boxCalibration_DATE.mat')
-calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+% ('boxCalibration_box#_DATE.mat')
+calImageDir = '/home/kkrista/Documents/SkilledReaching/CalCube_imgs/box1/boxCalibration/';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
 % change this if the videos were cropped at different coordinates; these
 % are the coordinates of the cropped videos fed into deeplabcut
-vidROI = [750,450,550,550;
-          1,450,450,400;
-          1650,435,390,400];
+vidROI = [820, 1268, 20, 952;
+          282, 830, 220, 922;
+          1272, 1760, 162, 976];
 triggerTime = 1;    % seconds, time at which video trigger should have occurred during acquisition
-frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
-frameRate = 300;
+frameTimeLimits = [-1,15];    % time around trigger to extract frames
+frameRate = 59.995;
 
-frameSize = [1024,2040];
+frameSize = [1080,1920];
 % would be nice to have these parameters stored with DLC output so they can
 % be read in directly. Someday...
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -69,34 +69,35 @@ numViews = length(vidView);
 
 
 % read in the table of rat information.
-ratInfo = readtable(csvfname);
-ratInfo_IDs = [ratInfo.ratID];
+% ratInfo = readtable(csvfname);
+% ratInfo_IDs = [ratInfo.ratID];
 
 % load the intrinsic camera parameters
 load(camParamFile);
 
 cd(labeledBodypartsFolder)
-ratFolders = dir('R*');
-numRatFolders = length(ratFolders);
+subFolders = dir('M*');
+numSubFolders = length(subFolders);
 
 % find the list of calibration files
 cd(calImageDir);
-calFileList = dir('SR_boxCalibration_*.mat');
+calFileList = dir('boxCalibration_*.mat');
 calDateList = cell(1,length(calFileList));
 calDateNums = zeros(length(calFileList),1);
 for iFile = 1 : length(calFileList)
-    C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
-    calDateList{iFile} = C{1};
+    C = textscan(calFileList(iFile).name,'boxCalibration_box%1c_%8c.mat');
+    calDateList{iFile} = C{end};
+    boxNum(iFile)=C{1};
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
 % change this loop depending on which rats you want to process
-for i_rat = 1:numRatFolders
+for i_sub = 1:numSubFolders
 
-    ratID = ratFolders(i_rat).name;
-    ratIDnum = str2double(ratID(2:end));
+    subID = subFolders(i_sub).name;
+    subIDnum = str2double(subID(2:end));
     
-    ratInfo_idx = find(ratInfo_IDs == ratIDnum);
+    ratInfo_idx = find(ratInfo_IDs == subIDnum);
     if isempty(ratInfo_idx)
         error('no entry in ratInfo structure for rat %d\n',C{1});
     end
@@ -111,18 +112,19 @@ for i_rat = 1:numRatFolders
         pawPref = thisRatInfo.pawPref;
     end
     
-    ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    ratRootFolder = fullfile(labeledBodypartsFolder,subID);
     cd(ratRootFolder);
     
-    sessionDirectories = listFolders([ratID '_2*']);
+    sessionDirectories = dir;
+    sessionDirectories = sessionDirectories(3:end);
     numSessions = length(sessionDirectories);
     
     for iSession = 1 : numSessions
         
-        C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
+        C = textscan(sessionDirectories(iSession).name,[subID '_%8c']);
         sessionDate = C{1};
         
-        fprintf('working on session %s_%s\n',ratID,sessionDate);
+        fprintf('working on session %s_%s\n',subID,sessionDate);
         
         % find the calibration file for this date
         cd(calImageDir);
@@ -135,7 +137,7 @@ for i_rat = 1:numRatFolders
         lastValidCalDate = min(dateDiff(dateDiff >= 0));
         calFileIdx = find(dateDiff == lastValidCalDate);
 
-        calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
+        calibrationFileName = ['boxCalibration_box' boxNum '_' calDateList{calFileIdx} '.mat'];
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else
@@ -191,7 +193,7 @@ for i_rat = 1:numRatFolders
                 extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
             foundMatch = false;
             for i_directcsv = 1 : numMarkedVids
-                if mirror_ratID == ratIDnum && ...      % match ratID
+                if mirror_ratID == subIDnum && ...      % match ratID
                    strcmp(mirror_vidDate, sessionDate) && ...  % match date
                    strcmp(mirror_vidTime, directVidTime{i_directcsv}) && ...  % match time
                    mirror_vidNum == directVidNum(i_directcsv)                % match vid number
