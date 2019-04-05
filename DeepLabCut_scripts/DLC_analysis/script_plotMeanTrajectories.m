@@ -283,25 +283,36 @@ for i_rat = 4:5%17:numRatFolders
         PL_summary(iSession) = collectTrajectoryLengths(trajectoryLengths);
         
         if ~skipSessionSummaryPlots
-            [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,reachEndPoints{iSession},bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),...
-                'var_lim',var_lim,'pawframelim',pawFrameLim);
-            [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle{iSession},mean_session_digit_trajectories,pawOrientationTrajectories{iSession},meanOrientations{iSession},mean_MRL{iSession},apertureTrajectories{iSession},endApertures{iSession},meanApertures{iSession},varApertures{iSession},mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),thisRatInfo);
-            [session_h_fig,session_h_axes,session_h_figAxis] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx,...
-                sessionDirectories{iSession},sessionType(allSessionIdx),validTypeNames,thisRatInfo);
+%             [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,first_reachEndPoints{iSession},bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),...
+%                 'var_lim',var_lim,'pawframelim',pawFrameLim);
+%             [h_digitSummaryFigs,h_digitSummaryAxes,h_digitSummary_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_endAngle{iSession},mean_session_digit_trajectories,pawOrientationTrajectories{iSession},meanOrientations{iSession},mean_MRL{iSession},apertureTrajectories{iSession},endApertures{iSession},meanApertures{iSession},varApertures{iSession},mean_xyz_from_dig_session_trajectories,mean_euc_from_dig_session_trajectories,bodyparts,pawPref,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),thisRatInfo);
+%             [session_h_fig,session_h_axes,session_h_figAxis] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx,...
+%                 sessionDirectories{iSession},sessionType(allSessionIdx),validTypeNames,thisRatInfo);
+            [h_multiReachFig,h_multiReachAxes,h_multiReachFigAxis] = ...
+                plot_multiReachInfo(reachFrames{iSession},reach_endPoints{iSession},bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,trialTypeIdx,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),trialTypeColors);
 
             pdfName_sessionTrials = sprintf('%s_3dtrajectories_summary.pdf',sessionDirectories{iSession});
+            figName_sessionTrials = sprintf('%s_3dtrajectories_summary.fig',sessionDirectories{iSession});
             pdfName_sessionTrials = fullfile(ratRootFolder,pdfName_sessionTrials);
+            figName_sessionTrials = fullfile(ratRootFolder,figName_sessionTrials);
             print(session_h_fig,pdfName_sessionTrials,'-dpdf');
+            savefig(session_h_fig,figName_sessionTrials);
             close(session_h_fig);
 
             pdfName_sessionSummary = sprintf('%s_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionSummary = fullfile(ratRootFolder,pdfName_sessionSummary);
+            figName_sessionSummary = sprintf('%s_summary.fig',sessionDirectories{iSession});
+            figName_sessionSummary = fullfile(ratRootFolder,figName_sessionSummary);
             print(h_summaryFigs(1),pdfName_sessionSummary,'-dpdf');
+            savefig(h_summaryFigs(1),figName_sessionSummary);
             close(h_summaryFigs(1));
 
             pdfName_sessionDigitSummary = sprintf('%s_digits_summary.pdf',sessionDirectories{iSession});
             pdfName_sessionDigitSummary = fullfile(ratRootFolder,pdfName_sessionDigitSummary);
+            figName_sessionDigitSummary = sprintf('%s_digits_summary.fig',sessionDirectories{iSession});
+            figName_sessionDigitSummary = fullfile(ratRootFolder,figName_sessionDigitSummary);
             print(h_digitSummaryFigs(1),pdfName_sessionDigitSummary,'-dpdf');
+            savefig(h_digitSummaryFigs(1),figName_sessionDigitSummary);
             close(h_digitSummaryFigs(1));    
         end
             

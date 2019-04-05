@@ -131,6 +131,7 @@ if isnan(paw_through_slot_frame)
     return
 end
 
+numFrames = size(pawTrajectory,1);
 % find the first local minimum in the z-dimension after reach onset
 xyz_coords = pawTrajectory(:,:,allPawPartsIdx);
 xyz_smooth = zeros(size(xyz_coords));
@@ -138,12 +139,15 @@ xyz_smooth = zeros(size(xyz_coords));
 % to use just the mirror frame?), and exclude them
 pawPartEstimates = squeeze(isEstimate(allPawPartsIdx,:,1)) | squeeze(isEstimate(allPawPartsIdx,:,2));
 for iPart = 1 : numPawParts
-    if ~allPawPartsIdx(iPart) == pawDorsumIdx
+    if ~(allPawPartsIdx(iPart) == pawDorsumIdx)
         % allow the paw dorsum to be an estimate
         xyz_coords(pawPartEstimates(iPart,:)',:,iPart) = NaN;
     end
     xyz_part = squeeze(xyz_coords(:,:,iPart));
     xyz_smooth(:,:,iPart) = smoothdata(xyz_part,1,'movmean',smoothSize);
+%     for iAxis = 1 : 3
+%         xyz_smooth(:,iAxis,iPart) = pchip(1:numFrames,squeeze(xyz_part(:,iAxis)),1:numFrames);
+%     end
 end
 z_smooth = squeeze(xyz_smooth(:,3,:));
 y_smooth = squeeze(xyz_smooth(:,2,:));
@@ -358,9 +362,9 @@ for i_possReach = 1 : num_poss_reaches
     % clearly NOT a reach.
     y_diff = diff(y(poss_reach_idx(i_possReach)-5:poss_reach_idx(i_possReach)));
 
-    % if the paw part is moving up AND there are no points where it was
+    % if the paw part is moving up quickly AND there are no points where it was
     % descending quickly, throw it out
-    if any(y_diff < 0) && ~any(y_diff > 0.4)
+    if any(y_diff < -0.4) && ~any(y_diff > 0.4)
         continue;
     end
     % if the paw part retracted at least min_z_diff_pre_reach, count it as
