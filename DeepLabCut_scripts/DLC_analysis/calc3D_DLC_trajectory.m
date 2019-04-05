@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
+function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts] = ...
     calc3D_DLC_trajectory(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, pawPref, imSize, varargin)
 %
 % INPUTS:
@@ -70,8 +70,9 @@ switch pawPref
 end
 K = cameraParams.IntrinsicMatrix;
 
-[final_direct_pts,final_mirror_pts,isEstimate] = ...
-    estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
+% [final_direct_pts,final_mirror_pts,isEstimate] = ...
+%     estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
+
 numFrames = size(final_direct_pts,2);
 if size(invalid_direct,2) > numFrames
     % sometimes invalid_direct/mirror has more frames than the video
@@ -92,11 +93,11 @@ for i_bp = 1 : numValid_bp
 
     % only make calculations for points that are valid
     valid_direct = ~invalid_direct(i_bp,:);valid_mirror = ~invalid_mirror(i_bp,:);
-    estimate_direct = squeeze(isEstimate(i_bp,:,1));estimate_mirror = squeeze(isEstimate(i_bp,:,2));
+%     estimate_direct = squeeze(isEstimate(i_bp,:,1));estimate_mirror = squeeze(isEstimate(i_bp,:,2));
     
-    validPoints = (valid_direct & valid_mirror) | ...
-                  (valid_direct & estimate_mirror) | ...
-                  (valid_mirror & estimate_direct);
+    validPoints = (valid_direct & valid_mirror); %| ...
+%                   (valid_direct & estimate_mirror) | ...
+%                   (valid_mirror & estimate_direct);
     
 	% if there are no validPoints for this bodypart, skip this bodypart
     if ~any(validPoints)
