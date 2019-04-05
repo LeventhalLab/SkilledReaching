@@ -72,8 +72,51 @@ end
 
 
 
-% first row, plot 2 - all reach endpoints for each trial
+% first row, plot 2 - all reach endpoints for each trial, digit 2
 axes(h_axes{1}(1,2));
+hold on
+for iTrial = 1 : numTrials
+    for iType = 2 : numTrialTypes_to_analyze
+        if trialTypeIdx(iTrial,iType)
+            plotColor = trialTypeColors{iType};
+            break;
+        else
+            plotColor = 'y';   % if not one of the trials we defined at the top of the script
+        end
+    end
+    curTrialNumReaches = length(reachFrames{iTrial});
+    toPlot = squeeze(reach_endPoints{iTrial}(1,3,:));
+    plot(1:curTrialNumReaches,toPlot,'marker','o','color',plotColor,'markerfacecolor',plotColor);
+    
+end
+title('digit 2 z')
+xlabel('reach number')
+
+
+% first row, plot 2 - all reach endpoints for each trial, digit 2
+axes(h_axes{1}(1,3));
+hold on
+for iTrial = 1 : numTrials
+    for iType = 2 : numTrialTypes_to_analyze
+        if trialTypeIdx(iTrial,iType)
+            plotColor = trialTypeColors{iType};
+            break;
+        else
+            plotColor = 'y';   % if not one of the trials we defined at the top of the script
+        end
+    end
+    curTrialNumReaches = length(reachFrames{iTrial});
+    toPlot = squeeze(reach_endPoints{iTrial}(2,3,:));
+    plot(1:curTrialNumReaches,toPlot,'marker','o','color',plotColor,'markerfacecolor',plotColor);
+    
+end
+title('digit 3 z')
+xlabel('reach number')
+
+
+
+
+
 plot(trialNumbers(:,2),all_firstPawDorsumFrame);
 % title('first paw dorsum frame')
 % set(gca,'ylim',pawFrameLim);

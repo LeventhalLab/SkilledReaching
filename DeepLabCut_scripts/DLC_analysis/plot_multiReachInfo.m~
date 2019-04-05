@@ -48,27 +48,45 @@ end
 [h_fig(1),h_axes{1}] = createFigPanels5(figProps);
 % [h_fig(2),h_axes{2}] = createFigPanels5(figProps);
 
-% first row, plot 1 - number of reaches for each trial. color code by trial
+numTrials = size(trialNumbers,1);
+% first row, plot 1 - reach indices for each trial. color code by trial
 % reported outcome
 axes(h_axes{1}(1,1));
-for iType = 2 : numTrialTypes_to_analyze
-    if trialTypeIdx(iTrial,iType)
-        plotColor = trialTypeColors{iType};
-        break;
-    else
-        plotColor = 'y';   % if not one of the trials we defined at the top of the script
+hold on
+for iTrial = 1 : numTrials
+    for iType = 2 : numTrialTypes_to_analyze
+        if trialTypeIdx(iTrial,iType)
+            plotColor = trialTypeColors{iType};
+            break;
+        else
+            plotColor = 'y';   % if not one of the trials we defined at the top of the script
+        end
     end
-    plotTrialNumbers = trialNumbers(trialTypeIdx(:,iType),1);
+    trialNum = trialNumbers(iTrial,2);
+    curTrialNumReaches = length(reachFrames{iTrial});
+    trialNum = ones(curTrialNumReaches,1) * trialNum;
+
+    scatter(trialNum,reachFrames{iTrial},36,plotColor);
     
-    for iTrial = 1 : length(plotTrialNumbers)
-        
-        scatter(plotTrialNumb
 end
 
 
 
 % first row, plot 2 - all reach endpoints for each trial
 axes(h_axes{1}(1,2));
+for iTrial = 1 : numTrials
+    for iType = 2 : numTrialTypes_to_analyze
+        if trialTypeIdx(iTrial,iType)
+            plotColor = trialTypeColors{iType};
+            break;
+        else
+            plotColor = 'y';   % if not one of the trials we defined at the top of the script
+        end
+    end
+    curTrialNumReaches = length(reachFrames{iTrial});
+    toPlot = reach_endPoints{iTrial}
+    plot(1:curTrialNumReaches,
+end
 plot(trialNumbers(:,2),all_firstPawDorsumFrame);
 % title('first paw dorsum frame')
 % set(gca,'ylim',pawFrameLim);
