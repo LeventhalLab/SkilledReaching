@@ -49,9 +49,29 @@ end
 % [h_fig(2),h_axes{2}] = createFigPanels5(figProps);
 
 numTrials = size(trialNumbers,1);
-% first row, plot 1 - reach indices for each trial. color code by trial
-% reported outcome
+
+% first row, plot 1 - number of reaches
 axes(h_axes{1}(1,1));
+hold on
+for iTrial = 1 : numTrials
+    for iType = 2 : numTrialTypes_to_analyze
+        if trialTypeIdx(iTrial,iType)
+            plotColor = trialTypeColors{iType};
+            break;
+        else
+            plotColor = 'y';   % if not one of the trials we defined at the top of the script
+        end
+    end
+    trialNum = trialNumbers(iTrial,2);
+    scatter(trialNum,length(reachFrames{iTrial}),36,plotColor);
+    
+end
+
+
+
+% first row, plot 2 - reach indices for each trial. color code by trial
+% reported outcome
+axes(h_axes{1}(1,2));
 hold on
 for iTrial = 1 : numTrials
     for iType = 2 : numTrialTypes_to_analyze
@@ -72,8 +92,8 @@ end
 
 
 
-% first row, plot 2 - all reach endpoints for each trial, digit 2
-axes(h_axes{1}(1,2));
+% first row, plot 3 - all reach endpoints for each trial, digit 2
+axes(h_axes{1}(1,3));
 hold on
 for iTrial = 1 : numTrials
     for iType = 2 : numTrialTypes_to_analyze
@@ -93,8 +113,8 @@ title('digit 2 z')
 xlabel('reach number')
 
 
-% first row, plot 2 - all reach endpoints for each trial, digit 2
-axes(h_axes{1}(1,3));
+% first row, plot 4 - all reach endpoints for each trial, digit 2
+axes(h_axes{1}(1,4));
 hold on
 for iTrial = 1 : numTrials
     for iType = 2 : numTrialTypes_to_analyze

@@ -83,7 +83,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 10:numRatFolders
+for i_rat = 18:numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -321,7 +321,7 @@ for i_rat = 10:numRatFolders
                 'initPellet3D','-append');
         end
         
-        mean_initPellet3D = nanmean(all_initPellet3D);
+        mean_initPellet3D = nanmean(all_initPellet3D,1);
             
         for iTrial = 1 : numTrials
 %             iTrial

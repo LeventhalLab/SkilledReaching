@@ -13,7 +13,7 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = false;
+skipTrialPlots = true;
 skipSessionSummaryPlots = false;
 
 % paramaeters for readReachScores
@@ -413,7 +413,7 @@ end
     
 %     try
     [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
-        mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,paw_endAngle,meanOrientations,mean_MRL,...
+        mean_pd_trajectories,mean_xyz_from_pd_trajectories,first_reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,paw_endAngle,meanOrientations,mean_MRL,...
         endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,thisRatInfo);
 %     catch
 %         close all
@@ -421,6 +421,9 @@ end
 %     end
     pdfName_ratSummary = sprintf('%s_trajectories_summary.pdf',ratID);
     pdfName_ratSummary = fullfile(ratRootFolder,pdfName_ratSummary);
+    figName_ratSummary = sprintf('%s_trajectories_summary.fig',ratID);
+    figName_ratSummary = fullfile(ratRootFolder,figName_ratSummary);
+    savefig(ratSummary_h_fig,figName_ratSummary);
     print(ratSummary_h_fig,pdfName_ratSummary,'-dpdf');
     close(ratSummary_h_fig);
     
