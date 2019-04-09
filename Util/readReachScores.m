@@ -76,7 +76,11 @@ for iCol = 2 : numCols
          if ischar(temp{ii})
              reachScores(numValidSessions).scores(ii) = str2double(temp{ii});
          else
-             reachScores(numValidSessions).scores(ii) = temp{ii};
+             if isnat(temp{ii})
+                 reachScores(numValidSessions).scores(ii) = NaN;
+             else
+                 reachScores(numValidSessions).scores(ii) = temp{ii};
+             end
          end
      end
      

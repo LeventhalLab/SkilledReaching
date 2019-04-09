@@ -60,8 +60,8 @@ if iscategorical(pawPref)
     pawPref = char(pawPref);
 end
 
-min_z_diff_pre_reach = 1;     % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
-min_z_diff_post_reach = 0.5;     
+min_z_diff_pre_reach = 0.5;     % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
+min_z_diff_post_reach = 0.25;     
 maxFramesPriorToAdvance = 10;   % if the paw extends further within this many frames after a local minimum, don't count it as a reach
 pts_to_extract = 10;  % look pts_to_extract frames on either side of each z
 % local minimum, and see if z changed greater than min_z_for reach within that window

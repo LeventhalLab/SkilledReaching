@@ -42,7 +42,11 @@ for iType = 1 : numTrialTypes_to_analyze
                 all_reachEndPoints{iType}{i_bodypart} = zeros(numReaches_byPart{iType}(i_bodypart,numValidTrials),3);
                 for i_reach = 1 : numReaches_byPart{iType}(i_bodypart,numValidTrials)
                     curEndPt = squeeze(allTrajectories(all_reachFrameIdx{iTrial}{i_bodypart}(i_reach),:,i_bodypart,iTrial));
+                    try
                     all_reachEndPoints{iType}{i_bodypart}(i_reach,:) = curEndPt;
+                    catch
+                        keyboard
+                    end
                 end
             end
         end

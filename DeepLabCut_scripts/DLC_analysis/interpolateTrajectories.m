@@ -110,10 +110,22 @@ for iTrial = 1 : numTrials
         interp_pd_trajectories{iTrial} = NaN;
         continue;
     end
-    try
-    curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
-    catch
-        keyboard
+
+    if isnan(all_endPtFrame(iTrial))   % no reach endpoint was found; will have to go back and see if there really wasn't a reach through the slot
+        % this doesn't happen often, but may occur if the "wrong" paw
+        % triggers a video and a reach with the "correct" paw never
+        % happened
+        normalized_pd_trajectories(:,:,iTrial) = NaN;
+        smoothed_pd_trajectories{iTrial} = NaN;
+        interp_pd_trajectories{iTrial} = NaN;
+        for iDigit = 1 : 4
+            normalized_digit_trajectories(iDigit,:,:,iTrial) = NaN;
+            smoothed_digit_trajectories{iTrial,iDigit} = NaN;
+            interp_digit_trajectories{iTrial,iDigit} = NaN;
+        end
+        continue;
+    else
+        curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
     end
     truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_pawdorsum);
     
