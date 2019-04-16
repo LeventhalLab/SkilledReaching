@@ -43,6 +43,7 @@ numSessions = length(sessionDates);
 
 for iSession = 1 : numSessions
 
+
     allSessionIdx = find(sessionDates{iSession} == allSessionDates);
     curSessionType = sessionType(allSessionIdx).type;
     sessionsLeftInBlock = sessionType(allSessionIdx).sessionsLeftInBlock;

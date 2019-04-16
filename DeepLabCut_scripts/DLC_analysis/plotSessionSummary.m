@@ -74,7 +74,15 @@ set(gca,'ylim',pawFrameLim);
 % final z location as a function of trial #
 [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 pd_endPts = squeeze(reachEndPoints{1}(pawDorsumIdx,:,:));
+
+% if only one trial, need to transpose to make everything else work
+if size(pd_endPts,1) == 1
+    pd_endPts = pd_endPts';
+end
 digit_endPts = squeeze(reachEndPoints{1}(digIdx(2),:,:));
+if size(digit_endPts,1) == 1
+    digit_endPts = digit_endPts';
+end
 for iDim = 1 : 3
     axes(h_axes{1}(1,1+iDim));
     try

@@ -112,8 +112,8 @@ bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
 summariesFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output/kinematics_summaries';
 
-ratFolders = findRatFolders(labeledBodypartsFolder);
-numRatFolders = length(summariesFolder);
+ratFolders = findRatFolders(summariesFolder);
+numRatFolders = length(ratFolders);
 
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
@@ -142,6 +142,8 @@ meanApertures = cell(numRatFolders,1);
 varApertures = cell(numRatFolders,1);
 sessionDates = cell(numRatFolders,1);
 sessionType = cell(numRatFolders,1);
+numReachingFrames = cell(numRatFolders,1);
+PL_summary = cell(numRatFolders,1);
 
 experimentType = zeros(numRatFolders,1);
 
@@ -189,7 +191,7 @@ for i_rat = 1:numRatFolders
     
     numSessionPages = 0;
     sessionType{i_rat} = determineSessionType(thisRatInfo, allSessionDates);
-    for ii = 1 : length(sessionType)
+    for ii = 1 : length(sessionType{i_rat})
         sessionType{i_rat}(ii).typeFromScoreSheet = reachScores(ii).sessionType;
     end
     
@@ -307,11 +309,11 @@ for i_rat = 1:numRatFolders
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % LOOK AT THIS - HOW IS REACH DURATION CALCULATED? CHECK RAT 191,
         % LASER SESSIONS 4-10
-        numReachingFrames(iSession).postSlot = all_endPtFrame - all_paw_through_slot_frame;
-        numReachingFrames(iSession).preSlot = all_paw_through_slot_frame - all_firstPawDorsumFrame;
-        numReachingFrames(iSession).total = all_endPtFrame - all_firstPawDorsumFrame;
+        numReachingFrames{i_rat}(iSession).postSlot = all_endPtFrame - all_paw_through_slot_frame;
+        numReachingFrames{i_rat}(iSession).preSlot = all_paw_through_slot_frame - all_firstPawDorsumFrame;
+        numReachingFrames{i_rat}(iSession).total = all_endPtFrame - all_firstPawDorsumFrame;
         
-        PL_summary(iSession) = collectTrajectoryLengths(trajectoryLengths);
+        PL_summary{i_rat}(iSession) = collectTrajectoryLengths(trajectoryLengths);
         
 %         if ~skipSessionSummaryPlots
 %             [h_summaryFigs,h_summaryAxes,h_summary_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_pd_trajectory,mean_xyz_from_pd_trajectory,first_reachEndPoints{iSession},bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,validTypeNames,sessionDirectories{iSession},sessionType(allSessionIdx),...
@@ -362,6 +364,34 @@ for i_rat = 1:numRatFolders
 end
     
 %     plotOverallSummaryFigs(
+%%
+alternateSessions = {'R0197_20171213','R0197_20171220','R0216_20180301','R0216_20180307','R0217_20180303','R0217_20180307','R0218_20180302'};
+
+alternate_endPoints = cell(length(alternateSessions),1);
+for i_altSession = 1 : length(alternateSessions)
+    ratID = alternateSessions{i_altSession}(1:5);
+    i_ratFolder = find(strcmp(ratFolders,ratID));
+    currentDate = alternateSessions{i_altSession}(7:14);
+    iDate = datetime(currentDate,'InputFormat','yyyyMMdd');
+    
+    for ii = 1 : length(sessionDates{i_ratFolder})
+        dateList(ii) = datetime(sessionDates{i_ratFolder}{ii});
+    end
+
+    i_session = find(dateList==iDate);
+    
+    temp = first_reachEndPoints{i_ratFolder}{i_session}{1};
+    
+    alternate_endPoints{i_altSession} = squeeze(temp(10,3,:));
+end
+
+
+
+q=first_reachEndPoints{i_ratFolder}{i_session}{1};
+q10 = squeeze(q(10,:,:))';
+
+
+
 
     [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
         mean_pd_trajectories,mean_xyz_from_pd_trajectories,first_reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,paw_endAngle,meanOrientations,mean_MRL,...

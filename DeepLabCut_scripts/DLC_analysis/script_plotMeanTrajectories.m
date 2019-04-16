@@ -120,7 +120,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 10:17%:numRatFolders
+for i_rat = 18:18%:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -185,9 +185,9 @@ for i_rat = 10:17%:numRatFolders
         case 4
             startSession = 1;
             endSession = numSessions;
-        case 17
-            startSession = 22;
-            endSession = 22;
+        case 18
+            startSession = 13;
+            endSession = numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
