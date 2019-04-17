@@ -1,0 +1,16 @@
+function extractAlternatingTrials(kinematicData,varargin)
+
+numAltTrials = 5;
+startProtocol = 'off';
+
+if isrow(kinematicData)
+    kinematicData = kinematicData';
+end
+
+numTrials = size(kinematicData,1);
+
+trialLabels = false(numTrials,1);
+trialLabels = 
+
+
+for ii = 1 : ceil(numT
