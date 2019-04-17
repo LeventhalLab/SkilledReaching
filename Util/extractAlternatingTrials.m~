@@ -56,7 +56,7 @@ onData = NaN(numOnStreaks,numAltTrials);
 
 for ii = 1 : numOnStreaks
     startIdx = onTransitions(ii);
-%     endIdx = offTransitions(ii    % WORKING HERE - MAKE THESE LINE UP
+    endIdx = offTransitions(ii    % WORKING HERE = MAKE THE
 end
 
 end

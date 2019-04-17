@@ -385,7 +385,10 @@ for i_altSession = 1 : length(alternateSessions)
     alternate_endPoints{i_altSession} = squeeze(temp(10,3,:));
 end
 
+%%
 
+for ii = 1 : length(alternate_endPoints)
+    
 
 q=first_reachEndPoints{i_ratFolder}{i_session}{1};
 q10 = squeeze(q(10,:,:))';
