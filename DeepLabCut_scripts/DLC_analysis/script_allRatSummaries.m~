@@ -367,11 +367,11 @@ end
 %%
 alternateSessions = {'R0197_20171213','R0197_20171220','R0216_20180301','R0216_20180307','R0217_20180303','R0217_20180307','R0218_20180302'};
 
-
-for iSession = 1 : length(alternateSessions)
-    ratID = alternateSessions{iSession}(1:5);
+alternate_endPoints = cell(length(alternateSessions),1);
+for i_altSession = 1 : length(alternateSessions)
+    ratID = alternateSessions{i_altSession}(1:5);
     i_ratFolder = find(strcmp(ratFolders,ratID));
-    currentDate = alternateSessions{iSession}(7:14);
+    currentDate = alternateSessions{i_altSession}(7:14);
     iDate = datetime(currentDate,'InputFormat','yyyyMMdd');
     
     for ii = 1 : length(sessionDates{i_ratFolder})
@@ -381,9 +381,14 @@ for iSession = 1 : length(alternateSessions)
     i_session = find(dateList==iDate);
     
     temp = first_reachEndPoints{i_ratFolder}{i_session}{1};
+    
+    alternate_endPoints{i_altSession} = squeeze(temp(10,3,:));
 end
 
+%%
 
+for ii = 1 : length(alternate_endPoints)
+    
 
 q=first_reachEndPoints{i_ratFolder}{i_session}{1};
 q10 = squeeze(q(10,:,:))';
