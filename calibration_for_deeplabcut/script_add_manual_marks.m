@@ -1,10 +1,25 @@
 % add manually marked calibration images to automatically marked calibration images
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+% calImageDir = '/Users/dleventh/Documents/deeplabcut images/cal images to review';
+=======
+>>>>>>> stash
+calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
+camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
+<<<<<<< HEAD
+% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
+=======
 % calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
 % camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
 
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+>>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
+=======
+>>>>>>> stash
 load(camParamFile);
 
 pointsStillDistorted = true;
@@ -95,7 +110,11 @@ for iDate = 1 : numDates
         csvNumList(i_csv) = C{1};
         csvData{i_csv} = readFIJI_csv(cur_csvName);
         % Undistort points in csv file
+<<<<<<< HEAD
+        csvData{i_csv}=undistortPoints(csvData{i_csv},cameraParams);
+=======
 %         csvData{i_csv}=undistortPoints(csvData{i_csv},cameraParams);
+>>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
     end
     
     % load images, but only ones for which there is a .csv file
@@ -151,6 +170,22 @@ for iDate = 1 : numDates
     end
     
     % Undistort points found during the automatic process
+<<<<<<< HEAD
+    for iUndistImgs = 1:size(directChecks,3)
+        for iUndistBrds = 1:size(directChecks,4)
+            if ~isnan(directChecks(:,:,iUndistImgs,iUndistBrds))
+                directChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(directChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
+            end
+        end
+    end
+    for iUndistImgs = 1:size(mirrorChecks,3)
+        for iUndistBrds = 1:size(mirrorChecks,4)
+            if ~isnan(mirrorChecks(:,:,iUndistImgs,iUndistBrds))
+                mirrorChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(mirrorChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
+            end
+        end
+    end
+=======
 %     for iUndistImgs = 1:size(directChecks,3)
 %         for iUndistBrds = 1:size(directChecks,4)
 %             if ~isnan(directChecks(:,:,iUndistImgs,iUndistBrds))
@@ -165,6 +200,7 @@ for iDate = 1 : numDates
 %             end
 %         end
 %     end
+>>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
     
     old_directChecks = directChecks;
     old_mirrorChecks = mirrorChecks;
@@ -201,6 +237,8 @@ for iDate = 1 : numDates
         end
             
     end
+    
+    %directChecks(:,:,1,1)=undistortPoints(directChecks(:,:,1,1),cameraParams);
     
     allMatchedPoints = NaN(points_per_board * numImgPerDate, 2, 2, numBoards);
     for iImg = 1 : numImgPerDate
@@ -274,7 +312,11 @@ for iDate = 1 : numDates
                 end
                 
             end
+<<<<<<< HEAD
+            figure;
+=======
             h_fig = figure;
+>>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
             imshow(newImg);
             newImgName = strrep(curImgName,'.png','_all_marked.png');
             set(gcf,'name',newImgName);

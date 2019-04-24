@@ -1,5 +1,13 @@
 % detect checkerboard calibration images, 20180605
 
+<<<<<<< HEAD
+% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
+calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
+
+camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
+% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
+=======
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
@@ -10,6 +18,7 @@ camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual
 
 % camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
 % camParamFile = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
+>>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
 load(camParamFile);
 
 saveMarkedImages = true;

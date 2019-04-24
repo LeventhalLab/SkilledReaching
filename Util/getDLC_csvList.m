@@ -19,7 +19,7 @@ numViews = length(vidView);
 directViewDir = fullfile(fullSessionDir, [curSession '_direct']);
 
 cd(directViewDir);
-direct_csvList = dir('R*.csv');
+direct_csvList = dir('*.csv');
 if isempty(direct_csvList)
     mirror_csvList = direct_csvList;
     return;
@@ -28,12 +28,12 @@ end
 numMarkedVids = length(direct_csvList);
 % ratID, date, etc. for each individual video
 directVidTime = cell(1, numMarkedVids);
-directVidNum = zeros(numMarkedVids,1);
+directVidNum = cell(numMarkedVids,1);
 
 % find all the direct view videos that are available
 uniqueDateList = {};
 for ii = 1 : numMarkedVids   
-    [directVid_ratID(ii),directVidDate{ii},directVidTime{ii},directVidNum(ii)] = ...
+    [directVid_ratID(ii),directVidDate{ii},directVidTime{ii},directVidNum{ii}] = ...
                 extractDLC_CSV_identifiers(direct_csvList(ii).name);
 
     if isempty(uniqueDateList)
@@ -56,4 +56,4 @@ for iView = 1 : numViews
 end
 
 cd(mirrorViewDir)
-mirror_csvList = dir('R*.csv');
+mirror_csvList = dir('*.csv');

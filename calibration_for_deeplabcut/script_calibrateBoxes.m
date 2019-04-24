@@ -1,13 +1,9 @@
 % calibrate boxes given marked checkerboard points
 
-% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Documents/deeplabcut images/cal images to review';
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
-
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 load(camParamFile);
+
 K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
                                     %       version - Hartley and Zisserman and the rest of the world seem to
                                     %       use the transpose of matlab K)

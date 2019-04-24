@@ -24,11 +24,11 @@ function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, 
 %       may (or may not) be accurate
 %   min_certain_p - minimum certainty score from DLC above which the point
 %       is assumed to be accurate
-%   maxneighbordist - maximum distance a point can be from a neighboring
+%   maxneighbordist - maximum reachingPawPartsdistance a point can be from a neighboring
 %       point before flagging as a possible mistake
 %
 % OUTPUTS:
-%   invalidPoints - bodyparts x numframes boolean array where true values
+%   invalidPoints - bodyparts x numframes boolean array where true valuesreachingPawParts
 %       indicate that a bodypart in a given frame was (probably) not
 %       correctly identified
 %   diff_per_frame - num_bodyparts x numframes-1 array containing the
@@ -51,10 +51,10 @@ for iarg = 1 : nargin - 4
             maxNeighborDist = varargin{iarg + 1};
     end
 end
-
-[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
-reachingPawParts = [mcpIdx;pipIdx;digIdx;pawDorsumIdx];
-
+ 
+% [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
+% reachingPawParts = [mcpIdx;pipIdx;digIdx;pawDorsumIdx];
+reachingPawParts=[1;2];
 num_frames = size(parts_loc, 2);
 num_bodyparts = size(parts_loc, 1);
 
