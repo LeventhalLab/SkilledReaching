@@ -14,7 +14,7 @@ var_lim = [0,5;
 pawFrameLim = [0 400];
 
 skipTrialPlots = true;
-skipSessionSummaryPlots = false;
+skipSessionSummaryPlots = true;
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
@@ -186,12 +186,13 @@ for i_rat = 18:18%:numRatFolders
             startSession = 1;
             endSession = numSessions;
         case 18
-            startSession = 13;
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
     end
+    numSessionsCalculated = 0;
     for iSession = startSession:endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
@@ -251,7 +252,8 @@ for i_rat = 18:18%:numRatFolders
                 calcTrajectoryVariability(squeeze(normalized_digit_trajectories(iDigit,:,:,:)),trialTypeIdx);
         end
 
-        if iSession == 1
+        numSessionsCalculated = numSessionsCalculated + 1;
+        if numSessionsCalculated == 1
             mean_pd_trajectories = zeros(size(mean_pd_trajectory,1),size(mean_pd_trajectory,2),size(mean_pd_trajectory,3),numSessions);
             mean_xyz_from_pd_trajectories = zeros(size(mean_xyz_from_pd_trajectory,1),size(mean_xyz_from_pd_trajectory,2),size(mean_xyz_from_pd_trajectory,3),numSessions);
             mean_euc_dist_from_pd_trajectories = zeros(size(mean_euc_dist_from_pd_trajectory,1),size(mean_euc_dist_from_pd_trajectory,2),numSessions);

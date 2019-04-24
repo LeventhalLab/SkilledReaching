@@ -165,11 +165,13 @@ digTrajectories = squeeze(normalized_digit_trajectories(9:12,:,:,:));
 meanDigTrajectories = nanmean(digTrajectories,4);
 
 h_fig2 = figure(2);
-set(gcf,'units','centimeters','position',[1 1 8*2.54 8*2.54]);
+set(gcf,'units','centimeters','position',[1 1 12*2.54 8*2.54]);
 viewOrientations = [-90,30;-10 15];
 for iPlot = 1 : 2
-    subplot(2,1,iPlot);
+    subplot(2,iPlot,1);
     hold off
+
+    
 
     for iTrial = 1 : numTrials
         plot3(normalized_pd_trajectories(:,1,iTrial),normalized_pd_trajectories(:,3,iTrial),normalized_pd_trajectories(:,2,iTrial),'color',[0 0 1],'linewidth',0.25)
@@ -195,7 +197,7 @@ for iPlot = 1 : 2
     set(gca,'fontsize',20,'fontname','arial','xgrid','on','ygrid','on','zgrid','on')
 end
 
-fname = fullfile(sessionFolder, 'sampleTrajectories');
+fname = fullfile(sessionFolder, 'sampleTrajectories_c');
 print(h_fig2,fname,'-dpdf','-r300');
 savefig(h_fig2,fname);
 

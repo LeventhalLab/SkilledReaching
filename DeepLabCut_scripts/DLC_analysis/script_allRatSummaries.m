@@ -362,7 +362,15 @@ for i_rat = 1:numRatFolders
     end
     
 end
-    
+
+%%
+[h_figs] = plotOverallSummaryFigs(meanOrientations,mean_MRL,endApertures,mean_dig_trajectories,mean_pd_trajectories,first_reachEndPoints,experimentType,sessionType);
+
+for ii = 1 : 3
+    fname = sprintf('meanExtents_%d.pdf',ii);
+    fname = fullfile(summariesFolder, fname);
+    print(h_figs(ii),fname,'-dpdf','-r300');
+end
 %     plotOverallSummaryFigs(
 %%
 alternateSessions = {'R0197_20171213','R0197_20171220','R0216_20180301','R0216_20180307','R0217_20180303','R0217_20180307','R0218_20180302'};
@@ -386,10 +394,161 @@ for i_altSession = 1 : length(alternateSessions)
 end
 
 %%
+close all
+onData = cell(length(alternate_endPoints),1);
+offData = cell(length(alternate_endPoints),1);
+
+onColor = 'b';
+offColor = 'r';
+markSize = 50;
+ylimits = [-20 20];
+y_meanlimits = [-10 5];
+y_medianlimits = [-10 10];
+sessionMean_on = zeros(length(alternate_endPoints),5);
+sessionMean_off = zeros(length(alternate_endPoints),5);
+sessionMedian_on = zeros(length(alternate_endPoints),5);
+sessionMedian_off = zeros(length(alternate_endPoints),5);
+
+onPatch_X = [0.5 5.5 5.5 0.5;10.5 15.5 15.5 10.5]';
+onPatch_Y = [y_meanlimits(1) y_meanlimits(1) y_meanlimits(2) y_meanlimits(2);y_meanlimits(1) y_meanlimits(1) y_meanlimits(2) y_meanlimits(2)]';
+patchAlpha = 0.1;
+
+labelfontsize = 24;
+ticklabelfontsize = 18;
 
 for ii = 1 : length(alternate_endPoints)
+    [onData{ii},offData{ii}] = extractAlternatingTrials(alternate_endPoints{ii});
+    figure(ii)
+    set(gcf,'name',alternateSessions{ii})
+    subplot(3,1,1)
+    for jj = 1 : size(onData{ii},1)
+        scatter(1:5,onData{ii}(jj,:));
+        hold on
+    end
+    for jj = 1 : size(offData{ii},1)
+        scatter(6:10,offData{ii}(jj,:));
+        hold on
+    end
+    set(gca,'ylim',ylimits);
     
+    sessionMean_on(ii,:) = nanmean(onData{ii});
+    sessionMean_off(ii,:) = nanmean(offData{ii});
+    
+    sessionMedian_on(ii,:) = nanmedian(onData{ii});
+    sessionMedian_off(ii,:) = nanmedian(offData{ii});
+    
+    subplot(3,1,2)
+    scatter(1:5,sessionMean_on(ii,:),markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
+    hold on
+    scatter(6:10,sessionMean_off(ii,:),markSize,'markeredgecolor',offColor,'markerfacecolor',offColor);
+    set(gca,'ylim',ylimits);
+    
+    subplot(3,1,3)
+    scatter(1:5,sessionMedian_on(ii,:),markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
+    hold on
+    scatter(6:10,sessionMedian_off(ii,:),markSize,'markeredgecolor',offColor,'markerfacecolor',offColor);
+    set(gca,'ylim',ylimits);
+end
 
+h_fig = figure;
+sessionsMean_on = nanmean(sessionMean_on);
+sessionsMean_off = nanmean(sessionMean_off);
+
+sessions_std_on = nanstd(sessionMean_on);
+sessions_std_off = nanstd(sessionMean_off);
+scatter(1:5,sessionsMean_on,markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
+hold on
+scatter(11:15,sessionsMean_on,markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
+scatter(6:10,sessionsMean_off,markSize,'markeredgecolor',offColor,'markerfacecolor',offColor);
+scatter(16:20,sessionsMean_off,markSize,'markeredgecolor',offColor,'markerfacecolor',offColor);
+line([0,20],[0,0],'color','k')
+patch(onPatch_X,onPatch_Y,'b','facealpha',patchAlpha);
+set(gcf,'name','mean');
+xticks([1,5,6,10,11,15,20]);
+xticklabels([1,5,1,5,1,5,1,5])
+set(gca,'ylim',y_meanlimits,'fontsize',ticklabelfontsize);
+ylabel('reach extent (mm)','fontsize',labelfontsize);
+xlabel('trial number in block','fontsize',labelfontsize);
+
+
+fname = 'alternating_extents.pdf';
+fname = fullfile(summariesFolder, fname);
+print(h_fig,fname,'-dpdf','-r300');
+
+
+figure;
+sessionsMedian_on = nanmedian(sessionMedian_on);
+sessionsMedian_off = nanmedian(sessionMedian_off);
+scatter(1:5,sessionsMedian_on,markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
+hold on
+scatter(11:15,sessionsMedian_on,markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
+scatter(6:10,sessionsMedian_off,markSize,'markeredgecolor',offColor,'markerfacecolor',offColor);
+scatter(16:20,sessionsMedian_off,markSize,'markeredgecolor',offColor,'markerfacecolor',offColor);
+
+patch(onPatch_X,onPatch_Y,'b','facealpha',patchAlpha);
+set(gcf,'name','median');
+set(gca,'ylim',y_medianlimits);
+
+%%
+firstDuringStimSessions = {'R0186_20170815','R0187_20170918','R0189_20170924','R0191_20170918','R0193_20171002','R0195_20171001','R0197_20171211','R0216_20180227','R0217_20180228','R0218_20180228'};
+duringStim_endPoints = cell(length(alternateSessions),1);
+for i_firstStimSession = 1 : length(firstDuringStimSessions)
+    ratID = firstDuringStimSessions{i_firstStimSession}(1:5);
+    i_ratFolder = find(strcmp(ratFolders,ratID));
+    currentDate = firstDuringStimSessions{i_firstStimSession}(7:14);
+    iDate = datetime(currentDate,'InputFormat','yyyyMMdd');
+    
+    for ii = 1 : length(sessionDates{i_ratFolder})
+        dateList(ii) = datetime(sessionDates{i_ratFolder}{ii});
+    end
+
+    i_session = find(dateList==iDate);
+    
+    temp = first_reachEndPoints{i_ratFolder}{i_session}{1};
+    
+    duringStim_endPoints{i_firstStimSession} = squeeze(temp(10,3,:));
+end
+
+%%
+figure(1)
+subplot(1,1,1);
+hold off
+maxLength = 0;
+for ii = 1 : length(duringStim_endPoints)
+    maxLength = max(maxLength,length(duringStim_endPoints{ii}));
+end
+all_firstDuringEndPoints = NaN(length(duringStim_endPoints),maxLength);
+for ii = 1 : length(duringStim_endPoints)
+    figure(ii+9)
+    subplot(1,1,1);
+    hold off
+    numTrials = length(duringStim_endPoints{ii});
+    scatter(1:numTrials,duringStim_endPoints{ii})
+    all_firstDuringEndPoints(ii,1:numTrials) = duringStim_endPoints{ii};
+    hold on
+    set(gcf,'name',firstDuringStimSessions{ii})
+end
+
+%%
+lastPt = 50;
+h_fig = figure(length(duringStim_endPoints)+10);
+hold off
+scatter(1:lastPt,nanmean(all_firstDuringEndPoints(:,1:lastPt)),markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
+
+line([0,lastPt],[0,0],'color','k')
+
+xtickValues = [1 10 20 30 40 50];
+xticks(xtickValues);
+xticklabels(xtickValues)
+set(gca,'ylim',y_meanlimits,'fontsize',ticklabelfontsize);
+ylabel('reach extent (mm)','fontsize',labelfontsize);
+xlabel('trial number','fontsize',labelfontsize);
+
+fname = 'firstLaserExtents.pdf';
+fname = fullfile(summariesFolder, fname);
+print(h_fig,fname,'-dpdf','-r300');
+
+    %%
 q=first_reachEndPoints{i_ratFolder}{i_session}{1};
 q10 = squeeze(q(10,:,:))';
 

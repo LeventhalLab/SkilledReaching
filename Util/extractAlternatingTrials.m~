@@ -56,7 +56,15 @@ onData = NaN(numOnStreaks,numAltTrials);
 
 for ii = 1 : numOnStreaks
     startIdx = onTransitions(ii);
-    endIdx = offTransitions(ii    % WORKING HERE = MAKE THE
+    % find first off transition after this on transition
+    valid_offTransitions= offTransitions(offTransitions > startIdx);
+    if isempty(valid_offTransitions)
+        endIdx = numTrials;
+    else
+        endIdx = valid_offTransitions(1)-1;
+    end
+    
+%     endIdx = offTransitions(ii);    % WORKING HERE - MAKE THESE LINE UP
 end
 
 end

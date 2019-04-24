@@ -1,4 +1,4 @@
-function data_by_streak = extractAlternatingTrials(kinematicData,varargin)
+function [onData,offData] = extractAlternatingTrials(kinematicData,varargin)
 
 includeFirstStreak = false;
 
@@ -56,7 +56,28 @@ onData = NaN(numOnStreaks,numAltTrials);
 
 for ii = 1 : numOnStreaks
     startIdx = onTransitions(ii);
-%     endIdx = offTransitions(ii    % WORKING HERE - MAKE THESE LINE UP
+    % find first off transition after this on transition
+    valid_offTransitions= offTransitions(offTransitions > startIdx);
+    if isempty(valid_offTransitions)
+        endIdx = numTrials;
+    else
+        endIdx = valid_offTransitions(1)-1;
+    end
+    
+    onData(ii,1:endIdx-startIdx+1) = kinematicData(startIdx:endIdx);
+end
+
+for ii = 1 : numOffStreaks
+    startIdx = offTransitions(ii);
+    % find first off transition after this on transition
+    valid_onTransitions= onTransitions(onTransitions > startIdx);
+    if isempty(valid_onTransitions)
+        endIdx = numTrials;
+    else
+        endIdx = valid_onTransitions(1)-1;
+    end
+    
+    offData(ii,1:endIdx-startIdx+1) = kinematicData(startIdx:endIdx);
 end
 
 end

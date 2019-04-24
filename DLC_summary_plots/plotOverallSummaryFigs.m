@@ -2,6 +2,8 @@ function [h_figs] = plotOverallSummaryFigs(meanOrientations,MRL,endApertures,mea
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
+labelfontsize = 24;
+ticklabelfontsize = 18;
 
 % (paw_endAngle,endApertures,mean_dig_trajectories,mean_pd_trajectories,all_reachEndPoints,experimentType,sessionType)
 numRats = length(experimentType);
@@ -53,8 +55,6 @@ for i_rat = 1 : numRats
     
 end
 h_figs = plotMeanEndPoints(mean_endPoints);
-% plotMeanEndApertures(mean_endApertures);
-outputArg1 = inputArg1;
-outputArg2 = inputArg2;
+
 end
 
