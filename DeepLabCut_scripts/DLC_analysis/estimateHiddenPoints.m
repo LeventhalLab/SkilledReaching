@@ -61,37 +61,37 @@ end
 
 numFrames = size(final_direct_pts,2);
 
-% [direct_mcp_idx,direct_pip_idx,direct_digit_idx,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
-% [mirror_mcp_idx,mirror_pip_idx,mirror_digit_idx,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
+[direct_mcp_idx,direct_pip_idx,direct_digit_idx,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
+[mirror_mcp_idx,mirror_pip_idx,mirror_digit_idx,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
 
-if strcmp(pawPref,'left')
-    direct_pp_idx=[1];
-    direct_npn_idx=[2];
-    mirror_pp_idx=[1];
-    mirror_npn_idx=[2];
-elseif strcmp(pawPref,'right')
-    direct_pp_idx=[2];
-    direct_npn_idx=[1];
-    mirror_pp_idx=[2];
-    mirror_npn_idx=[1];
-else
-    disp('there`s an error');
-end
+% if strcmp(pawPref,'left')
+%     direct_pp_idx=[1];
+%     direct_npn_idx=[2];
+%     mirror_pp_idx=[1];
+%     mirror_npn_idx=[2];
+% elseif strcmp(pawPref,'right')
+%     direct_pp_idx=[2];
+%     direct_npn_idx=[1];
+%     mirror_pp_idx=[2];
+%     mirror_npn_idx=[1];
+% else
+%     disp('there`s an error');
+% end
 
-direct_nose_idx=[3];
-direct_pellet_idx=[4];
-mirror_nose_idx=[3];
-mirror_pellet_idx=[4];
+% direct_nose_idx=[3];
+% direct_pellet_idx=[4];
+% mirror_nose_idx=[3];
+% mirror_pellet_idx=[4];
 
 % can work on the other body parts later; for now, just concerned with the
 % reaching paw
 
-allDirectParts_idx = [direct_pp_idx;direct_npn_idx;direct_nose_idx;direct_pellet_idx];
-allMirrorParts_idx = [mirror_pp_idx;mirror_npn_idx;mirror_nose_idx;mirror_pellet_idx];
+allDirectParts_idx = [direct_mcp_idx;direct_pip_idx;direct_digit_idx;direct_pawdorsum_idx];
+allMirrorParts_idx = [mirror_mcp_idx;mirror_pip_idx;mirror_digit_idx;mirror_pawdorsum_idx];
 
 isEstimate = false(size(final_direct_pts,1),size(final_mirror_pts,2),2);
 
-% numDigits = length(direct_mcp_idx);
+numDigits = length(direct_mcp_idx);
 
 for iFrame = 1 : numFrames
     allDirectPts = squeeze(final_direct_pts(allDirectParts_idx,iFrame,:));
@@ -100,135 +100,135 @@ for iFrame = 1 : numFrames
     validDirectPoints = allDirectPts(~invalid_direct(allDirectParts_idx,iFrame),:);
     validMirrorPoints = allMirrorPts(~invalid_mirror(allMirrorParts_idx,iFrame),:);
     
-%     % work on digits first
-%     for i_digitPart = 1 : 3
-%         switch i_digitPart
-%             case 1
-%                 direct_indices = direct_mcp_idx;
-%                 mirror_indices = mirror_mcp_idx;
-%                 
-%                 direct_nextKnuckle_indices = direct_pip_idx;
-%                 mirror_nextKnuckle_indices = mirror_pip_idx;
-%             case 2
-%                 direct_indices = direct_pip_idx;
-%                 mirror_indices = mirror_pip_idx;
-%                 
-%                 direct_nextKnuckle_indices = direct_digit_idx;
-%                 mirror_nextKnuckle_indices = mirror_digit_idx;
-%             case 3
-%                 direct_indices = direct_digit_idx;
-%                 mirror_indices = mirror_digit_idx;
-%                 
-%                 direct_nextKnuckle_indices = direct_pip_idx;
-%                 mirror_nextKnuckle_indices = mirror_pip_idx;
-%         end
+    % work on digits first
+    for i_digitPart = 1 : 3
+        switch i_digitPart
+            case 1
+                direct_indices = direct_mcp_idx;
+                mirror_indices = mirror_mcp_idx;
+                
+                direct_nextKnuckle_indices = direct_pip_idx;
+                mirror_nextKnuckle_indices = mirror_pip_idx;
+            case 2
+                direct_indices = direct_pip_idx;
+                mirror_indices = mirror_pip_idx;
+                
+                direct_nextKnuckle_indices = direct_digit_idx;
+                mirror_nextKnuckle_indices = mirror_digit_idx;
+            case 3
+                direct_indices = direct_digit_idx;
+                mirror_indices = mirror_digit_idx;
+                
+                direct_nextKnuckle_indices = direct_pip_idx;
+                mirror_nextKnuckle_indices = mirror_pip_idx;
+        end
         
-%         for i_digit = 1 : numDigits
-% 
-%             direct_part_idx = direct_indices(i_digit);
-%             mirror_part_idx = mirror_indices(i_digit);
-% 
-%             if (invalid_direct(direct_part_idx,iFrame) && invalid_mirror(mirror_part_idx,iFrame)) || ...
-%                (~invalid_direct(direct_part_idx,iFrame) && ~invalid_mirror(mirror_part_idx,iFrame))
-%                 % either both points were found or both points were not found
-%                 % with high certainty; nothing to do
-%                 continue;
-%             end
-%             % figure out whether the mirror or direct view point was identified
-%             nextDigitKnuckles = nan(2,2);
-%             if invalid_direct(direct_part_idx,iFrame)
-%                 % the mirror point was identified
-%                 allPawPoints = validDirectPoints;
-%                 known_pt = squeeze(final_mirror_pts(mirror_part_idx,iFrame,:))';
-% 
-%                 other_knuckle_pts = squeeze(final_direct_pts(direct_indices,iFrame,:));
-%                 other_knuckle_pts = other_knuckle_pts(~invalid_direct(direct_indices,iFrame),:);
-%                 
-%                 switch i_digit
-%                     case 1
-%                         if ~invalid_direct(direct_indices(2),iFrame)
-%                             nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(2),iFrame,:));
-%                         end
-%                     case {2,3}
-%                         if ~invalid_direct(direct_indices(i_digit-1),iFrame)
-%                             nextDigitKnuckles(1,:) = squeeze(final_direct_pts(direct_indices(i_digit-1),iFrame,:));
-%                         end
-%                         if ~invalid_direct(direct_indices(i_digit+1),iFrame)
-%                             nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(i_digit+1),iFrame,:));
-%                         end
-%                     case 4
-%                         if ~invalid_direct(direct_indices(3),iFrame)
-%                             nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(3),iFrame,:));
-%                         end
-%                 end
-%                 
-%                 % find the point marked at the next knuckle on the same
-%                 % digit
-%                 if ~invalid_direct(direct_nextKnuckle_indices(i_digit),iFrame)
-%                     nextKnucklePt = squeeze(final_direct_pts(direct_nextKnuckle_indices(i_digit),iFrame, :));
-%                     if size(nextKnucklePt,1) == 2
-%                         nextKnucklePt = nextKnucklePt';
-%                     end
-%                 else
-%                     nextKnucklePt = [];
-%                 end
-%             else
-%                 % the direct point was identified
-%                 allPawPoints = validMirrorPoints;
-%                 known_pt = squeeze(final_direct_pts(mirror_part_idx,iFrame,:))';
-% 
-%                 other_knuckle_pts = squeeze(final_mirror_pts(mirror_indices,iFrame,:));
-%                 other_knuckle_pts = other_knuckle_pts(~invalid_mirror(mirror_indices,iFrame),:);
-%                 
-%                 switch i_digit
-%                     case 1
-%                         if ~invalid_mirror(mirror_indices(2),iFrame)
-%                             nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(2),iFrame,:));
-%                         end
-%                     case {2,3}
-%                         if ~invalid_mirror(mirror_indices(i_digit-1),iFrame)
-%                             nextDigitKnuckles(1,:) = squeeze(final_mirror_pts(mirror_indices(i_digit-1),iFrame,:));
-%                         end
-%                         if ~invalid_mirror(mirror_indices(i_digit+1),iFrame)
-%                             nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(i_digit+1),iFrame,:));
-%                         end
-%                     case 4
-%                         if ~invalid_mirror(mirror_indices(3),iFrame)
-%                             nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(3),iFrame,:));
-%                         end
-%                 end
-%                 
-%                 % find the point marked at the next knuckle on the same
-%                 % digit
-%                 if ~invalid_mirror(mirror_nextKnuckle_indices(i_digit),iFrame)
-%                     nextKnucklePt = squeeze(final_mirror_pts(mirror_nextKnuckle_indices(i_digit),iFrame, :));
-%                     if size(nextKnucklePt,1) == 2
-%                         nextKnucklePt = nextKnucklePt';
-%                     end
-%                 else
-%                     nextKnucklePt = [];
-%                 end
-%             end
-%             if isempty(other_knuckle_pts) && isempty(nextKnucklePt)
-%                 continue;   % no nearest point to match with. probably will update this later to allow other points to be used...
-%             end
-% 
-%             np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize, maxDistFromNeighbor);
-%             if isempty(np); continue; end
-%             
-%             if invalid_direct(direct_part_idx,iFrame)
-%                 % the mirror point was identified
-%                 final_direct_pts(direct_part_idx,iFrame,:) = np;
-%                 isEstimate(direct_part_idx,iFrame,1) = true;   % direct point for this body part in this frame is estimated
-%             else
-%                 % the direct point was identified
-%                 final_mirror_pts(mirror_part_idx,iFrame,:) = np;
-%                 isEstimate(mirror_part_idx,iFrame,2) = true;   % mirror point for this body part in this frame is estimated
-%             end
-% 
-%         end
-%         
-%     end
+        for i_digit = 1 : numDigits
+
+            direct_part_idx = direct_indices(i_digit);
+            mirror_part_idx = mirror_indices(i_digit);
+
+            if (invalid_direct(direct_part_idx,iFrame) && invalid_mirror(mirror_part_idx,iFrame)) || ...
+               (~invalid_direct(direct_part_idx,iFrame) && ~invalid_mirror(mirror_part_idx,iFrame))
+                % either both points were found or both points were not found
+                % with high certainty; nothing to do
+                continue;
+            end
+            % figure out whether the mirror or direct view point was identified
+            nextDigitKnuckles = nan(2,2);
+            if invalid_direct(direct_part_idx,iFrame)
+                % the mirror point was identified
+                allPawPoints = validDirectPoints;
+                known_pt = squeeze(final_mirror_pts(mirror_part_idx,iFrame,:))';
+
+                other_knuckle_pts = squeeze(final_direct_pts(direct_indices,iFrame,:));
+                other_knuckle_pts = other_knuckle_pts(~invalid_direct(direct_indices,iFrame),:);
+                
+                switch i_digit
+                    case 1
+                        if ~invalid_direct(direct_indices(2),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(2),iFrame,:));
+                        end
+                    case {2,3}
+                        if ~invalid_direct(direct_indices(i_digit-1),iFrame)
+                            nextDigitKnuckles(1,:) = squeeze(final_direct_pts(direct_indices(i_digit-1),iFrame,:));
+                        end
+                        if ~invalid_direct(direct_indices(i_digit+1),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(i_digit+1),iFrame,:));
+                        end
+                    case 4
+                        if ~invalid_direct(direct_indices(3),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_direct_pts(direct_indices(3),iFrame,:));
+                        end
+                end
+                
+                % find the point marked at the next knuckle on the same
+                % digit
+                if ~invalid_direct(direct_nextKnuckle_indices(i_digit),iFrame)
+                    nextKnucklePt = squeeze(final_direct_pts(direct_nextKnuckle_indices(i_digit),iFrame, :));
+                    if size(nextKnucklePt,1) == 2
+                        nextKnucklePt = nextKnucklePt';
+                    end
+                else
+                    nextKnucklePt = [];
+                end
+            else
+                % the direct point was identified
+                allPawPoints = validMirrorPoints;
+                known_pt = squeeze(final_direct_pts(mirror_part_idx,iFrame,:))';
+
+                other_knuckle_pts = squeeze(final_mirror_pts(mirror_indices,iFrame,:));
+                other_knuckle_pts = other_knuckle_pts(~invalid_mirror(mirror_indices,iFrame),:);
+                
+                switch i_digit
+                    case 1
+                        if ~invalid_mirror(mirror_indices(2),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(2),iFrame,:));
+                        end
+                    case {2,3}
+                        if ~invalid_mirror(mirror_indices(i_digit-1),iFrame)
+                            nextDigitKnuckles(1,:) = squeeze(final_mirror_pts(mirror_indices(i_digit-1),iFrame,:));
+                        end
+                        if ~invalid_mirror(mirror_indices(i_digit+1),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(i_digit+1),iFrame,:));
+                        end
+                    case 4
+                        if ~invalid_mirror(mirror_indices(3),iFrame)
+                            nextDigitKnuckles(2,:) = squeeze(final_mirror_pts(mirror_indices(3),iFrame,:));
+                        end
+                end
+                
+                % find the point marked at the next knuckle on the same
+                % digit
+                if ~invalid_mirror(mirror_nextKnuckle_indices(i_digit),iFrame)
+                    nextKnucklePt = squeeze(final_mirror_pts(mirror_nextKnuckle_indices(i_digit),iFrame, :));
+                    if size(nextKnucklePt,1) == 2
+                        nextKnucklePt = nextKnucklePt';
+                    end
+                else
+                    nextKnucklePt = [];
+                end
+            end
+            if isempty(other_knuckle_pts) && isempty(nextKnucklePt)
+                continue;   % no nearest point to match with. probably will update this later to allow other points to be used...
+            end
+
+            np = estimatePawPart(known_pt, nextDigitKnuckles, other_knuckle_pts, nextKnucklePt, allPawPoints, F, imSize, maxDistFromNeighbor);
+            if isempty(np); continue; end
+            
+            if invalid_direct(direct_part_idx,iFrame)
+                % the mirror point was identified
+                final_direct_pts(direct_part_idx,iFrame,:) = np;
+                isEstimate(direct_part_idx,iFrame,1) = true;   % direct point for this body part in this frame is estimated
+            else
+                % the direct point was identified
+                final_mirror_pts(mirror_part_idx,iFrame,:) = np;
+                isEstimate(mirror_part_idx,iFrame,2) = true;   % mirror point for this body part in this frame is estimated
+            end
+
+        end
+        
+    end
     
 end
 

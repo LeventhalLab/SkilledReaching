@@ -192,8 +192,11 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     valid_direct = (direct_p >= min_valid_p_for_calibration) & ~isnan(direct_pts_ud(:,:,1)) & ~invalid_direct;
     valid_mirror = (mirror_p >= min_valid_p_for_calibration) & ~isnan(mirror_pts_ud(:,:,1)) & ~invalid_mirror;
 
+    try
     validPoints = (valid_direct & valid_mirror);
-
+    catch
+        keyboard
+    end
     for i_bp = 1 : num_direct_bp
         
         if strcmpi(direct_bp{i_bp},'pellet') && skipPelletForCalibration

@@ -63,29 +63,30 @@ end
         
 numFrames = size(direct_pts_ud,2);
 
-% [direct_mcp_idx,direct_pip_idx,direct_digit_idx,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
-% [~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
+[direct_mcp_idx,direct_pip_idx,direct_digit_idx,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
+[~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
 
-% all_direct_digit_idx = [direct_mcp_idx;direct_pip_idx;direct_digit_idx];
+all_direct_digit_idx = [direct_mcp_idx;direct_pip_idx;direct_digit_idx];
 
-if strcmp(pawPref,'left')
-    direct_pp_idx=[1];
-    direct_npn_idx=[2];
-    mirror_pp_idx=[1];
-    mirror_npn_idx=[2];
-elseif strcmp(pawPref,'right')
-    direct_pp_idx=[2];
-    direct_npn_idx=[1];
-    mirror_pp_idx=[2];
-    mirror_npn_idx=[1];
-else
-    disp('there`s an error');
-end
+% if strcmp(pawPref,'left')
+%     direct_pp_idx=[1];
+%     direct_npn_idx=[2];
+%     mirror_pp_idx=[1];
+%     mirror_npn_idx=[2];
+% elseif strcmp(pawPref,'right')
+%     direct_pp_idx=[2];
+%     direct_npn_idx=[1];
+%     mirror_pp_idx=[2];
+%     mirror_npn_idx=[1];
+% else
+%     disp('there`s an error');
+% end
 
-direct_nose_idx=[3];
-direct_pellet_idx=[4];
-mirror_nose_idx=[3];
-mirror_pellet_idx=[4];
+% direct_nose_idx=[3];
+% direct_pellet_idx=[4];
+% mirror_nose_idx=[3];
+% mirror_pellet_idx=[4];
+
 
 direct_pawdorsum_pts_ud = squeeze(direct_pts_ud(direct_pawdorsum_idx,:,:));
 mirror_pawdorsum_pts_ud = squeeze(mirror_pts_ud(mirror_pawdorsum_idx,:,:));

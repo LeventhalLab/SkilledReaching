@@ -22,18 +22,32 @@ cd(directViewDir);
 direct_csvList = dir('*.csv');
 if isempty(direct_csvList)
     mirror_csvList = direct_csvList;
+    mirrorViewDir = '';
     return;
 end
+
+% eliminate hidden files whose name starts with '._'. Not sure where those
+% come from but it's annoying...
+new_csvList = direct_csvList(1);
+numValidNames = 0;
+for ii = 1 : length(direct_csvList)
+    if strcmp(direct_csvList(ii).name(1:2),'._')
+        continue;
+    end
+    numValidNames = numValidNames + 1;
+    new_csvList(numValidNames) = direct_csvList(ii);
+end
+direct_csvList = new_csvList;
 
 numMarkedVids = length(direct_csvList);
 % ratID, date, etc. for each individual video
 directVidTime = cell(1, numMarkedVids);
-directVidNum = cell(numMarkedVids,1);
+directVidNum = zeros(numMarkedVids,1);
 
 % find all the direct view videos that are available
 uniqueDateList = {};
 for ii = 1 : numMarkedVids   
-    [directVid_ratID(ii),directVidDate{ii},directVidTime{ii},directVidNum{ii}] = ...
+    [directVid_ratID(ii),directVidDate{ii},directVidTime{ii},directVidNum(ii)] = ...
                 extractDLC_CSV_identifiers(direct_csvList(ii).name);
 
     if isempty(uniqueDateList)
@@ -57,3 +71,17 @@ end
 
 cd(mirrorViewDir)
 mirror_csvList = dir('*.csv');
+% eliminate hidden files whose name starts with '._'. Not sure where those
+% come from but it's annoying...
+new_csvList = mirror_csvList(1);
+numValidNames = 0;
+for ii = 1 : length(mirror_csvList)
+    if strcmp(mirror_csvList(ii).name(1:2),'._')
+        continue;
+    end
+    numValidNames = numValidNames + 1;
+    new_csvList(numValidNames) = mirror_csvList(ii);
+end
+mirror_csvList = new_csvList;
+
+end

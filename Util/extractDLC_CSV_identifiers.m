@@ -6,9 +6,11 @@ function [ratID,vidDate,vidTime,vidNum] = extractDLC_CSV_identifiers(csvName)
 % The .... between the formatted information and the file extension is for
 % DLC-specific information (training iterations, etc.)
 %
-C = textscan(csvName,'%04d_%8c_%2c_%03c');
+C = textscan(csvName,'R%04d_%8c_%8c_%03d');
 
 ratID = C{1};
 vidDate = C{2};
 vidTime = C{3};
 vidNum = C{4};
+
+end
