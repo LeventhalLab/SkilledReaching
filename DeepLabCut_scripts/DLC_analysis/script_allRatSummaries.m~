@@ -1,4 +1,4 @@
-% script_plotMeanTrajectories
+% script_allRatSummaries
 
 % CONSIDER EXCLUDING ANY TRIALS WHERE Z < 40 AT THE START OF THE TRIAL (PAW
 % MAY ALREADY BE AT THE SLOT - MISSED TRIGGER)
@@ -362,7 +362,15 @@ for i_rat = 1:numRatFolders
     end
     
 end
-    
+
+%%
+[h_figs] = plotOverallSummaryFigs(meanOrientations,mean_MRL,endApertures,mean_dig_trajectories,mean_pd_trajectories,first_reachEndPoints,experimentType,sessionType);
+
+for ii = 1 : 3
+    fname = sprintf('meanExtents_%d.pdf',ii);
+    fname = fullfile(summariesFolder, fname);
+    print(h_figs(ii),fname,'-dpdf','-r300');
+end
 %     plotOverallSummaryFigs(
 %%
 alternateSessions = {'R0197_20171213','R0197_20171220','R0216_20180301','R0216_20180307','R0217_20180303','R0217_20180307','R0218_20180302'};
@@ -442,7 +450,7 @@ for ii = 1 : length(alternate_endPoints)
     set(gca,'ylim',ylimits);
 end
 
-figure;
+h_fig = figure;
 sessionsMean_on = nanmean(sessionMean_on);
 sessionsMean_off = nanmean(sessionMean_off);
 
@@ -453,7 +461,7 @@ hold on
 scatter(11:15,sessionsMean_on,markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
 scatter(6:10,sessionsMean_off,markSize,'markeredgecolor',offColor,'markerfacecolor',offColor);
 scatter(16:20,sessionsMean_off,markSize,'markeredgecolor',offColor,'markerfacecolor',offColor);
-
+line([0,20],[0,0],'color','k')
 patch(onPatch_X,onPatch_Y,'b','facealpha',patchAlpha);
 set(gcf,'name','mean');
 xticks([1,5,6,10,11,15,20]);
@@ -461,6 +469,11 @@ xticklabels([1,5,1,5,1,5,1,5])
 set(gca,'ylim',y_meanlimits,'fontsize',ticklabelfontsize);
 ylabel('reach extent (mm)','fontsize',labelfontsize);
 xlabel('trial number in block','fontsize',labelfontsize);
+
+
+fname = 'alternating_extents.pdf';
+fname = fullfile(summariesFolder, fname);
+print(h_fig,fname,'-dpdf','-r300');
 
 
 figure;
@@ -500,17 +513,41 @@ end
 figure(1)
 subplot(1,1,1);
 hold off
-all_firstDuringEndPoints = 
+maxLength = 0;
 for ii = 1 : length(duringStim_endPoints)
-    figure(ii)
+    maxLength = max(maxLength,length(duringStim_endPoints{ii}));
+end
+all_firstDuringEndPoints = NaN(length(duringStim_endPoints),maxLength);
+for ii = 1 : length(duringStim_endPoints)
+    figure(ii+9)
     subplot(1,1,1);
     hold off
     numTrials = length(duringStim_endPoints{ii});
-    scatter(1:numTrials,duringStim_endPoints{ii}(1:numTrials))
+    scatter(1:numTrials,duringStim_endPoints{ii})
+    all_firstDuringEndPoints(ii,1:numTrials) = duringStim_endPoints{ii};
     hold on
     set(gcf,'name',firstDuringStimSessions{ii})
 end
-    
+
+%%
+lastPt = 50;
+h_fig = figure(length(duringStim_endPoints)+10);
+hold off
+scatter(1:lastPt,nanmean(all_firstDuringEndPoints(:,1:lastPt)),markSize,'markeredgecolor',onColor,'markerfacecolor',onColor);
+
+line([0,lastPt],[0,0],'color','k')
+
+xtickValues = [1 10 20 30 40 50];
+xticks(xtickValues);
+xticklabels(xtickValues)
+set(gca,'ylim',y_meanlimits,'fontsize',ticklabelfontsize);
+ylabel('reach extent (mm)','fontsize',labelfontsize);
+xlabel('trial number','fontsize',labelfontsize);
+
+fname = 'firstLaserExtents.pdf';
+fname = fullfile(summariesFolder, fname);
+print(h_fig,fname,'-dpdf','-r300');
+
     %%
 q=first_reachEndPoints{i_ratFolder}{i_session}{1};
 q10 = squeeze(q(10,:,:))';

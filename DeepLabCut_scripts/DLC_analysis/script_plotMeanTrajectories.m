@@ -13,8 +13,8 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
-skipSessionSummaryPlots = true;
+skipTrialPlots = false;
+skipSessionSummaryPlots = false;
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
@@ -120,7 +120,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 18:18%:numRatFolders
+for i_rat = 19:19%:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -185,9 +185,9 @@ for i_rat = 18:18%:numRatFolders
         case 4
             startSession = 1;
             endSession = numSessions;
-        case 18
-            startSession = 1;
-            endSession = numSessions;
+        case 19
+            startSession = 18;
+            endSession = 18;
         otherwise
             startSession = 1;
             endSession = numSessions;

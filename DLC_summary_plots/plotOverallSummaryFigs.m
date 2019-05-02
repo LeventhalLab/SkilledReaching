@@ -1,6 +1,11 @@
-function [h_figs] = plotOverallSummaryFigs(meanOrientations,MRL,endApertures,mean_dig_trajectories,mean_pd_trajectories,first_reachEndPoints,experimentType,sessionType)
+function [h_figs] = plotOverallSummaryFigs(ratInfo, meanOrientations,MRL,endApertures,mean_dig_trajectories,mean_pd_trajectories,first_reachEndPoints,experimentType,sessionType,summariesFolder)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
+
+
+% WORKING HERE - NEED TO EXTRACT THE DATA FOR THE RELEVANT SESSIONS FROM
+% THE RELEVANT RATS FOR EACH PLOT
+
 
 labelfontsize = 24;
 ticklabelfontsize = 18;
@@ -11,12 +16,21 @@ digitIdx = 10;
 % collect all reach endpoints for each experiment type for baseline, laser
 % on, and occlusion sessions
 
-mean_endPoints = cell(3,1);
-mean_endAngle = cell(3,1);
-mean_MRL = cell(3,1);
-mean_endApertures = cell(3,1);
-numExperiments = zeros(3,1);
-for ii = 1 : 3
+
+% collect all rats with ChR2 during stim
+exptTable{1} = findSubTable(ratInfo,'virus','chr2','lasertiming','during reach');
+exptTable{2} = findSubTable(ratInfo,'virus','chr2','lasertiming','between reach');
+exptTable{3} = findSubTable(ratInfo,'virus','eyfp','lasertiming','during reach');
+exptTable{4} = findSubTable(ratInfo,'virus','arch','lasertiming','during reach');
+
+num_exptTypes = length(exptTable);
+mean_endPoints = cell(num_exptTypes,1);
+mean_endAngle = cell(num_exptTypes,1);
+mean_MRL = cell(num_exptTypes,1);
+mean_endApertures = cell(num_exptTypes,1);
+numExperiments = zeros(num_exptTypes,1);
+
+for ii = 1 : length(exptTable)
     numExperiments(ii) = sum(experimentType == ii);
     
     mean_endPoints{ii} = zeros(22,3,numExperiments(ii));   % 22 = 2 baseline sessions + 10 laser + 10 occlusion
@@ -27,7 +41,7 @@ for ii = 1 : 3
 end
     
 idx_to_collect = zeros(22,1);
-expTypeIdx = zeros(3,1);
+expTypeIdx = zeros(num_exptTypes,1);
 for i_rat = 1 : numRats
 
     % find the last 2 baseline sessions
@@ -56,5 +70,31 @@ for i_rat = 1 : numRats
 end
 h_figs = plotMeanEndPoints(mean_endPoints);
 
-end
+end    % function
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function [n = findAnalyzedRats(ratTable,summariesFolder)
+
+numRats_in_group = size(ratTable,1);
+analyzedRows = false(numRats_in_group,1);
+for iRow = 1 : numRats_in_group
+    
+    ratID_num = ratTable(iRow).ratID;
+    ratID_str = sprintf('R%04d',ratID_num);
+    
+    ratRootFolder = fullfile(summariesFolder,ratID_str);
+    cd(ratRootFolder);
+    
+    % read rat summary table from this folder
+    sessionsSummary_csv = sprintf('%s_sessions.csv',ratID_str);
+    if exist(sessionsSummary_csv,'file')
+        sessionsTable = readReachingSessionTable(sessionsSummary_csv);
+    else
+        continue;
+    end
+        
+    
+
+end

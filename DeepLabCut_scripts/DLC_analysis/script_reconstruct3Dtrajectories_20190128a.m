@@ -89,8 +89,8 @@ for i_rat = 19:19%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 19
-        startSession = 1;
-        endSession = 16;
+        startSession = 18;
+        endSession = numSessions;
     else
         startSession = 1;
         endSession = numSessions;
