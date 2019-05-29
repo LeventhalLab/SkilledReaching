@@ -1,25 +1,15 @@
 % add manually marked calibration images to automatically marked calibration images
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Documents/deeplabcut images/cal images to review';
-=======
->>>>>>> stash
-calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
-camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
-<<<<<<< HEAD
-% camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
-=======
-% calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
-% camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
+month_to_analyze = '201805';
+year_to_analyze = month_to_analyze(1:4);
+rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+calImageDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_original_images']);
+autoImageDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_auto_marked']);
+manuallyMarkedDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_manually_marked']);
 
-calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
->>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
-=======
->>>>>>> stash
 load(camParamFile);
 
 pointsStillDistorted = true;

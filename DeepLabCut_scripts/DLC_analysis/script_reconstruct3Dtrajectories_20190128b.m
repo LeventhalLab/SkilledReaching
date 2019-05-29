@@ -19,7 +19,7 @@ maxDistFromNeighbor_invalid = 70;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190516.csv');
 
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
@@ -50,17 +50,17 @@ vidView = {'direct','right','left'};
 numViews = length(vidView);
 
 % find the list of calibration files
-cd(calImageDir);
-calFileList = dir('SR_boxCalibration_*.mat');
-calDateList = cell(1,length(calFileList));
-calDateNums = zeros(length(calFileList),1);
-for iFile = 1 : length(calFileList)
-    C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
-    calDateList{iFile} = C{1};
-    calDateNums(iFile) = str2double(calDateList{iFile});
-end
+% cd(calImageDir);
+% calFileList = dir('SR_boxCalibration_*.mat');
+% calDateList = cell(1,length(calFileList));
+% calDateNums = zeros(length(calFileList),1);
+% for iFile = 1 : length(calFileList)
+%     C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
+%     calDateList{iFile} = C{1};
+%     calDateNums(iFile) = str2double(calDateList{iFile});
+% end
 
-for i_rat = 19:numRatFolders
+for i_rat = 25:25%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,16 +88,31 @@ for i_rat = 19:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 19
+    if i_rat == 25
         startSession = 2;
+        endSession = numSessions;
     else
-        startSession = 2;
+        startSession = 1;
+        endSession = numSessions;
     end
-    for iSession = startSession : 5 : numSessions
+    for iSession = startSession : 3 : endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
+        sessionYear = sessionDate(1:4);
+        sessionMonth = sessionDate(1:6);
         
+        calibrationDir = fullfile(calImageDir,sessionYear,[sessionMonth '_calibration'],[sessionMonth '_calibration_files']);
+                % find the list of calibration files
+        cd(calibrationDir);
+        calFileList = dir('SR_boxCalibration_*.mat');
+        calDateList = cell(1,length(calFileList));
+        calDateNums = zeros(length(calFileList),1);
+        for iFile = 1 : length(calFileList)
+            C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
+            calDateList{iFile} = C{1};
+            calDateNums(iFile) = str2double(calDateList{iFile});
+        end
         fprintf('working on session %s_%s\n',ratID,sessionDate);
         
         % find the calibration file for this date
@@ -115,7 +130,9 @@ for i_rat = 19:numRatFolders
             
         calFileIdx = find(dateDiff == lastValidCalDate);
 
+%         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
+        calibrationFileName = fullfile(calibrationDir,calibrationFileName);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else

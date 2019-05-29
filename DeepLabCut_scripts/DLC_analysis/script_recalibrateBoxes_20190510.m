@@ -18,7 +18,7 @@ min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190315.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190516.csv');
 
 ratInfo = readRatInfoTable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
@@ -59,7 +59,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 26:26%4:13%numRatFolders
+for i_rat = 25:25%4:13%numRatFolders
 % for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -89,7 +89,7 @@ for i_rat = 26:26%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 2
-        startSession = 1;
+        startSession = 3;
         endSession = numSessions;
     else
         startSession = 1;
@@ -123,7 +123,7 @@ for i_rat = 26:26%4:13%numRatFolders
         
         % find the calibration file for this date
         % find the calibration file
-        cd(calImageDir);
+%         cd(calImageDir);
         curDateNum = str2double(sessionDate);
         dateDiff = curDateNum - calDateNums;
 
@@ -138,6 +138,7 @@ for i_rat = 26:26%4:13%numRatFolders
 
     %     calibrationFileName = ['SR_boxCalibration_' directVidDate{i_directcsv} '.mat'];
         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
+        calibrationFileName = fullfile(calibrationDir,calibrationFileName);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else

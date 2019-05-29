@@ -1,5 +1,8 @@
 % script_plotMeanTrajectories
 
+% R0219, 20180314a, VID #69 IS MISSING FRAMES - NEEDS TO BE RE-CLIPPED AND
+% RUN THROUGH DLC
+
 % CONSIDER EXCLUDING ANY TRIALS WHERE Z < 40 AT THE START OF THE TRIAL (PAW
 % MAY ALREADY BE AT THE SLOT - MISSED TRIGGER)
 
@@ -112,7 +115,7 @@ bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
 labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190315.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190516.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
@@ -120,7 +123,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 19:19%:numRatFolders
+for i_rat = 2:2%:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -182,12 +185,12 @@ for i_rat = 19:19%:numRatFolders
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
     switch i_rat
-        case 4
+        case 2
             startSession = 1;
             endSession = numSessions;
         case 19
-            startSession = 18;
-            endSession = 18;
+            startSession = 1;
+            endSession = numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;

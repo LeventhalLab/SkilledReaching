@@ -4,7 +4,7 @@
 
 % Crops a video into different views and places those video files into different folders, see
 % documentation for usage
-function [savedVideoPaths] = cropVideo(videoFile,pixelBounds)
+function [savedVideoPaths] = cropVideo_old(videoFile,pixelBounds)
     video = VideoReader(videoFile);
     [videoPath,videoName,videoExt] = fileparts(videoFile);
     

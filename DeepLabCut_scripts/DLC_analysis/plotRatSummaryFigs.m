@@ -189,7 +189,11 @@ for iSession = 1 : numSessions
         axes(ratSummary_h_axes(4,iDim))
         % find reach end points for the bodypart of interest for all
         % trials
+        try
         dim_endPoints = squeeze(reachEndPoints{iSession}{1}(bodypart_idx_toPlot,iDim,:));
+        catch
+            keyboard
+        end
         toPlot = nanmean(dim_endPoints);
         scatter(iSession,toPlot,'markeredgecolor',plotColor,'markerfacecolor',plotColor);
         hold on
