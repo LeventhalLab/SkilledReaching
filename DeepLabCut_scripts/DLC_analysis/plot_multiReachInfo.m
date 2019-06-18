@@ -141,7 +141,10 @@ end
 
 textString{1} = sprintf('%s session summary; %s (%s on score sheet), day %d, %d days left in block, Virus: %s', ...
     curSession, curSessionType.type, curSessionType.typeFromScoreSheet, curSessionType.sessionsInBlock, curSessionType.sessionsLeftInBlock, virus);
-% textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
+textString{2} = sprintf('color indicators: %s - %s',trialTypeColors{1},validTypeNames{1});
+for ii = 2 : length(trialTypeColors)
+    textString{2} = sprintf('%s, %s - %s', textString{2},trialTypeColors{ii},validTypeNames{ii});
+end
 % textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
 axes(h_figAxis(1));
 text(figProps.leftMargin,figProps.height-0.75,textString,'units','centimeters','interpreter','none');

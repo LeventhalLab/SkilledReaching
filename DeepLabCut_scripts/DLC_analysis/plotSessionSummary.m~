@@ -67,7 +67,6 @@ plot(trialNumbers(:,2),all_endPtFrame);
 plot(trialNumbers(:,2),all_maxDigitReachFrame);
 title('event frames')
 set(gca,'ylim',pawFrameLim);
-legend('first paw','through slot','end point','max reach','location','southwest');
 
 % final z location as a function of trial #
 [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);

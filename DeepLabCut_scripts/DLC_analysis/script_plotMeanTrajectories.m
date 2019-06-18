@@ -123,7 +123,7 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = 2:2%:numRatFolders
+for i_rat = 18:18%:numRatFolders
     
     ratID = ratFolders{i_rat};
     ratIDnum = str2double(ratID(2:end));
@@ -186,9 +186,9 @@ for i_rat = 2:2%:numRatFolders
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
     switch i_rat
-        case 9
+        case 17
             startSession = 1;
-            endSession = numSessions;
+            endSession = 30;
         case 19
             startSession = 1;
             endSession = numSessions;
@@ -403,7 +403,7 @@ if ~skipTrialPlots
                     textString{2} = sprintf('%s, %d', textString{2}, currentTrialList(ii));
                 end
                 textString{3} = sprintf('color indicators: %s - %s',trialTypeColors{1},validTypeNames{1});
-                for ii = 2 : length(currentTrialList)
+                for ii = 2 : length(trialTypeColors)
                     textString{3} = sprintf('%s, %s - %s', textString{3},trialTypeColors{ii},validTypeNames{ii});
                 end
                 axes(trajectory_h_figAxis);

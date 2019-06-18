@@ -44,8 +44,17 @@ numSessions = length(sessionDates);
 for iSession = 1 : numSessions
 
 
+    if ~isdatetime(sessionDates{iSession})
+        continue   % no date loaded for this session, perhaps because it wasn't calculated (not scored?)
+    end
     allSessionIdx = find(sessionDates{iSession} == allSessionDates);
+
+    if isempty(allSessionIdx)
+        % session wasn't computed - maybe because it wasn't scored
+        continue;
+    end
     curSessionType = sessionType(allSessionIdx).type;
+
     sessionsLeftInBlock = sessionType(allSessionIdx).sessionsLeftInBlock;
     
     sessionTypeUnknown = false;
@@ -157,7 +166,15 @@ end
 
 for iSession = 1 : numSessions
 
+    if ~isdatetime(sessionDates{iSession})
+        continue   % no date loaded for this session, perhaps because it wasn't calculated (not scored?)
+    end
     allSessionIdx = find(sessionDates{iSession} == allSessionDates);
+    if isempty(allSessionIdx)
+        % session wasn't computed - maybe because it wasn't scored
+        continue;
+    end
+    
     curSessionType = sessionType(allSessionIdx).type;
     sessionsLeftInBlock = sessionType(allSessionIdx).sessionsLeftInBlock;
     switch curSessionType
