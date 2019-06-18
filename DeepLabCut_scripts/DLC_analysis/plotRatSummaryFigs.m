@@ -1,6 +1,6 @@
 function [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
     mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle,meanOrientations,mean_MRL,...
-    endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,thisRatInfo)
+    endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,numTrialsPerSession,thisRatInfo)
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -288,6 +288,13 @@ for iSession = 1 : numSessions
     plot(toPlot,'color',plotColor);
     hold on
     title('aperture variance vs frame')
+    
+    % number of reaches per session (and also perhaps accuracy)
+    axes(ratSummary_h_axes(5,4))
+    toPlot = varApertures{iSession};
+    scatter(iSession,numTrialsPerSession(iSession),'markeredgecolor',plotColor,'markerfacecolor',plotColor);
+    hold on
+    title('number of trials per session')
 end
             
 axes(ratSummary_h_axes(4,1))
