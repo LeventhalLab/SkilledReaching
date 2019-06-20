@@ -18,10 +18,10 @@ digitIdx = 10;
 
 
 % collect all rats with ChR2 during stim
-exptTable{1} = findSubTable(ratInfo,'virus','chr2','lasertiming','during reach');
-exptTable{2} = findSubTable(ratInfo,'virus','chr2','lasertiming','between reach');
-exptTable{3} = findSubTable(ratInfo,'virus','eyfp','lasertiming','during reach');
-exptTable{4} = findSubTable(ratInfo,'virus','arch','lasertiming','during reach');
+exptTable{1} = findSubTable(ratInfo,'Virus','chr2','laserTiming','during reach');
+exptTable{2} = findSubTable(ratInfo,'Virus','chr2','laserTiming','between reach');
+exptTable{3} = findSubTable(ratInfo,'Virus','eyfp','laserTiming','during reach');
+exptTable{4} = findSubTable(ratInfo,'Virus','arch','laserTiming','during reach');
 
 num_exptTypes = length(exptTable);
 mean_endPoints = cell(num_exptTypes,1);
@@ -95,6 +95,6 @@ for iRow = 1 : numRats_in_group
         continue;
     end
         
-    
+end
 
 end
