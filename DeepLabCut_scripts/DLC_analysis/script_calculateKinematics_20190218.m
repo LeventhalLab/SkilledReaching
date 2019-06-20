@@ -83,7 +83,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 17:17%numRatFolders
+for i_rat = 24:24%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -124,8 +124,8 @@ for i_rat = 17:17%numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 17
-        startSession = 31;
+    if i_rat == 24
+        startSession = 1;
         endSession = numSessions;
     else
         startSession = 1;
@@ -225,6 +225,10 @@ for i_rat = 17:17%numRatFolders
             if size(isEstimate,2) < size(all_isEstimate,2)
                 isEstimate(:,end+1:size(all_isEstimate,2),:) = false;
             end 
+            % sometimes it happens to the first video...
+            if size(isEstimate,2) > size(all_isEstimate,2)
+                all_isEstimate(:,end+1:size(isEstimate,2),:,:) = false;
+            end
             all_isEstimate(:,:,:,iTrial) = isEstimate;
 
             trialOutcome = sessionReachScores(trialNumbers(iTrial,2));
@@ -239,6 +243,11 @@ for i_rat = 17:17%numRatFolders
                 % make any points that aren't in a truncated video invalid
                 invalid_direct(:,end+1:size(invalid3Dpoints,2)) = true;
                 invalid_mirror(:,end+1:size(invalid3Dpoints,2)) = true;
+            end
+            if size(invalid_direct,2) > size(invalid3Dpoints,2)
+                % make any points that aren't in a truncated video invalid
+                % (sometimes this happens on the first video)
+                invalid3Dpoints(:,end+1:size(invalid_direct,2),:) = true;
             end
             invalid3Dpoints(:,:,iTrial) = invalid_direct & invalid_mirror;   % if both direct and indirect points are invalid, 3D point can't be valid
             
@@ -262,6 +271,12 @@ for i_rat = 17:17%numRatFolders
                 pipAngle(end+1:size(all_pipAngle,1)) = 0;
                 digitAngle(end+1:size(all_digitAngle,1)) = 0;
                 pawAngle(end+1:size(all_pawAngle,1)) = 0;
+            end
+            if length(mcpAngle) > size(all_mcpAngle,1)
+                all_mcpAngle(end+1:length(mcpAngle),:) = 0;
+                all_pipAngle(end+1:length(pipAngle),:) = 0;
+                all_digitAngle(end+1:length(digitAngle),:) = 0;
+                all_pawAngle(end+1:length(pawAngle),:) = 0;
             end
             all_mcpAngle(:,iTrial) = mcpAngle;
             all_pipAngle(:,iTrial) = pipAngle;
@@ -313,6 +328,9 @@ for i_rat = 17:17%numRatFolders
                             trajectory(iFrame,:,i_bp) = NaN;
                         end
                     end
+                end
+                if size(trajectory,1) > size(allTrajectories,1)
+                    allTrajectories(end+1:size(trajectory,1),:,:,:) = 0;
                 end
                 allTrajectories(:,:,:,iTrial) = trajectory;
             end
@@ -369,6 +387,9 @@ for i_rat = 17:17%numRatFolders
             % now and then within a session)
             if size(aperture,1) < size(all_aperture,1)
                 aperture(end+1:size(all_aperture,1),:) = NaN;
+            end 
+            if size(aperture,1) > size(all_aperture,1)
+                all_aperture(end+1:size(aperture,1),:,:) = NaN;
             end 
             all_aperture(:,:,iTrial) = aperture;
             

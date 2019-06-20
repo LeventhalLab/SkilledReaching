@@ -52,10 +52,14 @@ reachingPawIdx = [mcpIdx;pipIdx;digIdx;pawDorsumIdx];
 
 for iTrial = 2 : numTrials
     load(pawTrajectoryList(iTrial).name);
-    if size(pawTrajectory,1) < size(allTrajectories,1)
+    if size(pawTrajectory,1) < size(allTrajectories,1)   % if the current video is short compared to others for whatever reason.
         pawTrajectory(end+1:size(allTrajectories,1),:,:) = 0;
     end
+    if size(pawTrajectory,1) > size(allTrajectories,1)   % if the current video is longer than the first one for whatever reason. this may happen if the first video in a series is short
+        allTrajectories(end+1:size(pawTrajectory,1),:,:,:) = NaN;   % assume all frames after the last frame so far should be NaNs
+    end
     allTrajectories(:,:,:,iTrial) = pawTrajectory;
+
 end
 all_z = squeeze(allTrajectories(:,3,reachingPawIdx,:));
 all_z = all_z(all_z > 0);

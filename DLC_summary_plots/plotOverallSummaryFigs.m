@@ -75,7 +75,7 @@ end    % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [n = findAnalyzedRats(ratTable,summariesFolder)
+function sessionsTable = findAnalyzedRats(ratTable,summariesFolder)
 
 numRats_in_group = size(ratTable,1);
 analyzedRows = false(numRats_in_group,1);
