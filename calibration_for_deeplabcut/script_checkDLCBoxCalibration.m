@@ -1,24 +1,47 @@
 % script to check if calibration points are appropriately triangulated
 
-allParams = setParams;
+% allParams = setParams;
+
+month_to_analyze = '201708';
+year_to_analyze = month_to_analyze(1:4);
+rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+calImageDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_original_images']);
+autoImageDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_auto_marked']);
+manuallyMarkedDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_manually_marked']);
+allMarkedDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_all_marked']);
+calFileDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_calibration_files']);
 
 colList = 'rgb';
-matList = dir([allParams.calImageDir 'boxCalibration_*.mat']);
+cd(calFileDir)
+matList = dir('SR_boxCalibration_*.mat');
 P = eye(4,3);
 % close all
 
+cd(calImageDir);
+[imFiles_from_same_date, img_dateList] = groupCalibrationImagesbyDate(imgList);
+
 for iMat = 1 : length(matList)
     
+    cd(calFileDir)
     load(matList(iMat).name);
-    if ~any(strcmp({'20180317'}, curDate))
+    % curDate is stored in the .mat file
+    if ~any(strcmp({'20170814'}, curDate))
         continue;
     end
+    
     K = cameraParams.IntrinsicMatrix;
     
     numBoards = size(directChecks,3);
     numImg = size(directChecks,4);
     
     close all
+    cd(calImageDir)
+    % imFileList is stored in the .mat file
     for iImg = 1 : numImg
         img = imread(imFileList{iImg},'png');
         img = undistortImage(img,cameraParams);

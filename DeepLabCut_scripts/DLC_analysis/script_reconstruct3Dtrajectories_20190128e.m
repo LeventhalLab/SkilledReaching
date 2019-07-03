@@ -60,7 +60,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 24:24%numRatFolders
+for i_rat = 20:20%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,7 +88,7 @@ for i_rat = 24:24%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 24
+    if i_rat == 23
         startSession = 1;
         endSession = numSessions;
     else
@@ -180,7 +180,7 @@ for i_rat = 24:24%numRatFolders
 
         cd(mirrorViewDir)
 
-        for i_mirrorcsv = 1 : length(mirror_csvList)
+        for i_mirrorcsv = 14 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);

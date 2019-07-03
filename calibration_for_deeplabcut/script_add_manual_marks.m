@@ -1,6 +1,6 @@
 % add manually marked calibration images to automatically marked calibration images
 
-month_to_analyze = '201805';
+month_to_analyze = '201708';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -9,6 +9,14 @@ autoImageDir = fullfile(rootDir,year_to_analyze,...
     [month_to_analyze '_calibration'],[month_to_analyze '_auto_marked']);
 manuallyMarkedDir = fullfile(rootDir,year_to_analyze,...
     [month_to_analyze '_calibration'],[month_to_analyze '_manually_marked']);
+allMarkedDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_all_marked']);
+calFileDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze 'calibration_files']);
+
+if ~exist(allMarkedDir,'dir')
+    mkdir(allMarkedDir);
+end
 
 load(camParamFile);
 
@@ -49,12 +57,14 @@ mirror_hsvThresh = [0,0.1,0.85,1,0.85,1;
 boardSize = [4 5];
 points_per_board = prod(boardSize-1);
 
-cd(calImageDir)
-
 anticipatedBoardSize = [4 5];
 
-imgList = dir('GridCalibration_*.png');
+cd(manuallyMarkedDir)
 csvList = dir('GridCalibration_*.csv');
+
+cd(calImageDir)
+imgList = dir('GridCalibration_*.png');
+
 % load test image
 A = imread(imgList(1).name,'png');
 h = size(A,1); w = size(A,2);
@@ -71,7 +81,6 @@ numBoards = size(ROIs,1) - 1;
 mirrorOrientation = {'top','left','right'};
    
 cd(calImageDir);
-
 [imFiles_from_same_date, img_dateList] = groupCalibrationImagesbyDate(imgList);
 [csvFiles_from_same_date, csv_dateList] = group_csv_files_by_date(csvList);
 numDates = length(csv_dateList);
@@ -79,7 +88,7 @@ numDates = length(csv_dateList);
 for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
-    if ~any(strcmp({'20180317'}, curDate))
+    if ~any(strcmp({'20170814'}, curDate))
         continue;
     end
     
@@ -94,20 +103,22 @@ for iDate = 1 : numDates
     
     csvData = cell(1,num_csvPerDate);
     csvNumList = zeros(1,num_csvPerDate);
+    cd(manuallyMarkedDir)
     for i_csv = 1 : num_csvPerDate
         cur_csvName = csvFiles_from_same_date{iDate}{i_csv};
         C = textscan(cur_csvName,['GridCalibration_' curDate '_%d.csv']);
         csvNumList(i_csv) = C{1};
         csvData{i_csv} = readFIJI_csv(cur_csvName);
         % Undistort points in csv file
-<<<<<<< HEAD
-        csvData{i_csv}=undistortPoints(csvData{i_csv},cameraParams);
-=======
+% <<<<<<< HEAD
 %         csvData{i_csv}=undistortPoints(csvData{i_csv},cameraParams);
->>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
+% =======
+%         csvData{i_csv}=undistortPoints(csvData{i_csv},cameraParams);
+% >>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
     end
     
     % load images, but only ones for which there is a .csv file
+    cd(calImageDir)
     imgNumList = zeros(1,numImgPerDate);
     numImgLoaded = 0;
     if exist('img','var')
@@ -147,6 +158,7 @@ for iDate = 1 : numDates
 %     end
 %     
     % read in corresponding .mat file if it exists
+    cd(autoImageDir)
     matFileName = ['GridCalibration_' csv_dateList{iDate} '_auto.mat'];
     foundMatFile = false;
     if exist(matFileName,'file')
@@ -160,22 +172,7 @@ for iDate = 1 : numDates
     end
     
     % Undistort points found during the automatic process
-<<<<<<< HEAD
-    for iUndistImgs = 1:size(directChecks,3)
-        for iUndistBrds = 1:size(directChecks,4)
-            if ~isnan(directChecks(:,:,iUndistImgs,iUndistBrds))
-                directChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(directChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
-            end
-        end
-    end
-    for iUndistImgs = 1:size(mirrorChecks,3)
-        for iUndistBrds = 1:size(mirrorChecks,4)
-            if ~isnan(mirrorChecks(:,:,iUndistImgs,iUndistBrds))
-                mirrorChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(mirrorChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
-            end
-        end
-    end
-=======
+% <<<<<<< HEAD
 %     for iUndistImgs = 1:size(directChecks,3)
 %         for iUndistBrds = 1:size(directChecks,4)
 %             if ~isnan(directChecks(:,:,iUndistImgs,iUndistBrds))
@@ -190,7 +187,22 @@ for iDate = 1 : numDates
 %             end
 %         end
 %     end
->>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
+% =======
+%     for iUndistImgs = 1:size(directChecks,3)
+%         for iUndistBrds = 1:size(directChecks,4)
+%             if ~isnan(directChecks(:,:,iUndistImgs,iUndistBrds))
+%                 directChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(directChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
+%             end
+%         end
+%     end
+%     for iUndistImgs = 1:size(mirrorChecks,3)
+%         for iUndistBrds = 1:size(mirrorChecks,4)
+%             if ~isnan(mirrorChecks(:,:,iUndistImgs,iUndistBrds))
+%                 mirrorChecks(:,:,iUndistImgs,iUndistBrds)=undistortPoints(mirrorChecks(:,:,iUndistImgs,iUndistBrds),cameraParams);
+%             end
+%         end
+%     end
+% >>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
     
     old_directChecks = directChecks;
     old_mirrorChecks = mirrorChecks;
@@ -254,6 +266,7 @@ for iDate = 1 : numDates
     end
     
     matSaveFileName = ['GridCalibration_' csv_dateList{iDate} '_all.mat'];
+    matSaveFileName = fullfile(allMarkedDir,matSaveFileName);
     imFileList = imFiles_from_same_date{img_date_idx};
     save(matSaveFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList','curDate','pointsStillDistorted');
     
@@ -262,6 +275,7 @@ for iDate = 1 : numDates
             
             % was there a previously marked image?
             curImgName = imFiles_from_same_date{img_date_idx}{iImg};
+            cd(calImageDir);
             oldImg = imread(curImgName,'png');
 %             newImg = undistortImage(oldImg,cameraParams);
             newImg = oldImg;
@@ -302,13 +316,11 @@ for iDate = 1 : numDates
                 end
                 
             end
-<<<<<<< HEAD
-            figure;
-=======
+
             h_fig = figure;
->>>>>>> 7ef36dc6e86be6b0cec96f5433caac4fc34fd11b
             imshow(newImg);
             newImgName = strrep(curImgName,'.png','_all_marked.png');
+            newImgName = fullfile(allMarkedDir,newImgName);
             set(gcf,'name',newImgName);
             imwrite(newImg,newImgName,'png');
             close(h_fig)

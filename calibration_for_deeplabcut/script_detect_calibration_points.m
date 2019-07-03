@@ -9,14 +9,16 @@
 % % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 % =======
 
-month_to_analyze = '201805';
+month_to_analyze = '201708';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
     [month_to_analyze '_calibration'],[month_to_analyze '_original_images']);
 autoImageDir = fullfile(rootDir,year_to_analyze,...
     [month_to_analyze '_calibration'],[month_to_analyze '_auto_marked']);
-
+if ~exist(autoImageDir,'dir')
+    mkdir(autoImageDir)
+end
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 
@@ -77,9 +79,9 @@ numDates = length(dateList);
 for iDate = 1 : numDates
     
     curDate = dateList{iDate};
-%     if ~any(strcmp({'20180317'}, curDate))
-%         continue;
-%     end
+    if ~any(strcmp({'20170810','20170811'}, curDate))
+        continue;
+    end
     
     fprintf('processing %s\n',curDate);
     numFilesPerDate = length(imFiles_from_same_date{iDate});

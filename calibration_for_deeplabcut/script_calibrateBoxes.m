@@ -2,6 +2,25 @@
 
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+
+month_to_analyze = '201708';
+year_to_analyze = month_to_analyze(1:4);
+rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+calImageDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_original_images']);
+autoImageDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_auto_marked']);
+manuallyMarkedDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_manually_marked']);
+allMarkedDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_all_marked']);
+calFileDir = fullfile(rootDir,year_to_analyze,...
+    [month_to_analyze '_calibration'],[month_to_analyze '_calibration_files']);
+
+if ~exist(calFileDir,'dir')
+    mkdir(calFileDir);
+end
+
 load(camParamFile);
 
 K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, meaning lower triangular
@@ -11,7 +30,7 @@ K = cameraParams.IntrinsicMatrix;   % camera intrinsic matrix (matlab format, me
 cb_spacing = 4;   % real world spacing between calibration checkerboard vertices, in mm
 anticipatedBoardSize = [4,5];
 
-cd(calImageDir)
+cd(allMarkedDir)
 
 all_pt_matList = dir('Grid*_all.mat');
 P = eye(4,3);
@@ -21,7 +40,7 @@ for iMat = 1 : length(all_pt_matList)
         clear pointsStillDistorted
     end
     load(all_pt_matList(iMat).name);
-    if ~any(strcmp({'20180317'}, curDate))
+    if ~any(strcmp({'20170814'}, curDate))
         continue;
     end
     fprintf('working on %s\n',curDate);
@@ -52,7 +71,7 @@ for iMat = 1 : length(all_pt_matList)
         if exist('pointsStillDistorted','var')    % this was added into the all_pt_matList files on 20190301 so that
                                                   % point matching could be
                                                   % performed prior to
-                                                  % undistortation; now
+                                                  % undistortion; now
                                                   % have to undistort here
             if pointsStillDistorted  % points not undistorted yet
                 valid_mp_direct = undistortPoints(valid_mp_direct,cameraParams);
@@ -135,6 +154,7 @@ for iMat = 1 : length(all_pt_matList)
     
     % write box calibration information to disk
     calibrationFileName = ['SR_boxCalibration_' curDate '.mat'];
+    calibrationFileName = fullfile(calFileDir,calibrationFileName);
     save(calibrationFileName,'P','Pn','F','E','scaleFactor','directChecks','mirrorChecks','cameraParams','curDate','imFileList');
     
     % comment in below to draw lines between matching points
