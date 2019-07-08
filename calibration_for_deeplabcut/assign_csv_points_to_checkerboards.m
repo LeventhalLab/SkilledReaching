@@ -8,6 +8,12 @@ function [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboar
 %       Assumption is that directBorderMask(:,:,1) is the red (top) border,
 %       (:,:2) is the green (left) border, (:,:,3) is the blue (right)
 %       border
+%   ROIs - regions of interest in which to find the direct view of the
+%       cube, and each mirror view in the format [x,y,w,h] where x is the
+%       left x-coordinate, y is the top y-coordinate, and w and h are the 
+%       width and height, respectively. First row is for direct cube view, 
+%       second row top mirror, third row left mirror, fourth row right 
+%       mirror
 %   newPoints - m x 2 array where each row is an (x,y) pair for a marked
 %       point
 %
@@ -82,6 +88,7 @@ for i_pt = 1 : num_newPoints
     
     % is this point enclosed in any of the direct or mirror border masks?
     testPoint = round(newPoints(i_pt,:));
+    testPoint(testPoint == 0) = 1;   % sometimes the point is right on the edge of the image and gets assigned a zero coordinate
     pointAssigned = false;
     for iBoard = 1 : numDirectBoards
         % recall first index is y, second is x in the masks
@@ -137,7 +144,11 @@ for i_pt = 1 : num_newPoints
     end
     
     % point belongs to one of two missing direct masks. which one?
+    try
     knownMaskString = mirrorOrientation{foundDirectMask};
+    catch
+        keyboard
+    end
     knownMask = squeeze(directBorderMask(:,:,foundDirectMask));
     [y,x] = find(knownMask);
     bot_y = max(y);

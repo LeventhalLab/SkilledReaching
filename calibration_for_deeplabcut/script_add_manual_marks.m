@@ -1,6 +1,8 @@
 % add manually marked calibration images to automatically marked calibration images
 
-month_to_analyze = '201708';
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+
+month_to_analyze = '201705';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -49,6 +51,11 @@ SEsize = 3;
 direct_hsvThresh = [0,0.1,0.9,1,0.9,1;
                     0.33,0.1,0.9,1,0.9,1;
                     0.66,0.1,0.9,1,0.9,1];
+                
+% for 20170804
+% direct_hsvThresh = [0,0.1,0.9,1,0.9,1;
+%                     0.2,0.1,0.9,1,0.9,1;
+%                     0.66,0.1,0.9,1,0.9,1];
 
 mirror_hsvThresh = [0,0.1,0.85,1,0.85,1;
                     0.30,0.05,0.85,1,0.85,1;
@@ -68,7 +75,7 @@ imgList = dir('GridCalibration_*.png');
 % load test image
 A = imread(imgList(1).name,'png');
 h = size(A,1); w = size(A,2);
-% [x,y,w,h]. first row is for direct cube view, second row tpp mirror,
+% [x,y,w,h]. first row is for direct cube view, second row top mirror,
 % third row left mirror, fourth row right mirror
 rightMirrorLeftEdge = 1700;
 ROIs = [700,270,650,705;
@@ -88,7 +95,7 @@ numDates = length(csv_dateList);
 for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
-    if ~any(strcmp({'20170814'}, curDate))
+    if ~any(strcmp({'20170726'}, curDate))
         continue;
     end
     
@@ -233,7 +240,11 @@ for iDate = 1 : numDates
             testPoints = squeeze(new_mirrorChecks(:,:,iBoard));
             if ~all(isnan(testPoints(:)))
                 % marked points were found for this board
+                try
                 mirrorChecks(:,:,iBoard,imgNumList(img_idx)) = testPoints;
+                catch
+                    keyboard
+                end
             end
                 
         end

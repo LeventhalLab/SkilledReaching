@@ -18,7 +18,7 @@ min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190516.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190708.csv');
 
 ratInfo = readRatInfoTable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];

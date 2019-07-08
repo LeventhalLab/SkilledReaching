@@ -23,6 +23,7 @@ P = eye(4,3);
 % close all
 
 cd(calImageDir);
+imgList = dir('GridCalibration_*.png');
 [imFiles_from_same_date, img_dateList] = groupCalibrationImagesbyDate(imgList);
 
 for iMat = 1 : length(matList)
@@ -30,7 +31,7 @@ for iMat = 1 : length(matList)
     cd(calFileDir)
     load(matList(iMat).name);
     % curDate is stored in the .mat file
-    if ~any(strcmp({'20170814'}, curDate))
+    if ~any(strcmp({'20170804'}, curDate))
         continue;
     end
     
