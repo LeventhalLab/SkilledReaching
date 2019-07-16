@@ -11,7 +11,7 @@ tic
 
 repeatCalculations = false;   % if cropped video file already exists, don't repeat
 
-ratID = 'R0158';
+ratID = 'R0159';
 
 % rootPath = fullfile('/Volumes/RecordingsLeventhal04/SkilledReaching');
 rootPath = fullfile('/Volumes/Tbolt_01/Skilled Reaching');
@@ -100,72 +100,72 @@ if ~selectRandomVideos
     
 %     ii = ii + 1;
 %     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170502a';
+%     sessionsToExtract(ii).session = '20170420a';
 %     
 %     ii = ii+1;
 %     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170503a'; 
+%     sessionsToExtract(ii).session = '20170421a'; 
 %     
 %     ii = ii+1;
 %     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170504a'; 
+%     sessionsToExtract(ii).session = '20170424a'; 
 %     
 %     ii = ii+1;
 %     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170505a'; 
+%     sessionsToExtract(ii).session = '20170425a'; 
 %     
 %     ii = ii+1;
 %     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170506a';
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170509a'; 
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170510a'; 
-%     
-%     ii = ii+1;                                                               
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170511a'; 
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170512a';
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170513a'; 
+%     sessionsToExtract(ii).session = '20170426a';
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170427c'; 
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170428c'; 
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170430a'; 
 %     
     ii = ii+1;
     sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170514a'; 
+    sessionsToExtract(ii).session = '20170501a';
     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170515a'; 
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170517a';
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170518a';
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170519a';
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170518a'; 
-%     
-%     ii = ii+1;
-%     sessionsToExtract(ii).ratID = ratID;
-%     sessionsToExtract(ii).session = '20170519a'; 
-%     
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170502a'; 
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170503a'; 
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170504a'; 
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170505a';
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170506a';
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170509b';
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170510a'; 
+    
+    ii = ii+1;
+    sessionsToExtract(ii).ratID = ratID;
+    sessionsToExtract(ii).session = '20170511a'; 
+    
 %     ii = ii+1;
 %     sessionsToExtract(ii).ratID = ratID;
 %     sessionsToExtract(ii).session = '20170520a'; 
@@ -285,9 +285,7 @@ if selectRandomVideos
         for iView = 1 : length(viewSavePath)
             destVidName{iView} = fullfile(viewSavePath{iView}, [vidName(1:end-4),'_',viewList{iView}]);
         end
-
-        % check if destination vid already exists. If set to not
-        % repeat calculations and cropped vid already exists, skip
+        
         if ~repeatCalculations
             if exist(destVidName{iView},'file')
                 continue;
@@ -295,7 +293,7 @@ if selectRandomVideos
         end
                 
         fprintf('working on %s\n', vidName);
-        
+
         cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
 
         numVidsExtracted = numVidsExtracted + 1;
@@ -326,14 +324,12 @@ else % extracts videos from sessions specified above
                     destVidName{iView} = fullfile(viewSavePath{iView}, [vidName(1:end-4),'_',viewList{iView}]);
                 end
                 
-                % check if destination vid already exists. If set to not
-                % repeat calculations and cropped vid already exists, skip
                 if ~repeatCalculations
                     if exist(destVidName{iView},'file')
                         continue;
                     end
                 end
-                
+
                 fprintf('working on %s\n', vidName);
                 
                 video=VideoReader(vidName);
@@ -355,17 +351,15 @@ else % extracts videos from sessions specified above
                 vidNameNumber = vidName(end-6:end-4);
                 destVidName = cell(1,length(viewSavePath));
                 for iView = 1 : length(viewSavePath)
-                    destVidName{iView} = fullfile(viewSavePath{iView}, [vidName(1:end-4),'_',viewList{iView}, '.mp4']);
+                    destVidName{iView} = fullfile(viewSavePath{iView}, [vidName(1:end-4),'_',viewList{iView}]);
                 end
                 
-                % check if destination vid already exists. If set to not
-                % repeat calculations and cropped vid already exists, skip
                 if ~repeatCalculations
                     if exist(destVidName{iView},'file')
                         continue;
                     end
                 end
-                
+
                 fprintf('working on %s\n', vidName);
                 
                 video=VideoReader(vidName);

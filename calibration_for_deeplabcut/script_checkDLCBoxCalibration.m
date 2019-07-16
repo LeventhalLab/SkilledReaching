@@ -2,7 +2,7 @@
 
 % allParams = setParams;
 
-month_to_analyze = '201708';
+month_to_analyze = '201811';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -31,7 +31,7 @@ for iMat = 1 : length(matList)
     cd(calFileDir)
     load(matList(iMat).name);
     % curDate is stored in the .mat file
-    if ~any(strcmp({'20170804'}, curDate))
+    if ~any(strcmp({'20181128','20181129','20181130'}, curDate))
         continue;
     end
     

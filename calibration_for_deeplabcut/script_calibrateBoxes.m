@@ -3,7 +3,7 @@
 calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 
-month_to_analyze = '201707';
+month_to_analyze = '201811';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -40,9 +40,9 @@ for iMat = 1 : length(all_pt_matList)
         clear pointsStillDistorted
     end
     load(all_pt_matList(iMat).name);
-%     if ~any(strcmp({'20170804'}, curDate))
-%         continue;
-%     end
+    if ~any(strcmp({'20181128','20181129','20181130'}, curDate))
+        continue;
+    end
     fprintf('working on %s\n',curDate);
     % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each
     %   totalNumPts x 2 subarray contains (x,y) points for each matched
@@ -68,13 +68,21 @@ for iMat = 1 : length(all_pt_matList)
         valid_mp_mirror = mp_mirror(~isnan(mp_mirror));
         valid_mp_mirror = reshape(valid_mp_mirror,size(valid_mp_mirror,1)/2,2);
         
+        if isempty(valid_mp_direct) || isempty(valid_mp_mirror)
+            continue;
+        end
+        
         if exist('pointsStillDistorted','var')    % this was added into the all_pt_matList files on 20190301 so that
                                                   % point matching could be
                                                   % performed prior to
                                                   % undistortion; now
                                                   % have to undistort here
             if pointsStillDistorted  % points not undistorted yet
+                try
                 valid_mp_direct = undistortPoints(valid_mp_direct,cameraParams);
+                catch
+                    keyboard
+                end
                 valid_mp_mirror = undistortPoints(valid_mp_mirror,cameraParams);
                 
                 for iImg = 1 : num_img
