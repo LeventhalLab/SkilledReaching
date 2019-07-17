@@ -190,8 +190,8 @@ for i_rat = firstRat:lastRat%:numRatFolders
     
     switch i_rat
         case 30
-            startSession = 1;
-            endSession = 5;
+            startSession = numSessions;
+            endSession = numSessions;
         case 19
             startSession = 1;
             endSession = numSessions;
