@@ -67,10 +67,10 @@ time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reac
 % easy to make left vs right-pawed trajectories overlap - just reflect
 % across x = 0. I think this will be OK. -DL 20181015
 
-labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
-% calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+% calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
@@ -83,7 +83,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 30:30%numRatFolders
+for i_rat = 1:1%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -124,9 +124,9 @@ for i_rat = 30:30%numRatFolders
     
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
-    if i_rat == 30
-        startSession = numSessions;
-        endSession = numSessions;
+    if i_rat == 1
+        startSession = 3;
+        endSession = 5;
     else
         startSession = 1;
         endSession = numSessions;

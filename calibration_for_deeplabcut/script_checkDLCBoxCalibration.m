@@ -2,9 +2,9 @@
 
 % allParams = setParams;
 
-month_to_analyze = '201811';
+month_to_analyze = '201803';
 year_to_analyze = month_to_analyze(1:4);
-rootDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+rootDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
     [month_to_analyze '_calibration'],[month_to_analyze '_original_images']);
 autoImageDir = fullfile(rootDir,year_to_analyze,...
@@ -31,7 +31,7 @@ for iMat = 1 : length(matList)
     cd(calFileDir)
     load(matList(iMat).name);
     % curDate is stored in the .mat file
-    if ~any(strcmp({'20181128','20181129','20181130'}, curDate))
+    if ~any(strcmp({'20180319'}, curDate))
         continue;
     end
     

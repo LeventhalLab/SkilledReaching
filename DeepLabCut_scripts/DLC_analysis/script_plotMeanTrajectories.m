@@ -6,8 +6,8 @@
 % CONSIDER EXCLUDING ANY TRIALS WHERE Z < 40 AT THE START OF THE TRIAL (PAW
 % MAY ALREADY BE AT THE SLOT - MISSED TRIGGER)
 
-firstRat = 30;
-lastRat = 30;
+firstRat = 1;
+lastRat = 1;
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -116,7 +116,7 @@ traj2D_xlim = [250 320];
 
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
-labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190708.csv');
 ratInfo = readRatInfoTable(csvfname);
@@ -189,9 +189,9 @@ for i_rat = firstRat:lastRat%:numRatFolders
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
     switch i_rat
-        case 30
-            startSession = numSessions;
-            endSession = numSessions;
+        case 1
+            startSession = 3;
+            endSession = 5;
         case 19
             startSession = 1;
             endSession = numSessions;
