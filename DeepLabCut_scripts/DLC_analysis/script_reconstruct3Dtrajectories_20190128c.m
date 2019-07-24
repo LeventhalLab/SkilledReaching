@@ -60,7 +60,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 7:8%numRatFolders
+for i_rat = 6:6%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,8 +88,8 @@ for i_rat = 7:8%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 1
-        startSession = 1;
+    if i_rat == 6
+        startSession = 8;
         endSession = numSessions;
     else
         startSession = 1;
@@ -117,22 +117,24 @@ for i_rat = 7:8%numRatFolders
         
         % find the calibration file for this date
         % find the calibration file
-        cd(calImageDir);
-        curDateNum = str2double(sessionDate);
-        dateDiff = curDateNum - calDateNums;
+%         cd(calImageDir);
+%         curDateNum = str2double(sessionDate);
+%         dateDiff = curDateNum - calDateNums;
 
         % find the most recent date compared to the current file for which a
         % calibration file exists. Later, write code so files are stored by
         % date so that this file can be found before entering the loop through
         % DLC csv files
 
-        lastValidCalDate = min(dateDiff(dateDiff >= 0));
-            
-        calFileIdx = find(dateDiff == lastValidCalDate);
+%         lastValidCalDate = min(dateDiff(dateDiff >= 0));
+%             
+%         calFileIdx = find(dateDiff == lastValidCalDate);
 
 %         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
-        calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
-        calibrationFileName = fullfile(calibrationDir,calibrationFileName);
+%         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
+%         calibrationFileName = fullfile(calibrationDir,calibrationFileName);
+        
+        [calibrationFileName, lastValidCalDate] = findCalibrationFile(calImageDir,sessionDate);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else

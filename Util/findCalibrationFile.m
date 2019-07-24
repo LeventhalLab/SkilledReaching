@@ -1,4 +1,4 @@
-function calFileName = findCalibrationFile(mainCalibrationDir, sessionDate)
+function [calFileName, lastValidCalDate] = findCalibrationFile(mainCalibrationDir, sessionDate)
 
 sessionYear = sessionDate(1:4);
 sessionMonth = sessionDate(1:6);

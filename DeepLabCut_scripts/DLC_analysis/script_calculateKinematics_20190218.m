@@ -125,8 +125,11 @@ for i_rat = 1:1%numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     if i_rat == 1
-        startSession = 3;
-        endSession = 5;
+        startSession = 20;
+        endSession = 20;
+    elseif i_rat == 11
+        startSession = 21;
+        endSession = 21;
     else
         startSession = 1;
         endSession = numSessions;
@@ -156,6 +159,8 @@ for i_rat = 1:1%numRatFolders
         if isempty(pawTrajectoryList)
             continue
         end
+        
+        fprintf('working on %s\n',sessionDirectories{iSession});
         
         numTrials = length(pawTrajectoryList);
         

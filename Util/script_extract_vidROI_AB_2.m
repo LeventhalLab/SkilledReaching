@@ -11,7 +11,7 @@ tic
 
 repeatCalculations = false;   % if cropped video file already exists, don't repeat
 
-ratID = 'R0161';
+ratID = 'R0169';
 
 % rootPath = fullfile('/Volumes/RecordingsLeventhal04/SkilledReaching');
 rootPath = fullfile('/Volumes/Tbolt_02/Skilled Reaching');

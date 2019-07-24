@@ -117,22 +117,24 @@ for i_rat = 1:1%numRatFolders
         
         % find the calibration file for this date
         % find the calibration file
-        cd(calImageDir);
-        curDateNum = str2double(sessionDate);
-        dateDiff = curDateNum - calDateNums;
+%         cd(calImageDir);
+%         curDateNum = str2double(sessionDate);
+%         dateDiff = curDateNum - calDateNums;
 
         % find the most recent date compared to the current file for which a
         % calibration file exists. Later, write code so files are stored by
         % date so that this file can be found before entering the loop through
         % DLC csv files
 
-        lastValidCalDate = min(dateDiff(dateDiff >= 0));
-            
-        calFileIdx = find(dateDiff == lastValidCalDate);
+%         lastValidCalDate = min(dateDiff(dateDiff >= 0));
+%             
+%         calFileIdx = find(dateDiff == lastValidCalDate);
 
 %         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
-        calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
-        calibrationFileName = fullfile(calibrationDir,calibrationFileName);
+%         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
+%         calibrationFileName = fullfile(calibrationDir,calibrationFileName);
+        
+        [calibrationFileName, lastValidCalDate] = findCalibrationFile(calImageDir,sessionDate);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else
