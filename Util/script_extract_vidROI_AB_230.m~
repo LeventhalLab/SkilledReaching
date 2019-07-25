@@ -11,7 +11,7 @@ tic
 
 repeatCalculations = false;   % if cropped video file already exists, don't repeat
 
-ratID = 'R0221';
+ratID = 'R0230';
 
 % rootPath = fullfile('/Volumes/RecordingsLeventhal04/SkilledReaching');
 rootPath = fullfile('/Volumes/Tbolt_02/Skilled Reaching');
@@ -100,19 +100,19 @@ if ~selectRandomVideos
     
     ii = ii + 1;
     sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20180324a';
+    sessionsToExtract(ii).session = '20181010a';
     
     ii = ii+1;
     sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20180325a'; 
+    sessionsToExtract(ii).session = '20181010a'; 
     
     ii = ii+1;
     sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20180327a'; 
+    sessionsToExtract(ii).session = '20181010a'; 
     
     ii = ii+1;
     sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20180328a'; 
+    sessionsToExtract(ii).session = '20181010a'; 
     
     ii = ii+1;
     sessionsToExtract(ii).ratID = ratID;

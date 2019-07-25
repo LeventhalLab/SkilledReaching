@@ -25,9 +25,9 @@ selectRandomVideos = false;
 extractFullSession = true;
 
 % which types of videos to extract? left vs right paw, tat vs no tat 
-selectPawPref = 'right';
+selectPawPref = 'left';
 selectTattoo = 'yes';
-digitColors = 'gbypr';   % order of colors on the digits (digits 1-4 and dorsum of paw).
+digitColors = 'gpybr';   % order of colors on the digits (digits 1-4 and dorsum of paw).
                          % g = green, p = purple, b = blue, y = yellow, r = red
 
 if strcmpi(selectTattoo,'yes')
