@@ -6,8 +6,8 @@
 % CONSIDER EXCLUDING ANY TRIALS WHERE Z < 40 AT THE START OF THE TRIAL (PAW
 % MAY ALREADY BE AT THE SLOT - MISSED TRIGGER)
 
-firstRat = 6;
-lastRat = 6;
+firstRat = 1;
+lastRat = 1;
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -19,8 +19,8 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
-skipSessionSummaryPlots = true;
+skipTrialPlots = false;
+skipSessionSummaryPlots = false;
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
@@ -189,9 +189,9 @@ for i_rat = firstRat:lastRat%:numRatFolders
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
     switch i_rat
-        case 6
-            startSession = 1;
-            endSession = numSessions;
+        case 1
+            startSession =4;
+            endSession = 4;
         case 11
             startSession = 1;
             endSession = numSessions;

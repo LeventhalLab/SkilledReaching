@@ -34,6 +34,17 @@ ratIDs_with_new_date_format = [284];
 % 9 - Laser fired at the wrong time
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
 
+summariesFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output/kinematics_summaries';
+
+ratFolders = findRatFolders(summariesFolder);
+numRatFolders = length(ratFolders);
+
+labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
+xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190708.csv');
+ratInfo = readRatInfoTable(csvfname);
+
+
 trialTypeColors = {'k','k','b','r','g'};
 validTrialTypes = {0:10,0,1,2,[3,4,7]};
 validTypeNames = {'all','no pellet','1st reach success','any reach success','failed reach'};
@@ -110,17 +121,7 @@ traj2D_xlim = [250 320];
 
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
-summariesFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output/kinematics_summaries';
-
-ratFolders = findRatFolders(summariesFolder);
-numRatFolders = length(ratFolders);
-
-labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
-xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190315.csv');
-ratInfo = readRatInfoTable(csvfname);
-
-virusCategories = {'ChR2','Arch'};
+virusCategories = {'ChR2','Arch','EYFP'};
 timingCategories = {'During Reach','Between Reach'};
 
 ratInfo_IDs = [ratInfo.ratID];

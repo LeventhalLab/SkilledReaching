@@ -2,7 +2,7 @@
 
 % allParams = setParams;
 
-month_to_analyze = '201803';
+month_to_analyze = '201704';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -31,9 +31,9 @@ for iMat = 1 : length(matList)
     cd(calFileDir)
     load(matList(iMat).name);
     % curDate is stored in the .mat file
-    if ~any(strcmp({'20180319'}, curDate))
-        continue;
-    end
+%     if ~any(strcmp({'20180319'}, curDate))
+%         continue;
+%     end
     
     K = cameraParams.IntrinsicMatrix;
     

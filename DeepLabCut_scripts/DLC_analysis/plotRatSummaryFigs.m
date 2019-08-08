@@ -2,6 +2,12 @@ function [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSum
     mean_pd_trajectories,mean_xyz_from_pd_trajectories,reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,digit_endAngle,meanOrientations,mean_MRL,...
     endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,numTrialsPerSession,thisRatInfo)
 
+% ADD SESSION DATES INTO HEADER
+%
+% INPUTS
+%   ratID - 
+%   sessionDates - 
+
 x_lim = [-30 10];
 y_lim = [-15 10];
 z_lim = [-5 50];

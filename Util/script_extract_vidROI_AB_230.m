@@ -26,7 +26,7 @@ extractFullSession = true;
 
 % which types of videos to extract? left vs right paw, tat vs no tat 
 selectPawPref = 'right';
-selectTattoo = 'yes';
+selectTattoo = 'no';
 digitColors = 'gbypr';   % order of colors on the digits (digits 1-4 and dorsum of paw).
                          % g = green, p = purple, b = blue, y = yellow, r = red
 
@@ -238,9 +238,9 @@ if ~selectRandomVideos
     sessionsToExtract(ii).ratID = ratID;
     sessionsToExtract(ii).session = '20181117a';
     
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20181118a';
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20181118a';
     
     ii = ii+1;
     sessionsToExtract(ii).ratID = ratID;
