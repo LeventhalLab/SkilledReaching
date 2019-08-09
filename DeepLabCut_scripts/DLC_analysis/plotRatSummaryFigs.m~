@@ -22,20 +22,18 @@ dev_x_lim = [0 20];
 dev_y_lim = [0 20];
 dev_z_lim = [0 50];
 
-mean_aperture_lim = [5 25];
+mean_aperture_lim = [10 25];
 var_aperture_lim = [0 10];
 
-mean_x_lim = [-10 10];
+mean_x_lim = [-5 10];
 mean_y_lim = [-15 0];
 mean_z_lim = [-20 10];
-mean_dist_from_pellet_limits = [0 20];
 
-var_x_lim = [0 10];
-var_y_lim = [0 10];
-var_z_lim = [0 20];
+var_x_lim = [0 20];
+var_y_lim = [0 20];
+var_z_lim = [0 50];
 
 mean_frame_ap_limits = [0 25];
-var_frame_ap_limits = [0 10];
 trial_num_limits = [0 100];
 
 virus = thisRatInfo.Virus;
@@ -319,14 +317,12 @@ for iSession = 1 : numSessions
     plot(toPlot,'color',plotColor);
     hold on
     title('mean aperture vs frame')
-    set(gca,'ylim',mean_frame_ap_limits);
     
     axes(ratSummary_h_axes(3,5))
     toPlot = varApertures{iSession};
     plot(toPlot,'color',plotColor);
     hold on
     title('aperture variance vs frame')
-    set(gca,'ylim',var_frame_ap_limits);
     
     % number of reaches per session (and also perhaps accuracy)
     axes(ratSummary_h_axes(5,4))
@@ -338,31 +334,38 @@ end
 axes(ratSummary_h_axes(4,1))
 title('final mean x')
 set(gca,'ylim',mean_x_lim);
-
 axes(ratSummary_h_axes(4,2))
 title('final mean y')
-set(gca,'ylim',mean_y_lim);
 
 axes(ratSummary_h_axes(4,3))
 title('final mean z')
-set(gca,'ylim',mean_z_lim);
 
 axes(ratSummary_h_axes(4,4))
 title('final mean dist from pellet')
-set(gca,'ylim',mean_dist_from_pellet_limits);
+
+    axes(ratSummary_h_axes(4,1))
+    
+    axes(ratSummary_h_axes(4,2))
+    set(gca,'ylim',mean_y_lim);
+    axes(ratSummary_h_axes(4,3))
+    set(gca,'ylim',mean_z_lim);
+    
+    axes(ratSummary_h_axes(5,1))
+    set(gca,'ylim',var_x_lim);
+    axes(ratSummary_h_axes(5,2))
+    set(gca,'ylim',var_y_lim);
+    axes(ratSummary_h_axes(5,3))
+    set(gca,'ylim',var_z_lim);
 
 
 axes(ratSummary_h_axes(5,1))
 title('final var x')
-set(gca,'ylim',var_x_lim);
 
 axes(ratSummary_h_axes(5,2))
 title('final var y')
-set(gca,'ylim',var_y_lim);
 
 axes(ratSummary_h_axes(5,3))
 title('final var z')
-set(gca,'ylim',var_z_lim);
 
 axes(ratSummary_h_axes(5,4))
 title('number of trials per session')
@@ -381,9 +384,6 @@ numLaserDates = 0;
 occlusionDates = cell(1);
 numOcclusionDates = 0;
 for iSession = 1 : numSessions
-    if ~ischar(plottedSessionTypes{iSession})
-        continue;
-    end
     switch plottedSessionTypes{iSession}
         case 'training'
             numTrainingDates = numTrainingDates + 1;
@@ -407,7 +407,7 @@ laserDatesString = 'laser dates: ';
 for ii = 1 : numLaserDates
     laserDatesString = sprintf('%s, %s', laserDatesString, laserDates{ii});
 end
-occlusionDatesString = 'occlusion/post-laser dates: ';
+occlusionDatesString = 'training dates: ';
 for ii = 1 : numOcclusionDates
     occlusionDatesString = sprintf('%s, %s', occlusionDatesString, occlusionDates{ii});
 end

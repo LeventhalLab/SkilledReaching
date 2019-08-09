@@ -6,8 +6,14 @@
 % CONSIDER EXCLUDING ANY TRIALS WHERE Z < 40 AT THE START OF THE TRIAL (PAW
 % MAY ALREADY BE AT THE SLOT - MISSED TRIGGER)
 
+ratList = {'R0158','R0170','R0183','R0184','R0186','R0187','R0189','R0190',...
+           'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
+           'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
+           'R0228'};
+numRats = length(ratList);
+
 firstRat = 1;
-lastRat = 1;
+lastRat = numRats;
 
 x_lim = [-30 10];
 y_lim = [-15 10];
@@ -19,8 +25,8 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = false;
-skipSessionSummaryPlots = false;
+skipTrialPlots = true;
+skipSessionSummaryPlots = true;
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
@@ -126,9 +132,10 @@ ratInfo_IDs = [ratInfo.ratID];
 ratFolders = findRatFolders(labeledBodypartsFolder);
 numRatFolders = length(ratFolders);
 
-for i_rat = firstRat:lastRat%:numRatFolders
+for i_rat = firstRat:1:lastRat%:numRatFolders
     
-    ratID = ratFolders{i_rat};
+%     ratID = ratFolders{i_rat};
+    ratID = ratList{i_rat};
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
@@ -188,13 +195,10 @@ for i_rat = firstRat:lastRat%:numRatFolders
     numTrialsPerSession = zeros(numSessions,1);
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
-    switch i_rat
-        case 1
-            startSession =4;
-            endSession = 4;
-        case 11
-            startSession = 1;
-            endSession = numSessions;
+    switch ratID
+        case 'R0217'
+            startSession =1;
+            endSession = 30;
         otherwise
             startSession = 1;
             endSession = numSessions;
