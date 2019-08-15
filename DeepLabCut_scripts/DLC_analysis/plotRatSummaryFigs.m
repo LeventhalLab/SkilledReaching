@@ -38,6 +38,8 @@ mean_frame_ap_limits = [0 25];
 var_frame_ap_limits = [0 10];
 trial_num_limits = [0 100];
 
+traj_frame_limits = [0 50];   % number of frames after breaching the slot to look at for aperture and paw oreintation
+
 virus = thisRatInfo.Virus;
 if iscell(virus)
     virus = virus{1};
@@ -143,12 +145,14 @@ for iSession = 1 : numSessions
     plot(toPlot,'color',plotColor);
     hold on
     title('mean paw orientation')
+    set(gca,'xlim',traj_frame_limits);
     
     axes(ratSummary_h_axes(3,2))
     toPlot = mean_MRL{iSession};
     plot(toPlot,'color',plotColor);
     hold on
     title('mean paw orientation MRL')
+    set(gca,'xlim',traj_frame_limits);
 end
 axes(ratSummary_h_axes(1,4))
 title('mean trajectory in 3D');
@@ -319,14 +323,14 @@ for iSession = 1 : numSessions
     plot(toPlot,'color',plotColor);
     hold on
     title('mean aperture vs frame')
-    set(gca,'ylim',mean_frame_ap_limits);
+    set(gca,'ylim',mean_frame_ap_limits,'xlim',traj_frame_limits);
     
     axes(ratSummary_h_axes(3,5))
     toPlot = varApertures{iSession};
     plot(toPlot,'color',plotColor);
     hold on
     title('aperture variance vs frame')
-    set(gca,'ylim',var_frame_ap_limits);
+    set(gca,'ylim',var_frame_ap_limits,'xlim',traj_frame_limits);
     
     % number of reaches per session (and also perhaps accuracy)
     axes(ratSummary_h_axes(5,4))

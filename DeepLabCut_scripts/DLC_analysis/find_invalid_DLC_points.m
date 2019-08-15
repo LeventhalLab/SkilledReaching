@@ -14,8 +14,6 @@ function [invalidPoints,diff_per_frame] = find_invalid_DLC_points(parts_loc, p, 
 %   p - number of body parts x number of frames array
 %       containing p-values for how confident DLC is that a body part was
 %       correctly identified
-%   bodyparts - cell array containing lis of body part descriptors
-%   pawPref - 'left' or 'right'
 %
 % VARARGS:
 %   maxdistperframe - maximum distance a point can travel per frame before

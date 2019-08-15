@@ -84,7 +84,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1:numRatFolders
+for i_rat = 1:1%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -126,15 +126,18 @@ for i_rat = 1:numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     switch ratID
+        case 'R0158'
+            startSession = 6;
+            endSession = 6;
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
         case 'R0160'
-            startSession = 1;
-            endSession = 18;
+            startSession = 9;
+            endSession = numSessions;
         case 'R0217'
-            startSession = 1;
-            endSession = 30;
+            startSession = 33;
+            endSession = 33;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -354,6 +357,7 @@ for i_rat = 1:numRatFolders
             if pelletMissingFlag(iTrial)
                 load(pawTrajectoryList(iTrial).name);
                 trajectory = trajectory_wrt_pellet(pawTrajectory, mean_initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
+                all_initPellet3D(iTrial,:) = mean_initPellet3D;
                 for i_bp = 1 : size(invalid3Dpoints,1)
                     for iFrame = 1 : size(invalid3Dpoints,2)
                         if invalid3Dpoints(i_bp,iFrame,iTrial)

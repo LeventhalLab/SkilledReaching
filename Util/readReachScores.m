@@ -65,6 +65,8 @@ for iCol = 2 : numCols
              continue;
 %              sessionDate = NaT;
          end
+     else
+         numValidSessions = numValidSessions + 1;
      end
      if sessionDate.Year < 100
          sessionDate.Year = sessionDate.Year + 2000;

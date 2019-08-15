@@ -51,15 +51,7 @@ for iType = 1 : numTrialTypes_to_analyze
             end
         end
     end
-    
-%     % create an array num_bodyparts x 3 x number of trials of this type
-%     distFromPellet{iType} = zeros(num_bodyparts,sum(trialTypeIdx(:,iType)));
-%     for i_bodypart = 1 : num_bodyparts
-%         cur_endPts = squeeze(reachEndPoints{iType}(i_bodypart,:,:));
-%         distFromPellet{iType}(i_bodypart,:) = sqrt(sum(cur_endPts.^2));
-% %         distFromPellet{iType}(i_bodypart,:,:) = 
-%     end
-%     
+   
 end
 
 [numReaches,reachFrames,reach_endPoints] = assignOverallReachEndPoints(all_reachFrameIdx,allTrajectories,digIdx,minFrameSep);

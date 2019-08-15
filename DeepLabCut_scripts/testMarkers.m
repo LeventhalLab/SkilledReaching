@@ -1,5 +1,5 @@
 %%
-labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
 vidRootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
@@ -7,24 +7,23 @@ vidRootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190708.csv');
+ratInfo = readRatInfoTable(csvfname);
 
 % parameters for find_invalid_DLC_points
 maxDistPerFrame = 30;
 min_valid_p = 0.85;
 min_certain_p = 0.97;
 
-ratInfo = readtable(csvfname);
-% ratInfo = readExcelDB(xlfname, 'well learned');
 ratInfo_IDs = [ratInfo.ratID];
 
 cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 25;
-iSession = 1;
-iVid = 2;
+i_rat = 1;
+iSession = 6;
+iVid = 32;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));
@@ -93,7 +92,7 @@ vidName = [matList(iVid).name(1:27) '.avi'];
 fullVidName = fullfile(vidDirectory,vidName);
 vidIn = VideoReader(fullVidName);
 
-iFrame = 272;
+iFrame = 270;
 
 %%
 while hasFrame(vidIn)

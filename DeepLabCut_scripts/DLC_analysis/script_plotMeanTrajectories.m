@@ -6,7 +6,7 @@
 % CONSIDER EXCLUDING ANY TRIALS WHERE Z < 40 AT THE START OF THE TRIAL (PAW
 % MAY ALREADY BE AT THE SLOT - MISSED TRIGGER)
 
-ratList = {'R0158','R0170','R0183','R0184','R0186','R0187','R0189','R0190',...
+ratList = {'R0158','R0159','R0160','R0170','R0183','R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
            'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
            'R0228'};
@@ -25,8 +25,8 @@ var_lim = [0,5;
            0,10];
 pawFrameLim = [0 400];
 
-skipTrialPlots = true;
-skipSessionSummaryPlots = true;
+skipTrialPlots = false;
+skipSessionSummaryPlots = false;
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
@@ -199,6 +199,12 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0217'
             startSession =1;
             endSession = 30;
+        case 'R0159'
+            startSession = 5;
+            endSession = numSessions;
+        case 'R0160'
+            startSession = 1;
+            endSession = 13;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -282,9 +288,11 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         mean_xyz_from_dig_trajectories(:,:,:,:,iSession) = mean_xyz_from_dig_session_trajectories;
         mean_euc_dist_from_dig_trajectories(:,:,:,iSession) = mean_euc_from_dig_session_trajectories;
         
-        [paw_endAngle{iSession},pawOrientationTrajectories{iSession}] = collectPawOrientations(all_pawAngle,all_paw_through_slot_frame,all_endPtFrame);
+        all_reachStartFrames = getFirstReachStartFrames(allTrajectories,bodyparts,pawPref,all_endPtFrame,slot_z,all_initPellet3D);
+        
+        [paw_endAngle{iSession},pawOrientationTrajectories{iSession}] = collectPawOrientations(all_pawAngle,all_reachStartFrames,all_endPtFrame);
         [meanOrientations{iSession},mean_MRL{iSession}] = summarizePawOrientations(pawOrientationTrajectories{iSession});
-        [endApertures{iSession},apertureTrajectories{iSession}] = collectApertures(all_aperture,all_paw_through_slot_frame,all_endPtFrame);
+        [endApertures{iSession},apertureTrajectories{iSession}] = collectApertures(all_aperture,all_reachStartFrames,all_endPtFrame);
         [meanApertures{iSession},varApertures{iSession}] = summarizeApertures(apertureTrajectories{iSession});
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

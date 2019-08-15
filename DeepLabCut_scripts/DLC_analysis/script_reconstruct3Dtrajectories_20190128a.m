@@ -1,6 +1,6 @@
 % script to perform 3D reconstruction on videos
 
-repeatCalculations = false;
+repeatCalculations = true;
 
 % points to the camera parameter file with camera intrinsics
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
@@ -60,7 +60,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 2:2%numRatFolders
+for i_rat = 1:1%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,9 +88,9 @@ for i_rat = 2:2%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 2
-        startSession = 5;
-        endSession = numSessions;
+    if i_rat == 1
+        startSession = 6;
+        endSession = 6;
     else
         startSession = 1;
         endSession = numSessions;
@@ -114,26 +114,11 @@ for i_rat = 2:2%numRatFolders
             calDateNums(iFile) = str2double(calDateList{iFile});
         end
         fprintf('working on session %s_%s\n',ratID,sessionDate);
-        
-        % find the calibration file for this date
-        % find the calibration file
-%         cd(calImageDir);
-%         curDateNum = str2double(sessionDate);
-%         dateDiff = curDateNum - calDateNums;
 
         % find the most recent date compared to the current file for which a
         % calibration file exists. Later, write code so files are stored by
         % date so that this file can be found before entering the loop through
         % DLC csv files
-
-%         lastValidCalDate = min(dateDiff(dateDiff >= 0));
-%             
-%         calFileIdx = find(dateDiff == lastValidCalDate);
-
-%         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
-%         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
-%         calibrationFileName = fullfile(calibrationDir,calibrationFileName);
-        
         [calibrationFileName, lastValidCalDate] = findCalibrationFile(calImageDir,sessionDate);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
@@ -220,11 +205,11 @@ for i_rat = 2:2%numRatFolders
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
     
-%             if ~exist('manually_invalidated_points','var')
+            if ~exist('manually_invalidated_points','var')
                 numFrames = size(direct_p,2);
                 num_bodyparts = length(direct_bp);
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
-%             end
+            end
                     
             numDirectFrames = size(direct_p,2);
             numMirrorFrames = size(mirror_p,2);
@@ -283,6 +268,7 @@ for i_rat = 2:2%numRatFolders
 %             else
 %                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
+                clear manually_invalidated_points
 %             end
             
         end
