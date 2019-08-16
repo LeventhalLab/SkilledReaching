@@ -1,4 +1,4 @@
-scrfunction [session_h_fig,session_h_axes,session_h_figAxis] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx,curSession,curSessionType,validTypeNames,thisRatInfo,varargin)
+function [session_h_fig,session_h_axes,session_h_figAxis] = plotSessionSummary_b(mean_pd_trajectory,normalized_pd_trajectories,trialTypeIdx,curSession,curSessionType,validTypeNames,thisRatInfo,varargin)
 
 x_lim = [-30 10];
 y_lim = [-15 10];

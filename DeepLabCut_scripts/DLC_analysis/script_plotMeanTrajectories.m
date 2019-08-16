@@ -207,7 +207,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
             endSession = numSessions;
         case 'R0160'
             startSession = 1;
-            endSession = 20;
+            endSession = 21;
         otherwise
             startSession = 1;
             endSession = numSessions;
