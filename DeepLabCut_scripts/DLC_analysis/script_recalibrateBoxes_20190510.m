@@ -89,7 +89,7 @@ for i_rat = 3:3%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 3
-        startSession = 19;
+        startSession = numSessions;
         endSession = numSessions;
     elseif i_rat == 3
         startSession = 1;

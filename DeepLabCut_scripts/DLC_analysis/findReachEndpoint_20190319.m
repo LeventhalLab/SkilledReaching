@@ -167,7 +167,7 @@ reachFrameIdx = cell(numPawParts,1);
 extraFramesToExtract = pts_to_extract+1;
 
 for iPart = 1 : numPawParts
-    
+
     if any(localMins(triggerFrame+1:end,iPart))
         startFrame = max(triggerFrame-extraFramesToExtract,1);
         reachFrameMarkers = find_reaches(localMins(startFrame:end,iPart),z_reach(startFrame:end,iPart),y_reach(startFrame:end,iPart),min_z_diff_pre_reach,min_z_diff_post_reach,maxFramesPriorToAdvance,extraFramesToExtract,pts_to_extract);
@@ -191,14 +191,15 @@ for iPart = 1 : numPawParts
         partEndPts(iPart,:) = NaN(1,3);
         partFinalEndPts(iPart,:) = NaN(1,3);
     end
-    
+
 end
-    
+
 % now come up with an overall endpoint frame
 % first choice is the latest frame for one of the digit tips to reach its furthest extension
 % exclude the first digit, which is often obscured. also exclude 4th digit
 % (pinky) which sometimes moves independently of the rest of the digits
 endPtFrame = min(partEndPtFrame(digIdx(2:3)));
+
 final_endPtFrame = min(partFinalEndPtFrame(digIdx(2:3)));
 % second choice is the most advanced pip frame
 if isnan(endPtFrame)

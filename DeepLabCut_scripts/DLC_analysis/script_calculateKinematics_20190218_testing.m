@@ -29,8 +29,8 @@ max_consecutive_misses = 50;
 maxReprojError_pawDorsum = 10;    % if paw dorsum found in both views, only count it if they are more or less on the same epipolar line
 
 % parameters for findReachEndpoint
-min_z_diff_pre_reach = 1;     % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
-min_z_diff_post_reach = 1.5;     
+min_z_diff_pre_reach = 1.5;     % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
+min_z_diff_post_reach = 1;     
 maxFramesPriorToAdvance = 10;   % if the paw extends further within this many frames after a local minimum, don't count it as a reach
 pts_to_extract = 15;  % look pts_to_extract frames on either side of each z
 smoothSize = 3;
@@ -127,8 +127,8 @@ for i_rat = 1:1%numRatFolders
     
     switch ratID
         case 'R0158'
-            startSession = 6;
-            endSession = 6;
+            startSession = 8;
+            endSession = 8;
         case 'R0159'
             startSession = 5;
             endSession = numSessions;

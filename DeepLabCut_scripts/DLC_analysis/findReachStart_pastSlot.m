@@ -29,7 +29,14 @@ digitsToTrack = [2,3];
 % passing through the slot.
 
 slot_z_wrt_pellet = slot_z - initPellet_z;
+
+if isnan(endPtFrame)
+    reachStartFrame = NaN;
+    return
+end
+
 z = squeeze(trajectory(1:endPtFrame,3,digIdx(digitsToTrack)));
+% pawDorsum_z = squeeze(trajectory(1:endPtFrame,3,pawDorsumIdx));
 
 numDigits = size(z,2);
 digStartFrame = zeros(numDigits,1);
@@ -40,11 +47,7 @@ for iDigit = 1 : numDigits
         lastBehindSlotFrame = 1;   % digit must not have been found inside the box
     end
     firstPreSlotFrame = find(z(lastBehindSlotFrame:end,iDigit)<slot_z_wrt_pellet,1,'first');
-    try
     digStartFrame(iDigit) = firstPreSlotFrame + lastBehindSlotFrame - 1;
-    catch
-        keyboard
-    end
 end
 reachStartFrame = min(digStartFrame);
 

@@ -3,7 +3,7 @@ function [h_fig,h_axes,h_figAxis] = plotSessionDigitSummary(trialTypeIdx,paw_end
 x_lim = [-30 10];
 y_lim = [-15 10];
 z_lim = [-5 50];
-apertureLims = [0 15];
+apertureLims = [0 25];
 
 virus = thisRatInfo.Virus;
 if iscell(virus)
@@ -44,6 +44,12 @@ for iarg = 1 : 2 : nargin - 22
             var_lim = varargin{iarg + 1};
         case 'pawframelim'
             pawFrameLim = varargin{iarg + 1};
+        case 'x_lim'
+            x_lim = varargin{iarg + 1};
+        case 'y_lim'
+            y_lim = varargin{iarg + 1};
+        case 'z_lim'
+            z_lim = varargin{iarg + 1};
     end
 end
 [h_fig(1),h_axes{1}] = createFigPanels5(figProps);

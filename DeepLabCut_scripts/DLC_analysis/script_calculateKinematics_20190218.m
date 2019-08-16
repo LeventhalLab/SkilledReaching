@@ -29,8 +29,8 @@ max_consecutive_misses = 50;
 maxReprojError_pawDorsum = 10;    % if paw dorsum found in both views, only count it if they are more or less on the same epipolar line
 
 % parameters for findReachEndpoint
-min_z_diff_pre_reach = 1;     % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
-min_z_diff_post_reach = 1.5;     
+min_z_diff_pre_reach = 1.5;     % minimum number of millimeters the paw must have moved since the previous reach to count as a new reach
+min_z_diff_post_reach = 1;     
 maxFramesPriorToAdvance = 10;   % if the paw extends further within this many frames after a local minimum, don't count it as a reach
 pts_to_extract = 15;  % look pts_to_extract frames on either side of each z
 smoothSize = 3;
@@ -126,12 +126,15 @@ for i_rat = 1:numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     switch ratID
+        case 'R0158'
+            startSession = 13;
+            endSession = numSessions;
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
         case 'R0160'
             startSession = 1;
-            endSession = 18;
+            endSession = 20;
         case 'R0217'
             startSession = 1;
             endSession = 30;
@@ -354,6 +357,7 @@ for i_rat = 1:numRatFolders
             if pelletMissingFlag(iTrial)
                 load(pawTrajectoryList(iTrial).name);
                 trajectory = trajectory_wrt_pellet(pawTrajectory, mean_initPellet3D, reproj_error, pawPref,'maxreprojectionerror',maxReprojError);
+                all_initPellet3D(iTrial,:) = mean_initPellet3D;
                 for i_bp = 1 : size(invalid3Dpoints,1)
                     for iFrame = 1 : size(invalid3Dpoints,2)
                         if invalid3Dpoints(i_bp,iFrame,iTrial)
