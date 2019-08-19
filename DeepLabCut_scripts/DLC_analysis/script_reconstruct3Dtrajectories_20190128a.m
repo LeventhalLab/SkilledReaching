@@ -19,7 +19,7 @@ maxDistFromNeighbor_invalid = 70;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190708.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
@@ -60,7 +60,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 1:1%numRatFolders
+for i_rat = 4:4%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,9 +88,9 @@ for i_rat = 1:1%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 1
-        startSession = 6;
-        endSession = 6;
+    if i_rat == 4
+        startSession = 1;
+        endSession = numSessions;
     else
         startSession = 1;
         endSession = numSessions;

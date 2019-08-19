@@ -42,7 +42,7 @@ function [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,e
 %       for each body part
 %   endPtFrame - single frame at which the paw as a whole is believed to
 %       change directions. Currently calculated as the maximum frame at
-%       which any of the last 3 digits (exclude index since often occluded)
+%       which any of the middle 2 digits (exclude index since often occluded)
 %       changes direction
 %   final_endPts - same as endPts, but for the last reach instead of the
 %       first
@@ -50,6 +50,7 @@ function [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,e
 %       of the first
 %   pawPartsList - the list of paw parts in the same order as for the
 %       numeric arrays above
+%   reachFrameIdx - 
 
 
 % NEXT THING TO DO: COUNT THE NUMBER OF REACHES BY COUNTING THE NUMBER OF

@@ -28,7 +28,7 @@ digitsToTrack = [2,3];
 % might want to use the first time when z is monotonically decreasing after
 % passing through the slot.
 
-slot_z_wrt_pellet = slot_z - initPellet_z;
+slot_z_wrt_pellet = slot_z - initPellet_z + 1.5;   % added 1.5 to give some cushion for measurement error
 
 if isnan(endPtFrame)
     reachStartFrame = NaN;
@@ -47,7 +47,11 @@ for iDigit = 1 : numDigits
         lastBehindSlotFrame = 1;   % digit must not have been found inside the box
     end
     firstPreSlotFrame = find(z(lastBehindSlotFrame:end,iDigit)<slot_z_wrt_pellet,1,'first');
+    try
     digStartFrame(iDigit) = firstPreSlotFrame + lastBehindSlotFrame - 1;
+    catch
+        keyboard
+    end
 end
 reachStartFrame = min(digStartFrame);
 
