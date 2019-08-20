@@ -1,6 +1,6 @@
 % script to perform 3D reconstruction on videos
 
-repeatCalculations = true;
+repeatCalculations = false;
 
 % points to the camera parameter file with camera intrinsics
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';

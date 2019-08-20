@@ -24,7 +24,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 2:2%numRatFolders
+for i_rat = 1:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -67,17 +67,17 @@ for i_rat = 2:2%numRatFolders
     
     switch ratID
         case 'R0158'
-            startSession = 8;
-            endSession = 8;
+            startSession = 1;
+            endSession = numSessions;
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
         case 'R0160'
-            startSession = 6;
+            startSession = 1;
             endSession = numSessions;
         case 'R0217'
-            startSession = 33;
-            endSession = 33;
+            startSession = 1;
+            endSession = numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -104,7 +104,7 @@ for i_rat = 2:2%numRatFolders
         end
         
         vidDirectory = fullfile(ratVidPath,sessionDirectories{iSession});
-        cd(vidDirectory);
+%         cd(vidDirectory);
         
         trialNumbers_nanEndPtFrame = trialNumbers(isnan(all_endPtFrame),:);
         trialIdx_nanEndPtFrame = find(isnan(all_endPtFrame));

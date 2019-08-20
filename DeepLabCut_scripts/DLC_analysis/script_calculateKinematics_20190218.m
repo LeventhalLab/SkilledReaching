@@ -84,7 +84,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 2:2%2:numRatFolders
+for i_rat = 7:7%2:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -127,17 +127,17 @@ for i_rat = 2:2%2:numRatFolders
     
     switch ratID
         case 'R0158'
-            startSession = 13;
-            endSession = numSessions;
+            startSession = 8;
+            endSession = 8;
         case 'R0159'
-            startSession = 5;
-            endSession = 7;
-        case 'R0160'
-            startSession = 1;
-            endSession = numSessions - 1;
-        case 'R0217'
-            startSession = 31;
+            startSession = 11;
             endSession = numSessions;
+        case 'R0160'
+            startSession = 21;
+            endSession = 21;
+        case 'R0184'
+            startSession = 21;
+            endSession = 21;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -169,8 +169,18 @@ for i_rat = 2:2%2:numRatFolders
         end
         
         fprintf('working on %s\n',sessionDirectories{iSession});
-        
         numTrials = length(pawTrajectoryList);
+        
+        sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
+        if exist('isEndPtManuallyMarked','var')
+            clear isEndPtManuallyMarked
+        end
+        if exist(sessionSummaryName,'file')
+            load(sessionSummaryName);
+        end
+        if ~exist('isEndPtManuallyMarked','var')
+            isEndPtManuallyMarked = false(numTrials,1);
+        end
         
         load(pawTrajectoryList(1).name);
             
@@ -187,7 +197,6 @@ for i_rat = 2:2%2:numRatFolders
         all_final_endPts = zeros(numReachingPawParts, 3, numTrials);
         all_partEndPts = zeros(numReachingPawParts, 3, numTrials);
         all_partFinalEndPts = zeros(numReachingPawParts, 3, numTrials);
-        all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
         all_partFinalEndPtFrame = zeros(numReachingPawParts, numTrials);
         all_paw_through_slot_frame = zeros(numTrials,1);
         all_first_pawPart_outside_box = zeros(numReachingPawParts, numTrials);
@@ -196,13 +205,18 @@ for i_rat = 2:2%2:numRatFolders
         all_aperture = NaN(size(pawTrajectory,1),3,numTrials);
         all_maxDigitReachFrame = zeros(numTrials,1);
         all_initPellet3D = NaN(numTrials, 3);
-        all_endPtFrame = NaN(numTrials,1);
-        all_final_endPtFrame = NaN(numTrials,1);
-        all_reachFrameIdx = cell(numTrials,1);
+        
         all_trialOutcomes = NaN(numTrials,1);
         all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
         vidNum = zeros(numTrials,1);
         
+        if ~any(isEndPtManuallyMarked)
+            all_endPtFrame = NaN(numTrials,1);
+            all_final_endPtFrame = NaN(numTrials,1);
+            all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
+            all_reachFrameIdx = cell(numTrials,1);
+        end
+                
         pelletMissingFlag = false(numTrials,1);
         % sometimes the session restarted and we get duplicate trial
         % numbers. The first column of trialNumbers will contain the trial
@@ -271,7 +285,7 @@ for i_rat = 2:2%2:numRatFolders
                 temp_manually_invalidated = false(size(manually_invalidated_points,2),num_session_frames);
                 temp_manually_invalidated(:,1:num_trial_frames) = squeeze(manually_invalidated_points(:,:,1))' | squeeze(manually_invalidated_points(:,:,2))';
 
-                invalid3Dpoints(:,:,iTrial) = invalid3Dpoints(:,:,iTrial) | temp_manually_invalidated;
+%                 invalid3Dpoints(:,:,iTrial) = invalid3Dpoints(:,:,iTrial) | temp_manually_invalidated;
                 invalid_direct(:,1:num_trial_frames) = invalid_direct(:,1:num_trial_frames) | squeeze(manually_invalidated_points(:,:,1))';
                 invalid_mirror(:,1:num_trial_frames) = invalid_mirror(:,1:num_trial_frames) | squeeze(manually_invalidated_points(:,:,2))';
             end
@@ -382,11 +396,26 @@ for i_rat = 2:2%2:numRatFolders
             aperture = calcAperture(trajectory,bodyparts,pawPref);
             slot_z_wrt_pellet = slot_z - mean_initPellet3D(3);
             
-            [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,endPtFrame,final_endPts,final_endPtFrame,pawPartsList,reachFrameIdx] = ...
-                findReachEndpoint_20190319(trajectory, bodyparts,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
-                'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet,'min_dist_pre_reach',min_z_diff_pre_reach,'min_dist_post_reach',min_z_diff_post_reach,...
-                'maxframespriortoadvance',maxFramesPriorToAdvance,'pts_to_extract',pts_to_extract);
-
+            if ~isEndPtManuallyMarked(iTrial)
+                % did not go through and manually mark part end points
+                [partEndPts,partEndPtFrame,partFinalEndPts,partFinalEndPtFrame,endPts,endPtFrame,final_endPts,final_endPtFrame,pawPartsList,reachFrameIdx] = ...
+                    findReachEndpoint_20190319(trajectory, bodyparts,pawPref,all_paw_through_slot_frame(iTrial),squeeze(all_isEstimate(:,:,:,iTrial)),...
+                    'smoothsize',smoothSize,'slot_z',slot_z_wrt_pellet,'min_dist_pre_reach',min_z_diff_pre_reach,'min_dist_post_reach',min_z_diff_post_reach,...
+                    'maxframespriortoadvance',maxFramesPriorToAdvance,'pts_to_extract',pts_to_extract);
+            else
+                % the endpoints for this reach were marked manually; don't
+                % overwrite them
+                endPtFrame = all_endPtFrame(iTrial);
+                final_endPtFrame = all_final_endPtFrame(iTrial);
+                partEndPtFrame = NaN(numReachingPawParts,1);
+                reachFrameIdx = all_reachFrameIdx{iTrial};
+                
+                partEndPts = zeros(numReachingPawParts,3);
+                endPts = zeros(numReachingPawParts,3);
+                final_endPts = zeros(numReachingPawParts,3);
+                partFinalEndPts = NaN(numReachingPawParts,3);
+                partFinalEndPtFrame = NaN(numReachingPawParts,1);
+            end
 
             all_endPts(:,:,iTrial) = endPts;
             all_final_endPts(:,:,iTrial) = final_endPts;
@@ -461,7 +490,7 @@ for i_rat = 2:2%2:numRatFolders
             'pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box',...
             'all_isEstimate','all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','all_firstPawDorsumFrame','all_maxDigitReachFrame',...
-            'trajectoryLengths','thisRatInfo','thisSessionType','slot_z');
+            'trajectoryLengths','thisRatInfo','thisSessionType','slot_z','isEndPtManuallyMarked');
         
     end
     

@@ -39,7 +39,7 @@ z = squeeze(trajectory(1:endPtFrame,3,digIdx(digitsToTrack)));
 % pawDorsum_z = squeeze(trajectory(1:endPtFrame,3,pawDorsumIdx));
 
 numDigits = size(z,2);
-digStartFrame = zeros(numDigits,1);
+digStartFrame = NaN(numDigits,1);
 for iDigit = 1 : numDigits
     % find the last z point that was behind the slot
     lastBehindSlotFrame = find(z(:,iDigit)>slot_z_wrt_pellet,1,'last');
@@ -47,11 +47,11 @@ for iDigit = 1 : numDigits
         lastBehindSlotFrame = 1;   % digit must not have been found inside the box
     end
     firstPreSlotFrame = find(z(lastBehindSlotFrame:end,iDigit)<slot_z_wrt_pellet,1,'first');
-    try
-    digStartFrame(iDigit) = firstPreSlotFrame + lastBehindSlotFrame - 1;
-    catch
-        keyboard
+    if isempty(firstPreSlotFrame)   % maybe if one of the digits wasn't detected, the other was
+        continue;
     end
+    digStartFrame(iDigit) = firstPreSlotFrame + lastBehindSlotFrame - 1;
+
 end
 reachStartFrame = min(digStartFrame);
 
