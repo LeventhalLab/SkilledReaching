@@ -11,7 +11,7 @@ tic
 
 repeatCalculations = false;   % if cropped video file already exists, don't repeat
 
-ratID = 'R0169';
+ratID = 'R0189';
 
 % rootPath = fullfile('/Volumes/RecordingsLeventhal04/SkilledReaching');
 rootPath = fullfile('/Volumes/Tbolt_02/Skilled Reaching');
@@ -26,7 +26,7 @@ extractFullSession = true;
 
 % which types of videos to extract? left vs right paw, tat vs no tat 
 selectPawPref = 'right';
-selectTattoo = 'yes';
+selectTattoo = 'no';
 digitColors = 'gbypr';   % order of colors on the digits (digits 1-4 and dorsum of paw).
                          % g = green, p = purple, b = blue, y = yellow, r = red
 
@@ -100,7 +100,7 @@ if ~selectRandomVideos
     
     ii = ii + 1;
     sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170504a';
+    sessionsToExtract(ii).session = '20170929a';
     
     ii = ii+1;
     sessionsToExtract(ii).ratID = ratID;

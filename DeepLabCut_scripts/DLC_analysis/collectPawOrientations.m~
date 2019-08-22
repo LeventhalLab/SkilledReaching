@@ -4,8 +4,6 @@ numTrials = length(all_endPtFrame);
 
 paw_endAngle = NaN(numTrials,1);
 pawOrientationTrajectories = cell(numTrials,1);
-
-maxFrameWindow_for_endPt = 3;
 % pip_endAngle = zeros(numTrials,1);
 % mcp_endAngle = zeros(numTrials,1);
 for iTrial = 1 : numTrials
@@ -18,21 +16,8 @@ for iTrial = 1 : numTrials
     
     if ~isnan(all_pawAngle(all_endPtFrame(iTrial),iTrial))
         paw_endAngle(iTrial) = all_pawAngle(all_endPtFrame(iTrial),iTrial);
-    else
-        % find nearest frame within maxFrameWindow_for_endPt with a valid
-        % angle
-        for iFrameDiff = 1 : maxFrameWindow_for_endPt
-            curFrame = all_endPtFrame(iTrial) - iFrameDiff;
-            if ~isnan(all_pawAngle(curFrame,iTrial))
-                paw_endAngle(iTrial) = all_pawAngle(curFrame,iTrial);
-                break
-            end
-            curFrame = all_endPtFrame(iTrial) + iFrameDiff;
-            if ~isnan(all_pawAngle(curFrame,iTrial))
-                paw_endAngle(iTrial) = all_pawAngle(curFrame,iTrial);
-                break
-            end
-        end
+    if isnan(paw_endAngle(iTrial))
+        keyboard
     end
 %     pip_endAngle(iTrial) = all_pipAngle(all_endPtFrame(iTrial),iTrial);
 %     mcp_endAngle(iTrial) = all_mcpAngle(all_endPtFrame(iTrial),iTrial);

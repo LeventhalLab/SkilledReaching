@@ -68,9 +68,10 @@ numFrames = size(final_direct_pts, 2);
                            % points be before the algorithm says there must
                            % be a mismatch?
 
-
-[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
 numFrames = size(final_direct_pts,2);
+frames_to_check = 1 : numFrames;
+[final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,frames_to_check,'maxDistFromNeighbor',maxDistFromNeighbor);
+
 if size(invalid_direct,2) > numFrames
     % sometimes invalid_direct/mirror has more frames than the video
     % because one video in a session was truncated. If so, use only up to

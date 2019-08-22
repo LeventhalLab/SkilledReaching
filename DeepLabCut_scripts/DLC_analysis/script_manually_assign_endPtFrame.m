@@ -102,22 +102,35 @@ for i_rat = 1:numRatFolders
             fprintf('no session summary found for %s\n', sessionDirectories{iSession});
             continue
         end
+        [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
+%         numReachingParts = length([mcpIdx,pipIdx,digIdx,pawDorsumIdx]);
         
         vidDirectory = fullfile(ratVidPath,sessionDirectories{iSession});
 %         cd(vidDirectory);
         
-        trialNumbers_nanEndPtFrame = trialNumbers(isnan(all_endPtFrame),:);
+        nanEndPtFrame = isnan(all_endPtFrame);
+        trialNumbers_nanEndPtFrame = trialNumbers(nanEndPtFrame,:);
         trialIdx_nanEndPtFrame = find(isnan(all_endPtFrame));
+        
+        foundTooManyReaches = (all_trialOutcomes == 1) & (all_numReaches > 1);
+        trialIdx_tooManyReaches = find(foundTooManyReaches);
+        missedTrials = foundTooManyReaches | nanEndPtFrame;
+        missedTrials_idx = find(missedTrials);
         
         if isempty(trialNumbers_nanEndPtFrame)
             continue;
         end
         
         isEndPtManuallyMarked = false(size(trialNumbers,1),1);
-        for i_missedTrial = 1 : size(trialNumbers_nanEndPtFrame,1)
-            curTrialNums = trialNumbers_nanEndPtFrame(i_missedTrial,:);
-            fprintf('reach end points for session %s, trial %d, label %d\n',[ratID sessionDateString], curTrialNums(1),curTrialNums(2));
-            
+        for i_missedTrial = 1 : length(missedTrials_idx)
+            curTrialNums = trialNumbers(missedTrials_idx(i_missedTrial),:);
+            fprintf('reach end points for session %s, label %d, trial %d\n',[ratID sessionDateString], curTrialNums(1),curTrialNums(2));
+            if foundTooManyReaches(missedTrials_idx(i_missedTrial))
+                fprintf('too many reaches identified\n');
+            elseif nanEndPtFrame(missedTrials_idx(i_missedTrial))
+                fprintf('no reach identified\n');
+            end
+                
             q = squeeze(allTrajectories(:,3,10:11,trialIdx_nanEndPtFrame(i_missedTrial)));
             h_dig2z = figure(1);
             plot(q(:,1));
@@ -137,7 +150,7 @@ for i_rat = 1:numRatFolders
                 final_endPtFrame = dig3_endFrames(end);
             elseif isempty(dig3_endFrames)
                 endPtFrame = dig2_endFrames(1);
-                final_endPtFrame = dig3_endFrames(2);
+                final_endPtFrame = dig3_endFrames(end);
             else
                 endPtFrame = max(dig2_endFrames(1),dig3_endFrames(1));
                 final_endPtFrame = max(dig2_endFrames(end),dig3_endFrames(end));

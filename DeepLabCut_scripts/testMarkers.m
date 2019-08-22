@@ -23,9 +23,9 @@ ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
 i_rat = 3;
-iSession = 15;
-iVid = 27;
-iFrame = 300;
+iSession = 2;
+iVid = 33;
+iFrame = 312;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));

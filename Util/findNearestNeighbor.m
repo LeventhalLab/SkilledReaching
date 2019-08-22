@@ -20,7 +20,7 @@ if nargin == 3
     numNeighbors = varargin{1};
 end
 
-if size(x,1) == 2 && size(x,2) == 1
+if iscolumn(x)
     x = x';
 end
 

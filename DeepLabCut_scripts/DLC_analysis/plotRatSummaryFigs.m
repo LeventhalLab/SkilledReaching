@@ -18,9 +18,9 @@ traj_x_lim = [-30 10];
 traj_y_lim = [-20 15];
 traj_z_lim = [-5 50];
 
-dev_x_lim = [0 20];
-dev_y_lim = [0 20];
-dev_z_lim = [0 50];
+dev_x_lim = [0 10];
+dev_y_lim = [0 10];
+dev_z_lim = [0 10];
 
 mean_aperture_lim = [5 25];
 var_aperture_lim = [0 10];
@@ -307,7 +307,7 @@ for iSession = 1 : numSessions
     
     axes(ratSummary_h_axes(3,3))
     MRL = circ_r(digit_endAngle{iSession});
-    mean_endAngle = circ_mean(digit_endAngle{iSession});
+    mean_endAngle = nancirc_mean(digit_endAngle{iSession});
     try
     toPlot = MRL * exp(1i*mean_endAngle);
     catch

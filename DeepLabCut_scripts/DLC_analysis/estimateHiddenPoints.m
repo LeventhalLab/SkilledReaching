@@ -1,4 +1,4 @@
-function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref, varargin)
+function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref, frames_to_check, varargin)
 %
 % function to estimate the locations of hidden points given knowledge of
 % nearby points and epipolar geometry
@@ -45,7 +45,7 @@ function [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(f
 %       direct, 2 = mirror) was estimated or identified directly by DLC
 
 maxDistFromNeighbor = 60;  % how far the estimated point is allowed to be from its nearest identified neighbor
-for iarg = 1 : 2 : nargin - 9
+for iarg = 1 : 2 : nargin - 10
     switch lower(varargin{iarg})
         case 'maxdistfromneighbor'    % how far the estimated point is allowed to be from its nearest identified neighbor
             maxDistFromNeighbor = varargin{iarg + 1};
@@ -59,29 +59,11 @@ switch pawPref
         F = squeeze(boxCal.F(:,:,3));
 end
 
-numFrames = size(final_direct_pts,2);
+% numFrames = size(final_direct_pts,2);
+numFrames = length(frames_to_check);
 
 [direct_mcp_idx,direct_pip_idx,direct_digit_idx,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
 [mirror_mcp_idx,mirror_pip_idx,mirror_digit_idx,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
-
-% if strcmp(pawPref,'left')
-%     direct_pp_idx=[1];
-%     direct_npn_idx=[2];
-%     mirror_pp_idx=[1];
-%     mirror_npn_idx=[2];
-% elseif strcmp(pawPref,'right')
-%     direct_pp_idx=[2];
-%     direct_npn_idx=[1];
-%     mirror_pp_idx=[2];
-%     mirror_npn_idx=[1];
-% else
-%     disp('there`s an error');
-% end
-
-% direct_nose_idx=[3];
-% direct_pellet_idx=[4];
-% mirror_nose_idx=[3];
-% mirror_pellet_idx=[4];
 
 % can work on the other body parts later; for now, just concerned with the
 % reaching paw
@@ -93,7 +75,8 @@ isEstimate = false(size(final_direct_pts,1),size(final_mirror_pts,2),2);
 
 numDigits = length(direct_mcp_idx);
 
-for iFrame = 1 : numFrames
+for ii = 1 : numFrames
+    iFrame = frames_to_check(ii);
     allDirectPts = squeeze(final_direct_pts(allDirectParts_idx,iFrame,:));
     allMirrorPts = squeeze(final_mirror_pts(allMirrorParts_idx,iFrame,:));
     
@@ -233,7 +216,8 @@ for iFrame = 1 : numFrames
 end
 
 [final_directPawDorsum_pts, isPawDorsumEstimate] = ...
-    estimateDirectPawDorsum_from_ud_points(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,'maxDistFromNeighbor',maxDistFromNeighbor);
+    estimateDirectPawDorsum_from_ud_points(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,frames_to_check,'maxDistFromNeighbor',maxDistFromNeighbor);
+
 final_direct_pts(direct_pawdorsum_idx,:,:) = final_directPawDorsum_pts;
 isEstimate(direct_pawdorsum_idx,:,1) = isPawDorsumEstimate;
 

@@ -19,7 +19,7 @@ function [all_reachEndPoints,numReaches_byPart,numReaches,reachFrames,reach_endP
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
 
 % min frame separation for digits 2 and 3 to consider separate reaches
-minFrameSep = 5;
+minFrameSep = 20;
 
 numTrialTypes_to_analyze = length(validTrialTypes);
 all_reachEndPoints = cell(numTrialTypes_to_analyze,1);

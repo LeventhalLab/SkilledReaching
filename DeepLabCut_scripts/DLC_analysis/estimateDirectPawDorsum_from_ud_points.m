@@ -1,4 +1,4 @@
-function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_ud_points(direct_pts_ud, mirror_pts_ud, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,varargin)
+function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_ud_points(direct_pts_ud, mirror_pts_ud, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,frames_to_check,varargin)
 %
 % estimate the location of the paw dorsum in the direct view given its
 % location in the mirror view and the locations of associated points
@@ -47,7 +47,7 @@ function [final_directPawDorsum_pts, isEstimate] = estimateDirectPawDorsum_from_
 
 maxDistFromNeighbor = 60;  % how far the estimated point is allowed to be from its nearest identified neighbor
 
-for iarg = 1 : 2 : nargin - 9
+for iarg = 1 : 2 : nargin - 10
     switch lower(varargin{iarg})
         case 'maxdistfromneighbor'
             maxDistFromNeighbor = varargin{iarg + 1};
@@ -61,32 +61,13 @@ switch pawPref
         F = squeeze(boxCal.F(:,:,3));
 end
         
-numFrames = size(direct_pts_ud,2);
+numFramesTotal = size(direct_pts_ud,2);
+numFrames_to_check = length(frames_to_check);
 
 [direct_mcp_idx,direct_pip_idx,direct_digit_idx,direct_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(direct_bp,pawPref);
 [~,~,~,mirror_pawdorsum_idx,~,~,~] = group_DLC_bodyparts(mirror_bp,pawPref);
 
 all_direct_digit_idx = [direct_mcp_idx;direct_pip_idx;direct_digit_idx];
-
-% if strcmp(pawPref,'left')
-%     direct_pp_idx=[1];
-%     direct_npn_idx=[2];
-%     mirror_pp_idx=[1];
-%     mirror_npn_idx=[2];
-% elseif strcmp(pawPref,'right')
-%     direct_pp_idx=[2];
-%     direct_npn_idx=[1];
-%     mirror_pp_idx=[2];
-%     mirror_npn_idx=[1];
-% else
-%     disp('there`s an error');
-% end
-
-% direct_nose_idx=[3];
-% direct_pellet_idx=[4];
-% mirror_nose_idx=[3];
-% mirror_pellet_idx=[4];
-
 
 direct_pawdorsum_pts_ud = squeeze(direct_pts_ud(direct_pawdorsum_idx,:,:));
 mirror_pawdorsum_pts_ud = squeeze(mirror_pts_ud(mirror_pawdorsum_idx,:,:));
@@ -94,10 +75,10 @@ mirror_pawdorsum_pts_ud = squeeze(mirror_pts_ud(mirror_pawdorsum_idx,:,:));
 invalid_directPawDorsum = invalid_direct(direct_pawdorsum_idx,:);
 invalid_mirrorPawDorsum = invalid_mirror(mirror_pawdorsum_idx,:);
 
-final_directPawDorsum_pts = NaN(numFrames,2);
-isEstimate = false(numFrames,1);
-for iFrame = 1 : numFrames
-    
+final_directPawDorsum_pts = squeeze(direct_pts_ud(direct_pawdorsum_idx,:,:));
+isEstimate = false(numFramesTotal,1);
+for ii = 1 : numFrames_to_check
+    iFrame = frames_to_check(ii);
     if invalid_directPawDorsum(iFrame)
         % the reaching paw dorsum was probably not correctly identified in
         % the current frame

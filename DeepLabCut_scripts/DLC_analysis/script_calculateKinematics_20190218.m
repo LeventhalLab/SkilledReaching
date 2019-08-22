@@ -84,7 +84,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 7:7%2:numRatFolders
+for i_rat = 1:2:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -127,17 +127,20 @@ for i_rat = 7:7%2:numRatFolders
     
     switch ratID
         case 'R0158'
-            startSession = 8;
-            endSession = 8;
+            startSession = 5;
+            endSession = numSessions;
         case 'R0159'
-            startSession = 11;
+            startSession = 5;
             endSession = numSessions;
         case 'R0160'
-            startSession = 21;
-            endSession = 21;
+            startSession = 1;
+            endSession = 22;
+        case 'R0161'
+            startSession = 1;
+            endSession = numSessions;
         case 'R0184'
-            startSession = 21;
-            endSession = 21;
+            startSession = 1;
+            endSession = numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -410,6 +413,8 @@ for i_rat = 7:7%2:numRatFolders
                 partEndPtFrame = NaN(numReachingPawParts,1);
                 reachFrameIdx = all_reachFrameIdx{iTrial};
                 
+%                 [partEndPts,partEndPtFrame
+                
                 partEndPts = zeros(numReachingPawParts,3);
                 endPts = zeros(numReachingPawParts,3);
                 final_endPts = zeros(numReachingPawParts,3);
@@ -481,6 +486,9 @@ for i_rat = 7:7%2:numRatFolders
         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
         thisSessionType = sessionType(allSessionIdx);
         
+        [all_reachEndPoints,all_numReaches_byPart,all_numReaches,all_reachFrames,all_reach_endPoints] = ...
+            collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,{0:10},all_trialOutcomes,digIdx);
+        
         save(sessionSummaryName,'bodyparts','allTrajectories','all_paw_xyz_v','all_paw_tangential_v',...
             'normalized_pd_trajectories','normalized_digit_trajectories',...
             'smoothed_pd_trajectories','smoothed_digit_trajectories',...
@@ -490,7 +498,8 @@ for i_rat = 7:7%2:numRatFolders
             'pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box',...
             'all_isEstimate','all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','all_firstPawDorsumFrame','all_maxDigitReachFrame',...
-            'trajectoryLengths','thisRatInfo','thisSessionType','slot_z','isEndPtManuallyMarked');
+            'trajectoryLengths','thisRatInfo','thisSessionType','slot_z','isEndPtManuallyMarked',...
+            'all_reachEndPoints','all_numReaches_byPart','all_numReaches','all_reachFrames','all_reach_endPoints');
         
     end
     
