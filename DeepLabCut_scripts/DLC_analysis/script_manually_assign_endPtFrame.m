@@ -24,7 +24,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 7:6%numRatFolders
+for i_rat = 1:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -131,7 +131,7 @@ for i_rat = 7:6%numRatFolders
                 fprintf('no reach identified\n');
             end
                 
-            q = squeeze(allTrajectories(:,3,10:11,trialIdx_nanEndPtFrame(i_missedTrial)));
+            q = squeeze(allTrajectories(:,3,10:11,missedTrials_idx(i_missedTrial)));
             h_dig2z = figure(1);
             plot(q(:,1));
             set(gcf,'name',sprintf('trial %d, %d, second digit',curTrialNums(1),curTrialNums(2)));
@@ -155,12 +155,12 @@ for i_rat = 7:6%numRatFolders
                 endPtFrame = max(dig2_endFrames(1),dig3_endFrames(1));
                 final_endPtFrame = max(dig2_endFrames(end),dig3_endFrames(end));
             end
-            isEndPtManuallyMarked(trialIdx_nanEndPtFrame(i_missedTrial)) = true;
-            all_endPtFrame(trialIdx_nanEndPtFrame(i_missedTrial)) = endPtFrame;
-            all_final_endPtFrame(trialIdx_nanEndPtFrame(i_missedTrial)) = final_endPtFrame;
+            isEndPtManuallyMarked(missedTrials_idx(i_missedTrial)) = true;
+            all_endPtFrame(missedTrials_idx(i_missedTrial)) = endPtFrame;
+            all_final_endPtFrame(missedTrials_idx(i_missedTrial)) = final_endPtFrame;
             
-            all_reachFrameIdx{trialIdx_nanEndPtFrame(i_missedTrial)}{10} = dig2_endFrames;
-            all_reachFrameIdx{trialIdx_nanEndPtFrame(i_missedTrial)}{11} = dig3_endFrames;
+            all_reachFrameIdx{missedTrials_idx(i_missedTrial)}{10} = dig2_endFrames;
+            all_reachFrameIdx{missedTrials_idx(i_missedTrial)}{11} = dig3_endFrames;
             
             save(sessionSummaryName,'all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','isEndPtManuallyMarked','-append');
             

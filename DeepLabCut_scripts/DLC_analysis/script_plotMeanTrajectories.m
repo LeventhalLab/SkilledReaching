@@ -12,7 +12,7 @@ ratList = {'R0158','R0159','R0160','R0161','R0170','R0183','R0184','R0186','R018
            'R0228'};
 numRats = length(ratList);
 
-firstRat = 7;
+firstRat = 3;
 lastRat = numSessions;
 
 x_lim = [-30 10];
@@ -204,7 +204,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
             endSession = numSessions;
         case 'R0160'
             startSession = 1;
-            endSession = numSessions;
+            endSession = 22;
         case 'R0161'
             startSession = 1;
             endSession = numSessions;

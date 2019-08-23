@@ -60,7 +60,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 3:3%numRatFolders
+for i_rat = 8:8%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,9 +88,9 @@ for i_rat = 3:3%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 3
-        startSession = 1;
-        endSession = 1;
+    if i_rat == 8
+        startSession = 13;
+        endSession = 13;
     else
         startSession = 1;
         endSession = numSessions;
