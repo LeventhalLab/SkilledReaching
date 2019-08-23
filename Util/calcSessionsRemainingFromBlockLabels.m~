@@ -1,0 +1,12 @@
+function sessions_remaining = calcSessionsRemainingFromBlockLabels(sessionBlockLabels)
+
+numSessionBlocks = sessionBlockLabels(end);
+firstBlockSession = 1;
+sessionNumbers = 1 : length(sessionBlockLabels);
+
+for iBlock = 1 : numSessionsInBlock
+    
+    lastBlockSession = find(sessionBlockLabels == iBlock,1,'last');
+    
+    sessions_remaining(firstBlockSession:lastBlockSession) = ...
+        lastBlockSession - sessionNumbers(firstBlockSession:lastBlockSession);

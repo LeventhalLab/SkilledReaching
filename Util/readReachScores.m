@@ -22,6 +22,7 @@ function reachScores = readReachScores(fname, varargin)
 % 8 - Used only contralateral paw
 % 9 - Laser fired at the wrong time
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
+% 11 - paw started out through the slot
 
 csvDateFormat = 'MM/dd/yyyy';
 for iarg = 1 : 2 : nargin - 1

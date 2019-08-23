@@ -12,8 +12,8 @@ ratList = {'R0158','R0159','R0160','R0161','R0170','R0183','R0184','R0186','R018
            'R0228'};
 numRats = length(ratList);
 
-firstRat = 3;
-lastRat = numSessions;
+firstRat = 1;
+lastRat = numRats;
 
 x_lim = [-30 10];
 y_lim = [-20 10];

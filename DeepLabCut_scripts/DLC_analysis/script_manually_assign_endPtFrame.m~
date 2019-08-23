@@ -121,9 +121,7 @@ for i_rat = 1:numRatFolders
             continue;
         end
         
-        if ~exist('isEndPtManuallyMarked','var')
-            isEndPtManuallyMarked = false(size(trialNumbers,1),1);
-        end
+        isEndPtManuallyMarked = false(size(trialNumbers,1),1);
         for i_missedTrial = 1 : length(missedTrials_idx)
             curTrialNums = trialNumbers(missedTrials_idx(i_missedTrial),:);
             fprintf('reach end points for session %s, label %d, trial %d\n',[ratID sessionDateString], curTrialNums(1),curTrialNums(2));
@@ -133,8 +131,7 @@ for i_rat = 1:numRatFolders
                 fprintf('no reach identified\n');
             end
                 
-            if any(all_trialOutcomes(missedTrials_idx(i_missedTrial)) == [6,8,11]) || ...
-                isEndPtManuallyMarked(missedTrials_idx(i_missedTrial))
+            if any(all_trialOutcomes(missedTrials_idx(i_missedTrial)) == [8,11])
                 % exclude trials where paw started outside the slot or the
                 % reach was with the wrong paw
                 continue;
@@ -171,8 +168,7 @@ for i_rat = 1:numRatFolders
             all_reachFrameIdx{missedTrials_idx(i_missedTrial)}{11} = dig3_endFrames;
             
             all_numReaches(missedTrials_idx(i_missedTrial)) = max(length(dig2_endFrames),length(dig3_endFrames));
-            all_numReaches_byPart{10,missedTrials_idx(i_missedTrial)} = length(dig2_endFrames);
-            all_numReaches_byPart{11,missedTrials_idx(i_missedTrial)} = length(dig3_endFrames);
+            all_numReaches_byPart{10}{missedTrials_idx(i_missedTrial)}
             save(sessionSummaryName,'all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','isEndPtManuallyMarked','all_numReaches','-append');
             
             close(h_dig2z);close(h_dig3z)

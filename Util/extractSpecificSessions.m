@@ -11,18 +11,18 @@ function sessionTableOut = extractSpecificSessions(sessionTable,sessions_to_extr
 
 
 % divide sessionTable into blocks of similar sessions
-% WORKING HERE...
-
-
+sessionBlockLabels = identifySessionTransitions(sessionTable);
+sessions_remaining = calcSessionsRemainingFromBlockLabels(sessionBlockLabels);
 
 sessionFields = fieldnames(sessions_to_extract);
-ratTableOut = ratInfo;
+sessionTableOut = sessionTable;
 
-for iField = 1 : length(exptFields)
-    % the field 'type' is just an identifier for the type of experiment
-    % (e.g., chr2 during reaches, arch between reaches, etc)
-    if strcmpi(sessions_to_extract{iField},'type')
-        continue
+for iField = 1 : length(sessionFields)
+    switch sessions_to_extract{iField}
+        case 'sessions_remaining'
+            validRows = (sessions_remaining == sessions_to_extract)
+            sessionTableOut = sessionTableOut(
+            sessions_remaining = sessions_remaining
     end
     
     % if field value is irrelevant, don't pull out any rows
@@ -31,5 +31,5 @@ for iField = 1 : length(exptFields)
     end
     
     ratTableOut = extractTableRows(ratTableOut,exptFields{iField},experimentInfo.(exptFields{iField}));
-
+    
 end
