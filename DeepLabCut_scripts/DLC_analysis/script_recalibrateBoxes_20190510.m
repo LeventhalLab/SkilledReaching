@@ -23,8 +23,9 @@ csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readRatInfoTable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
-calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
+% labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
+calImageDir = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/calibration_images';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS

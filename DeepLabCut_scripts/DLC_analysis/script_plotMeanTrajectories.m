@@ -12,7 +12,7 @@ ratList = {'R0158','R0159','R0160','R0161','R0170','R0183','R0184','R0186','R018
            'R0228'};
 numRats = length(ratList);
 
-firstRat = 1;
+firstRat = 12;
 lastRat = numRats;
 
 x_lim = [-30 10];
@@ -47,7 +47,7 @@ ratIDs_with_new_date_format = [284];
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
 
 trialTypeColors = {'k','k','b','r','g'};
-validTrialTypes = {0:10,0,1,2,[3,4,7]};
+validTrialTypes = {0:11,0,1,2,[3,4,7]};
 validTypeNames = {'all','no pellet','1st reach success','any reach success','failed reach'};
 numTrialTypes_to_analyze = length(validTrialTypes);
 
@@ -122,7 +122,8 @@ traj2D_xlim = [250 320];
 
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readRatInfoTable(csvfname);
@@ -205,7 +206,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0161'
+        case 'R0191'
             startSession = 1;
             endSession = numSessions;
         otherwise

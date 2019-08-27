@@ -10,7 +10,7 @@ apertureTrajectories = cell(numTrials,1);
 % mcp_endAngle = zeros(numTrials,1);
 for iTrial = 1 : numTrials
     
-    if isnan(all_endPtFrame(iTrial))
+    if isnan(all_endPtFrame(iTrial)) || isnan(all_paw_through_slot_frame(iTrial))
         continue;
     end
     

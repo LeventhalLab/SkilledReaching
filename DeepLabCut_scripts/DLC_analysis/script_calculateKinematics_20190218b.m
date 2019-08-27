@@ -68,7 +68,8 @@ time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reac
 % easy to make left vs right-pawed trajectories overlap - just reflect
 % across x = 0. I think this will be OK. -DL 20181015
 
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
 % calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
@@ -84,7 +85,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 2:2:numRatFolders
+for i_rat = 20:2:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -138,8 +139,8 @@ for i_rat = 2:2:numRatFolders
         case 'R0161'
             startSession = 1;
             endSession = numSessions;
-        case 'R0187'
-            startSession = 1;
+        case 'R0216'
+            startSession = 28;
             endSession = numSessions;
         otherwise
             startSession = 1;

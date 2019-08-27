@@ -1,7 +1,7 @@
 %%
 labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
 % vidRootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
-vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR Raw Data';
+vidRootPath = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/SR Raw Data';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
 % calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
@@ -22,10 +22,10 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 3;
-iSession = 2;
-iVid = 33;
-iFrame = 312;
+i_rat = 12;
+iSession = 9;
+iVid = 9;
+iFrame = 300;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));

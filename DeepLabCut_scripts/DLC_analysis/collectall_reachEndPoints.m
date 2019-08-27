@@ -74,12 +74,22 @@ for iTrial = 1 : numTrials
     dig2_reachFrames = all_reachFrameIdx{iTrial}{digitTipIdx(1)};
     dig3_reachFrames = all_reachFrameIdx{iTrial}{digitTipIdx(2)};
     
+    if isrow(dig2_reachFrames)
+        dig2_reachFrames = dig2_reachFrames';
+    end
+    if isrow(dig3_reachFrames)
+        dig3_reachFrames = dig3_reachFrames';
+    end
     if isempty(dig2_reachFrames)
         trial_reachFrames = dig3_reachFrames;
     elseif isempty(dig3_reachFrames)
         trial_reachFrames = dig2_reachFrames;
     else
-        trial_reachFrames = [all_reachFrameIdx{iTrial}{digitTipIdx(1)};all_reachFrameIdx{iTrial}{digitTipIdx(2)}];
+        try
+        trial_reachFrames = [dig2_reachFrames;dig3_reachFrames];
+        catch
+            keyboard
+        end
     end
     
     % make sure there aren't any reachFrames too close together

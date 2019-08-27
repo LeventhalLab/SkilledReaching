@@ -1,8 +1,9 @@
 % script_manually_assign_endPtFrame
 
-% script to manually assign reach end point frames when the algorithm fails
+% script to manually assign the frame at which any of the digits breached the slot when the algorithm fails
 
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
 % calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
@@ -24,9 +25,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1:numRatFolders
+for i_rat = 12:numRatFolders
 
-    ratID = ratFolders(i_rat).name;
+    ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
     ratVidPath = fullfile(vidRootPath,ratID);   % root path for the original videos
     
@@ -97,6 +98,9 @@ for i_rat = 1:numRatFolders
         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
         sessionSummaryName = fullfile(fullSessionDir, sessionSummaryName);
         try
+            if exist('is_paw_through_slot_frame_ManuallyMarked','var')
+                clear is_paw_through_slot_frame_ManuallyMarked
+            end
             load(sessionSummaryName);
         catch
             fprintf('no session summary found for %s\n', sessionDirectories{iSession});
@@ -108,68 +112,72 @@ for i_rat = 1:numRatFolders
         vidDirectory = fullfile(ratVidPath,sessionDirectories{iSession});
 %         cd(vidDirectory);
         
-        nanEndPtFrame = isnan(all_endPtFrame);
-        trialNumbers_nanEndPtFrame = trialNumbers(nanEndPtFrame,:);
-        trialIdx_nanEndPtFrame = find(isnan(all_endPtFrame));
+        nan_paw_through_slot_frame = isnan(all_paw_through_slot_frame);
+        trialNumbers_nan_paw_through_slot_frame = trialNumbers(nan_paw_through_slot_frame,:);
+        trialIdx_nan_paw_through_slot_frame = find(isnan(all_paw_through_slot_frame));
         
-        foundTooManyReaches = (all_trialOutcomes == 1) & (all_numReaches > 1);
-        trialIdx_tooManyReaches = find(foundTooManyReaches);
-        missedTrials = foundTooManyReaches | nanEndPtFrame;
+        missedTrials = nan_paw_through_slot_frame;
         missedTrials_idx = find(missedTrials);
         
-        if isempty(trialNumbers_nanEndPtFrame)
+        if isempty(trialNumbers_nan_paw_through_slot_frame)
             continue;
         end
         
-        isEndPtManuallyMarked = false(size(trialNumbers,1),1);
+        if ~exist('is_paw_through_slot_frame_ManuallyMarked','var')
+            is_paw_through_slot_frame_ManuallyMarked = false(size(trialNumbers,1),1);
+        end
         for i_missedTrial = 1 : length(missedTrials_idx)
             curTrialNums = trialNumbers(missedTrials_idx(i_missedTrial),:);
-            fprintf('reach end points for session %s, label %d, trial %d\n',[ratID sessionDateString], curTrialNums(1),curTrialNums(2));
-            if foundTooManyReaches(missedTrials_idx(i_missedTrial))
-                fprintf('too many reaches identified\n');
-            elseif nanEndPtFrame(missedTrials_idx(i_missedTrial))
-                fprintf('no reach identified\n');
-            end
+            fprintf('paw through slot frame for session %s, label %d, trial %d\n',[ratID sessionDateString], curTrialNums(1),curTrialNums(2));
                 
-            if any(all_trialOutcomes(missedTrials_idx(i_missedTrial)) == [8,11])
+            if any(all_trialOutcomes(missedTrials_idx(i_missedTrial)) == [6,8,11]) || ...
+                is_paw_through_slot_frame_ManuallyMarked(missedTrials_idx(i_missedTrial))
                 % exclude trials where paw started outside the slot or the
                 % reach was with the wrong paw
                 continue;
             end
             q = squeeze(allTrajectories(:,3,10:11,missedTrials_idx(i_missedTrial)));
+            pellet_z = all_initPellet3D(missedTrials_idx(i_missedTrial),3);
+            slot_z_wrt_pellet = slot_z - pellet_z;
+            
             h_dig2z = figure(1);
+            hold off
             plot(q(:,1));
-            set(gcf,'name',sprintf('trial %d, %d, second digit',curTrialNums(1),curTrialNums(2)));
+            hold on
+            x1 = find(~isnan(q(:,1)),1,'first');
+            x2 = find(~isnan(q(:,1)),1,'last');
+            line([x1,x2],[slot_z_wrt_pellet,slot_z_wrt_pellet]);
+            set(gcf,'name',sprintf('%s, trial %d, %d, second digit',[ratID '_' sessionDateString], curTrialNums(1),curTrialNums(2)),...
+                'position',[100   630   560   420]);
             
             h_dig3z = figure(2);
+            hold off
             plot(q(:,2));
-            set(gcf,'name',sprintf('trial %d, %d, third digit',curTrialNums(1),curTrialNums(2)));
+            hold on
+            x1 = find(~isnan(q(:,2)),1,'first');
+            x2 = find(~isnan(q(:,2)),1,'last');
+            line([x1,x2],[slot_z_wrt_pellet,slot_z_wrt_pellet]);
+            set(gcf,'name',sprintf('%s, trial %d, %d, third digit',[ratID '_' sessionDateString], curTrialNums(1),curTrialNums(2)),...
+                'position',[700   630   560   420]);
             
-            dig2_endFrames = input('reach endpoint frames for digit 2: ');
-            dig3_endFrames = input('reach endpoint frames for digit 3: ');
+            dig2_through_slot_frame = input('first paw through slot frame for digit 2: ');
+            dig3_through_slot_frame = input('first paw through slot frame for digit 3: ');
             
-            if isempty(dig2_endFrames) && isempty(dig3_endFrames)
+            if isempty(dig2_through_slot_frame) && isempty(dig3_through_slot_frame)
                 continue
-            elseif isempty(dig2_endFrames)
-                endPtFrame = dig3_endFrames(1);
-                final_endPtFrame = dig3_endFrames(end);
-            elseif isempty(dig3_endFrames)
-                endPtFrame = dig2_endFrames(1);
-                final_endPtFrame = dig3_endFrames(end);
+            elseif isempty(dig2_through_slot_frame)
+                paw_through_slot_frame = dig3_through_slot_frame;
+            elseif isempty(dig3_through_slot_frame)
+                paw_through_slot_frame = dig2_through_slot_frame;
             else
-                endPtFrame = max(dig2_endFrames(1),dig3_endFrames(1));
-                final_endPtFrame = max(dig2_endFrames(end),dig3_endFrames(end));
+                paw_through_slot_frame = min(dig2_through_slot_frame,dig3_through_slot_frame);
             end
-            isEndPtManuallyMarked(missedTrials_idx(i_missedTrial)) = true;
-            all_endPtFrame(missedTrials_idx(i_missedTrial)) = endPtFrame;
-            all_final_endPtFrame(missedTrials_idx(i_missedTrial)) = final_endPtFrame;
+            is_paw_through_slot_frame_ManuallyMarked(missedTrials_idx(i_missedTrial)) = true;
+            all_paw_through_slot_frame(missedTrials_idx(i_missedTrial)) = paw_through_slot_frame;
             
-            all_reachFrameIdx{missedTrials_idx(i_missedTrial)}{10} = dig2_endFrames;
-            all_reachFrameIdx{missedTrials_idx(i_missedTrial)}{11} = dig3_endFrames;
+            save(sessionSummaryName,'all_paw_through_slot_frame','is_paw_through_slot_frame_ManuallyMarked','-append');
             
-            all_numReaches(missedTrials_idx(i_missedTrial)) = max(length(dig2_endFrames),length(dig3_endFrames));
-            all_numReaches_byPart{10}{missedTrials_idx(i_missedTrial)}
-            save(sessionSummaryName,'all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','isEndPtManuallyMarked','all_numReaches','-append');
+            clear is_paw_through_slot_frame_ManuallyMarked
             
             close(h_dig2z);close(h_dig3z)
         end

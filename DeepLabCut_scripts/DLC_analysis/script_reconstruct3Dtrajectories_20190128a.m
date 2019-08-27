@@ -24,7 +24,8 @@ csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
 calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';   % where the calibration files are
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -60,7 +61,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 10:10%numRatFolders
+for i_rat = 4:4%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -95,7 +96,7 @@ for i_rat = 10:10%numRatFolders
         startSession = 1;
         endSession = numSessions;
     end
-    for iSession = startSession : 2 : endSession
+    for iSession = startSession : 4 : endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};

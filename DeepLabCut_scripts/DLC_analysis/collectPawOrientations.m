@@ -10,11 +10,14 @@ maxFrameWindow_for_endPt = 3;
 % mcp_endAngle = zeros(numTrials,1);
 for iTrial = 1 : numTrials
     
-    if isnan(all_endPtFrame(iTrial))
+    if isnan(all_endPtFrame(iTrial)) || isnan(all_paw_through_slot_frame(iTrial))
         continue;
     end
-    
+    try
     pawOrientationTrajectories{iTrial} = all_pawAngle(all_paw_through_slot_frame(iTrial):all_endPtFrame(iTrial),iTrial);
+    catch
+        keyboard
+    end
     
     if ~isnan(all_pawAngle(all_endPtFrame(iTrial),iTrial))
         paw_endAngle(iTrial) = all_pawAngle(all_endPtFrame(iTrial),iTrial);

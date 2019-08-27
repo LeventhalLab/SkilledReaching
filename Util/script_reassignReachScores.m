@@ -1,10 +1,15 @@
 % script_reassignReachScores
 
 trajectory_file_name = 'R*3dtrajectory_new.mat';
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
 % calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
+
+% paramaeters for readReachScores
+csvDateFormat = 'MM/dd/yyyy';
+ratIDs_with_new_date_format = [284];
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
@@ -17,9 +22,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1:numRatFolders
+for i_rat = 12:12%1:numRatFolders
     
-    ratID = ratFolders(i_rat).name;
+    ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);

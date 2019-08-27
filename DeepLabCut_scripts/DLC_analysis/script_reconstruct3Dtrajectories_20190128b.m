@@ -1,6 +1,6 @@
 % script to perform 3D reconstruction on videos
 
-repeatCalculations = true;
+repeatCalculations = false;
 
 % points to the camera parameter file with camera intrinsics
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
@@ -24,7 +24,8 @@ csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
 calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';   % where the calibration files are
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -60,7 +61,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 8:8%numRatFolders
+for i_rat = 4:4%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,14 +89,14 @@ for i_rat = 8:8%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 8
-        startSession = 13;
-        endSession = 13;
+    if i_rat == 10
+        startSession = 8;
+        endSession = 8;
     else
-        startSession = 1;
+        startSession = 2;
         endSession = numSessions;
     end
-    for iSession = startSession : 2 : endSession
+    for iSession = startSession : 4 : endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -167,7 +168,7 @@ for i_rat = 8:8%numRatFolders
 
         cd(mirrorViewDir)
 
-        for i_mirrorcsv = 30 : length(mirror_csvList)
+        for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
