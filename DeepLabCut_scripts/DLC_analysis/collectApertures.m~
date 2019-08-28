@@ -24,12 +24,12 @@ for iTrial = 1 : numTrials
         for iFrameDiff = 1 : maxFrameWindow_for_endPt
             curFrame = all_endPtFrame(iTrial) - iFrameDiff;
             if ~isnan(all_aperture(curFrame,1,iTrial))
-                endApertures(iTrial,:) = all_aperture(curFrame,:,iTrial);
+                endApertures(iTrial) = all_aperture(curFrame,iTrial);
                 break
             end
             curFrame = all_endPtFrame(iTrial) + iFrameDiff;
             if ~isnan(all_aperture(curFrame,1,iTrial))
-                endApertures(iTrial,:) = all_aperture(curFrame,:,iTrial);
+                endApertures(iTrial) = all_aperture(curFrame,iTrial);
                 break
             end
         end

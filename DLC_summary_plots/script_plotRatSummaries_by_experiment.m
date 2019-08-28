@@ -1,5 +1,6 @@
 % script_plotRatSummaries_by_experiment
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
@@ -7,7 +8,6 @@ ratInfo = readRatInfoTable(csvfname);
 
 experimentInfo = getExperimentFeatures();
 sessions_to_analyze = getSessionsToAnalyze();
-% sessions_of_interest = 1 : 22;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up the figures for each type of plot
@@ -43,7 +43,8 @@ for i_expt = 1 : length(experimentInfo)
     
     ratIDs = [curRatList.ratID];
     numRats = length(ratIDs);
-    sessionTables = cell(numRats,1);
+    sessionTables = cell(numRats,1);   % load in full session tables into this cell array
+    sessions_for_analysis = cell(numRats,1);   % just the sessions to analyze for this particular analysis
     for i_rat = 1 : numRats
         
         % load session info for this rat
@@ -55,6 +56,8 @@ for i_expt = 1 : length(experimentInfo)
         cd(ratFolder);
         sessionCSV = [ratIDstring '_sessions.csv'];
         sessionTables{i_rat} = readSessionInfoTable(sessionCSV);
+        
+        sessions_for_analysis{i_rat} = extractSpecificSessions(sessionTables{i_rat},sessions_to_analyze);
         
     end
     

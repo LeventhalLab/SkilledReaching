@@ -24,8 +24,11 @@ ratInfo = readRatInfoTable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
 % labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
-labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
-calImageDir = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/calibration_images';
+% labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+% calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';   % where the calibration files are
+% calImageDir = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/calibration_images';   % where the calibration files are
+calImageDir = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC calibration/calibration_images';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
@@ -90,7 +93,7 @@ for i_rat = 4:4%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 4
-        startSession = numSessions;
+        startSession = numSessions-1;
         endSession = numSessions;
     elseif i_rat == 3
         startSession = 1;

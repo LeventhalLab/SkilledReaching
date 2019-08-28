@@ -3,7 +3,8 @@
 % script to manually assign reach end point frames when the algorithm fails
 
 % labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
-labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
 % calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
@@ -25,7 +26,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 28:numRatFolders
+for i_rat = 3:3%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -74,8 +75,8 @@ for i_rat = 28:numRatFolders
             startSession = 5;
             endSession = numSessions;
         case 'R0160'
-            startSession = 1;
-            endSession = 22;
+            startSession = 17;
+            endSession = 17;
         case 'R0217'
             startSession = 1;
             endSession = numSessions;
@@ -118,7 +119,14 @@ for i_rat = 28:numRatFolders
         missedTrials = foundTooManyReaches | nanEndPtFrame;
         missedTrials_idx = find(missedTrials);
         
-        if isempty(trialNumbers_nanEndPtFrame)
+        %%%%%%%%%%%%%%%
+%         if want to work on a specific trial
+        missedTrials = false(size(trialNumbers,1),1);
+        missedTrials(71) = true;
+        missedTrials_idx = find(missedTrials);
+        %%%%%%%%%%%%%%%
+        
+        if ~any(missedTrials)
             continue;
         end
         
@@ -141,7 +149,11 @@ for i_rat = 28:numRatFolders
                 continue;
             end
             q = squeeze(allTrajectories(:,3,10:11,missedTrials_idx(i_missedTrial)));
+            pellet_z = all_initPellet3D(missedTrials_idx(i_missedTrial),3);
+            slot_z_wrt_pellet = slot_z - pellet_z;
+            
             h_dig2z = figure(1);
+            hold off
             plot(q(:,1));
             hold on
             x1 = find(~isnan(q(:,1)),1,'first');
@@ -151,13 +163,14 @@ for i_rat = 28:numRatFolders
                 'position',[100   630   560   420]);
             
             h_dig3z = figure(2);
+            hold off
             plot(q(:,2));
             hold on
             x1 = find(~isnan(q(:,2)),1,'first');
             x2 = find(~isnan(q(:,2)),1,'last');
             line([x1,x2],[slot_z_wrt_pellet,slot_z_wrt_pellet]);
             set(gcf,'name',sprintf('%s, trial %d, %d, third digit',[ratID '_' sessionDateString], curTrialNums(1),curTrialNums(2)),...
-                'position',[100   630   560   420]);
+                'position',[700   630   560   420]);
             
             dig2_endFrames = input('reach endpoint frames for digit 2: ');
             dig3_endFrames = input('reach endpoint frames for digit 3: ');

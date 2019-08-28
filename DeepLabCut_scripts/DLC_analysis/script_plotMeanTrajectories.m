@@ -12,8 +12,8 @@ ratList = {'R0158','R0159','R0160','R0161','R0170','R0183','R0184','R0186','R018
            'R0228'};
 numRats = length(ratList);
 
-firstRat = 12;
-lastRat = numRats;
+firstRat = 1;
+lastRat = 3;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -123,7 +123,8 @@ traj2D_xlim = [250 320];
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
 % labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
-labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readRatInfoTable(csvfname);
@@ -203,11 +204,11 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
-        case 'R0160'
+        case 'R0161'
             startSession = 1;
-            endSession = 22;
-        case 'R0191'
-            startSession = 1;
+            endSession = numSessions;
+        case 'R0217'
+            startSession = 33;
             endSession = numSessions;
         otherwise
             startSession = 1;
