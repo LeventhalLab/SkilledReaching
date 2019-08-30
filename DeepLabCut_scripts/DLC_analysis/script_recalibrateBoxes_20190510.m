@@ -25,11 +25,12 @@ ratInfo_IDs = [ratInfo.ratID];
 
 % labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
 % labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
-labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+% labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 % calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';   % where the calibration files are
 % calImageDir = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/calibration_images';   % where the calibration files are
-calImageDir = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC calibration/calibration_images';
-
+% calImageDir = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC calibration/calibration_images';
+calImageDir = '/Volumes/LL EXHD #2/calibration_images';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
 % change this if the videos were cropped at different coordinates
@@ -93,7 +94,7 @@ for i_rat = 4:4%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 4
-        startSession = numSessions-1;
+        startSession = 1;
         endSession = numSessions;
     elseif i_rat == 3
         startSession = 1;
