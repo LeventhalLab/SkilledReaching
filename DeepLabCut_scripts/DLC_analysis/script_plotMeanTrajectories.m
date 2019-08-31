@@ -124,7 +124,14 @@ bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
 % labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
 % labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
-labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+% labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+[plotsDir,~,~] = fileparts(labeledBodypartsFolder);
+plotsDir = fullfile(plotsDir,'DLC output plots');
+if ~exist(plotsDir,'dir')
+    mkdir(plotsDir);
+end
+
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readRatInfoTable(csvfname);
@@ -228,6 +235,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         allSessionIdx = find(sessionDate == allSessionDates);
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        sessionDir_pdf = fullfile(plotsDir,'pdf',ratID,sessionDirectories{iSession});
+        sessionDir_fig = fullfile(plotsDir,'fig',ratID,sessionDirectories{iSession});
         cd(fullSessionDir);
         
         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
@@ -323,32 +332,32 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
 
             pdfName_sessionTrials = sprintf('%s_3dtrajectories_summary.pdf',sessionDirectories{iSession});
             figName_sessionTrials = sprintf('%s_3dtrajectories_summary.fig',sessionDirectories{iSession});
-            pdfName_sessionTrials = fullfile(ratRootFolder,pdfName_sessionTrials);
-            figName_sessionTrials = fullfile(ratRootFolder,figName_sessionTrials);
+            pdfName_sessionTrials = fullfile(sessionDir_pdf,pdfName_sessionTrials);
+            figName_sessionTrials = fullfile(sessionDir_fig,figName_sessionTrials);
             print(session_h_fig,pdfName_sessionTrials,'-dpdf');
             savefig(session_h_fig,figName_sessionTrials);
             close(session_h_fig);
 
             pdfName_sessionSummary = sprintf('%s_summary.pdf',sessionDirectories{iSession});
-            pdfName_sessionSummary = fullfile(ratRootFolder,pdfName_sessionSummary);
+            pdfName_sessionSummary = fullfile(sessionDir_pdf,pdfName_sessionSummary);
             figName_sessionSummary = sprintf('%s_summary.fig',sessionDirectories{iSession});
-            figName_sessionSummary = fullfile(ratRootFolder,figName_sessionSummary);
+            figName_sessionSummary = fullfile(sessionDir_fig,figName_sessionSummary);
             print(h_summaryFigs(1),pdfName_sessionSummary,'-dpdf');
             savefig(h_summaryFigs(1),figName_sessionSummary);
             close(h_summaryFigs(1));
 
             pdfName_sessionDigitSummary = sprintf('%s_digits_summary.pdf',sessionDirectories{iSession});
-            pdfName_sessionDigitSummary = fullfile(ratRootFolder,pdfName_sessionDigitSummary);
+            pdfName_sessionDigitSummary = fullfile(sessionDir_pdf,pdfName_sessionDigitSummary);
             figName_sessionDigitSummary = sprintf('%s_digits_summary.fig',sessionDirectories{iSession});
-            figName_sessionDigitSummary = fullfile(ratRootFolder,figName_sessionDigitSummary);
+            figName_sessionDigitSummary = fullfile(sessionDir_fig,figName_sessionDigitSummary);
             print(h_digitSummaryFigs(1),pdfName_sessionDigitSummary,'-dpdf');
             savefig(h_digitSummaryFigs(1),figName_sessionDigitSummary);
             close(h_digitSummaryFigs(1)); 
             
             pdfName_multiReachSummary = sprintf('%s_multiReach_summary.pdf',sessionDirectories{iSession});
-            pdfName_multiReachSummary = fullfile(ratRootFolder,pdfName_multiReachSummary);
+            pdfName_multiReachSummary = fullfile(sessionDir_pdf,pdfName_multiReachSummary);
             figName_multiReachSummary = sprintf('%s_multiReach_summary.fig',sessionDirectories{iSession});
-            figName_multiReachSummary = fullfile(ratRootFolder,figName_multiReachSummary);
+            figName_multiReachSummary = fullfile(sessionDir_fig,figName_multiReachSummary);
             print(h_multiReachFig,pdfName_multiReachSummary,'-dpdf');
             savefig(h_multiReachFig,figName_multiReachSummary);
             close(h_multiReachFig); 
@@ -432,6 +441,7 @@ if ~skipTrialPlots
                 axes(trajectory_h_figAxis);
                 text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
                 pdfName_indTrials = sprintf('%s_%02d_normalized.pdf',pdf_baseName_indTrials,numTrialPages);
+                pdfName_indTrials = fullfile(sessionDir_pdf,pdfName_indTrials);
                 print(trajectory_h_fig,pdfName_indTrials,'-dpdf');
                 close(trajectory_h_fig);
             end
@@ -441,18 +451,15 @@ end
             
     end
     
-%     try
+
     [ratSummary_h_fig, ratSummary_h_axes,ratSummary_h_figAxis] = plotRatSummaryFigs(ratID,sessionDates,allSessionDates,sessionType,bodyparts,bodypart_to_plot,...
         mean_pd_trajectories,mean_xyz_from_pd_trajectories,first_reachEndPoints,mean_euc_dist_from_pd_trajectories,distFromPellet,paw_endAngle,meanOrientations,mean_MRL,...
         endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,numTrialsPerSession,thisRatInfo);
-%     catch
-%         close all
-%         continue;
-%     end
+
     pdfName_ratSummary = sprintf('%s_trajectories_summary.pdf',ratID);
-    pdfName_ratSummary = fullfile(ratRootFolder,pdfName_ratSummary);
+    pdfName_ratSummary = fullfile(plotsDir,'pdf',ratID,ratRootFolder,pdfName_ratSummary);
     figName_ratSummary = sprintf('%s_trajectories_summary.fig',ratID);
-    figName_ratSummary = fullfile(ratRootFolder,figName_ratSummary);
+    figName_ratSummary = fullfile(plotsDir,'fig',ratID,figName_ratSummary);
     savefig(ratSummary_h_fig,figName_ratSummary);
     print(ratSummary_h_fig,pdfName_ratSummary,'-dpdf');
     close(ratSummary_h_fig);
