@@ -1,11 +1,11 @@
 % calibrate boxes given marked checkerboard points
 
-calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
+% rootDir = '/Volumes/LL EXHD #2/calibration_images';
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 
-month_to_analyze = '201704';
+month_to_analyze = '201705';
 year_to_analyze = month_to_analyze(1:4);
-rootDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
+rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
     [month_to_analyze '_calibration'],[month_to_analyze '_original_images']);
 autoImageDir = fullfile(rootDir,year_to_analyze,...
@@ -40,9 +40,10 @@ for iMat = 1 : length(all_pt_matList)
         clear pointsStillDistorted
     end
     load(all_pt_matList(iMat).name);
-%     if ~any(strcmp({'20180319'}, curDate))
-%         continue;
-%     end
+    if ~any(strcmp({'20170522','20170529'}, curDate))
+        continue;
+    end
+    
     fprintf('working on %s\n',curDate);
     % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each
     %   totalNumPts x 2 subarray contains (x,y) points for each matched

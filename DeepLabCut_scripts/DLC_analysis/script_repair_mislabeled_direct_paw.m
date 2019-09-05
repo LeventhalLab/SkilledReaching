@@ -30,8 +30,8 @@ csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
-calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';   % where the calibration files are
+labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+calImageDir = '/Volumes/LL EXHD #2/calibration_images';   % where the calibration files are
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
@@ -55,7 +55,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 3:3%numRatFolders
+for i_rat = 8:8%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -82,7 +82,7 @@ for i_rat = 3:3%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 3
+    if i_rat == 8
         startSession = 1;
         endSession = numSessions;
     else

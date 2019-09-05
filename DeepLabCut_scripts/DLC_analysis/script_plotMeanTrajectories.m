@@ -13,7 +13,7 @@ ratList = {'R0158','R0159','R0160','R0161','R0170','R0183','R0184','R0186','R018
 numRats = length(ratList);
 
 firstRat = 1;
-lastRat = 1;%numRats;
+lastRat = 7;%numRats;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -236,8 +236,14 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         sessionDir_pdf = fullfile(plotsDir,'pdf',ratID,sessionDirectories{iSession});
+        if ~exist(sessionDir_pdf,'dir')
+            mkdir(sessionDir_pdf);
+        end
         sessionDir_fig = fullfile(plotsDir,'fig',ratID,sessionDirectories{iSession});
         cd(fullSessionDir);
+        if ~exist(sessionDir_fig,'dir')
+            mkdir(sessionDir_fig);
+        end
         
         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
              
@@ -440,7 +446,7 @@ if ~skipTrialPlots
                 end
                 axes(trajectory_h_figAxis);
                 text(trajectory_figProps.leftMargin,trajectory_figProps.height-0.75,textString,'units','centimeters','interpreter','none');
-                pdfName_indTrials = sprintf('%s_%02d_normalized.pdf',pdf_baseName_indTrials,numTrialPages);
+                pdfName_indTrials = sprintf('%s_%02d.pdf',pdf_baseName_indTrials,numTrialPages);
                 pdfName_indTrials = fullfile(sessionDir_pdf,pdfName_indTrials);
                 print(trajectory_h_fig,pdfName_indTrials,'-dpdf');
                 close(trajectory_h_fig);
@@ -457,7 +463,7 @@ end
         endApertures,meanApertures,varApertures,numReachingFrames,PL_summary,numTrialsPerSession,thisRatInfo);
 
     pdfName_ratSummary = sprintf('%s_trajectories_summary.pdf',ratID);
-    pdfName_ratSummary = fullfile(plotsDir,'pdf',ratID,ratRootFolder,pdfName_ratSummary);
+    pdfName_ratSummary = fullfile(plotsDir,'pdf',ratID,pdfName_ratSummary);
     figName_ratSummary = sprintf('%s_trajectories_summary.fig',ratID);
     figName_ratSummary = fullfile(plotsDir,'fig',ratID,figName_ratSummary);
     savefig(ratSummary_h_fig,figName_ratSummary);

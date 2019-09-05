@@ -129,8 +129,12 @@ for iTrial = 1 : numTrials
     end
     truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_pawdorsum);
     
+    try
     [normalized_pd_trajectories(:,:,iTrial),smoothed_pd_trajectories{iTrial},interp_pd_trajectories{iTrial}] = ...
         smoothTrajectory(truncated_trajectory, 'numtrajectorypoints', num_pd_TrajectoryPoints,'smoothwindow',smoothWindow);
+    catch
+        keyboard
+    end
     
     % for the digits, identify the first point after it breaks the slot
     % (recorded in firstSlotBreak) until max extension for the reach

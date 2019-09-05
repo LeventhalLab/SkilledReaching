@@ -11,7 +11,7 @@
 
 month_to_analyze = '201704';
 year_to_analyze = month_to_analyze(1:4);
-rootDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
+rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
     [month_to_analyze '_calibration'],[month_to_analyze '_original_images']);
 autoImageDir = fullfile(rootDir,year_to_analyze,...
@@ -79,7 +79,7 @@ numDates = length(dateList);
 for iDate = 1 : numDates
     
     curDate = dateList{iDate};
-%     if ~any(strcmp({'20180319'}, curDate))
+%     if ~any(strcmp({'20170522','20170529'}, curDate))
 %         continue;
 %     end
     

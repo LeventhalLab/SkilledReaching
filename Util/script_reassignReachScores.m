@@ -3,7 +3,8 @@
 trajectory_file_name = 'R*3dtrajectory_new.mat';
 % labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
 % labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
-labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+% labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
 % calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
@@ -23,7 +24,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 3:3%1:numRatFolders
+for i_rat = 5:5%1:numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -77,7 +78,7 @@ for i_rat = 3:3%1:numRatFolders
             startSession = 1;
             endSession = numSessions;
         case 'R0187'
-            startSession = 8;
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;
