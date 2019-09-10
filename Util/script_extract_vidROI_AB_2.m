@@ -9,12 +9,12 @@
 %%
 tic
 
-repeatCalculations = false;   % if cropped video file already exists, don't repeat
+repeatCalculations = true;   % if cropped video file already exists, don't repeat
 
-ratID = 'R0189';
+ratID = 'R0169';
 
 % rootPath = fullfile('/Volumes/RecordingsLeventhal04/SkilledReaching');
-rootPath = fullfile('/Volumes/Tbolt_02/Skilled Reaching');
+rootPath = fullfile('/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data');
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
 numVidstoExtract = 2;
@@ -26,19 +26,19 @@ extractFullSession = true;
 
 % which types of videos to extract? left vs right paw, tat vs no tat 
 selectPawPref = 'right';
-selectTattoo = 'no';
+selectTattoo = 'yes';
 digitColors = 'gbypr';   % order of colors on the digits (digits 1-4 and dorsum of paw).
                          % g = green, p = purple, b = blue, y = yellow, r = red
 
 if strcmpi(selectTattoo,'yes')
-    savePath = fullfile('/Volumes','Tbolt_02','Skilled Reaching',[ratID '_cropped'],[selectPawPref, '_paw_tattooed_', digitColors]);
+    savePath = fullfile('/Volumes','LL EXHD #2','Skilled Reaching',[ratID '_cropped'],[selectPawPref, '_paw_tattooed_', digitColors]);
 else
-    savePath = fullfile('/Volumes','Tbolt_02','Skilled Reaching',[ratID '_cropped'],[selectPawPref, '_paw_markerless']);
+    savePath = fullfile('/Volumes','LL EXHD #2','Skilled Reaching',[ratID '_cropped'],[selectPawPref, '_paw_markerless']);
 end 
 
-% if ~exist(savePath,'dir')
-%     mkdir(savePath);
-% end
+if ~exist(savePath,'dir')
+    mkdir(savePath);
+end
 
 viewList = {'direct','left','right'};
 viewSavePath = cell(1,3);
@@ -98,93 +98,93 @@ numValidRats = size(validRatInfo,1);
 ii = 0;
 if ~selectRandomVideos
     
-    ii = ii + 1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170929a';
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170505a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170506a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170509a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170510a';
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170511a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170512a'; 
-    
-    ii = ii+1;                                                               
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170515a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170516a';
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170517a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170518a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170519a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170522a';
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170523a';
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170524a';
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170525a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170527a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170529a'; 
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170530a';
-    
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170531a';
+%     ii = ii + 1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170601a';
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170505a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170506a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170509a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170510a';
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170511a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170512a'; 
+%     
+%     ii = ii+1;                                                               
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170515a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170516a';
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170517a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170518a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170519a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170522a';
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170523a';
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170524a';
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170525a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170527a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170529a'; 
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170530a';
+%     
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170531a';
     
     ii = ii+1;
     sessionsToExtract(ii).ratID = ratID;
     sessionsToExtract(ii).session = '20170601a';
     
-    ii = ii+1;
-    sessionsToExtract(ii).ratID = ratID;
-    sessionsToExtract(ii).session = '20170602a';
+%     ii = ii+1;
+%     sessionsToExtract(ii).ratID = ratID;
+%     sessionsToExtract(ii).session = '20170602a';
 % 
 %     ii = ii+1;
 %     sessionsToExtract(ii).ratID = ratID;

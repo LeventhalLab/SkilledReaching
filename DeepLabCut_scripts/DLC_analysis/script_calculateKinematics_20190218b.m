@@ -52,6 +52,7 @@ ratIDs_with_new_date_format = [284];
 % 8 - Used only contralateral paw
 % 9 - Laser fired at the wrong time
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
+% 11 - started with paw through the slot
 
 % parameter for initPelletLocation
 time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
@@ -69,7 +70,9 @@ time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reac
 % across x = 0. I think this will be OK. -DL 20181015
 
 % labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
-labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
+% labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
 % calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';
@@ -85,9 +88,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 20:2:numRatFolders
+for i_rat = 18:1:18%numRatFolders
 
-    ratID = ratFolders(i_rat).name;
+    ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
@@ -139,8 +142,8 @@ for i_rat = 20:2:numRatFolders
         case 'R0161'
             startSession = 1;
             endSession = numSessions;
-        case 'R0216'
-            startSession = 28;
+        case 'R0189'
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -179,11 +182,17 @@ for i_rat = 20:2:numRatFolders
         if exist('isEndPtManuallyMarked','var')
             clear isEndPtManuallyMarked
         end
+        if exist('is_paw_through_slot_frame_ManuallyMarked','var')
+            clear is_paw_through_slot_frame_ManuallyMarked
+        end
         if exist(sessionSummaryName,'file')
             load(sessionSummaryName);
         end
         if ~exist('isEndPtManuallyMarked','var')
             isEndPtManuallyMarked = false(numTrials,1);
+        end
+        if ~exist('is_paw_through_slot_frame_ManuallyMarked','var')
+            is_paw_through_slot_frame_ManuallyMarked = false(numTrials,1);
         end
         
         load(pawTrajectoryList(1).name);
@@ -202,7 +211,6 @@ for i_rat = 20:2:numRatFolders
         all_partEndPts = zeros(numReachingPawParts, 3, numTrials);
         all_partFinalEndPts = zeros(numReachingPawParts, 3, numTrials);
         all_partFinalEndPtFrame = zeros(numReachingPawParts, numTrials);
-        all_paw_through_slot_frame = zeros(numTrials,1);
         all_first_pawPart_outside_box = zeros(numReachingPawParts, numTrials);
         all_firstSlotBreak = zeros(numReachingPawParts, numTrials);
         all_firstPawDorsumFrame = zeros(numTrials,1);
@@ -214,11 +222,17 @@ for i_rat = 20:2:numRatFolders
         all_isEstimate = false(size(isEstimate,1),size(isEstimate,2),size(isEstimate,3),numTrials);
         vidNum = zeros(numTrials,1);
         
+        % if no reach endpoints have been manually marked, initialize the
+        % following arrays; otherwise, use the arrays already in the file
         if ~any(isEndPtManuallyMarked)
             all_endPtFrame = NaN(numTrials,1);
             all_final_endPtFrame = NaN(numTrials,1);
             all_partEndPtFrame = zeros(numReachingPawParts, numTrials);
             all_reachFrameIdx = cell(numTrials,1);
+        end
+        % same for paw_through_slot_frame
+        if ~any(is_paw_through_slot_frame_ManuallyMarked)
+            all_paw_through_slot_frame = zeros(numTrials,1);
         end
                 
         pelletMissingFlag = false(numTrials,1);
@@ -316,7 +330,9 @@ for i_rat = 20:2:numRatFolders
             [mcpIdx,pipIdx,digIdx,pawdorsum_idx] = findReachingPawParts(bodyparts,pawPref);
             pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
             
+            
             [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            
             all_maxDigitReachFrame(iTrial) = maxDigitReachFrame;
             
             pellet_reproj_error = squeeze(reproj_error(pellet_idx,:,:));
@@ -335,7 +351,9 @@ for i_rat = 20:2:numRatFolders
             firstPawDorsumFrame = findFirstPawDorsumFrame(pawDorsum_p,paw_z,paw_through_slot_frame,pawDorsum_reproj_error,...
                 'pthresh',pThresh,'min_consec_frames',min_consec_frames,'max_consecutive_misses',max_consecutive_misses,...
                 'slot_z',slot_z,'maxreprojerror',maxReprojError_pawDorsum);
-            all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
+            if ~is_paw_through_slot_frame_ManuallyMarked
+                all_paw_through_slot_frame(iTrial) = paw_through_slot_frame;
+            end
             all_first_pawPart_outside_box(:,iTrial) = first_pawPart_outside_box;
             all_firstSlotBreak(:,iTrial) = firstSlotBreak;
             
@@ -500,7 +518,7 @@ for i_rat = 20:2:numRatFolders
             'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box',...
             'all_isEstimate','all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','all_firstPawDorsumFrame','all_maxDigitReachFrame',...
             'trajectoryLengths','thisRatInfo','thisSessionType','slot_z','isEndPtManuallyMarked',...
-            'all_reachEndPoints','all_numReaches_byPart','all_numReaches','all_reachFrames','all_reach_endPoints');
+            'all_reachEndPoints','all_numReaches_byPart','all_numReaches','all_reachFrames','all_reach_endPoints','is_paw_through_slot_frame_ManuallyMarked');
         
     end
     

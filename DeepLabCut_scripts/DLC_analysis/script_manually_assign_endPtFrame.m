@@ -27,7 +27,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 13:numRatFolders
+for i_rat = 19:numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -69,7 +69,7 @@ for i_rat = 13:numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     switch ratID
-        case 'R0158'
+        case 'R0169'
             startSession = 1;
             endSession = numSessions;
         case 'R0159'
@@ -78,8 +78,8 @@ for i_rat = 13:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0217'
-            startSession = 1;
+        case 'R0197'
+            startSession = 25;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -118,7 +118,8 @@ for i_rat = 13:numRatFolders
         foundTooManyReaches = (all_trialOutcomes == 1) & (all_numReaches > 1);
         trialIdx_tooManyReaches = find(foundTooManyReaches);
         
-        foundTooFewReaches = (all_trialOutcomes == 2) & (all_numReaches < 2);
+        foundTooFewReaches = ((all_trialOutcomes == 2) & (all_numReaches < 2)) | ...
+                             ((all_trialOutcomes ~= 6) & (all_numReaches < 1));
         trialIdx_tooFewReaches = find(foundTooFewReaches);
         
         frames_between_slot_and_endpoint = all_endPtFrame - all_paw_through_slot_frame;
@@ -131,7 +132,7 @@ for i_rat = 13:numRatFolders
         %%%%%%%%%%%%%%%
 %         if want to work on a specific trial
 %         missedTrials = false(size(trialNumbers,1),1);
-%         missedTrials([53,54,60,62,65]) = true;
+%         missedTrials([58]) = true;
 %         missedTrials_idx = find(missedTrials);
         %%%%%%%%%%%%%%%
         
@@ -147,11 +148,14 @@ for i_rat = 13:numRatFolders
             fprintf('reach end points for session %s, label %d, trial %d\n',[ratID sessionDateString], curTrialNums(1),curTrialNums(2));
             if foundTooManyReaches(missedTrials_idx(i_missedTrial))
                 fprintf('too many reaches identified\n');
-            elseif foundTooFewReaches(missedTrials_idx(i_missedTrial))
+            end
+            if foundTooFewReaches(missedTrials_idx(i_missedTrial))
                 fprintf('too few reaches identified\n');
-            elseif nanEndPtFrame(missedTrials_idx(i_missedTrial))
+            end
+            if nanEndPtFrame(missedTrials_idx(i_missedTrial))
                 fprintf('no reach identified\n');
-            elseif reachTooLong(missedTrials_idx(i_missedTrial))
+            end
+            if reachTooLong(missedTrials_idx(i_missedTrial))
                 fprintf('%d frames between paw through slot and reach end\n',frames_between_slot_and_endpoint(missedTrials_idx(i_missedTrial)))
             end
                 
@@ -163,7 +167,7 @@ for i_rat = 13:numRatFolders
             if isEndPtManuallyMarked(missedTrials_idx(i_missedTrial))% && ~reachTooLong(missedTrials_idx(i_missedTrial))
                 continue
             end
-            
+%             
             
             q = squeeze(allTrajectories(:,3,10:11,missedTrials_idx(i_missedTrial)));
             pellet_z = all_initPellet3D(missedTrials_idx(i_missedTrial),3);
@@ -197,7 +201,9 @@ for i_rat = 13:numRatFolders
                 'position',[100   130   560   420]);
             dcm_obj_dig2 = datacursormode(h_dig2z);
             set(dcm_obj_dig2,'enable','on');
-            dt_dig2 = add_data_tips(dcm_obj_dig2,h_endpts_dig2,dig_2_endpoints);
+            if ~isempty(dig_2_endpoints)
+                dt_dig2 = add_data_tips(dcm_obj_dig2,h_endpts_dig2,dig_2_endpoints);
+            end
             
             h_dig3z = figure(2);
             hold off
@@ -227,7 +233,9 @@ for i_rat = 13:numRatFolders
             
             dcm_obj_dig3 = datacursormode(h_dig3z);
             set(dcm_obj_dig3,'enable','on');
-            dt_dig3 = add_data_tips(dcm_obj_dig3,h_endpts_dig3,dig_3_endpoints);
+            if ~isempty(dig_3_endpoints)
+                dt_dig3 = add_data_tips(dcm_obj_dig3,h_endpts_dig3,dig_3_endpoints);
+            end
             
             dig2_endFrames = input('reach endpoint frames for digit 2: ');
             dig3_endFrames = input('reach endpoint frames for digit 3: ');

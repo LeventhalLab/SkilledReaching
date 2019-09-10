@@ -127,6 +127,19 @@ for iTrial = 1 : numTrials
     else
         curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
     end
+    
+    if all(isnan(curTrajectory(:)))
+        % no identified points in curTrajectory
+        normalized_pd_trajectories(:,:,iTrial) = NaN;
+        smoothed_pd_trajectories{iTrial} = NaN;
+        interp_pd_trajectories{iTrial} = NaN;
+        for iDigit = 1 : 4
+            normalized_digit_trajectories(iDigit,:,:,iTrial) = NaN;
+            smoothed_digit_trajectories{iTrial,iDigit} = NaN;
+            interp_digit_trajectories{iTrial,iDigit} = NaN;
+        end
+        continue;
+    end
     truncated_trajectory = find_trajectory_start_point(curTrajectory, start_z_pawdorsum);
     
     try

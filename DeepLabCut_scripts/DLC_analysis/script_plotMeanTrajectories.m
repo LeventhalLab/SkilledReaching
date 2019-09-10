@@ -6,14 +6,15 @@
 % CONSIDER EXCLUDING ANY TRIALS WHERE Z < 40 AT THE START OF THE TRIAL (PAW
 % MAY ALREADY BE AT THE SLOT - MISSED TRIGGER)
 
-ratList = {'R0158','R0159','R0160','R0161','R0170','R0183','R0184','R0186','R0187','R0189','R0190',...
+ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0183','R0184',...
+           'R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
            'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
            'R0228'};
 numRats = length(ratList);
 
-firstRat = 1;
-lastRat = 7;%numRats;
+firstRat = 16;
+lastRat = 18;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -45,6 +46,7 @@ ratIDs_with_new_date_format = [284];
 % 8 - Used only contralateral paw
 % 9 - Laser fired at the wrong time
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
+% 11 - paw started out through the slot
 
 trialTypeColors = {'k','k','b','r','g'};
 validTrialTypes = {0:11,0,1,2,[3,4,7]};
@@ -216,8 +218,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
             endSession = 22;
         case 'R0161'
             startSession = 1;
-            endSession = 1;
-        case 'R0217'
+            endSession = numSessions;
+        case 'R0192'
             startSession = 1;
             endSession = numSessions;
         otherwise

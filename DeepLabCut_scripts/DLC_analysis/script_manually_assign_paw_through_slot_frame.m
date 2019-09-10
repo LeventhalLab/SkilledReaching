@@ -27,7 +27,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 6:numRatFolders
+for i_rat = 19:numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -69,8 +69,8 @@ for i_rat = 6:numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     switch ratID
-        case 'R0158'
-            startSession = 1;
+        case 'R0169'
+            startSession = 21;
             endSession = numSessions;
         case 'R0159'
             startSession = 5;
@@ -78,8 +78,8 @@ for i_rat = 6:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0217'
-            startSession = 1;
+        case 'R0195'
+            startSession = 6;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -125,13 +125,16 @@ for i_rat = 6:numRatFolders
         slot_after_endpoint = all_endPtFrame <= all_paw_through_slot_frame;
         trialIdx_slot_after_endpoint = find(slot_after_endpoint);
         
-        missedTrials = nan_paw_through_slot_frame | reachTooLong | slot_after_endpoint;
+        foundTooFewReaches = ((all_trialOutcomes ~= 6) & (all_numReaches < 1));
+        trialIdx_tooFewReaches = find(foundTooFewReaches);
+        
+        missedTrials = nan_paw_through_slot_frame | reachTooLong | slot_after_endpoint | foundTooFewReaches;
         missedTrials_idx = find(missedTrials);
         
         %%%%%%%%%%%%%%%
 %         if want to work on a specific trial
 %         missedTrials = false(size(trialNumbers,1),1);
-%         missedTrials(end) = true;
+%         missedTrials([45]) = true;
 %         missedTrials_idx = find(missedTrials);
         %%%%%%%%%%%%%%%
         
@@ -155,8 +158,12 @@ for i_rat = 6:numRatFolders
             
             if reachTooLong(missedTrials_idx(i_missedTrial))
                 fprintf('%d frames between paw through slot and reach end\n',frames_between_slot_and_endpoint(missedTrials_idx(i_missedTrial)))
-            elseif slot_after_endpoint(missedTrials_idx(i_missedTrial))
+            end
+            if slot_after_endpoint(missedTrials_idx(i_missedTrial))
                 fprintf('reach end point occurred before slot breach\n')
+            end
+            if foundTooFewReaches(missedTrials_idx(i_missedTrial))
+                fprintf('too few reaches identified\n');
             end
             q = squeeze(allTrajectories(:,3,10:11,missedTrials_idx(i_missedTrial)));
             pellet_z = all_initPellet3D(missedTrials_idx(i_missedTrial),3);
