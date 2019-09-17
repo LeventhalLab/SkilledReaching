@@ -33,7 +33,6 @@ labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 % calImageDir = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/calibration_images';   % where the calibration files are
 % calImageDir = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC calibration/calibration_images';
 calImageDir = '/Volumes/LL EXHD #2/calibration_images';
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
 % change this if the videos were cropped at different coordinates
@@ -67,7 +66,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 5:5%numRatFolders
+for i_rat = 7:7%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -95,11 +94,11 @@ for i_rat = 5:5%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 10
-        startSession = 8;
-        endSession = 8;
-    else
+    if i_rat == 7
         startSession = 3;
+        endSession = numSessions;
+    else
+        startSession = 1;
         endSession = numSessions;
     end
     for iSession = startSession : 4 : endSession

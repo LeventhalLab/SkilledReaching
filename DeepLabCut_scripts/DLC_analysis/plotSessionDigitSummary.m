@@ -5,6 +5,8 @@ y_lim = [-15 10];
 z_lim = [-5 50];
 apertureLims = [0 25];
 
+orientation_lim = [0,pi];
+
 virus = thisRatInfo.Virus;
 if iscell(virus)
     virus = virus{1};
@@ -71,7 +73,7 @@ hold on
 plot(trialNumbers(:,2),paw_endAngle + 2*pi);
 
 title('paw orientation at reach end')
-set(gca,'ylim',[-pi,3*pi]);
+set(gca,'ylim',orientation_lim);
 
 % overlay paw angles for each trajectory
 axes(h_axes{1}(1,3));
@@ -83,7 +85,7 @@ end
 plot(meanOrientations,'color','k','linewidth',2)
 % plot(meanOrientations+2*pi,'color','k','linewidth',2)
 title('paw orientation after slot vs frame')
-set(gca,'ylim',[-pi,pi]);
+set(gca,'ylim',orientation_lim);
 
 axes(h_axes{1}(1,4));
 plot(mean_MRL)

@@ -65,7 +65,6 @@ numViews = length(vidView);
 % end
 
 for i_rat = 5:5%4:13%numRatFolders
-% for i_rat = 8 : numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -89,16 +88,16 @@ for i_rat = 5:5%4:13%numRatFolders
     
     cd(ratRootFolder);
     
-%     sessionDirectories = dir([ratID '_*']);
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 5
-        startSession = 17;
-        endSession = numSessions;
-    elseif i_rat == 3
-        startSession = 1;
-        endSession = numSessions;
+    switch ratID
+        case 'R0169'
+            startSession = 20;
+            endSession = 20;
+        otherwise
+            startSession = 1;
+            endSession = numSessions;
     end
     
     
@@ -109,46 +108,8 @@ for i_rat = 5:5%4:13%numRatFolders
         end
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
-%         sessionYear = sessionDate(1:4);
-%         sessionMonth = sessionDate(1:6);
-%         
-%         calibrationDir = fullfile(calImageDir,sessionYear,[sessionMonth '_calibration'],[sessionMonth '_calibration_files']);
-%         % find the list of calibration files
-%         cd(calibrationDir);
-%         calFileList = dir('SR_boxCalibration_*.mat');
-%         calDateList = cell(1,length(calFileList));
-%         calDateNums = zeros(length(calFileList),1);
-%         for iFile = 1 : length(calFileList)
-%             C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
-%             calDateList{iFile} = C{1};
-%             calDateNums(iFile) = str2double(calDateList{iFile});
-%         end
-% 
+ 
         fprintf('working on session %s_%s\n',ratID,sessionDate);
-%         
-%         % find the calibration file for this date
-%         % find the calibration file
-% %         cd(calImageDir);
-%         curDateNum = str2double(sessionDate);
-%         dateDiff = curDateNum - calDateNums;
-% 
-%         % find the most recent date compared to the current file for which a
-%         % calibration file exists. Later, write code so files are stored by
-%         % date so that this file can be found before entering the loop through
-%         % DLC csv files
-% 
-%         lastValidCalDate = min(dateDiff(dateDiff >= 0));
-%         if isempty(lastValidCalDate)    % there are no sessions in this month before the current date
-%             % look back one month
-%         end
-%             
-%         calFileIdx = find(dateDiff == lastValidCalDate);
-% 
-%     %     calibrationFileName = ['SR_boxCalibration_' directVidDate{i_directcsv} '.mat'];
-%         calibrationFileName = ['SR_boxCalibration_' calDateList{calFileIdx} '.mat'];
-%         calibrationFileName = fullfile(calibrationDir,calibrationFileName);
-        
-        
         
         calibrationFileName = findCalibrationFile(calImageDir,sessionDate);
         if exist(calibrationFileName,'file')

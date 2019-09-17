@@ -27,7 +27,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 19:numRatFolders
+for i_rat = 30:numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -206,7 +206,9 @@ for i_rat = 19:numRatFolders
                 'position',[100   130   560   420]);
             dcm_obj_dig2 = datacursormode(h_dig2z);
             set(dcm_obj_dig2,'enable','on');
-            dt_dig2 = add_data_tips(dcm_obj_dig2,h_startpt_dig2,dig_2_startPt);
+            if ~isempty(cur_paw_through_slot_frame) && ~isnan(cur_paw_through_slot_frame)
+                dt_dig2 = add_data_tips(dcm_obj_dig2,h_startpt_dig2,dig_2_startPt);
+            end
             
             h_dig3z = figure(2);
             hold off
@@ -245,7 +247,9 @@ for i_rat = 19:numRatFolders
                 'position',[700   130   560   420]);
             dcm_obj_dig3 = datacursormode(h_dig3z);
             set(dcm_obj_dig3,'enable','on');
-            dt_dig3 = add_data_tips(dcm_obj_dig3,h_startpt_dig3,dig_3_startPt);
+            if ~isempty(cur_paw_through_slot_frame) && ~isnan(cur_paw_through_slot_frame)
+                dt_dig3 = add_data_tips(dcm_obj_dig3,h_startpt_dig3,dig_3_startPt);
+            end
             
             dig2_through_slot_frame = input('first paw through slot frame for digit 2: ');
             dig3_through_slot_frame = input('first paw through slot frame for digit 3: ');

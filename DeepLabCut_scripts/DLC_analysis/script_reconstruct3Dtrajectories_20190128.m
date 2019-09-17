@@ -35,6 +35,10 @@ calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 vidROI = [750,450,550,550;
           1,450,450,400;
           1650,435,390,400];
+      
+%%%%%%%
+% for Rat R0216
+      
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
 frameRate = 300;
@@ -62,7 +66,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 4:numRatFolders
+for i_rat = 6:6%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -90,7 +94,7 @@ for i_rat = 4:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 16
+    if i_rat == 6
         startSession = 1;
     else
         startSession = 1;

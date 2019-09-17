@@ -27,7 +27,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 19:numRatFolders
+for i_rat = 30:numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -78,8 +78,8 @@ for i_rat = 19:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0197'
-            startSession = 25;
+        case 'R0217'
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -132,7 +132,7 @@ for i_rat = 19:numRatFolders
         %%%%%%%%%%%%%%%
 %         if want to work on a specific trial
 %         missedTrials = false(size(trialNumbers,1),1);
-%         missedTrials([58]) = true;
+%         missedTrials([15]) = true;
 %         missedTrials_idx = find(missedTrials);
         %%%%%%%%%%%%%%%
         
