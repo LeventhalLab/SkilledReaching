@@ -502,13 +502,14 @@ for i_rat = 30:30%numRatFolders
 %         smoothed_pawOrientations = calcSmoothedPawOrientations(smoothed_pd_trajectories,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,pawPref);
         
         [all_paw_xyz_v,all_paw_tangential_v] = calculatePawVelocity(smoothed_pd_trajectories,frameRate);
-        sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
+        [sessionSummaryName,sessionSummary_exists] = findSessionSummary(ratID,sessionDateString,'dlcdirectory',labeledBodypartsFolder);
+%         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
         thisSessionType = sessionType(allSessionIdx);
         
         [all_reachEndPoints,all_numReaches_byPart,all_numReaches,all_reachFrames,all_reach_endPoints] = ...
             collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,{0:10},all_trialOutcomes,digIdx);
         
-        if exist(sessionSummaryName,'file')
+        if sessionSummary_exists
             save(sessionSummaryName,'bodyparts','allTrajectories','all_paw_xyz_v','all_paw_tangential_v',...
                 'normalized_pd_trajectories','normalized_digit_trajectories',...
                 'smoothed_pd_trajectories','smoothed_digit_trajectories',...

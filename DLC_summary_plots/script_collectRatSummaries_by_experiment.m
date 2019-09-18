@@ -1,4 +1,4 @@
-% script_plotRatSummaries_by_experiment
+% script_collectRatSummaries_by_experiment
 % labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 [plotsDir,~,~] = fileparts(labeledBodypartsFolder);

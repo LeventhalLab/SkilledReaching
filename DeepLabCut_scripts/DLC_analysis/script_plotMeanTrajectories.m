@@ -145,7 +145,6 @@ numRatFolders = length(ratFolders);
 
 for i_rat = firstRat:1:lastRat%:numRatFolders
     
-%     ratID = ratFolders{i_rat};
     ratID = ratList{i_rat};
     ratIDnum = str2double(ratID(2:end));
     

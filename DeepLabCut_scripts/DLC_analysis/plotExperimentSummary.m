@@ -1,4 +1,4 @@
-function [h_fig,h_axes,h_figAxis] = plotSessionSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,validTypeNames,curSession,curSessionType,varargin)
+function [h_fig,h_axes,h_figAxis] = plotExperimentSummary(trialTypeIdx,mean_euc_dist_from_trajectory,mean_xyz_from_trajectory,reachEndPoints,bodyparts,thisRatInfo,trialNumbers,all_firstPawDorsumFrame,all_paw_through_slot_frame,all_endPtFrame,all_maxDigitReachFrame,validTypeNames,curSession,curSessionType,varargin)
 
 % to plot:
 % ROW 1
