@@ -53,7 +53,8 @@ for iSession = 1 : maxSessions
             pawPref = pawPref{1};
         end
         determineTrialTrajectories(squeeze(allTrajectories(:,:,:,1)), bodyparts, pawPref);
-        [reachTrajectories,reachEndFrames] = collectReachTrajectories(all_trialOutcomes,allTrajectories,all_reachFrameIdx,10,bodyparts,1,pawPref);
+        [reachTrajectories, validTrials, reachEndFrames] = ...
+            collectReachTrajectories(all_trialOutcomes,allTrajectories,all_reachFrameIdx,bodyparts,1,pawPref,slot_z,all_initPellet3D);
         
     end
     
