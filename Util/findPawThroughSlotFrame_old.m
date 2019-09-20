@@ -1,11 +1,18 @@
-function paw_through_slot_frame = findPawThroughSlotFrame(pawTrajectory, slot_z, reproj_error, varargin)
+function [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = ...
+    findPawThroughSlotFrame_old(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
 %
 % find the first time the paw broke through the reaching slot
 %
 % INPUTS
 %   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
-%       matrix contains x,y,z points for each bodypart. Only include
-%       bodyparts on the reaching paw.
+%       matrix contains x,y,z points for each bodypart
+%   bodyparts - cell array containing strings describing each bodypart in
+%       the same order as in the pawTrajectory array
+%   pawPref - 'right' or 'left'
+%   invalid_direct - bodyparts x numframes boolean array where true values
+%       indicate that a bodypart in a given frame was (probably) not
+%       correctly identified
+%   invalid_mirror - same as invalid_direct for the mirror view
 %   reproj_error - num_bodyparts x numFrames x 2 array where
 %       reproj_error(bodypart,frame,1) is the euclidean distance
 %       between the reprojected 3D point and originally
@@ -28,10 +35,28 @@ function paw_through_slot_frame = findPawThroughSlotFrame(pawTrajectory, slot_z,
 %   maxDigitReachFrame - the frame at which any of the digit tips got
 %       closest to the camera (doesn't have to be just the first reach)
 
+slot_z = 200; 
+maxReprojError = 10;
+min_consec_frames = 5;
 
-% WORKING HERE...
+if iscategorical(pawPref)
+    pawPref = char(pawPref);
+end
 
+for iarg = 1 : 2 : nargin - 6
+    switch lower(varargin{iarg})
+        case 'maxreprojerror'
+            maxReprojError = varargin{iarg + 1};
+        case 'slot_z'
+            slot_z = varargin{iarg + 1};
+        case 'minconsecframes'
+            min_consec_frames = varargin{iarg + 1};
+    end
+end
 
+maxDigitReachFrame = NaN;
+
+[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 
 % only look for paw coming through the slot after the paw has been
 % identified behind the front panel

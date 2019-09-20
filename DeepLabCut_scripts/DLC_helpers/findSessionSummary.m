@@ -1,4 +1,4 @@
-function [sessionSummaryName,varargout] = findSessionSummary(ratID, sessionDate,varargin)
+function [sessionSummaryName,varargout] = findSessionSummary(ratID, sessionDate, varargin)
 %
 % INPUTS
 %   ratID - rat ID as either an integer or string (e.g., 'R0100' will give
@@ -9,6 +9,8 @@ function [sessionSummaryName,varargout] = findSessionSummary(ratID, sessionDate,
 % OUTPUTS
 %
 DLCdirectory = '/Volumes/LL EXHD #2/DLC output';
+
+curDirectory = pwd;
 
 for iarg = 1 : 2 : nargin - 2
     switch lower(varargin{iarg})
@@ -40,3 +42,5 @@ varargout{1} = true;
 if ~exist(sessionSummaryName,'file')
     varargout{1} = false;
 end
+
+cd(curDirectory)

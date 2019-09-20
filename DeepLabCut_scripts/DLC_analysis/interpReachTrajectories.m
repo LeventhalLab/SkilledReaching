@@ -1,4 +1,4 @@
-function [reachTrajectories, validTrials, reachEndFrames] = collectReachTrajectories(trialOutcomes,trajectories,all_reachFrameIdx,bodyparts,validOutcomes,pawPref,slot_z,all_initPellet3D)
+function [interp_trajectories, validTrials, reachEndFrames] = interpReachTrajectories(trialOutcomes,trajectories,all_reachFrameIdx,bodyparts,validOutcomes,pawPref,slot_z,all_initPellet3D)
 %
 % INPUTS
 %
