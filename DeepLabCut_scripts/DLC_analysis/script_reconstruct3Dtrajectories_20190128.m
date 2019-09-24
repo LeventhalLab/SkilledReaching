@@ -169,7 +169,7 @@ for i_rat = 6:6%numRatFolders
 
         cd(mirrorViewDir)
 
-        for i_mirrorcsv = 27 : length(mirror_csvList)
+        for i_mirrorcsv = 1 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
@@ -192,7 +192,6 @@ for i_rat = 6:6%numRatFolders
             fullTrajName = fullfile(fullSessionDir, trajName);
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
-            
             if exist(fullTrajName,'file')
                 % already did this calculation
                 if repeatCalculations

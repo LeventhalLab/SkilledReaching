@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = calc3D_DLC_trajectory_20181204(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, ROIs, boxCal, pawPref, imSize, varargin)
+function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = calc3D_DLC_trajectory_20190924(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, pawPref, imSize, varargin)
 %
 % INPUTS:
 %   final_direct_pts, final_mirror_pts - number of body parts x number of frames x 2
@@ -9,10 +9,6 @@ function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstima
 %       correctly identified
 %   direct_bp, mirror_bp - cell arrays containing lists of body parts
 %       descriptors
-%   ROIs - 3 x 4 array where each row is a [left,top,width,height] vector
-%       defining a rectangular region of interest. First row is the direct
-%       view, second row is the left mirror view, third row is the right
-%       mirror view
 %   boxCal - structure with the following fields:
 %       cameraParams - matlab camera parameters structure
 %   pawPref - 'right' or 'left'
@@ -37,7 +33,7 @@ function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstima
 % points_still_distorted = true;   % set to false if vids were undistorted prior to running through deeplabcut
 maxDistFromNeighbor = 60;
 
-for iarg = 1 : 2 : nargin - 10
+for iarg = 1 : 2 : nargin - 9
     switch lower(varargin{iarg})
         case 'maxdistfromneighbor'
             maxDistFromNeighbor = varargin{iarg + 1};

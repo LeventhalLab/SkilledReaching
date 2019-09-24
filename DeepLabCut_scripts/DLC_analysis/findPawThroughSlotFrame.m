@@ -1,15 +1,12 @@
-function paw_through_slot_frame = findPawThroughSlotFrame(pawTrajectory, slot_z, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
+function paw_through_slot_frame = findPawThroughSlotFrame(trajectories, slot_z, reproj_error, varargin)
 %
 % find the first time the paw broke through the reaching slot
 %
 % INPUTS
-%   pawTrajectory - numFrames x 3 x numBodyparts array. Each numFramex x 3
-%       matrix contains x,y,z points for each bodypart. Only include body
-%   pawPref - 'right' or 'left'
-%   invalid_direct - bodyparts x numframes boolean array where true values
-%       indicate that a bodypart in a given frame was (probably) not
-%       correctly identified
-%   invalid_mirror - same as invalid_direct for the mirror view
+%   trajectories - numFrames x 3 x numBodyparts array. Each numFrames x 3
+%       matrix contains x,y,z points for each bodypart. Only include
+%       bodyparts on the reaching paw. trajectories is with the origin at 
+%       the camera, not the pellet
 %   reproj_error - num_bodyparts x numFrames x 2 array where
 %       reproj_error(bodypart,frame,1) is the euclidean distance
 %       between the reprojected 3D point and originally
@@ -32,31 +29,21 @@ function paw_through_slot_frame = findPawThroughSlotFrame(pawTrajectory, slot_z,
 %   maxDigitReachFrame - the frame at which any of the digit tips got
 %       closest to the camera (doesn't have to be just the first reach)
 
-maxReprojError = 10;
-min_consec_frames = 5;
 
-if iscategorical(pawPref)
-    pawPref = char(pawPref);
+% WORKING HERE...
+for i_part = 1 : size(trajectories,3)
+    
+    % find all frames where the bodypart transitions from behind the
+    % reaching slot (z > slot_z) to in front of the reaching slot (z <
+    % slot_z)
+    z_coords = squeeze(trajectories(:,3,i_part));
+    z_coords_wrt_slot = z_coords - slot_z;
+
 end
-
-for iarg = 1 : 2 : nargin - 6
-    switch lower(varargin{iarg})
-        case 'maxreprojerror'
-            maxReprojError = varargin{iarg + 1};
-        case 'slot_z'
-            slot_z = varargin{iarg + 1};
-        case 'minconsecframes'
-            min_consec_frames = varargin{iarg + 1};
-    end
-end
-
-maxDigitReachFrame = NaN;
-
-[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 
 % only look for paw coming through the slot after the paw has been
 % identified behind the front panel
-pawDorsum_z = pawTrajectory(:,3,pawDorsumIdx);
+pawDorsum_z = trajectories(:,3,pawDorsumIdx);
 pawDorsum_mirror_valid = ~invalid_mirror(pawDorsumIdx,:);
 pawDorsum_reproj_error = squeeze(reproj_error(pawDorsumIdx,:,:));
 
@@ -107,7 +94,7 @@ for ii = 1 : length(pawDorsumIdx)
     allPawPartsIdx(curPartIdx) = pawDorsumIdx(ii);
 end
 
-xyz_coords = pawTrajectory(:,:,allPawPartsIdx);
+xyz_coords = trajectories(:,:,allPawPartsIdx);
 z_coords = squeeze(xyz_coords(:,3,:));
 
 for iPart = 1 : numPawParts

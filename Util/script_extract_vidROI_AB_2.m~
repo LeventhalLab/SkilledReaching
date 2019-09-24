@@ -17,7 +17,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 9 : numRatFolders
+for i_rat = 7 : numRatFolders
     
     ratID = ratFolders(i_rat).name;
 
@@ -96,9 +96,9 @@ for i_rat = 9 : numRatFolders
     %        1650,400,390,450];
 
     % old vidROI
-%     ROI = [750,450,550,550;
-%               1,450,450,400;
-%               1650,435,390,400];
+    ROI = [750,450,550,550;
+              1,450,450,400;
+              1650,435,390,400];
     % ultimately, randomly select videos and times for cropping out images to
     % make a stack
 
@@ -118,9 +118,6 @@ for i_rat = 9 : numRatFolders
     % same time (make sure to change above so that videos save to correct
     % folders)
     ii = 0;
-    if exist('sessionsToExtract','var')
-        clear sessionsToExtract
-    end
     if ~selectRandomVideos
         if useSessionsFrom_DLCoutput_folder
             DLCout_folder = fullfile(labeledBodypartsFolder,ratID);
@@ -351,12 +348,9 @@ for i_rat = 9 : numRatFolders
     else % extracts videos from sessions specified above
 
         switch ratID
-            case 'R0184'
-                startSess = 1;
+            case 'R0170'
+                startSess = 21;
                 endSess = length(sessionsToExtract);
-                ROI = [750,450,550,550;
-                      1,450,450,400;
-                      1650,435,390,400];
             case 'R0216'
                 ROI = [750,350,550,600;
                        1,400,450,450;
@@ -364,9 +358,6 @@ for i_rat = 9 : numRatFolders
                 startSess = 1;
                 endSess = length(sessionsToExtract);
             otherwise
-                ROI = [750,450,550,550;
-                      1,450,450,400;
-                      1650,435,390,400];
                 startSess = 1;
                 endSess = length(sessionsToExtract);
         end

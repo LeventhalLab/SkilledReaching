@@ -31,6 +31,10 @@ frameRange = zeros(num_bodyparts,2);
 % calculate trajectory for each identified "body part"
 for i_part = 1 : 16
     fullTrajectory = squeeze(trajectory(:,:,i_part));
+    numValidPoints = sum(~isnan(fullTrajectory(:,1)));
+    if numValidPoints < 2
+        continue;
+    end
     [frameRange(i_part,:),cur_trajectory] = ...
         smoothSingleTrajectory(fullTrajectory,'windowlength',windowLength,'smoothmethod',smoothMethod);
     interp_trajectory(frameRange(i_part,1):frameRange(i_part,2),:,i_part) = cur_trajectory;
