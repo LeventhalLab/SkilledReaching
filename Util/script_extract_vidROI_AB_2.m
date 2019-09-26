@@ -17,7 +17,8 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 9 : numRatFolders
+% HAVE TO REDO RAT 25 (R0219)
+for i_rat = 30 : numRatFolders
     
     ratID = ratFolders(i_rat).name;
 
@@ -351,8 +352,8 @@ for i_rat = 9 : numRatFolders
     else % extracts videos from sessions specified above
 
         switch ratID
-            case 'R0184'
-                startSess = 1;
+            case 'R0227'
+                startSess = 11;
                 endSess = length(sessionsToExtract);
                 ROI = [750,450,550,550;
                       1,450,450,400;
@@ -467,7 +468,7 @@ for i_rat = 9 : numRatFolders
                         for ii = 1 : 3
                             [cur_path,~,~] = fileparts(full_metadata_name{ii});
                             if ~exist(cur_path,'dir')
-                                continue;
+                                mkdir(cur_path)
                             end
                             save(full_metadata_name{ii},'triggerTime','frameTimeLimits','view_direction','viewROI','frameRate','frameSize');
                         end

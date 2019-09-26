@@ -3,7 +3,7 @@
 % template name for viable trajectory files (for searching)
 trajectory_file_name = 'R*3dtrajectory_new.mat';
 
-% parameter for function trajectory_wrt_pellet:
+% parameter for function nanPawTrajectory:
 maxReprojError = 15;
 
 % parameters for find_invalid_DLC_points
@@ -22,14 +22,6 @@ time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reac
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
 ratIDs_with_new_date_format = [284];
-
-% calculate the following kinematic parameters:
-% 1. max velocity
-% 2. average trajectory for a session
-% 3. deviation from that trajectory for a session
-% 4. distance between trajectories
-% 5. closest distance paw to pellet
-% 6. minimum z
 
 % use the pellet as the origin for all trajectories. That way it should be
 % easy to make left vs right-pawed trajectories overlap - just reflect
@@ -236,7 +228,7 @@ for i_rat = 1 : numRatFolders
         
         % calculate trajectories with respect to the pellet's initial
         % location
-        slot_z_wrt_pellet = zeros(numTrials,1);
+        all_slot_z_wrt_pellet = zeros(numTrials,1);
         all_interp_traj_wrt_pellet = NaN(maxFrames,3,num_bodyparts,numTrials);
         for iTrial = 1 : numTrials
             % if a pellet was not found OR the paw started outside the box
@@ -244,6 +236,7 @@ for i_rat = 1 : numRatFolders
                 all_initPellet3D(iTrial,:) = nanmean(all_initPellet3D);
             end
             
+            all_slot_z_wrt_pellet(iTrial) = slot_z - all_initPellet3D(iTrial,3);
             interp_traj_wrt_pellet = NaN(maxFrames,3,num_bodyparts);
             for iDim = 1 : 3
                 for i_bodypart = 1 : num_bodyparts
@@ -255,7 +248,8 @@ for i_rat = 1 : numRatFolders
         end
             
         save(interpTrajectoryName,'all_interp_traj_wrt_pellet','all_frameRange','all_didPawStartThroughSlot',...
-            'all_initPellet3D','all_firstSlotBreachFrame','pelletMissingFlag','trialNumbers','invalid3Dpoints','slot_z','slot_z_wrt_pellet');
+            'all_initPellet3D','all_firstSlotBreachFrame','pelletMissingFlag','trialNumbers',...
+            'bodyparts','invalid3Dpoints','slot_z','all_slot_z_wrt_pellet');
         
     end
     
