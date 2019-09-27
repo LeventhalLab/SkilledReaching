@@ -27,7 +27,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 12 : numRatFolders
+for i_rat = 1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -64,7 +64,7 @@ for i_rat = 12 : numRatFolders
             startSession = 1;
             endSession = 22;
         case 'R0189'
-            startSession = 5;
+            startSession = 7;
             endSession = numSessions;
         case 'R0195'
             startSession = 1;
@@ -128,9 +128,12 @@ for i_rat = 12 : numRatFolders
         all_initPellet3D = NaN(numTrials, 3);
         
         for iTrial = 1 : numTrials
+            trialNumbers(iTrial,:)
             interp_trajectory = squeeze(all_interp_traj_wrt_pellet(:,:,:,iTrial));
             
             reachData = identifyReaches(interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref);
+            reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref,frameRate);
+%             reachData = calculateKinematics(reachData,)
         end
         
     end

@@ -249,7 +249,7 @@ for i_rat = 1 : numRatFolders
             
         save(interpTrajectoryName,'all_interp_traj_wrt_pellet','all_frameRange','all_didPawStartThroughSlot',...
             'all_initPellet3D','all_firstSlotBreachFrame','pelletMissingFlag','trialNumbers',...
-            'bodyparts','invalid3Dpoints','slot_z','all_slot_z_wrt_pellet');
+            'bodyparts','invalid3Dpoints','slot_z','all_slot_z_wrt_pellet','frameRate');
         
     end
     

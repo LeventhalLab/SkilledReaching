@@ -16,32 +16,16 @@ for i_reach = 1 : num_reaches
     startFrame = reachStartFrames(i_reach);
     endFrame = reachEndFrames(i_reach);
     
-    % reach extent
-    
     % add in pathlength later?
     
     % velocity profile
-    pd_v = diff(pd_trajectory(startFrame:endFrame,:),1,1) * frameRate;
+    pd_v = diff(pd_trajectory(startFrame:endFrame,:),1,1) / frameRat;
     pd_v = sqrt(sum(pd_v.^2,2));
     reachData.pd_v{i_reach} = pd_v;
     
-    dig2_v = diff(dig2_trajectory(startFrame:endFrame,:),1,1) * frameRate;
+    dig2_v = diff(dig2_trajectory(startFrame:endFrame,:),1,1);
     dig2_v = sqrt(sum(dig2_v.^2,2));
     reachData.dig2_v{i_reach} = dig2_v;
-    
-    % paw orientation
-    
-    
-    
-    % aperture
-    
-    
-    % trajectories divided up into equal segments by pathlength
-    
-    
-    
-    % trajectories divided into equal segments by time
-    
 end
     
     
