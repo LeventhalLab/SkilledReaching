@@ -133,7 +133,7 @@ for i_rat = 1 : numRatFolders
             
             reachData = identifyReaches(interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref);
             reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref,frameRate);
-%             reachData = calculateKinematics(reachData,)
+
         end
         
     end

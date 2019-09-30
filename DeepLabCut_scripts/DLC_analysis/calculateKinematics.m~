@@ -18,30 +18,27 @@ reach_to_grasp_frames = find(reachData.reach_to_grasp);   % these are grasp end 
 
 num_reaches = length(reachData.reachEnds);
 
-reachData.pdEndPoints = zeros(num_reaches,3);
+reachData.reachEndPoints = zeros(num_reaches,3);
 for i_reach = 1 : num_reaches
     startFrame = reachStartFrames(i_reach);
-    reach_endFrame = reachEndFrames(i_reach);
-    grasp_endFrame = reach_to_grasp_frames(i_reach);
+    endFrame = reachEndFrames(i_reach);
+    
+    % reach endpoints
+    reachData.pdEndPoints(i_reach,:) = 
     
     % add in pathlength later?
     
-    % paw dorsum trajectory
-    reachData.pd_trajectory{i_reach} = pd_trajectory(startFrame:reach_endFrame,:);
-    
+    % paw dorsum trajectories
+    reachData.pd_trajectory{i_reach} = pd_trajectory(startFrame:endFrame,:);
+    reachData.dig2_trajectory
     % velocity profile
     pd_v = diff(reachData.pd_trajectory{i_reach},1,1) * frameRate;
     pd_v = sqrt(sum(pd_v.^2,2));
     reachData.pd_v{i_reach} = pd_v;
     
-    reachData.dig2_trajectory{i_reach} = dig2_trajectory(startFrame:grasp_endFrame,:);
-    dig2_v = diff(reachData.dig2_trajectory{i_reach},1,1) * frameRate;
+    dig2_v = diff(dig2_trajectory(startFrame:endFrame,:),1,1) * frameRate;
     dig2_v = sqrt(sum(dig2_v.^2,2));
     reachData.dig2_v{i_reach} = dig2_v;
-    
-    % reach endpoints
-    reachData.pdEndPoints(i_reach,:) = pd_trajectory(reach_endFrame,:);
-    reachData.dig2_endPoints(i_reach,:) = pd_trajectory(grasp_endFrame,:);   % should this be reach_endFrame or grasp_endFrame? probably doesn't matter much
     
     % paw orientation
     
