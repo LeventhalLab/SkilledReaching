@@ -36,16 +36,15 @@ calImageDir = '/Volumes/LL EXHD #2/calibration_images';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
 % change this if the videos were cropped at different coordinates
-vidROI = [750,450,550,550;
-          1,450,450,400;
-          1650,435,390,400];
-triggerTime = 1;    % seconds
-frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
-frameRate = 300;
-
-frameSize = [1024,2040];
-% would be nice to have these parameters stored with DLC output so they can
-% be read in directly. Might they be in the .h files?
+% vidROI = [750,450,550,550;
+%           1,450,450,400;
+%           1650,435,390,400];
+% triggerTime = 1;    % seconds
+% frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
+% frameRate = 300;
+% 
+% frameSize = [1024,2040];
+% these are now loaded in from crop metadata files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
 cd(labeledBodypartsFolder)
@@ -66,7 +65,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 27:27%numRatFolders
+for i_rat = 22:22%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -94,7 +93,7 @@ for i_rat = 27:27%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 27
+    if i_rat == 22
         startSession = 2;
         endSession = numSessions;
     else
@@ -134,15 +133,17 @@ for i_rat = 27:27%numRatFolders
         
         switch pawPref
             case 'right'
-                ROIs = vidROI(1:2,:);
+%                 ROIs = vidROI(1:2,:);
                 Pn = squeeze(boxCal.Pn(:,:,2));
                 sf = mean(boxCal.scaleFactor(2,:));
                 F = squeeze(boxCal.F(:,:,2));
+                mirrorView = 'left';
             case 'left'
-                ROIs = vidROI([1,3],:);
+%                 ROIs = vidROI([1,3],:);
                 Pn = squeeze(boxCal.Pn(:,:,3));
                 sf = mean(boxCal.scaleFactor(3,:));
                 F = squeeze(boxCal.F(:,:,3));
+                mirrorView = 'right';
         end
     
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
@@ -197,20 +198,34 @@ for i_rat = 27:27%numRatFolders
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
             
-            if exist(fullTrajName,'file')
-                % already did this calculation
-                if repeatCalculations
-                    load(fullTrajName)
-                else
-                    continue;
-                end
-            end
+%             if exist(fullTrajName,'file')
+%                 % already did this calculation
+%                 if repeatCalculations
+%                     load(fullTrajName)
+%                 else
+%                     continue;
+%                 end
+%             end
             
             cd(mirrorViewDir)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = fullfile(mirrorViewDir, mirror_metadataName);
+            mirror_metadata = load(mirror_metadataName);
+            
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
-    
+            direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name);
+            direct_metadataName = fullfile(directViewDir, direct_metadataName);
+            direct_metadata = load(direct_metadataName);
+            
+            % ROIs loaded from cropping metadata files
+            ROIs = [direct_metadata.viewROI;mirror_metadata.viewROI];
+            triggerTime = direct_metadata.triggerTime; % assume same as mirror view
+            frameTimeLimits = direct_metadata.frameTimeLimits;
+            frameRate = direct_metadata.frameRate;
+            frameSize = direct_metadata.frameSize;
+
             if ~exist('manually_invalidated_points','var')
                 numFrames = size(direct_p,2);
                 num_bodyparts = length(direct_bp);
@@ -256,10 +271,10 @@ for i_rat = 27:27%numRatFolders
             end
             
             [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
-                calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
+                calc3D_DLC_trajectory_20190924(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
-                                      vidROI, activeBoxCal, pawPref, frameSize,...
+                                      activeBoxCal, pawPref, frameSize,...
                                       'maxdistfromneighbor',maxDistFromNeighbor);
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);

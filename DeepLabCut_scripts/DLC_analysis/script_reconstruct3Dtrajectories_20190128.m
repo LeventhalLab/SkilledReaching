@@ -21,29 +21,29 @@ maxDistFromNeighbor_invalid = 70;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_DL.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
-labeledBodypartsFolder = '/Volumes/Tbolt_01/Skilled Reaching/DLC output';
-calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
+labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+calImageDir = '/Volumes/LL EXHD #2/calibration_images';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
 % change this if the videos were cropped at different coordinates
-vidROI = [750,450,550,550;
-          1,450,450,400;
-          1650,435,390,400];
+% vidROI = [750,450,550,550;
+%           1,450,450,400;
+%           1650,435,390,400];
       
 %%%%%%%
 % for Rat R0216
       
-triggerTime = 1;    % seconds
-frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
-frameRate = 300;
+% triggerTime = 1;    % seconds
+% frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
+% frameRate = 300;
 
-frameSize = [1024,2040];
+% frameSize = [1024,2040];
 % would be nice to have these parameters stored with DLC output so they can
 % be read in directly. Might they be in the .h files?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -66,7 +66,7 @@ for iFile = 1 : length(calFileList)
     calDateNums(iFile) = str2double(calDateList{iFile});
 end
 
-for i_rat = 6:6%numRatFolders
+for i_rat = 22:22%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -94,7 +94,7 @@ for i_rat = 6:6%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 6
+    if i_rat == 22
         startSession = 1;
     else
         startSession = 1;
@@ -130,12 +130,12 @@ for i_rat = 6:6%numRatFolders
         
         switch pawPref
             case 'right'
-                ROIs = vidROI(1:2,:);
+%                 ROIs = vidROI(1:2,:);
                 Pn = squeeze(boxCal.Pn(:,:,2));
                 sf = mean(boxCal.scaleFactor(2,:));
                 F = squeeze(boxCal.F(:,:,2));
             case 'left'
-                ROIs = vidROI([1,3],:);
+%                 ROIs = vidROI([1,3],:);
                 Pn = squeeze(boxCal.Pn(:,:,3));
                 sf = mean(boxCal.scaleFactor(3,:));
                 F = squeeze(boxCal.F(:,:,3));
@@ -203,14 +203,29 @@ for i_rat = 6:6%numRatFolders
             
             cd(mirrorViewDir)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = fullfile(mirrorViewDir, mirror_metadataName);
+            mirror_metadata = load(mirror_metadataName);
+            
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
+            direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name);
+            direct_metadataName = fullfile(directViewDir, direct_metadataName);
+            direct_metadata = load(direct_metadataName);
     
-%             if ~exist('manually_invalidated_points','var')
+            % extract parameters for reconstruction - frame size, frame
+            % rate, cropping areas, etc.
+            ROIs = [direct_metadata.viewROI;mirror_metadata.viewROI];
+            frameRate = direct_metadata.frameRate;
+            frameSize = direct_metadata.frameSize;
+            triggerTime = direct_metadata.triggerTime;
+            frameTimeLimits = direct_metadata.frameTimeLimits;
+
+            if ~exist('manually_invalidated_points','var')
                 numFrames = size(direct_p,2);
                 num_bodyparts = length(direct_bp);
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
-%             end
+            end
                     
             numDirectFrames = size(direct_p,2);
             numMirrorFrames = size(mirror_p,2);
@@ -251,10 +266,10 @@ for i_rat = 6:6%numRatFolders
             end
             
             [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
-                calc3D_DLC_trajectory_20181204(direct_pts_ud, ...
+                calc3D_DLC_trajectory_20190924(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
-                                      vidROI, activeBoxCal, pawPref, frameSize,...
+                                      activeBoxCal, pawPref, frameSize,...
                                       'maxdistfromneighbor',maxDistFromNeighbor);
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
@@ -269,6 +284,7 @@ for i_rat = 6:6%numRatFolders
 %             else
 %                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
+                clear manually_invalidated_points
 %             end
             
         end

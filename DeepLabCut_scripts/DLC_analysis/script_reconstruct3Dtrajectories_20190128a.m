@@ -65,7 +65,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 1:1%numRatFolders
+for i_rat = 22:22%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -93,7 +93,7 @@ for i_rat = 1:1%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 27
+    if i_rat == 22
         startSession = 1;
         endSession = numSessions;
     else
@@ -208,13 +208,17 @@ for i_rat = 1:1%numRatFolders
 %             end
             
             cd(mirrorViewDir)
-            mirror_metadata_fname = [mirror_csvList(i_mirrorcsv).name(1:28), mirrorView, '_metadata.mat'];
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
-            mirror_metadata = load(mirror_metadata_fname);
+            mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = fullfile(mirrorViewDir, mirror_metadataName);
+            mirror_metadata = load(mirror_metadataName);
+            
             cd(directViewDir)
-            direct_metadata_fname = [direct_csvList(i_directcsv).name(1:28), 'direct_metadata.mat'];
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
-            direct_metadata = load(direct_metadata_fname);
+            direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name);
+            direct_metadataName = fullfile(directViewDir, direct_metadataName);
+            direct_metadata = load(direct_metadataName);
+            
             % ROIs loaded from cropping metadata files
             ROIs = [direct_metadata.viewROI;mirror_metadata.viewROI];
             triggerTime = direct_metadata.triggerTime; % assume same as mirror view
