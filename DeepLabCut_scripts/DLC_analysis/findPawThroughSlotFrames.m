@@ -16,7 +16,7 @@ num_bodyparts = size(trajectories,3);
 numFrames = size(trajectories,1);
 part_through_slot_frames = cell(num_bodyparts,1);
 firstSlotBreachFrame = numFrames;
-first_paw_past_slot_frame = zeros(num_bodyparts,1);
+first_paw_past_slot_frame = NaN(num_bodyparts,1);
 didPawStartThroughSlot = false;
 
 for i_part = 1 : num_bodyparts

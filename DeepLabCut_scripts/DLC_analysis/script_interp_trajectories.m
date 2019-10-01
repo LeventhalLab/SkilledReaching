@@ -38,7 +38,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1 : numRatFolders
+for i_rat = 4 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -215,7 +215,11 @@ for i_rat = 1 : numRatFolders
                 if ~isempty(initPellet3D)
                     % most likely, pellet wasn't brought up by the delivery arm
                     % on this trial
-                    all_initPellet3D(iTrial,:) = initPellet3D;
+                    if ~isnan(initPellet3D(1))
+                        all_initPellet3D(iTrial,:) = initPellet3D;
+                    else
+                        pelletMissingFlag(iTrial) = true;
+                    end
                 else
                     pelletMissingFlag(iTrial) = true;
                 end

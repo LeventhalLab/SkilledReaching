@@ -198,14 +198,14 @@ for i_rat = 22:22%numRatFolders
             
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
             
-%             if exist(fullTrajName,'file')
-%                 % already did this calculation
-%                 if repeatCalculations
-%                     load(fullTrajName)
-%                 else
-%                     continue;
-%                 end
-%             end
+            if exist(fullTrajName,'file')
+                % already did this calculation
+                if repeatCalculations
+                    load(fullTrajName)
+                else
+                    continue;
+                end
+            end
             
             cd(mirrorViewDir)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);

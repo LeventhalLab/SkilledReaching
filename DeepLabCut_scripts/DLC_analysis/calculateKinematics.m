@@ -1,4 +1,4 @@
-function reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,all_slot_z_wrt_pellet,pawPref,frameRate)
+function reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref,frameRate)
 
 % INPUTS
 %   reachData - structure with the following fields:
@@ -15,11 +15,13 @@ graspStartFrames = find(reachData.graspStarts);
 reachEndFrames = find(reachData.reachEnds);
 graspEndFrames = find(reachData.graspEnds);
 reach_to_grasp_frames = find(reachData.reach_to_grasp);   % these are grasp end frames associated with a reach
-
-num_reaches = length(reachData.reachEnds);
+num_reaches = length(reachEndFrames);
 
 reachData.pdEndPoints = zeros(num_reaches,3);
+reachData.slotBreachFrame = zeros(num_reaches,1);
+reachData.firstDigitKinematicsFrame = zeros(num_reaches,1);
 for i_reach = 1 : num_reaches
+
     startFrame = reachStartFrames(i_reach);
     reach_endFrame = reachEndFrames(i_reach);
     grasp_endFrame = reach_to_grasp_frames(i_reach);
@@ -35,26 +37,28 @@ for i_reach = 1 : num_reaches
     reachData.pd_v{i_reach} = pd_v;
     
     reachData.dig2_trajectory{i_reach} = dig2_trajectory(startFrame:grasp_endFrame,:);
+    reachData.slotBreachFrame(i_reach) = startFrame + find(reachData.dig2_trajectory{i_reach}(:,3) < slot_z_wrt_pellet,1) - 1;
     dig2_v = diff(reachData.dig2_trajectory{i_reach},1,1) * frameRate;
     dig2_v = sqrt(sum(dig2_v.^2,2));
     reachData.dig2_v{i_reach} = dig2_v;
     
     % reach endpoints
-    reachData.pdEndPoints(i_reach,:) = pd_trajectory(reach_endFrame,:);
+    reachData.pdEndPoints(i_reach,:) = pd_trajectory(grasp_endFrame,:);
     reachData.dig2_endPoints(i_reach,:) = pd_trajectory(grasp_endFrame,:);   % should this be reach_endFrame or grasp_endFrame? probably doesn't matter much
     
     % paw orientation
-    
+    [reachData.orientation{i_reach},firstValidFrame] = ...
+        determinePawOrientation(interp_trajectory(startFrame:grasp_endFrame,:,:),bodyparts,pawPref);
+    reachData.firstDigitKinematicsFrame(i_reach) = firstValidFrame + startFrame - 1;
     
     
     % aperture
-    
+    [reachData.aperture{i_reach},~] = ...
+        determinePawAperture(interp_trajectory(startFrame:grasp_endFrame,:,:),bodyparts,pawPref);
     
     % trajectories divided up into equal segments by pathlength
+    % maybe do this separately
     
-    
-    
-    % trajectories divided into equal segments by time
     
 end
     

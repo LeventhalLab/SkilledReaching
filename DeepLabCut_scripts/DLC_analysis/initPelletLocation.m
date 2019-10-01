@@ -59,11 +59,11 @@ pelletIdx3D = strcmpi(bodyparts,'pellet');
 pelletPts = squeeze(pawTrajectory(:,:,pelletIdx3D));
 
 invalidPoints = (pellet_reproj_error(:,1) > maxReprojError)' | (pellet_reproj_error(:,2) > maxReprojError)';
-pelletPts(invalidPoints,:) = 0;
+pelletPts(invalidPoints,:) = NaN;
 % zeros in the pawTrajectory array represent points where the pellet wasn't
 % visible in at least one view
 initPelletPts = pelletPts(preTriggerFrame:firstSlotBreachFrame,:);
-validPelletPts = initPelletPts(initPelletPts(:,1)~=0,:);
+validPelletPts = initPelletPts(~isnan(initPelletPts(:,1)),:);
 
 if isempty(validPelletPts)
     initPellet3D = [];

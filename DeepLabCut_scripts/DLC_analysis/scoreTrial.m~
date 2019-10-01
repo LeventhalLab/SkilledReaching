@@ -1,0 +1,25 @@
+function trialScores = scoreTrial(reachData,all_interp_traj_wrt_pellet,didPawStartThroughSlot,pelletMissingFlag,initPellet3D
+
+% 0 ? No pellet, mechanical failure
+% 1 -  First trial success (obtained pellet on initial limb advance)
+% 2 -  Success (obtain pellet, but not on first attempt)
+% 3 -  Forelimb advance -pellet dropped in box
+% 4 -  Forelimb advance -pellet knocked off shelf
+% 5 -  Obtain pellet with tongue
+% 6 -  Walk away without forelimb advance, no forelimb advance
+% 7 -  Reached, pellet remains on shelf
+% 8 - Used only contralateral paw
+% 9 - Laser fired at the wrong time
+% 10 ?Used preferred paw after obtaining or moving pellet with tongue
+% 11 - paw started out through the slot
+
+numScores = 0;
+if didPawStartThroughSlot
+    numScores = numScores + 1;
+    trialScores(numScores) = 11;
+end
+
+if pelletMissingFlag
+    numScores = numScores + 1;
+    trialScores(numScores) = 0;
+    en

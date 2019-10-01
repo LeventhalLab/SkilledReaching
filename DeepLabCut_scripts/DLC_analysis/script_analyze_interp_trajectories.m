@@ -113,8 +113,6 @@ for i_rat = 1 : numRatFolders
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
         numReachingPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
         
-        
-        
         all_endPts = zeros(numReachingPawParts, 3, numTrials);
         all_final_endPts = zeros(numReachingPawParts, 3, numTrials);
         all_partEndPts = zeros(numReachingPawParts, 3, numTrials);
@@ -131,9 +129,9 @@ for i_rat = 1 : numRatFolders
             trialNumbers(iTrial,:)
             interp_trajectory = squeeze(all_interp_traj_wrt_pellet(:,:,:,iTrial));
             
-            reachData = identifyReaches(interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref);
-            reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref,frameRate);
-
+            reachData(iTrial) = identifyReaches(interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref);
+            reachData(iTrial) = calculateKinematics(reachData(iTrial),interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref,frameRate);
+            reachData(iTrial) = scoreTrial(reachData(iTrial),all_didPawStartThroughSlot);
         end
         
     end
