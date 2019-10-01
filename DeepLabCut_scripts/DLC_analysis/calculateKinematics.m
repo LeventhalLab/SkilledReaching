@@ -10,21 +10,16 @@ function reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,s
 pd_trajectory = squeeze(interp_trajectory(:,:,pawDorsumIdx));
 dig2_trajectory = squeeze(interp_trajectory(:,:,digIdx(2)));
 
-reachStartFrames = find(reachData.reachStarts);
-graspStartFrames = find(reachData.graspStarts);
-reachEndFrames = find(reachData.reachEnds);
-graspEndFrames = find(reachData.graspEnds);
-reach_to_grasp_frames = find(reachData.reach_to_grasp);   % these are grasp end frames associated with a reach
-num_reaches = length(reachEndFrames);
+num_reaches = length(reachData.reachEnds);
 
 reachData.pdEndPoints = zeros(num_reaches,3);
 reachData.slotBreachFrame = zeros(num_reaches,1);
 reachData.firstDigitKinematicsFrame = zeros(num_reaches,1);
 for i_reach = 1 : num_reaches
 
-    startFrame = reachStartFrames(i_reach);
-    reach_endFrame = reachEndFrames(i_reach);
-    grasp_endFrame = reach_to_grasp_frames(i_reach);
+    startFrame = reachData.reachStarts(i_reach);
+    reach_endFrame = reachData.reachEnds(i_reach);
+    grasp_endFrame = reachData.reach_to_grasp(i_reach);
     
     % add in pathlength later?
     
@@ -49,7 +44,11 @@ for i_reach = 1 : num_reaches
     % paw orientation
     [reachData.orientation{i_reach},firstValidFrame] = ...
         determinePawOrientation(interp_trajectory(startFrame:grasp_endFrame,:,:),bodyparts,pawPref);
+    try
     reachData.firstDigitKinematicsFrame(i_reach) = firstValidFrame + startFrame - 1;
+    catch
+        keyboard
+    end
     
     
     % aperture

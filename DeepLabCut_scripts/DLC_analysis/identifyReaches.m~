@@ -1,11 +1,11 @@
-function reachData = identifyReaches(reachData,interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref,varargin)
+function reachData = identifyReaches(interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref,varargin)
 
 maxReach_Grasp_separation = 10;
 minGraspProminence = 2;
 maxPreGraspProminence = 10;
 minReachProminence = 3;
 
-for iarg = 1 : 2 : nargin - 5
+for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
         case 'mingraspprominence'
             minGrasprominence = varargin{iarg + 1};
@@ -104,6 +104,7 @@ end
 reachMins = reachMins & isReachToGraspRegion;
 reachData.reachEnds = find(reachMins & (dig2_z < slot_z_wrt_pellet));
 reachData.graspEnds = find(graspMins & (dig2_z < slot_z_wrt_pellet));
+reachData.graspEnds = find(reachData.graspEnds);
 
 % find the paw dorsum maxima in between each reach termination
 num_reaches = length(reachData.reachEnds);
@@ -126,6 +127,7 @@ reachData.reachStarts = find(reachStarts);
 num_grasps = length(reachData.graspEnds);
 
 reach_and_grasp_ends = unique(sort([reachData.reachEnds;reachData.graspEnds]));
+reach_and_grasp_ends = find(reach_and_grasp_ends);
 graspStarts = false(numFrames,1);
 for i_grasp = 1 : num_grasps
     
@@ -136,14 +138,10 @@ for i_grasp = 1 : num_grasps
         previous_grasp_frame = reach_and_grasp_ends(current_grasp_idx-1);
     end
     interval_dig2_z_max = max(dig2_z(previous_grasp_frame:reachData.graspEnds(i_grasp)));
-    try
     graspStarts(dig2_z == interval_dig2_z_max) = true;
-    catch
-        keyboard
-    end
 end
 reachData.graspStarts = find(graspStarts);
-reachData.reach_to_grasp = find(reach_to_grasp & (dig2_z < slot_z_wrt_pellet));
+reachData.reach_to_grasp = reach_to_grasp & (dig2_z < slot_z_wrt_pellet);
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

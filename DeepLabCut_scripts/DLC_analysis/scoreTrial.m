@@ -1,4 +1,6 @@
-function trialScores = scoreTrial(reachData,interp_trajectory,didPawStartThroughSlot,pelletMissingFlag,initPellet3D,slot_z_wrt_pellet,pawPref)
+function reachData = scoreTrial(reachData,interp_trajectory,bodyparts,didPawStartThroughSlot,pelletMissingFlag,initPellet3D,slot_z_wrt_pellet,pawPref)
+
+% WORK IN PROGRESS - MAY NEED THE OTHER VIEW IN DLC TO FIND THE PELLET...
 
 % 0 ? No pellet, mechanical failure
 % 1 -  First trial success (obtained pellet on initial limb advance)
@@ -53,3 +55,5 @@ num_reaches = length(reachEnds);
 for i_reach = 1 : num_reaches
     
 end
+
+reachData.trialScores = trialScores;

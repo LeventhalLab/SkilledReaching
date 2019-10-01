@@ -80,6 +80,9 @@ for i_rat = 1 : numRatFolders
         if ~isfolder(fullSessionDir)
             continue;
         end
+        reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
+        reachDataName = fullfile(fullSessionDir,reachDataName);
+        
         cd(fullSessionDir);
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDateString = C{1}; % this will be in format yyyymmdd
@@ -125,15 +128,20 @@ for i_rat = 1 : numRatFolders
         all_maxDigitReachFrame = zeros(numTrials,1);
         all_initPellet3D = NaN(numTrials, 3);
         
+        temp_reachData = initializeReachDataStruct();
         for iTrial = 1 : numTrials
             trialNumbers(iTrial,:)
+            slot_z_wrt_pellet = all_slot_z_wrt_pellet(iTrial);
+            initPellet3D = all_initPellet3D(iTrial,:);
             interp_trajectory = squeeze(all_interp_traj_wrt_pellet(:,:,:,iTrial));
             
-            reachData(iTrial) = identifyReaches(interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref);
-            reachData(iTrial) = calculateKinematics(reachData(iTrial),interp_trajectory,bodyparts,all_slot_z_wrt_pellet(iTrial),pawPref,frameRate);
-            reachData(iTrial) = scoreTrial(reachData(iTrial),all_didPawStartThroughSlot);
+            reachData(iTrial) = identifyReaches(temp_reachData,interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref);
+            reachData(iTrial) = calculateKinematics(reachData(iTrial),interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref,frameRate);
+            reachData(iTrial) = scoreTrial(reachData(iTrial),interp_trajectory,bodyparts,all_didPawStartThroughSlot(iTrial),pelletMissingFlag(iTrial),initPellet3D,slot_z_wrt_pellet,pawPref);
         end
         
+        save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers');
+        clear reachData
     end
     
 end
