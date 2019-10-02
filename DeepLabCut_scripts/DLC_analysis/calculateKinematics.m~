@@ -24,11 +24,7 @@ for i_reach = 1 : num_reaches
 
     startFrame = reachData.reachStarts(i_reach);
     reach_endFrame = reachData.reachEnds(i_reach);
-    try
     grasp_endFrame = reachData.reach_to_grasp(i_reach);
-    catch
-        keyboard
-    end
     
     % add in pathlength later?
     
@@ -42,7 +38,6 @@ for i_reach = 1 : num_reaches
     
     reachData.dig2_trajectory{i_reach} = dig2_trajectory(startFrame:grasp_endFrame,:);
     reachData.slotBreachFrame(i_reach) = startFrame + find(reachData.dig2_trajectory{i_reach}(:,3) < slot_z_wrt_pellet,1) - 1;
-
     dig2_v = diff(reachData.dig2_trajectory{i_reach},1,1) * frameRate;
     dig2_v = sqrt(sum(dig2_v.^2,2));
     reachData.dig2_v{i_reach} = dig2_v;
@@ -54,7 +49,12 @@ for i_reach = 1 : num_reaches
     % paw orientation
     [reachData.orientation{i_reach},firstValidFrame] = ...
         determinePawOrientation(interp_trajectory(startFrame:grasp_endFrame,:,:),bodyparts,pawPref);
+    try
     reachData.firstDigitKinematicsFrame(i_reach) = firstValidFrame + startFrame - 1;
+    catch
+        keyboard
+    end
+    
     
     % aperture
     [reachData.aperture{i_reach},~] = ...

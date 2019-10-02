@@ -27,7 +27,9 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1 : numRatFolders
+temp_reachData = initializeReachDataStruct();
+
+for i_rat = 22 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -54,7 +56,7 @@ for i_rat = 1 : numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0158'
+        case 'R0161'
             startSession = 1;
             endSession = numSessions;
         case 'R0159'
@@ -64,11 +66,11 @@ for i_rat = 1 : numRatFolders
             startSession = 1;
             endSession = 22;
         case 'R0189'
-            startSession = 7;
-            endSession = numSessions;
-        case 'R0195'
             startSession = 1;
             endSession = numSessions;
+        case 'R0216'
+            startSession = 1;
+            endSession = 15;%numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -80,8 +82,6 @@ for i_rat = 1 : numRatFolders
         if ~isfolder(fullSessionDir)
             continue;
         end
-        reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
-        reachDataName = fullfile(fullSessionDir,reachDataName);
         
         cd(fullSessionDir);
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
@@ -89,6 +89,9 @@ for i_rat = 1 : numRatFolders
                             % note date formats from the scores spreadsheet
                             % are in m/d/yy
 
+        reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
+        reachDataName = fullfile(fullSessionDir,reachDataName);
+        
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
         sessionDateNum = datenum(sessionDateString,'yyyymmdd');
         
@@ -128,9 +131,8 @@ for i_rat = 1 : numRatFolders
         all_maxDigitReachFrame = zeros(numTrials,1);
         all_initPellet3D = NaN(numTrials, 3);
         
-        temp_reachData = initializeReachDataStruct();
         for iTrial = 1 : numTrials
-            trialNumbers(iTrial,:)
+%             trialNumbers(iTrial,:)
             slot_z_wrt_pellet = all_slot_z_wrt_pellet(iTrial);
             initPellet3D = all_initPellet3D(iTrial,:);
             interp_trajectory = squeeze(all_interp_traj_wrt_pellet(:,:,:,iTrial));
