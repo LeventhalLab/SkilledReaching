@@ -1,0 +1,124 @@
+function plotSessionReachSummaries(reachData, trialNumbers, all_slot_z_wrt_pellet, varargin)
+
+figProps.m = 5;
+figProps.n = 5;
+
+figProps.panelWidth = ones(figProps.n,1) * 10;
+figProps.panelHeight = ones(figProps.m,1) * 4;
+
+figProps.colSpacing = ones(figProps.n-1,1) * 0.5;
+figProps.rowSpacing = ones(figProps.m-1,1) * 1;
+
+figProps.leftMargin = 2.54;
+figProps.topMargin = 5;
+
+figProps.width = sum(figProps.colSpacing) + sum(figProps.panelWidth) + figProps.leftMargin + 2.54;
+figProps.height = 12 * 2.54;
+
+[h_fig,h_axes] = createFigPanels5(figProps);
+
+% first row of plots: 
+%   column 1: breakdown of trial outcomes
+%   column 2: number of reaches in each trial
+%   column 3: "event frames" - frames at which paw dorsum is first seen, 
+%       paw breaches slot, 1st reach end framez-endpoints vs trial #
+%   column 4: 3-D of reach endpoints, color coded by trial type
+
+
+% REACHING SCORES:
+%
+% 0 - No pellet, mechanical failure
+% 1 -  First trial success (obtained pellet on initial limb advance)
+% 2 -  Success (obtain pellet, but not on first attempt)
+% 3 -  Forelimb advance -pellet dropped in box
+% 4 -  Forelimb advance -pellet knocked off shelf
+% 5 -  Obtain pellet with tongue
+% 6 -  Walk away without forelimb advance, no forelimb advance
+% 7 -  Reached, pellet remains on shelf
+% 8 - Used only contralateral paw
+% 9 - Laser fired at the wrong time
+% 10 ?Used preferred paw after obtaining or moving pellet with tongue
+% 11 - paw started out through the slot
+
+numTrials = length(reachData);
+
+trialTypeColors = {'k','y','b','r','g','c','m'};
+validTrialTypes = {0:10,1,2,[3,4,7],0,11,6};
+validTypeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
+
+% breakdown of trial outcomes
+[score_breakdown,ind_trial_type] = breakDownTrialScores(reachData,validTrialTypes);
+h_scoreBreakdown = plotTrialOutcomeBreakdown(score_breakdown,trialTypeColors,h_axes(1,1));
+set(gca,'ylim',[0 100])
+title('trial outcomes')
+ylabel('number of trials');
+legend(validTypeNames)
+
+% number of reaches
+plotNumReaches(reachData,trialNumbers,ind_trial_type,trialTypeColors,h_axes(1,2));
+
+% event frames
+plotEventFrames(reachData,trialNumbers,h_axes(1,3))
+    
+
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h_scoreBreakdown = plotTrialOutcomeBreakdown(score_breakdown,trialTypeColors,h_axes)
+
+axes(h_axes);
+h_scoreBreakdown = zeros(length(score_breakdown),1);
+for ii = 1 : length(score_breakdown)
+    h_scoreBreakdown(ii) = bar(ii,score_breakdown(ii),'facecolor',trialTypeColors{ii});
+    hold on
+end
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function plotNumReaches(reachData,trialNumbers,ind_trial_type,trialTypeColors,h_axes)
+
+axes(h_axes);
+numTrials = length(reachData);
+num_reaches_per_trial = zeros(numTrials,1);
+for iTrial = 1 : numTrials
+    num_reaches_per_trial(iTrial) = length(reachData);
+end
+
+for ii = 1 : max(ind_trial_type)
+    
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function plotEventFrames(reachData,trialNumbers,h_axes)
+
+axes(h_axes);
+numTrials = length(reachData);
+all_frames = zeros(3,numTrials);
+for iTrial = 1 : numTrials
+    if ~isempty(reachData(iTrial).reachStarts)
+        all_frames(1,iTrial) = reachData(iTrial).reachStarts(1);
+    end
+    if ~isempty(reachData(iTrial).slotBreachFrame)
+        all_frames(2,iTrial) = reachData(iTrial).slotBreachFrame(1);
+    end
+    if ~isempty(reachData(iTrial).reachEnds)
+        all_frames(3,iTrial) = reachData(iTrial).reachEnds(1);
+    end
+end
+
+plot(trialNumbers(:,2),all_frames(1,:),'b')
+hold on
+plot(trialNumbers(:,2),all_frames(2,:),'r')
+plot(trialNumbers(:,2),all_frames(3,:),'g')
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function plot_z(reachData,trialNumbers,

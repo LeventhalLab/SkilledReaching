@@ -1,4 +1,4 @@
-function reachData = scoreTrial(reachData,interp_trajectory,bodyparts,didPawStartThroughSlot,pelletMissingFlag,initPellet3D,slot_z_wrt_pellet,pawPref)
+function reachData = scoreTrial(reachData,interp_trajectory,bodyparts,didPawStartThroughSlot,pelletMissingFlag,initPellet3D,slot_z_wrt_pellet,pawPref,trialOutcome)
 
 % WORK IN PROGRESS - MAY NEED THE OTHER VIEW IN DLC TO FIND THE PELLET...
 
@@ -18,11 +18,15 @@ function reachData = scoreTrial(reachData,interp_trajectory,bodyparts,didPawStar
 % number of frames to look ahead after the end of the first reach to see if
 % the pellet is still there
 frames_to_look_past_reach = 10;
-
 [~,~,digIdx,~] = findReachingPawParts(bodyparts,pawPref);
 
 numScores = 0;
 trialScores = [];
+if ~isempty(trialOutcome)
+    numScores = numScores + 1;
+    trialScores(numScores) = trialOutcome;
+end
+
 % did the paw start on the wrong side of the slot?
 if didPawStartThroughSlot
     numScores = numScores + 1;
@@ -56,4 +60,4 @@ for i_reach = 1 : num_reaches
     
 end
 
-reachData.trialScores = trialScores;
+reachData.trialScores = unique(trialScores);

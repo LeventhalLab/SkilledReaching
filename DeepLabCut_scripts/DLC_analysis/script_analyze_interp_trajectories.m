@@ -29,7 +29,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 22 : numRatFolders
+for i_rat = 1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -51,12 +51,24 @@ for i_rat = 22 : numRatFolders
         csvDateFormat = 'yyyyMMdd';
     end
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    
+    % read in scores from manual review of each trial
+    reachScoresFile = [ratID '_scores.csv'];
+    reachScoresFile = fullfile(ratRootFolder,reachScoresFile);
+    reachScores = readReachScores(reachScoresFile,'csvdateformat',csvDateFormat);
+    allSessionDates = [reachScores.date]';
+    numTableSessions = length(reachScores);
+    dateNums_from_scores_table = zeros(numTableSessions,1);
+    for iSession = 1 : numTableSessions
+        dateNums_from_scores_table(iSession) = datenum(reachScores(iSession).date);
+    end
+    
     cd(ratRootFolder);
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0161'
+        case 'R0158'
             startSession = 1;
             endSession = numSessions;
         case 'R0159'
@@ -70,13 +82,15 @@ for i_rat = 22 : numRatFolders
             endSession = numSessions;
         case 'R0216'
             startSession = 1;
-            endSession = 15;%numSessions;
+            endSession = 29;%numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
     end
     for iSession = startSession : 1 : endSession
-        
+        if exist('reachData','var')
+            clear reachData
+        end
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
         if ~isfolder(fullSessionDir)
@@ -93,7 +107,14 @@ for i_rat = 22 : numRatFolders
         reachDataName = fullfile(fullSessionDir,reachDataName);
         
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
+        allSessionIdx = find(sessionDate == allSessionDates);
         sessionDateNum = datenum(sessionDateString,'yyyymmdd');
+        
+        if ~isempty(allSessionIdx)
+            sessionReachScores = reachScores(allSessionIdx).scores;
+        else
+            sessionReachScores = [];   % if a session hasn't been scored
+        end
         
         % find the pawTrajectory files
         pawTrajectoryList = dir(trajectory_file_name);
@@ -109,12 +130,6 @@ for i_rat = 22 : numRatFolders
         numFrames = size(all_interp_traj_wrt_pellet,1);
         num_bodyparts = size(all_interp_traj_wrt_pellet,3);
         numTrials = size(all_interp_traj_wrt_pellet,4);
-        
-        % initialize variables to hold the various kinematic values
-        all_mcpAngle = zeros(numFrames,numTrials);
-        all_pipAngle = zeros(numFrames,numTrials);
-        all_digitAngle = zeros(numFrames,numTrials);
-        all_pawAngle = zeros(numFrames,numTrials);
         
         [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
         numReachingPawParts = length(mcpIdx) + length(pipIdx) + length(digIdx) + length(pawDorsumIdx);
@@ -139,11 +154,16 @@ for i_rat = 22 : numRatFolders
             
             reachData(iTrial) = identifyReaches(temp_reachData,interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref);
             reachData(iTrial) = calculateKinematics(reachData(iTrial),interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref,frameRate);
-            reachData(iTrial) = scoreTrial(reachData(iTrial),interp_trajectory,bodyparts,all_didPawStartThroughSlot(iTrial),pelletMissingFlag(iTrial),initPellet3D,slot_z_wrt_pellet,pawPref);
+            if ~isempty(sessionReachScores)
+                trialOutcome = sessionReachScores(trialNumbers(iTrial,2));
+            else
+                trialOutcome = [];
+            end
+            reachData(iTrial) = scoreTrial(reachData(iTrial),interp_trajectory,bodyparts,all_didPawStartThroughSlot(iTrial),pelletMissingFlag(iTrial),initPellet3D,slot_z_wrt_pellet,pawPref,trialOutcome);
         end
         
         save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers');
-        clear reachData
+
     end
     
 end

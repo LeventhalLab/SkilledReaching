@@ -48,27 +48,27 @@ pd_z = squeeze(interp_trajectory(:,3,pawDorsumIdx));
 % exclude reaches where the paw immediately starts going forward
 % again. 
 reaches_to_keep = islocalmin(pd_z,1,...
-            'minprominence',3,...
+            'minprominence',1,...
             'prominencewindow',[0,1000],...
             'minseparation',minGraspSeparation);
 reachMins = reachMins & reaches_to_keep;
 % find local maxima in pd_z; if one of them is too close to the next
 % minimum, exclude that minimum as a potential reach
-[reachMaxes,~] = islocalmax(pd_z,1);
-reachMax_idx = find(reachMaxes);
-reachMin_idx = find(reachMins);
-mins_to_exclude = false(size(reachMins));
-for i_min = 1 : length(reachMin_idx)
-    % how far is the local max just before the current local min from that
-    % local min in the z-direction? if it's too small, then exclude that
-    % local min
-	prev_max_idx = find(reachMax_idx < reachMin_idx(i_min),1,'last');
-    if pd_z(reachMax_idx(prev_max_idx)) - pd_z(reachMin_idx(i_min)) < minReachProminence
-        mins_to_exclude(reachMin_idx(i_min)) = true;
-    end
-end
+% [reachMaxes,~] = islocalmax(pd_z,1);
+% reachMax_idx = find(reachMaxes);
+% reachMin_idx = find(reachMins);
+% mins_to_exclude = false(size(reachMins));
+% for i_min = 1 : length(reachMin_idx)
+%     % how far is the local max just before the current local min from that
+%     % local min in the z-direction? if it's too small, then exclude that
+%     % local min
+% 	prev_max_idx = find(reachMax_idx < reachMin_idx(i_min),1,'last');
+%     if pd_z(reachMax_idx(prev_max_idx)) - pd_z(reachMin_idx(i_min)) < minReachProminence
+%         mins_to_exclude(reachMin_idx(i_min)) = true;
+%     end
+% end
 
-reachMins = reachMins & ~mins_to_exclude;
+% reachMins = reachMins & ~mins_to_exclude;
         
 [graspMins,~] = islocalmin(dig2_z,1,...
             'flatselection','first',...
@@ -114,11 +114,11 @@ end
 reachMins = reachMins & isReachToGraspRegion;
 
 % make sure that both digits 1 and 4 locations are known/estimated at the
-% end of each reach/grasp. They may be missing if the digits aren't all the
+% end of each grasp. They may be missing if the digits aren't all the
 % way through the slot at reach termination. Essentially, make sure all
 % digits are through the slot
 areDigitsThroughSlot = (dig1_z < slot_z_wrt_pellet) & (dig2_z < slot_z_wrt_pellet) & (dig4_z < slot_z_wrt_pellet);
-reachData.reachEnds = find(reachMins & areDigitsThroughSlot);
+reachData.reachEnds = find(reachMins);% & areDigitsThroughSlot);
 reachData.graspEnds = find(graspMins & areDigitsThroughSlot);
 % the first grasp must occur with or after the first reach
 if ~isempty(reachData.reachEnds)

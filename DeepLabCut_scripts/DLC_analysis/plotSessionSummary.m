@@ -59,12 +59,7 @@ axes(h_axes{1}(1,1));
 plot(trialNumbers(:,2),all_firstPawDorsumFrame);
 hold on
 plot(trialNumbers(:,2),all_paw_through_slot_frame);
-% title('paw through slot frame frame')
-% set(gca,'ylim',pawFrameLim);
-
-% axes(h_axes{1}(1,3));
 plot(trialNumbers(:,2),all_endPtFrame);
-
 plot(trialNumbers(:,2),all_maxDigitReachFrame);
 title('event frames')
 set(gca,'ylim',pawFrameLim);

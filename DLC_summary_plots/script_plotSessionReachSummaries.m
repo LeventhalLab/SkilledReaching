@@ -42,9 +42,9 @@ ratIDs_with_new_date_format = [284];
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
 % 11 - paw started out through the slot
 
-trialTypeColors = {'k','k','b','r','g'};
-validTrialTypes = {0:11,0,1,2,[3,4,7]};
-validTypeNames = {'all','no pellet','1st reach success','any reach success','failed reach'};
+trialTypeColors = {'k','y','b','r','g','c','m'};
+validTrialTypes = {0:10,0,1,2,[3,4,7],11,6};
+validTypeNames = {'all','no pellet','1st reach success','any reach success','failed reach','paw through slot','no reach'};
 numTrialTypes_to_analyze = length(validTrialTypes);
 
 bodypart_to_plot = 'digit2';
