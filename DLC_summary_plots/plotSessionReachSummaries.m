@@ -94,6 +94,10 @@ plot_endReachAperture(reachData,trialNumbers,ind_trial_type,trialTypeColors,h_ax
 % digit aperture post-slot
 plot_digitApertures(reachData,ind_trial_type,trialTypeColors,h_axes(2,4))
 
+
+
+plot_firstReachDuration(reachData,trialNumbers,ind_trial_type,trialTypeColors,h_axes(3,1));
+
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -315,4 +319,29 @@ end
 
 set(gca,'ylim',[10,25])
 title('digit aperture')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function plot_firstReachDuration(reachData,trialNumbers,ind_trial_type,trialTypeColors,h_axes)
+
+axes(h_axes)
+
+numTrials = length(reachData);
+firstReachDuration = zeros(numTrials,1);
+for iTrial = 1 : numTrials
+    firstReachDuration(iTrial) = length(reachData(iTrial).aperture{1});
+end
+
+for ii = 1 : max(ind_trial_type)
+    if any(ind_trial_type == ii)
+        validTrialIdx = (ind_trial_type == ii);
+        scatter(trialNumbers(validTrialIdx,2),firstReachDuration(validTrialIdx),...
+            'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii});
+        hold on
+    end
+end
+set(gca,'ylim',[5,70])
+title('frames in aperture calc')
 end

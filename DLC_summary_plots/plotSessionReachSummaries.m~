@@ -52,7 +52,7 @@ figProps.height = 12 * 2.54;
 
 numTrials = length(reachData);
 
-trialTypeColors = {'k','y','b','r','g','c','m'};
+trialTypeColors = {'k','g','b','r','y','c','m'};
 validTrialTypes_for_outcomes = {0:10,1,[1,2],[3,4,7],0,11,6};
 validTrialTypes = {0:10,1,2,[3,4,7],0,11,6};
 validTypeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
@@ -87,6 +87,12 @@ plot_endReachOrientation(reachData,trialNumbers,ind_trial_type,trialTypeColors,h
 
 % reach orientation post-slot
 plot_reachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(2,2))
+
+% digit aperture at reach end point
+plot_endReachAperture(reachData,trialNumbers,ind_trial_type,trialTypeColors,h_axes(2,3));
+
+% digit aperture post-slot
+plot_digitApertures(reachData,ind_trial_type,trialTypeColors,h_axes(2,4))
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -245,7 +251,7 @@ for ii = 1 : max(ind_trial_type)
     end
 end
 set(gca,'ylim',[0,pi])
-title('reach orientation 
+title('paw orientation at reach end')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -265,4 +271,73 @@ end
 
 set(gca,'ylim',[0,pi])
 title('paw orientation')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function plot_endReachAperture(reachData,trialNumbers,ind_trial_type,trialTypeColors,h_axes)
+
+axes(h_axes)
+
+numTrials = length(reachData);
+end_aperture = zeros(numTrials,1);
+for iTrial = 1 : numTrials
+    end_aperture(iTrial) = reachData(iTrial).aperture{1}(end);
+end
+
+for ii = 1 : max(ind_trial_type)
+    if any(ind_trial_type == ii)
+        validTrialIdx = (ind_trial_type == ii);
+        scatter(trialNumbers(validTrialIdx,2),end_aperture(validTrialIdx),...
+            'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii});
+        hold on
+    end
+end
+set(gca,'ylim',[10,25])
+title('digit aperture at reach end')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function plot_digitApertures(reachData,ind_trial_type,trialTypeColors,h_axes)
+
+axes(h_axes)
+
+numTrials = length(reachData);
+digit_aperture = cell(numTrials,1);
+for iTrial = 1 : numTrials
+    digit_aperture{iTrial} = reachData(iTrial).aperture{1};
+    plot(digit_aperture{iTrial},trialTypeColors{ind_trial_type(iTrial)});
+    hold on
+end
+
+set(gca,'ylim',[10,25])
+title('digit aperture')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function plot_firstReachDuration(reachData,trialNumbers,ind_trial_type,trialTypeColors,h_axes)
+
+axes(h_axes)
+
+numTrials = length(reachData);
+end_aperture = zeros(numTrials,1);
+for iTrial = 1 : numTrials
+    end_aperture(iTrial) = reachData(iTrial).aperture{1}(end);
+end
+
+for ii = 1 : max(ind_trial_type)
+    if any(ind_trial_type == ii)
+        validTrialIdx = (ind_trial_type == ii);
+        scatter(trialNumbers(validTrialIdx,2),end_aperture(validTrialIdx),...
+            'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii});
+        hold on
+    end
+end
+set(gca,'ylim',[10,25])
+title('digit aperture at reach end')
 end
