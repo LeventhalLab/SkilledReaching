@@ -22,26 +22,27 @@ reachData.slotBreachFrame = zeros(num_reaches,1);
 reachData.firstDigitKinematicsFrame = zeros(num_reaches,1);
 for i_reach = 1 : num_reaches
 
-    startFrame = reachData.reachStarts(i_reach);
+    reach_startFrame = reachData.reachStarts(i_reach);
+    grasp_startFrame = reachData.reach_to_grasp_start(i_reach);
     reach_endFrame = reachData.reachEnds(i_reach);
-    try
-    grasp_endFrame = reachData.reach_to_grasp(i_reach);
-    catch
-        keyboard
-    end
+    grasp_endFrame = reachData.reach_to_grasp_end(i_reach);
     
     % add in pathlength later?
     
     % paw dorsum trajectory
-    reachData.pd_trajectory{i_reach} = pd_trajectory(startFrame:reach_endFrame,:);
+    reachData.pd_trajectory{i_reach} = pd_trajectory(reach_startFrame:reach_endFrame,:);
     
     % velocity profile
     pd_v = diff(reachData.pd_trajectory{i_reach},1,1) * frameRate;
     pd_v = sqrt(sum(pd_v.^2,2));
     reachData.pd_v{i_reach} = pd_v;
     
-    reachData.dig2_trajectory{i_reach} = dig2_trajectory(startFrame:grasp_endFrame,:);
-    reachData.slotBreachFrame(i_reach) = startFrame + find(reachData.dig2_trajectory{i_reach}(:,3) < slot_z_wrt_pellet,1) - 1;
+    reachData.dig2_trajectory{i_reach} = dig2_trajectory(grasp_startFrame:grasp_endFrame,:);
+    try
+    reachData.slotBreachFrame(i_reach) = grasp_startFrame + find(reachData.dig2_trajectory{i_reach}(:,3) < slot_z_wrt_pellet,1) - 1;
+    catch
+        keyboard
+    end
 
     dig2_v = diff(reachData.dig2_trajectory{i_reach},1,1) * frameRate;
     dig2_v = sqrt(sum(dig2_v.^2,2));
@@ -56,7 +57,7 @@ for i_reach = 1 : num_reaches
 %         determinePawOrientation(interp_trajectory(startFrame:grasp_endFrame,:,:),bodyparts,pawPref);
     [reachData.orientation{i_reach},firstValidFrame] = ...
         determinePawOrientation(interp_trajectory(reachData.slotBreachFrame(i_reach):grasp_endFrame,:,:),bodyparts,pawPref);
-    reachData.firstDigitKinematicsFrame(i_reach) = firstValidFrame + startFrame - 1;
+    reachData.firstDigitKinematicsFrame(i_reach) = firstValidFrame + reachData.slotBreachFrame(i_reach) - 1;
     
     % aperture
 %     [reachData.aperture{i_reach},~] = ...

@@ -7,7 +7,7 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0228'};
 numRats = length(ratList);
 
-firstRat = 29;
+firstRat = 1;
 lastRat = 30;
 
 x_lim = [-30 10];
@@ -196,8 +196,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
     end
     numSessionsCalculated = 0;
     for iSession = startSession:1:endSession
-        
-        C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
+        curSessionDir = sessionDirectories{iSession};
+        C = textscan(curSessionDir,[ratID '_%8c']);
         sessionDateString = C{1};
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
         sessionDates{iSession} = sessionDate;
@@ -205,12 +205,12 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         allSessionIdx = find(sessionDate == allSessionDates);
         sessionReachScores = reachScores(allSessionIdx).scores;
         
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
-        sessionDir_pdf = fullfile(plotsDir,'pdf',ratID,sessionDirectories{iSession});
+        fullSessionDir = fullfile(ratRootFolder,curSessionDir);
+        sessionDir_pdf = fullfile(plotsDir,'pdf',ratID,curSessionDir);
         if ~exist(sessionDir_pdf,'dir')
             mkdir(sessionDir_pdf);
         end
-        sessionDir_fig = fullfile(plotsDir,'fig',ratID,sessionDirectories{iSession});
+        sessionDir_fig = fullfile(plotsDir,'fig',ratID,curSessionDir);
         cd(fullSessionDir);
         if ~exist(sessionDir_fig,'dir')
             mkdir(sessionDir_fig);
@@ -222,7 +222,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         try
             load(reachDataName);
         catch
-            fprintf('no session summary found for %s\n', sessionDirectories{iSession});
+            fprintf('no session summary found for %s\n', curSessionDir);
             continue
         end
         
@@ -230,4 +230,10 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         if iscell(pawPref)
             pawPref = pawPref{1};
         end
+        
+        plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType);
+        
+    end
+    
+end
         

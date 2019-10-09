@@ -10,8 +10,8 @@ function reachData = identifyReaches(reachData,interp_trajectory,bodyparts,slot_
 % OUTPUTS
 %   reachData
 
-maxReach_Grasp_separation = 20;
-minGraspSeparation = 20;
+maxReach_Grasp_separation = 25;
+minGraspSeparation = 25;
 minGraspProminence = 2;
 maxPreGraspProminence = 10;
 minReachProminence = 10;
@@ -92,23 +92,23 @@ for i_reach = 1 : num_reaches
     endFrame = min(reachFrames(i_reach)+maxReach_Grasp_separation,length(reachMins));
     isReachRegion(startFrame:endFrame) = true;
 end
-reach_to_grasp = isReachRegion & graspMins;
+reach_to_grasp_end = isReachRegion & graspMins;
 % exclude grasps where the paw moves forward a lot prior to the grasp, but
 % isn't associated with a reach
 grasps_to_exclude = islocalmin(dig2_z,1,...
             'flatselection','first',...
             'minprominence',maxPreGraspProminence,...
             'prominencewindow',[100,0]);
-grasps_to_exclude = grasps_to_exclude & ~reach_to_grasp;
+grasps_to_exclude = grasps_to_exclude & ~reach_to_grasp_end;
 graspMins = graspMins & ~grasps_to_exclude;
 
 % exclude reaches not associated with a grasp
-isReachToGraspRegion = false(size(reach_to_grasp));
-reach_to_grasp_frames = find(reach_to_grasp);
-num_reach_to_grasp = sum(reach_to_grasp);
+isReachToGraspRegion = false(size(reach_to_grasp_end));
+reach_to_grasp_end_frames = find(reach_to_grasp_end);
+num_reach_to_grasp = sum(reach_to_grasp_end);
 for i_reach_to_grasp = 1 : num_reach_to_grasp
-    startFrame = max(reach_to_grasp_frames(i_reach_to_grasp)-maxReach_Grasp_separation,1);
-    endFrame = min(reach_to_grasp_frames(i_reach_to_grasp)+maxReach_Grasp_separation,length(reachMins));
+    startFrame = max(reach_to_grasp_end_frames(i_reach_to_grasp)-maxReach_Grasp_separation,1);
+    endFrame = min(reach_to_grasp_end_frames(i_reach_to_grasp)+maxReach_Grasp_separation,length(reachMins));
     isReachToGraspRegion(startFrame:endFrame) = true;
 end
 reachMins = reachMins & isReachToGraspRegion;
@@ -156,14 +156,10 @@ for i_grasp = 1 : num_grasps
         previous_grasp_frame = reach_and_grasp_ends(current_grasp_idx-1);
     end
     interval_dig2_z_max = max(dig2_z(previous_grasp_frame:reachData.graspEnds(i_grasp)));
-    try
     graspStarts(dig2_z == interval_dig2_z_max) = true;
-    catch
-        keyboard
-    end
 end
 reachData.graspStarts = find(graspStarts);
-reach_to_grasp = reach_to_grasp & areDigitsThroughSlot;
+reach_to_grasp_end = reach_to_grasp_end & areDigitsThroughSlot;
 
 % make sure each reach_to_grasp is associated with a reach. Generally, this
 % shouldn't be an issue, but might occasionally happen if the digits aren't
@@ -174,9 +170,9 @@ reach_to_grasp = reach_to_grasp & areDigitsThroughSlot;
 % make sure there is one and only one "reach_to_grasp" point associated
 % with each reach
 num_reaches = length(reachData.reachEnds);
-grasps_to_keep = false(size(reach_to_grasp));
+grasps_to_keep = false(size(reach_to_grasp_end));
 for i_reach = 1 : num_reaches
-    isReachRegion = false(size(reach_to_grasp));
+    isReachRegion = false(size(reach_to_grasp_end));
     try
     reachRegionStartFrame = max(1,reachData.reachEnds(i_reach)-maxReach_Grasp_separation);
     reachRegionEndFrame = min(numFrames,reachData.reachEnds(i_reach)+maxReach_Grasp_separation);
@@ -184,46 +180,46 @@ for i_reach = 1 : num_reaches
     catch
         keyboard
     end
-    poss_reach_to_grasp = reach_to_grasp & isReachRegion;
-    if sum(poss_reach_to_grasp) > 1   % more than one candidate grasp
+    poss_reach_to_grasp_end = reach_to_grasp_end & isReachRegion;
+    if sum(poss_reach_to_grasp_end) > 1   % more than one candidate grasp
         % pick the grasp closest to the paw dorsum reach endpoint
-        poss_reach_to_grasp_frames = find(poss_reach_to_grasp);
-        time_to_grasp = abs(poss_reach_to_grasp_frames - reachData.reachEnds(i_reach));
+        poss_reach_to_grasp_end_frames = find(poss_reach_to_grasp_end);
+        time_to_grasp = abs(poss_reach_to_grasp_end_frames - reachData.reachEnds(i_reach));
         grasp_to_keep_idx = find(time_to_grasp == min(time_to_grasp),1);
-        grasps_to_keep(poss_reach_to_grasp_frames(grasp_to_keep_idx)) = true;
-    elseif ~any(poss_reach_to_grasp)   % no candidate grasps for this reach - can happen if digits 1 and 4 aren't identified
+        grasps_to_keep(poss_reach_to_grasp_end_frames(grasp_to_keep_idx)) = true;
+    elseif ~any(poss_reach_to_grasp_end)   % no candidate grasps for this reach - can happen if digits 1 and 4 aren't identified
                                    % remove this reach from the list
         reachData.reachEnds(i_reach) = NaN;
         reachData.reachStarts(i_reach) = NaN;
     else   % there is exactly one reach_to_grasp associated with this reach
-        grasps_to_keep = grasps_to_keep | poss_reach_to_grasp;
+        grasps_to_keep = grasps_to_keep | poss_reach_to_grasp_end;
     end 
 end
-reach_to_grasp = reach_to_grasp & grasps_to_keep;
+reach_to_grasp_end = reach_to_grasp_end & grasps_to_keep;
 reachData.reachEnds = reachData.reachEnds(~isnan(reachData.reachEnds));
 reachData.reachStarts = reachData.reachStarts(~isnan(reachData.reachStarts));
 
 
 % make sure there is one and only one reach for each reach_to_grasp frame
-reachBoolean = false(size(reach_to_grasp));
+reachBoolean = false(size(reach_to_grasp_end));
 reachBoolean(reachData.reachEnds) = true;
-reach_to_grasp_frames = find(reach_to_grasp);
-reaches_to_keep = false(size(reach_to_grasp));
-for i_reach_to_grasp = 1 : length(reach_to_grasp_frames)
-    isReachToGraspRegion = false(size(reach_to_grasp));
-    reach_to_grasp_regionStartFrame = max(1,reach_to_grasp_frames(i_reach_to_grasp)-maxReach_Grasp_separation);
-    reach_to_grasp_regionEndFrame = min(numFrames,reach_to_grasp_frames(i_reach_to_grasp)+maxReach_Grasp_separation);
-    isReachToGraspRegion(reach_to_grasp_regionStartFrame:reach_to_grasp_regionEndFrame) = true;
+reach_to_grasp_end_frames = find(reach_to_grasp_end);
+reaches_to_keep = false(size(reach_to_grasp_end));
+for i_reach_to_grasp = 1 : length(reach_to_grasp_end_frames)
+    isReachToGraspRegion = false(size(reach_to_grasp_end));
+    reach_to_grasp_end_regionStartFrame = max(1,reach_to_grasp_end_frames(i_reach_to_grasp)-maxReach_Grasp_separation);
+    reach_to_grasp_end_regionEndFrame = min(numFrames,reach_to_grasp_end_frames(i_reach_to_grasp)+maxReach_Grasp_separation);
+    isReachToGraspRegion(reach_to_grasp_end_regionStartFrame:reach_to_grasp_end_regionEndFrame) = true;
     
     poss_reach = reachBoolean & isReachToGraspRegion;
     if sum(poss_reach) > 1   % more than one candidate reach
         % pick the reach closest to the grasp endpoint; throw out the other
         poss_reach_frames = find(poss_reach);
-        time_to_grasp = abs(poss_reach_frames - reach_to_grasp_frames(i_reach_to_grasp));
+        time_to_grasp = abs(poss_reach_frames - reach_to_grasp_end_frames(i_reach_to_grasp));
         reach_to_keep_idx = find(time_to_grasp == min(time_to_grasp),1);
         reaches_to_keep(poss_reach_frames(reach_to_keep_idx)) = true;  
     elseif ~any(poss_reach)   % no reach close enough to be associated with this grasp
-        reach_to_grasp(reach_to_grasp_frames(i_reach_to_grasp)) = false;
+        reach_to_grasp_end(reach_to_grasp_end_frames(i_reach_to_grasp)) = false;
     else   % there is exactly one reach associated with this reach_to_grasp
         reaches_to_keep = reaches_to_keep | poss_reach;
     end
@@ -234,6 +230,8 @@ preservedReachIdx = ismember(reachData.reachEnds,find(reaches_to_keep));
 reachData.reachEnds = find(reachBoolean);
 reachData.reachStarts = reachData.reachStarts(preservedReachIdx);
 
-reachData.reach_to_grasp = find(reach_to_grasp & areDigitsThroughSlot);
+reachData.reach_to_grasp_end = find(reach_to_grasp_end & areDigitsThroughSlot);
+grasp_idx = ismember(reachData.graspEnds,reachData.reach_to_grasp_end);
+reachData.reach_to_grasp_start = reachData.graspStarts(grasp_idx);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -67,9 +67,11 @@ for i_rat = 1 : numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
+    sessionType = determineSessionType(thisRatInfo, allSessionDates);
+    
     switch ratID
         case 'R0158'
-            startSession = 4;
+            startSession = 1;
             endSession = numSessions;
         case 'R0159'
             startSession = 5;
@@ -82,7 +84,7 @@ for i_rat = 1 : numRatFolders
             endSession = numSessions;
         case 'R0216'
             startSession = 1;
-            endSession = 29;%numSessions;
+            endSession = numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -91,7 +93,8 @@ for i_rat = 1 : numRatFolders
         if exist('reachData','var')
             clear reachData
         end
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        curSessionDir = sessionDirectories{iSession};
+        fullSessionDir = fullfile(ratRootFolder,curSessionDir);
         
         if ~isfolder(fullSessionDir)
             continue;
@@ -109,6 +112,8 @@ for i_rat = 1 : numRatFolders
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
         allSessionIdx = find(sessionDate == allSessionDates);
         sessionDateNum = datenum(sessionDateString,'yyyymmdd');
+        
+        thisSessionType = sessionType(allSessionIdx);
         
         if ~isempty(allSessionIdx)
             sessionReachScores = reachScores(allSessionIdx).scores;
@@ -160,9 +165,10 @@ for i_rat = 1 : numRatFolders
                 trialOutcome = [];
             end
             reachData(iTrial) = scoreTrial(reachData(iTrial),interp_trajectory,bodyparts,all_didPawStartThroughSlot(iTrial),pelletMissingFlag(iTrial),initPellet3D,slot_z_wrt_pellet,pawPref,trialOutcome);
+            reachData(iTrial).trialNumbers = trialNumbers(iTrial,:);
         end
         
-        save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers');
+        save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
 
     end
     
