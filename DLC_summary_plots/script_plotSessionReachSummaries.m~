@@ -176,7 +176,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
     
     switch ratID
         case 'R0158'
-            startSession = 9;
+            startSession = 1;
             endSession = numSessions;
         case 'R0159'
             startSession = 5;
@@ -202,15 +202,10 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
         sessionDates{iSession} = sessionDate;
         
-        fname_root = [ratID '_' sessionDateString];
-        pdfName_sessionSummary = sprintf('%s_session_summary.pdf',fname_root);
-        pdfName_sessionSummary = fullfile(plotsDir,'pdf',ratID,pdfName_sessionSummary);
-        figName_sessionSummary = sprintf('%s_session_summary.fig',fname_root);
-        figName_sessionSummary = fullfile(plotsDir,'fig',ratID,figName_sessionSummary);
-        
-        if exist(pdfName_sessionSummary,'file')
-            continue;
-        end
+            pdfName_ratSummary = sprintf('%s_trajectories_summary.pdf',ratID);
+    pdfName_ratSummary = fullfile(plotsDir,'pdf',ratID,pdfName_ratSummary);
+    figName_ratSummary = sprintf('%s_trajectories_summary.fig',ratID);
+    figName_ratSummary = fullfile(plotsDir,'fig',ratID,figName_ratSummary);
         
         allSessionIdx = find(sessionDate == allSessionDates);
         sessionReachScores = reachScores(allSessionIdx).scores;
@@ -243,8 +238,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         
         h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType);
         
-        savefig(h_fig,figName_sessionSummary);
-        print(h_fig,pdfName_sessionSummary,'-dpdf');
+        savefig(h_fig,figName_ratSummary);
+        print(h_fig,pdfName_ratSummary,'-dpdf');
         close(h_fig);
     end
     

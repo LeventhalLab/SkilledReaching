@@ -1,4 +1,4 @@
-function plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, sessionName, sessionType, varargin)
+function h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, sessionName, sessionType, varargin)
 
 % REACHING SCORES:
 %
@@ -213,7 +213,11 @@ trialNumbers = zeros(numTrials,1);
 pd_z_endpt = zeros(numTrials,1);
 dig2_z_endpt = zeros(numTrials,1);
 for iTrial = 1 : numTrials
+    try
     pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
+    catch
+        keyboard
+    end
     dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
     trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
 end
@@ -330,7 +334,7 @@ for iTrial = 1 : numTrials
     % extract digit 2 z-coordinates that correspond to reach orientation
     % points
     % frame limits for the first reach_to_grasp movement
-    graspFrames = traj_limits(iTrial).grasp_aperture_lims(1,1) : traj_limits(iTrial).grasp_aperture_lims(1,2);
+    graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
     dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
     plot(dig2_z,reach_orientation{iTrial},trialTypeColors{ind_trial_type(iTrial)});
     hold on
@@ -381,7 +385,7 @@ numTrials = length(reachData);
 digit_aperture = cell(numTrials,1);
 for iTrial = 1 : numTrials
     digit_aperture{iTrial} = reachData(iTrial).aperture{1};
-    graspFrames = traj_limits(iTrial).grasp_aperture_lims(1,1) : traj_limits(iTrial).grasp_aperture_lims(1,2);
+    graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
     dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
     plot(dig2_z,digit_aperture{iTrial},trialTypeColors{ind_trial_type(iTrial)});
     hold on
@@ -440,12 +444,12 @@ function traj_limits = align_trajectory_to_reach(reachData)
 
 numTrials = length(reachData);
 traj_limits.reach_aperture_lims = [];
-traj_limits.grasp_aperture_lims = [];
+% traj_limits.grasp_aperture_lims = [];
 for iTrial = 1 : numTrials
 
     num_reaches = length(reachData(iTrial).reachEnds);
     traj_limits(iTrial).reach_aperture_lims = zeros(num_reaches,2);
-    traj_limits(iTrial).grasp_aperture_lims = zeros(num_reaches,2);
+%     traj_limits(iTrial).grasp_aperture_lims = zeros(num_reaches,2);
     
     for i_reach = 1 : num_reaches
         traj_limits(iTrial).reach_aperture_lims(i_reach,1) = ...
@@ -453,10 +457,10 @@ for iTrial = 1 : numTrials
         traj_limits(iTrial).reach_aperture_lims(i_reach,2) = ...
             traj_limits(iTrial).reach_aperture_lims(i_reach,1) + length(reachData(iTrial).orientation{i_reach}) - 1;
 
-        traj_limits(iTrial).grasp_aperture_lims(i_reach,1) = ...
-            reachData(iTrial).firstDigitKinematicsFrame(i_reach) - reachData(iTrial).reach_to_grasp_start(i_reach) + 1;
-        traj_limits(iTrial).grasp_aperture_lims(i_reach,2) = ...
-            traj_limits(iTrial).grasp_aperture_lims(i_reach,1) + length(reachData(iTrial).orientation{i_reach}) - 1;
+%         traj_limits(iTrial).grasp_aperture_lims(i_reach,1) = ...
+%             reachData(iTrial).firstDigitKinematicsFrame(i_reach) - reachData(iTrial).reach_to_grasp_start(i_reach) + 1;
+%         traj_limits(iTrial).grasp_aperture_lims(i_reach,2) = ...
+%             traj_limits(iTrial).grasp_aperture_lims(i_reach,1) + length(reachData(iTrial).orientation{i_reach}) - 1;
     end
 
 end
@@ -523,7 +527,7 @@ for i_trialType = 1 : num_trial_types
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             
             trialCount = trialCount + 1;
-            graspFrames = traj_limits(iTrial).grasp_aperture_lims(1,1) : traj_limits(iTrial).grasp_aperture_lims(1,2);
+            graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
             dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
            
             cur_apertures = pchip(dig2_z,reachData(iTrial).aperture{1},zq);
@@ -603,10 +607,10 @@ for i_trialType = 1 : num_trial_types
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             
             trialCount = trialCount + 1;
-            graspFrames = traj_limits(iTrial).grasp_aperture_lims(1,1) : traj_limits(iTrial).grasp_aperture_lims(1,2);
+            graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
             dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
             
-            or_interp = NaN(length(zq),1);
+%             or_interp = NaN(length(zq),1);
             cur_orientations = pchip(dig2_z,unwrap(reachData(iTrial).orientation{1}),zq);
             cur_orientations(zq < min(dig2_z)) = NaN;
             cur_orientations(zq > max(dig2_z)) = NaN;

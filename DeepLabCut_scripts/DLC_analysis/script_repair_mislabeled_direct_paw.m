@@ -1,6 +1,6 @@
 % script to perform 3D reconstruction on videos
 
-% in many videos for R0160, the paw dorsum was misidentified in the direct
+% in many videos for R0159 & R0160, the paw dorsum was misidentified in the direct
 % view. This script will invalidate those direct view points and
 % recalculate the 3D trajectories
 
@@ -55,7 +55,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 8:8%numRatFolders
+for i_rat = 2:2%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -82,12 +82,13 @@ for i_rat = 8:8%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 8
-        startSession = 1;
-        endSession = numSessions;
-    else
-        startSession = 1;
-        endSession = numSessions;
+    switch ratID
+        case 'R0159'
+            startSession = 10;
+            endSession = 10;%numSessions;
+        otherwise
+            startSession = 1;
+            endSession = numSessions;
     end
     for iSession = startSession : 1 : endSession
         
@@ -122,12 +123,12 @@ for i_rat = 8:8%numRatFolders
         
         switch pawPref
             case 'right'
-                ROIs = vidROI(1:2,:);
+%                 ROIs = vidROI(1:2,:);
                 Pn = squeeze(boxCal.Pn(:,:,2));
                 sf = mean(boxCal.scaleFactor(2,:));
                 F = squeeze(boxCal.F(:,:,2));
             case 'left'
-                ROIs = vidROI([1,3],:);
+%                 ROIs = vidROI([1,3],:);
                 Pn = squeeze(boxCal.Pn(:,:,3));
                 sf = mean(boxCal.scaleFactor(3,:));
                 F = squeeze(boxCal.F(:,:,3));
@@ -139,7 +140,7 @@ for i_rat = 8:8%numRatFolders
         trajFiles = dir([ratID '_' sessionDate '_*_3dtrajectory_new.mat']);
         numTrajFiles = length(trajFiles);
         
-        for iTrial = 1 : numTrajFiles   
+        for iTrial = 25:25%1 : numTrajFiles   
     
             load(trajFiles(iTrial).name);
             

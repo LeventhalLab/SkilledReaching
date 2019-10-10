@@ -1,4 +1,4 @@
-function plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, sessionName, sessionType, varargin)
+function h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, sessionName, sessionType, varargin)
 
 % REACHING SCORES:
 %
@@ -15,20 +15,21 @@ function plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
 % 11 - paw started out through the slot
 
+pawPref = char(thisRatInfo.pawPref);
 figProps.m = 5;
 figProps.n = 5;
 
 figProps.panelWidth = ones(figProps.n,1) * 10;
 figProps.panelHeight = ones(figProps.m,1) * 4;
 
-figProps.colSpacing = ones(figProps.n-1,1) * 0.5;
-figProps.rowSpacing = ones(figProps.m-1,1) * 1;
+figProps.colSpacing = ones(figProps.n-1,1) * 1;
+figProps.rowSpacing = ones(figProps.m-1,1) * 1.5;
 
 figProps.leftMargin = 2.54;
 figProps.topMargin = 5;
 
 figProps.width = sum(figProps.colSpacing) + sum(figProps.panelWidth) + figProps.leftMargin + 2.54;
-figProps.height = 12 * 2.54;
+figProps.height = sum(figProps.rowSpacing) + sum(figProps.panelHeight) + figProps.topMargin + 2.54;
 
 [h_fig,h_axes] = createFigPanels5(figProps);
 
@@ -80,11 +81,11 @@ plotEventFrames(reachData,h_axes(1,3))
 plot_z_endpoints(reachData,ind_trial_type,trialTypeColors,all_slot_z_wrt_pellet,h_axes(1,4));
 
 % 3D endpoints
-plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,h_axes(1,5));
+plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(1,5));
 
 %%%%%%%%%%%%%%%%%% ROW 2
 % 3-D trajectories
-plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,h_axes(2,5));
+plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(2,5));
 
 % x,y,z trajectories
 % plot_reachTrajectories(reachData,ind_trial_type,trialTypeColors,h_axes(2,1));
@@ -212,6 +213,7 @@ trialNumbers = zeros(numTrials,1);
 pd_z_endpt = zeros(numTrials,1);
 dig2_z_endpt = zeros(numTrials,1);
 for iTrial = 1 : numTrials
+    t
     pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
     dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
     trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
@@ -237,7 +239,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,h_axes)
+function plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes)
 
 x_lim = [-30 10];
 y_lim = [-20 5];
@@ -256,13 +258,24 @@ end
 for ii = 1 : max(ind_trial_type)
     if any(ind_trial_type == ii)
         validTrialIdx = (ind_trial_type == ii);
-        scatter3(pd_endpt(validTrialIdx,1),pd_endpt(validTrialIdx,3),pd_endpt(validTrialIdx,2),...
-            'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii},...
-            'markerfacealpha',0.5,'markeredgealpha',0.5);
-        hold on
-        scatter3(dig2_endpt(validTrialIdx,1),dig2_endpt(validTrialIdx,3),dig2_endpt(validTrialIdx,2),...
-            'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii},...
-            'markerfacealpha',1,'markeredgealpha',1);
+        switch pawPref
+            case 'left'
+                scatter3(-pd_endpt(validTrialIdx,1),pd_endpt(validTrialIdx,3),pd_endpt(validTrialIdx,2),...
+                    'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii},...
+                    'markerfacealpha',0.5,'markeredgealpha',0.5);
+                hold on
+                scatter3(-dig2_endpt(validTrialIdx,1),dig2_endpt(validTrialIdx,3),dig2_endpt(validTrialIdx,2),...
+                    'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii},...
+                    'markerfacealpha',1,'markeredgealpha',1);
+            case 'right'
+                scatter3(pd_endpt(validTrialIdx,1),pd_endpt(validTrialIdx,3),pd_endpt(validTrialIdx,2),...
+                    'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii},...
+                    'markerfacealpha',0.5,'markeredgealpha',0.5);
+                hold on
+                scatter3(dig2_endpt(validTrialIdx,1),dig2_endpt(validTrialIdx,3),dig2_endpt(validTrialIdx,2),...
+                    'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii},...
+                    'markerfacealpha',1,'markeredgealpha',1);
+        end
     end
 end
 
@@ -318,7 +331,7 @@ for iTrial = 1 : numTrials
     % extract digit 2 z-coordinates that correspond to reach orientation
     % points
     % frame limits for the first reach_to_grasp movement
-    graspFrames = traj_limits(iTrial).grasp_aperture_lims(1,1) : traj_limits(iTrial).grasp_aperture_lims(1,2);
+    graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
     dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
     plot(dig2_z,reach_orientation{iTrial},trialTypeColors{ind_trial_type(iTrial)});
     hold on
@@ -369,7 +382,7 @@ numTrials = length(reachData);
 digit_aperture = cell(numTrials,1);
 for iTrial = 1 : numTrials
     digit_aperture{iTrial} = reachData(iTrial).aperture{1};
-    graspFrames = traj_limits(iTrial).grasp_aperture_lims(1,1) : traj_limits(iTrial).grasp_aperture_lims(1,2);
+    graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
     dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
     plot(dig2_z,digit_aperture{iTrial},trialTypeColors{ind_trial_type(iTrial)});
     hold on
@@ -428,12 +441,12 @@ function traj_limits = align_trajectory_to_reach(reachData)
 
 numTrials = length(reachData);
 traj_limits.reach_aperture_lims = [];
-traj_limits.grasp_aperture_lims = [];
+% traj_limits.grasp_aperture_lims = [];
 for iTrial = 1 : numTrials
 
     num_reaches = length(reachData(iTrial).reachEnds);
     traj_limits(iTrial).reach_aperture_lims = zeros(num_reaches,2);
-    traj_limits(iTrial).grasp_aperture_lims = zeros(num_reaches,2);
+%     traj_limits(iTrial).grasp_aperture_lims = zeros(num_reaches,2);
     
     for i_reach = 1 : num_reaches
         traj_limits(iTrial).reach_aperture_lims(i_reach,1) = ...
@@ -441,10 +454,10 @@ for iTrial = 1 : numTrials
         traj_limits(iTrial).reach_aperture_lims(i_reach,2) = ...
             traj_limits(iTrial).reach_aperture_lims(i_reach,1) + length(reachData(iTrial).orientation{i_reach}) - 1;
 
-        traj_limits(iTrial).grasp_aperture_lims(i_reach,1) = ...
-            reachData(iTrial).firstDigitKinematicsFrame(i_reach) - reachData(iTrial).reach_to_grasp_start(i_reach) + 1;
-        traj_limits(iTrial).grasp_aperture_lims(i_reach,2) = ...
-            traj_limits(iTrial).grasp_aperture_lims(i_reach,1) + length(reachData(iTrial).orientation{i_reach}) - 1;
+%         traj_limits(iTrial).grasp_aperture_lims(i_reach,1) = ...
+%             reachData(iTrial).firstDigitKinematicsFrame(i_reach) - reachData(iTrial).reach_to_grasp_start(i_reach) + 1;
+%         traj_limits(iTrial).grasp_aperture_lims(i_reach,2) = ...
+%             traj_limits(iTrial).grasp_aperture_lims(i_reach,1) + length(reachData(iTrial).orientation{i_reach}) - 1;
     end
 
 end
@@ -511,7 +524,7 @@ for i_trialType = 1 : num_trial_types
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             
             trialCount = trialCount + 1;
-            graspFrames = traj_limits(iTrial).grasp_aperture_lims(1,1) : traj_limits(iTrial).grasp_aperture_lims(1,2);
+            graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
             dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
            
             cur_apertures = pchip(dig2_z,reachData(iTrial).aperture{1},zq);
@@ -591,10 +604,10 @@ for i_trialType = 1 : num_trial_types
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             
             trialCount = trialCount + 1;
-            graspFrames = traj_limits(iTrial).grasp_aperture_lims(1,1) : traj_limits(iTrial).grasp_aperture_lims(1,2);
+            graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
             dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
             
-            or_interp = NaN(length(zq),1);
+%             or_interp = NaN(length(zq),1);
             cur_orientations = pchip(dig2_z,unwrap(reachData(iTrial).orientation{1}),zq);
             cur_orientations(zq < min(dig2_z)) = NaN;
             cur_orientations(zq > max(dig2_z)) = NaN;
@@ -666,7 +679,7 @@ for iTrial = 1 : numTrials
 end
 
 title('tangential paw velocity vs z')
-set(gca,'xdir','reverse')
+set(gca,'xdir','reverse','ylim',[0 1100])
 ylabel('mm/s');
 
 end
@@ -686,7 +699,7 @@ for iTrial = 1 : numTrials
 end
 
 title('tangential digit 2 velocity vs z')
-set(gca,'xdir','reverse')
+set(gca,'xdir','reverse','ylim',[0 1100])
 ylabel('mm/s');
 
 end
@@ -733,7 +746,7 @@ for i_trialType = 1 : num_trial_types
     hold on
 
 title('mean tangential paw velocity vs z')
-set(gca,'xdir','reverse')
+set(gca,'xdir','reverse','ylim',[0 1100])
 ylabel('mm/s');
 
 end
@@ -742,11 +755,11 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,h_axes)
+function plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes)
 
 x_lim = [-30 10];
-y_lim = [-20 5];
-z_lim = [-15 10];
+y_lim = [-20 10];
+z_lim = [-5 50];
 
 axes(h_axes)
 
@@ -754,35 +767,19 @@ numTrials = length(reachData);
 
 for iTrial = 1 : numTrials
     
-    plot3(reachData(iTrial).pd_trajectory(:,1),...
-          reachData(iTrial).pd_trajectory(:,3),...
-          reachData(iTrial).pd_trajectory(:,2),...
-          trialTypeColors{ind_trial_type(iTrial)});
-      hold on
-end
-
-end
-
-
-
-pd_z_endpt = zeros(numTrials,3);
-dig2_z_endpt = zeros(numTrials,3);
-for iTrial = 1 : numTrials
-    pd_endpt(iTrial,:) = reachData(iTrial).pdEndPoints(1,:);
-    dig2_endpt(iTrial,:) = reachData(iTrial).dig2_endPoints(1,:);
-end
-
-for ii = 1 : max(ind_trial_type)
-    if any(ind_trial_type == ii)
-        validTrialIdx = (ind_trial_type == ii);
-        scatter3(pd_endpt(validTrialIdx,1),pd_endpt(validTrialIdx,3),pd_endpt(validTrialIdx,2),...
-            'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii},...
-            'markerfacealpha',0.5,'markeredgealpha',0.5);
-        hold on
-        scatter3(dig2_endpt(validTrialIdx,1),dig2_endpt(validTrialIdx,3),dig2_endpt(validTrialIdx,2),...
-            'markerfacecolor',trialTypeColors{ii},'markeredgecolor',trialTypeColors{ii},...
-            'markerfacealpha',1,'markeredgealpha',1);
+    switch pawPref
+        case 'left'
+            plot3(-reachData(iTrial).pd_trajectory{1}(:,1),...
+                  reachData(iTrial).pd_trajectory{1}(:,3),...
+                  reachData(iTrial).pd_trajectory{1}(:,2),...
+                  trialTypeColors{ind_trial_type(iTrial)});
+        case 'right'
+            plot3(-reachData(iTrial).pd_trajectory{1}(:,1),...
+                  reachData(iTrial).pd_trajectory{1}(:,3),...
+                  reachData(iTrial).pd_trajectory{1}(:,2),...
+                  trialTypeColors{ind_trial_type(iTrial)});
     end
+      hold on
 end
 
 scatter3(0,0,0,25,'marker','*','markerfacecolor','k','markeredgecolor','k');
@@ -790,4 +787,6 @@ set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
     'view',[-70,30])
 xlabel('x');ylabel('z');zlabel('y');
 
-title('3D reach endpoints')
+title('3D paw trajectories')
+
+end

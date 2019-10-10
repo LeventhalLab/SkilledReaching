@@ -23,11 +23,7 @@ reachData.firstDigitKinematicsFrame = zeros(num_reaches,1);
 for i_reach = 1 : num_reaches
 
     reach_startFrame = reachData.reachStarts(i_reach);
-    try
     grasp_startFrame = reachData.reachStarts(i_reach);
-    catch
-        keyboard
-    end
     reach_endFrame = reachData.reachEnds(i_reach);
 %     grasp_endFrame = reachData.reach_to_grasp_end(i_reach);
     
