@@ -143,24 +143,23 @@ for i_reach = 1 : num_reaches
     reachStarts(pd_z == interval_pd_z_max) = true;
 end
 reachData.reachStarts = find(reachStarts);
-% find the digit 2 maxima in between each grasp termination
-num_grasps = length(reachData.graspEnds);
+% find the paw dorsum maxima in between each grasp termination
+% num_grasps = length(reachData.graspEnds);
 
 % reach_and_grasp_ends = unique(sort([reachData.reachEnds;reachData.graspEnds]));
-graspStarts = false(numFrames,1);
-for i_grasp = 1 : num_grasps
-    
-%     current_grasp_idx = reachData.graspEnds(i_grasp);
+% graspStarts = false(numFrames,1);
+% for i_grasp = 1 : num_grasps
+%     
 %     current_grasp_idx = find(reach_and_grasp_ends == reachData.graspEnds(i_grasp));
-    if i_grasp == 1   % this shouldn't happen - there should be a reach before the first grasp, but just in case...
-        previous_grasp_frame = 1;
-    else
-        previous_grasp_frame = reachData.graspEnds(i_grasp-1);
-    end
-    interval_dig2_z_max = max(dig2_z(previous_grasp_frame:reachData.graspEnds(i_grasp)));
-    graspStarts(dig2_z == interval_dig2_z_max) = true;
-end
-reachData.graspStarts = find(graspStarts);
+%     if current_grasp_idx == 1   % this shouldn't happen - there should be a reach before the first grasp, but just in case...
+%         previous_grasp_frame = 1;
+%     else
+%         previous_grasp_frame = reach_and_grasp_ends(current_grasp_idx-1);
+%     end
+%     interval_dig2_z_max = max(dig2_z(previous_grasp_frame:reachData.graspEnds(i_grasp)));
+%     graspStarts(dig2_z == interval_dig2_z_max) = true;
+% end
+% reachData.graspStarts = find(graspStarts);
 % reach_to_grasp_end = reach_to_grasp_end & areDigitsThroughSlot;
 
 % make sure each reach_to_grasp is associated with a reach. Generally, this

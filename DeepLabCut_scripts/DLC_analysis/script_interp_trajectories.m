@@ -38,7 +38,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 22:22%1 : numRatFolders
+for i_rat = 1 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -65,8 +65,8 @@ for i_rat = 22:22%1 : numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0216'
-            startSession = numSessions;
+        case 'R0158'
+            startSession = 1;
             endSession = numSessions;
         case 'R0159'
             startSession = 5;
@@ -74,7 +74,7 @@ for i_rat = 22:22%1 : numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0169'
+        case 'R0189'
             startSession = 1;
             endSession = numSessions;
         case 'R0195'
@@ -210,18 +210,15 @@ for i_rat = 22:22%1 : numRatFolders
 
             if ~all_didPawStartThroughSlot(iTrial)
                 pellet_reproj_error = squeeze(reproj_error(pellet_idx,:,:));
-                initPellet3D = initPelletLocation(interp_pawTrajectory,bodyparts,frameRate,all_firstSlotBreachFrame(iTrial),pellet_reproj_error,...
+                pellet_direct_p = direct_p(pellet_idx,:);
+                [initPellet3D,pelletMissingFlag(iTrial)] = initPelletLocation(interp_pawTrajectory,bodyparts,frameRate,all_firstSlotBreachFrame(iTrial),pellet_reproj_error,pellet_direct_p,...
                     'time_to_average_prior_to_reach',time_to_average_prior_to_reach);
                 if ~isempty(initPellet3D)
                     % most likely, pellet wasn't brought up by the delivery arm
                     % on this trial
                     if ~isnan(initPellet3D(1))
                         all_initPellet3D(iTrial,:) = initPellet3D;
-                    else
-                        pelletMissingFlag(iTrial) = true;
                     end
-                else
-                    pelletMissingFlag(iTrial) = true;
                 end
             end
             

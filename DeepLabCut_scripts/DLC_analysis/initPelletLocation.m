@@ -1,4 +1,4 @@
-function initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,firstSlotBreachFrame,pellet_reproj_error,varargin)
+function [initPellet3D,pelletMissingFlag] = initPelletLocation(pawTrajectory,bodyparts,frameRate,firstSlotBreachFrame,pellet_reproj_error,pellet_direct_p,varargin)
 %
 % determine the 3D location of the pellet on the pedestal - i.e., the reach
 % target
@@ -24,7 +24,10 @@ function initPellet3D = initPelletLocation(pawTrajectory,bodyparts,frameRate,fir
 %       timepriortoreach before the trigger event
 
 maxReprojError = 20;    % if the pellet was misidentified in one of the views, the reprojection error will likely be large
+min_pellet_direct_p = 0.90;
 
+pelletMissingFlag = false;
+    
 if isnan(firstSlotBreachFrame)
     % this can happen if the paw is already through the slot at the start
     % of the video becuase the findPawThroughSlotFrame function looks for
@@ -36,7 +39,7 @@ end
 
 time_to_average_prior_to_reach = 0.1;
 
-for iarg = 1 : 2 : nargin - 5
+for iarg = 1 : 2 : nargin - 6
     switch lower(varargin{iarg})
         case 'timepriortoreach'
             time_to_average_prior_to_reach = varargin{iarg + 1};
@@ -67,6 +70,9 @@ validPelletPts = initPelletPts(~isnan(initPelletPts(:,1)),:);
 
 if isempty(validPelletPts)
     initPellet3D = [];
+    if all(pellet_direct_p(preTriggerFrame:firstSlotBreachFrame) < min_pellet_direct_p)
+        pelletMissingFlag = true;
+    end
 else
     initPellet3D = mean(validPelletPts,1);
 end

@@ -1,5 +1,5 @@
 %%
-labeledBodypartsFolder = '/Volumes/Tbolt_02/Skilled Reaching/DLC output';
+labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 % vidRootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
 vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
 % shouldn't need this - calibration should be included in the pawTrajectory
@@ -22,10 +22,10 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 20;
-iSession = 17;
-iVid = 46;
-iFrame = 300;
+i_rat = 12;
+iSession = 10;
+iVid = 1;
+iFrame = 250;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));
