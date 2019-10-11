@@ -129,6 +129,7 @@ reachData.graspEnds = find(graspMins & areDigitsThroughSlot);
 % find the paw dorsum maxima in between each reach termination
 reachStarts = false(numFrames,1);
 num_reaches = length(reachData.reachEnds);
+removeReachEndFlag = false(num_reaches,1);
 for i_reach = 1 : num_reaches
     % look in the interval from the previous reach (or trial start) to the
     % current reach
@@ -140,8 +141,13 @@ for i_reach = 1 : num_reaches
     lastFrame = reachData.reachEnds(i_reach);
 
     interval_pd_z_max = max(pd_z(startFrame:lastFrame));
+    if isnan(interval_pd_z_max)   % paw dorsum wasn't found before this reach end point; can happen if rat reaches with wrong paw first
+        % invalidate this reach
+        removeReachEndFlag(i_reach) = true;
+    end
     reachStarts(pd_z == interval_pd_z_max) = true;
 end
+reachData.reachEnds = reachData.reachEnds(~removeReachEndFlag);    
 reachData.reachStarts = find(reachStarts);
 % find the digit 2 maxima in between each grasp termination
 num_grasps = length(reachData.graspEnds);

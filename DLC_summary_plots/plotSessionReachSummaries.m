@@ -15,6 +15,9 @@ function h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thi
 % 10 ?Used preferred paw after obtaining or moving pellet with tongue
 % 11 - paw started out through the slot
 
+full_traj_z_lim = [-5 50];
+reachEnd_zlim = [-15 10];
+
 pawPref = char(thisRatInfo.pawPref);
 figProps.m = 5;
 figProps.n = 5;
@@ -81,11 +84,11 @@ plotEventFrames(reachData,h_axes(1,3))
 plot_z_endpoints(reachData,ind_trial_type,trialTypeColors,all_slot_z_wrt_pellet,h_axes(1,4));
 
 % 3D endpoints
-plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(1,5));
+plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(1,5),reachEnd_zlim);
 
 %%%%%%%%%%%%%%%%%% ROW 2
 % 3-D trajectories
-plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(2,5));
+plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(2,5),full_traj_z_lim);
 
 % x,y,z trajectories
 % plot_reachTrajectories(reachData,ind_trial_type,trialTypeColors,h_axes(2,1));
@@ -95,11 +98,11 @@ hist_z_endPoints(reachData,ind_trial_type,trialTypeColors,h_axes(2,4));
 
 %%%%%%%%%%%%%%%%%%% ROW 3
 % paw velocity
-plot_pawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes(3,1));
+plot_pawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes(3,1),full_traj_z_lim);
 
 % mean paw velocity by trial type
 
-plot_meanPawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes(3,2))
+plot_meanPawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes(3,2),full_traj_z_lim)
 %%%%%%%%%%%%%%%%%% ROW 4
 % reach orientation at reach end point
 plot_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,1));
@@ -242,11 +245,10 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes)
+function plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes,reachEnd_zlim)
 
 x_lim = [-30 10];
 y_lim = [-20 5];
-z_lim = [-15 10];
 
 axes(h_axes)
 
@@ -283,7 +285,7 @@ for ii = 1 : max(ind_trial_type)
 end
 
 scatter3(0,0,0,25,'marker','*','markerfacecolor','k','markeredgecolor','k');
-set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
+set(gca,'zdir','reverse','xlim',x_lim,'ylim',reachEnd_zlim,'zlim',y_lim,...
     'view',[-70,30])
 xlabel('x');ylabel('z');zlabel('y');
 
@@ -530,7 +532,11 @@ for i_trialType = 1 : num_trial_types
             graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
             dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
            
-            cur_apertures = pchip(dig2_z,reachData(iTrial).aperture{1},zq);
+            if length(reachData(iTrial).aperture{1}) > 1
+                cur_apertures = pchip(dig2_z,reachData(iTrial).aperture{1},zq);
+            else
+                cur_apertures = NaN(size(zq));
+            end
             cur_apertures(zq < min(dig2_z)) = NaN;
             cur_apertures(zq > max(dig2_z)) = NaN;
             interp_apertures{i_trialType}(trialCount,:) = cur_apertures;
@@ -610,8 +616,13 @@ for i_trialType = 1 : num_trial_types
             graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
             dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
             
+            
 %             or_interp = NaN(length(zq),1);
-            cur_orientations = pchip(dig2_z,unwrap(reachData(iTrial).orientation{1}),zq);
+            if length(reachData(iTrial).orientation{1}) > 1
+                cur_orientations = pchip(dig2_z,unwrap(reachData(iTrial).orientation{1}),zq);
+            else
+                cur_orientations = NaN(size(zq));
+            end
             cur_orientations(zq < min(dig2_z)) = NaN;
             cur_orientations(zq > max(dig2_z)) = NaN;
             interp_orientations{i_trialType}(trialCount,:) = cur_orientations;
@@ -669,7 +680,7 @@ title('endpoint z by trial type')
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_pawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes)
+function plot_pawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes,full_traj_z_lim)
 
 axes(h_axes);
 numTrials = length(reachData);
@@ -682,7 +693,7 @@ for iTrial = 1 : numTrials
 end
 
 title('tangential paw velocity vs z')
-set(gca,'xdir','reverse','ylim',[0 1100])
+set(gca,'xdir','reverse','ylim',[0 1100],'xlim',full_traj_z_lim)
 ylabel('mm/s');
 
 end
@@ -710,7 +721,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function plot_meanPawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes)
+function plot_meanPawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes,full_traj_z_lim)
 
 zq = 50:-0.5:-15;
 
@@ -749,7 +760,7 @@ for i_trialType = 1 : num_trial_types
     hold on
 
 title('mean tangential paw velocity vs z')
-set(gca,'xdir','reverse','ylim',[0 1100])
+set(gca,'xdir','reverse','ylim',[0 1100],'xlim',full_traj_z_lim)
 ylabel('mm/s');
 
 end
@@ -758,11 +769,11 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes)
+function plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes,full_traj_z_lim)
 
 x_lim = [-30 10];
 y_lim = [-20 10];
-z_lim = [-5 50];
+
 
 axes(h_axes)
 
@@ -786,7 +797,7 @@ for iTrial = 1 : numTrials
 end
 
 scatter3(0,0,0,25,'marker','*','markerfacecolor','k','markeredgecolor','k');
-set(gca,'zdir','reverse','xlim',x_lim,'ylim',z_lim,'zlim',y_lim,...
+set(gca,'zdir','reverse','xlim',x_lim,'ylim',full_traj_z_lim,'zlim',y_lim,...
     'view',[-70,30])
 xlabel('x');ylabel('z');zlabel('y');
 

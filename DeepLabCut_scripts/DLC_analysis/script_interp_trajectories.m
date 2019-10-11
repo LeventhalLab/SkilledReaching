@@ -38,7 +38,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 2 : 2%numRatFolders
+for i_rat = 1 : numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -233,7 +233,7 @@ for i_rat = 2 : 2%numRatFolders
         all_interp_traj_wrt_pellet = NaN(maxFrames,3,num_bodyparts,numTrials);
         for iTrial = 1 : numTrials
             % if a pellet was not found OR the paw started outside the box
-            if pelletMissingFlag(iTrial) || all_didPawStartThroughSlot(iTrial)
+            if pelletMissingFlag(iTrial) || all_didPawStartThroughSlot(iTrial) || isnan(all_initPellet3D(iTrial,1))
                 all_initPellet3D(iTrial,:) = nanmean(all_initPellet3D);
             end
             

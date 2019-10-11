@@ -176,7 +176,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
     
     switch ratID
         case 'R0158'
-            startSession = 9;
+            startSession = 1;
             endSession = numSessions;
         case 'R0159'
             startSession = 5;
@@ -216,15 +216,15 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         sessionReachScores = reachScores(allSessionIdx).scores;
         
         fullSessionDir = fullfile(ratRootFolder,curSessionDir);
-        sessionDir_pdf = fullfile(plotsDir,'pdf',ratID,curSessionDir);
-        if ~exist(sessionDir_pdf,'dir')
-            mkdir(sessionDir_pdf);
-        end
-        sessionDir_fig = fullfile(plotsDir,'fig',ratID,curSessionDir);
-        cd(fullSessionDir);
-        if ~exist(sessionDir_fig,'dir')
-            mkdir(sessionDir_fig);
-        end
+%         sessionDir_pdf = fullfile(plotsDir,'pdf',ratID,curSessionDir);
+%         if ~exist(sessionDir_pdf,'dir')
+%             mkdir(sessionDir_pdf);
+%         end
+%         sessionDir_fig = fullfile(plotsDir,'fig',ratID,curSessionDir);
+%         cd(fullSessionDir);
+%         if ~exist(sessionDir_fig,'dir')
+%             mkdir(sessionDir_fig);
+%         end
         
         reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
         reachDataName = fullfile(fullSessionDir,reachDataName);
