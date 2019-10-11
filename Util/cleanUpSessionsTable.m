@@ -59,6 +59,11 @@ for iField = 1 : length(dateFields)
         
     end
     
+    if isnumeric(sessionsTable_out.(dateFields{iField}))
+        sessionsTable_out.(dateFields{iField}) = ...
+            datetime(sessionsTable_in.(dateFields{iField}),'convertfrom','yyyymmdd');
+    end
+    
 end
 
 for iField = 1 : length(categoricalFields)

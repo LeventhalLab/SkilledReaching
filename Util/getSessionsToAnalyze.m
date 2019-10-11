@@ -6,7 +6,7 @@ function sessions_to_analyze = getSessionsToAnalyze()
 %
 % extract last 2 training sessions
 for i_session = 1 : 2
-    sessions_to_analyze(i_session).trainingStage = 'training';
+    sessions_to_analyze(i_session).trainingStage = 'retraining';
     sessions_to_analyze(i_session).laserStim = 'none';
     sessions_to_analyze(i_session).sessions_remaining = 2 - i_session;
 end

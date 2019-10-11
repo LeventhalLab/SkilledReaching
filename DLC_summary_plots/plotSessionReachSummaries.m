@@ -213,14 +213,13 @@ axes(h_axes)
 
 numTrials = length(reachData);
 trialNumbers = zeros(numTrials,1);
-pd_z_endpt = zeros(numTrials,1);
-dig2_z_endpt = zeros(numTrials,1);
+pd_z_endpt = NaN(numTrials,1);
+dig2_z_endpt = NaN(numTrials,1);
 for iTrial = 1 : numTrials
-    try
-    pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
-    catch
-        keyboard
+    if isempty(reachData(iTrial).pdEndPoints)
+        continue;
     end
+    pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
     dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
     trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
 end
@@ -253,9 +252,12 @@ y_lim = [-20 5];
 axes(h_axes)
 
 numTrials = length(reachData);
-pd_z_endpt = zeros(numTrials,3);
-dig2_z_endpt = zeros(numTrials,3);
+pd_z_endpt = NaN(numTrials,3);
+dig2_z_endpt = NaN(numTrials,3);
 for iTrial = 1 : numTrials
+    if isempty(reachData(iTrial).pdEndPoints)
+        continue;
+    end
     pd_endpt(iTrial,:) = reachData(iTrial).pdEndPoints(1,:);
     dig2_endpt(iTrial,:) = reachData(iTrial).dig2_endPoints(1,:);
 end
@@ -300,9 +302,15 @@ function plot_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axe
 axes(h_axes)
 
 numTrials = length(reachData);
-trialNumbers = zeros(numTrials,1);
-end_orientation = zeros(numTrials,1);
+trialNumbers = NaN(numTrials,1);
+end_orientation = NaN(numTrials,1);
 for iTrial = 1 : numTrials
+    if isempty(reachData(iTrial).orientation)
+        continue;
+    end
+    if isempty(reachData(iTrial).orientation{1})
+        continue;
+    end
     end_orientation(iTrial) = reachData(iTrial).orientation{1}(end);
     trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
 end
@@ -331,6 +339,14 @@ traj_limits = align_trajectory_to_reach(reachData);
 numTrials = length(reachData);
 reach_orientation = cell(numTrials,1);
 for iTrial = 1 : numTrials
+    
+    if isempty(reachData(iTrial).orientation)
+        continue;
+    end
+    if isempty(reachData(iTrial).orientation{1})
+        continue;
+    end
+    
     reach_orientation{iTrial} = reachData(iTrial).orientation{1};
     
     % extract digit 2 z-coordinates that correspond to reach orientation
@@ -355,9 +371,15 @@ function plot_endReachAperture(reachData,ind_trial_type,trialTypeColors,h_axes)
 axes(h_axes)
 
 numTrials = length(reachData);
-trialNumbers = zeros(numTrials,1);
-end_aperture = zeros(numTrials,1);
+trialNumbers = NaN(numTrials,1);
+end_aperture = NaN(numTrials,1);
 for iTrial = 1 : numTrials
+    if isempty(reachData(iTrial).aperture)
+        continue;
+    end
+    if isempty(reachData(iTrial).aperture{1})
+        continue;
+    end
     end_aperture(iTrial) = reachData(iTrial).aperture{1}(end);
     trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
 end
@@ -386,6 +408,12 @@ traj_limits = align_trajectory_to_reach(reachData);
 numTrials = length(reachData);
 digit_aperture = cell(numTrials,1);
 for iTrial = 1 : numTrials
+    if isempty(reachData(iTrial).aperture)
+        continue;
+    end
+    if isempty(reachData(iTrial).aperture{1})
+        continue;
+    end
     digit_aperture{iTrial} = reachData(iTrial).aperture{1};
     graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
     dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
@@ -480,6 +508,12 @@ binWidth = pi/12;
 numTrials = length(reachData);
 end_orientation = zeros(numTrials,1);
 for iTrial = 1 : numTrials
+    if isempty(reachData(iTrial).orientation)
+        continue;
+    end
+    if isempty(reachData(iTrial).orientation{1})
+        continue;
+    end
     end_orientation(iTrial) = reachData(iTrial).orientation{1}(end);
 end
 
@@ -526,6 +560,13 @@ for i_trialType = 1 : num_trial_types
     trialCount = 0;
     for iTrial = 1 : numTrials
         
+        if isempty(reachData(iTrial).aperture)
+            continue;
+        end
+        if isempty(reachData(iTrial).aperture{1})
+            continue;
+        end
+    
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             
             trialCount = trialCount + 1;
@@ -567,6 +608,12 @@ binEdges = aperture_limits(1) : 1 : aperture_limits(2);
 numTrials = length(reachData);
 end_aperture = zeros(numTrials,1);
 for iTrial = 1 : numTrials
+    if isempty(reachData(iTrial).aperture)
+        continue;
+    end
+    if isempty(reachData(iTrial).aperture{1})
+        continue;
+    end
     end_aperture(iTrial) = reachData(iTrial).aperture{1}(end);
 end
 
@@ -610,6 +657,12 @@ for i_trialType = 1 : num_trial_types
     trialCount = 0;
     for iTrial = 1 : numTrials
         
+        if isempty(reachData(iTrial).orientation)
+            continue
+        end
+        if isempty(reachData(iTrial).orientation{1})
+            continue
+        end
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             
             trialCount = trialCount + 1;
@@ -650,9 +703,12 @@ z_limits = [-20,20];
 binEdges = z_limits(1) : 1 : z_limits(2);
 
 numTrials = length(reachData);
-pd_z_endpt = zeros(numTrials,1);
-dig2_z_endpt = zeros(numTrials,1);
+pd_z_endpt = NaN(numTrials,1);
+dig2_z_endpt = NaN(numTrials,1);
 for iTrial = 1 : numTrials
+    if isempty(reachData(iTrial).pdEndPoints) || isempty(reachData(iTrial).dig2_endPoints)
+        continue
+    end
     pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
     dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
 end
@@ -686,6 +742,12 @@ axes(h_axes);
 numTrials = length(reachData);
 
 for iTrial = 1 : numTrials
+    if isempty(reachData(iTrial).pd_v)
+        continue;
+    end
+    if isempty(reachData(iTrial).pd_v{1})
+        continue;
+    end
     cur_v = reachData(iTrial).pd_v{1};
     cur_v = sqrt(sum(cur_v.^2,2));
     plot(reachData(iTrial).pd_trajectory{1}(1:end-1,3),cur_v,'color',trialTypeColors{ind_trial_type(iTrial)});
@@ -741,6 +803,13 @@ for i_trialType = 1 : num_trial_types
     
     trialCount = 0;
     for iTrial = 1 : numTrials
+        
+        if isempty(reachData(iTrial).pd_trajectory)
+            continue;
+        end
+        if isempty(reachData(iTrial).pd_trajectory{1})
+            continue;
+        end
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             trialCount = trialCount + 1;
             
@@ -781,6 +850,12 @@ numTrials = length(reachData);
 
 for iTrial = 1 : numTrials
     
+    if isempty(reachData(iTrial).pd_trajectory)
+        continue;
+    end
+    if isempty(reachData(iTrial).pd_trajectory{1})
+        continue;
+    end
     switch pawPref
         case 'left'
             plot3(-reachData(iTrial).pd_trajectory{1}(:,1),...

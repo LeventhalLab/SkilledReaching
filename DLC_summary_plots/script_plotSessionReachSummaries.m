@@ -204,9 +204,17 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         
         fname_root = [ratID '_' sessionDateString];
         pdfName_sessionSummary = sprintf('%s_session_summary.pdf',fname_root);
-        pdfName_sessionSummary = fullfile(plotsDir,'pdf',ratID,pdfName_sessionSummary);
+        pdf_Directory = fullfile(plotsDir,'pdf',ratID);
+        if ~isfolder(pdf_Directory)
+            mkdir(pdf_Directory);
+        end
+        pdfName_sessionSummary = fullfile(pdf_Directory,pdfName_sessionSummary);
         figName_sessionSummary = sprintf('%s_session_summary.fig',fname_root);
-        figName_sessionSummary = fullfile(plotsDir,'fig',ratID,figName_sessionSummary);
+        fig_Directory = fullfile(plotsDir,'fig',ratID);
+        if ~isfolder(fig_Directory)
+            mkdir(fig_Directory);
+        end
+        figName_sessionSummary = fullfile(fig_Directory,figName_sessionSummary);
         
         if exist(pdfName_sessionSummary,'file')
             continue;

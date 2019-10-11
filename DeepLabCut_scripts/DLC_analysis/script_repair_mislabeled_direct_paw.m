@@ -140,7 +140,7 @@ for i_rat = 2:2%numRatFolders
         trajFiles = dir([ratID '_' sessionDate '_*_3dtrajectory_new.mat']);
         numTrajFiles = length(trajFiles);
         
-        for iTrial = 25:25%1 : numTrajFiles   
+        for iTrial = 1 : numTrajFiles   
     
             load(trajFiles(iTrial).name);
             

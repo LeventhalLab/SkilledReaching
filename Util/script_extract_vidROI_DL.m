@@ -7,6 +7,7 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0228','R0229','R0230'};
        
 repeatCalculations = true;   % if cropped video file already exists, don't repeat?
+useSessionsFrom_DLCoutput_folder = false;
 
 vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
 sharedX_root_metadata_SavePath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
@@ -21,13 +22,10 @@ csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
-useSessionsFrom_DLCoutput_folder = true;
-sessions_to_analyze = getSessionsToAnalyze();
-
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
     
-for i_rat = 30 : numRatFolders
+for i_rat = 32 : numRatFolders
     
     ratID = ratFolders(i_rat).name;
     ratFolder = fullfile(labeledBodypartsFolder,ratFolders(i_rat).name);
@@ -57,11 +55,19 @@ for i_rat = 30 : numRatFolders
         end
     elseif isdatetime(thisRatInfo.tattooDate)
         tattooDate = thisRatInfo.tattooDate;
-    if ischar(thisRatInfo.tattooDate)
+    elseif ischar(thisRatInfo.tattooDate)
         tattooDateString = thisRatInfo.tattooDate;
         tattooDate = datetime(tattooDateString);
     end
-    tattooDateString = datestr(tattooDate,'yyyymmdd');
+    if isdatetime(tattooDate)
+        if isnat(tattooDate)
+            tattooDateString = '';
+        else
+            tattooDateString = datestr(tattooDate,'yyyymmdd');
+        end
+    else
+        tattooDateString = '';
+    end
     
     if iscell(thisRatInfo.digitColors)
         digitColors = thisRatInfo.digitColors{1};
@@ -84,23 +90,21 @@ for i_rat = 30 : numRatFolders
         for ii = 1 : length(sessionDirectories)
             sessionsToExtract(ii).ratID = ratID;
             sessionsToExtract(ii).session = sessionDirectories{ii}(7:end);
-            sessionsToExtract(ii).sessionDate = sessionDirectories{ii}(7:end-1);
+            sessionsToExtract(ii).sessionDateString = sessionDirectories{ii}(7:end-1);
+            sessionsToExtract(ii).sessionDate = datetime(sessionsToExtract(ii).sessionDateString,'inputformat','yyyymmdd');
         end
 
     else
         % use sessions defined by the sessions table
-        % WORKING HERE TO IDENTIFY SESSIONSTOEXTRACT FROM sessionTable
-        % load the sessions table
         cd(ratFolder);
         sessionCSV = [ratID '_sessions.csv'];
         sessionTable = readSessionInfoTable(sessionCSV);
-
-        sessions_for_analysis = extractSpecificSessions(sessionTable,sessions_to_analyze);
+        sessions_to_crop = getSessionsToCrop(sessionTable);
         
-        for ii = 1 : size(sessions_for_analysis,1)
+        for ii = 1 : size(sessions_to_crop,1)
             
             sessionsToExtract(ii).ratID = ratID;
-            sessionsToExtract(ii).sessionDate = sessionTable(ii,:).date;
+            sessionsToExtract(ii).sessionDate = sessions_to_crop(ii,:).date;
         end
     end
 
@@ -124,7 +128,7 @@ for i_rat = 30 : numRatFolders
             startSess = 1;
             endSess = length(sessionsToExtract);
     end
-    
+    vidRatPath = fullfile(vidRootPath,ratID);
     for iSess = startSess:endSess         
     
         sessionDateString = datestr(sessionsToExtract(iSess).sessionDate,'yyyymmdd');
@@ -158,70 +162,86 @@ for i_rat = 30 : numRatFolders
             end
         end
     
-            fullSessionName = [sessionsToExtract(iSess).ratID '_' sessionsToExtract(iSess).session];
-            vidSessionFolder = fullfile(vidRootPath,sessionsToExtract(iSess).ratID,fullSessionName);
-            sharedX_sessionFolder = fullfile(sharedX_savePath,fullSessionName);
-            local_sessionFolder = fullfile(local_savePath,fullSessionName);
-            cd(vidSessionFolder);
+%         fullSessionName = [sessionsToExtract(iSess).ratID '_' sessionsToExtract(iSess).session];
+        % find the videos for this date
+        cd(vidRatPath);
+        sessionFolders = dir([ratID '_' sessionDateString '*']);
+        if isempty(sessionFolders)
+            fprintf('no video directory found for %s\n',[ratID '_' sessionDateString]);
+            continue;
+        end
+        if length(sessionFolders) > 1
+            fprintf('more than one video directory found for %s\n',[ratID '_' sessionDateString]);
+            keyboard
+            continue;            
+        end
+        fullSessionName = sessionFolders.name;
+        
+        vidSessionFolder = fullfile(vidRootPath,sessionsToExtract(iSess).ratID,fullSessionName);
+        sharedX_sessionFolder = fullfile(sharedX_rat_metadata_savePath,fullSessionName);
+        local_sessionFolder = fullfile(local_rat_metadata_savePath,fullSessionName);
+        cd(vidSessionFolder);
 
-            vidList = dir([sessionsToExtract(iSess).ratID,'*.avi']);
-            if isempty(vidList); continue; end
+        vidList = dir([sessionsToExtract(iSess).ratID,'*.avi']);
+        if isempty(vidList); continue; end
 
-            numVidsExtracted = 0;
-                  
-            for vid = 1:length(vidList)
-                frameTimeLimits = [-1,3.3]; 
-                vidName = vidList(vid).name;
-                vidNameNumber = vidName(end-6:end-4);
-                destVidName = cell(1,length(viewSavePath));
-                for iView = 1 : length(viewSavePath)
-                    destVidName{iView} = fullfile(viewSavePath{iView}, [vidName(1:end-4),'_',viewList{iView}, '.mp4']);
-                end
+        numVidsExtracted = 0;
 
-                % check if destination vid already exists. If set to not
-                % repeat calculations and cropped vid already exists, skip
-                if ~repeatCalculations
-                    if exist(destVidName{iView},'file')
-                        continue;
-                    end
-                end
+        for vid = 1:length(vidList)
+            frameTimeLimits = [-1,3.3]; 
+            vidName = vidList(vid).name;
+            vidNameNumber = vidName(end-6:end-4);
+            destVidName = cell(1,length(viewSavePath));
+            for iView = 1 : length(viewSavePath)
+                destVidName{iView} = fullfile(viewSavePath{iView}, [vidName(1:end-4),'_',viewList{iView}, '.mp4']);
+            end
 
-                fprintf('working on %s\n', vidName);
-
-                video=VideoReader(vidName);
-
-                if video.Duration < frameTimeLimits(2)+ triggerTime
-                    frameTimeLimits = [-1 video.Duration-1.01];
-                else
-                    frameTimeLimits = frameTimeLimits;
-                end             
-                frameRate = video.FrameRate;
-                frameSize = [video.height,video.width];
-%                 cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
-
-                [fp,fn,fext] = fileparts(vidName);
-
-                for iView = 1 : length(viewSavePath)
-                    metadata_name = [fn '_' viewList{iView} '_metadata.mat'];
-                    if ~exist(viewSavePath{iView},'dir')
-                        mkdir(viewSavePath{iView});
-                    end
-                    view_direction = viewList{iView};
-                    viewROI = ROI(iView,:);
-
-                    full_metadata_name{1} = fullfile(viewSavePath{iView},metadata_name);
-                    sharedX_viewPath = fullfile(sharedX_sessionFolder,[fullSessionName '_' viewList{iView}]);
-                    local_viewPath = fullfile(local_sessionFolder,[fullSessionName '_' viewList{iView}]);
-                    full_metadata_name{2} = fullfile(sharedX_viewPath,metadata_name);
-                    full_metadata_name{3} = fullfile(local_viewPath,metadata_name);
-                    for ii = 1 : 3
-                        [cur_path,~,~] = fileparts(full_metadata_name{ii});
-                        if ~exist(cur_path,'dir')
-                            mkdir(cur_path)
-                        end
-                        save(full_metadata_name{ii},'triggerTime','frameTimeLimits','view_direction','viewROI','frameRate','frameSize');
-                    end
-
+            % check if destination vid already exists. If set to not
+            % repeat calculations and cropped vid already exists, skip
+            if ~repeatCalculations
+                if exist(destVidName{iView},'file')
+                    continue;
                 end
             end
-        end 
+
+            fprintf('working on %s\n', vidName);
+
+            video=VideoReader(vidName);
+
+            if video.Duration < frameTimeLimits(2)+ triggerTime
+                frameTimeLimits = [-1 video.Duration-1.01];
+            else
+                frameTimeLimits = frameTimeLimits;
+            end             
+            frameRate = video.FrameRate;
+            frameSize = [video.height,video.width];
+%                 cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
+
+            [fp,fn,fext] = fileparts(vidName);
+
+            for iView = 1 : length(viewSavePath)
+                metadata_name = [fn '_' viewList{iView} '_metadata.mat'];
+                if ~exist(viewSavePath{iView},'dir')
+                    mkdir(viewSavePath{iView});
+                end
+                view_direction = viewList{iView};
+                viewROI = ROI(iView,:);
+
+                full_metadata_name{1} = fullfile(viewSavePath{iView},metadata_name);
+                sharedX_viewPath = fullfile(sharedX_sessionFolder,[fullSessionName '_' viewList{iView}]);
+                local_viewPath = fullfile(local_sessionFolder,[fullSessionName '_' viewList{iView}]);
+                full_metadata_name{2} = fullfile(sharedX_viewPath,metadata_name);
+                full_metadata_name{3} = fullfile(local_viewPath,metadata_name);
+                for ii = 1 : 3
+                    [cur_path,~,~] = fileparts(full_metadata_name{ii});
+                    if ~exist(cur_path,'dir')
+                        mkdir(cur_path)
+                    end
+                    save(full_metadata_name{ii},'triggerTime','frameTimeLimits','view_direction','viewROI','frameRate','frameSize');
+                end
+
+            end
+        end
+    end 
+        
+end

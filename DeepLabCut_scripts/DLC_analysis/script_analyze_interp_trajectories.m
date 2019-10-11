@@ -29,7 +29,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 1 : numRatFolders
+for i_rat = 2 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -71,10 +71,10 @@ for i_rat = 1 : numRatFolders
     
     switch ratID
         case 'R0158'
-            startSession = 22;
+            startSession = 1;
             endSession = numSessions;
         case 'R0159'
-            startSession = 5;
+            startSession = 10;
             endSession = numSessions;
         case 'R0160'
             startSession = 1;
