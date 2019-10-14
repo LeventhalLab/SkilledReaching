@@ -816,8 +816,11 @@ for i_trialType = 1 : num_trial_types
             pd_z = reachData(iTrial).pd_trajectory{1}(1:end-1,3);
             cur_v = reachData(iTrial).pd_v{1};
             cur_v = sqrt(sum(cur_v.^2,2));
-            
+            try
             cur_v_interp = pchip(pd_z,cur_v,zq);
+            catch
+                keyboard
+            end
             cur_v_interp(zq < min(pd_z)) = NaN;
             cur_v_interp(zq > max(pd_z)) = NaN;
             

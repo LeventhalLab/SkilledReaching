@@ -100,7 +100,7 @@ for i_rat = 32:32%numRatFolders
         startSession = 1;
         endSession = numSessions;
     end
-    for iSession = startSession : 1 : endSession
+    for iSession = startSession : 4 : endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
