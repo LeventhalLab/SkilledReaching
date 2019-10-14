@@ -9,12 +9,13 @@ csvDateFormat = 'MM/dd/yyyy';
 ratIDs_with_new_date_format = [284];
 
 % calculate the following kinematic parameters:
-% 1. max velocity
-% 2. average trajectory for a session
+% 1. max velocity, by reach type
+% 2. average trajectory for a session, by reach time
 % 3. deviation from that trajectory for a session
 % 4. distance between trajectories
 % 5. closest distance paw to pellet
-% 6. minimum z
+% 6. minimum z, by type
+% 7. number of reaches, by type
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
@@ -29,7 +30,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 7 : numRatFolders
+for i_rat = 1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -79,8 +80,8 @@ for i_rat = 7 : numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0171'
-            startSession = 15;
+        case 'R0190'
+            startSession = 1;
             endSession = numSessions;
         case 'R0216'
             startSession = 1;
@@ -166,6 +167,8 @@ for i_rat = 7 : numRatFolders
             end
             reachData(iTrial) = scoreTrial(reachData(iTrial),interp_trajectory,bodyparts,all_didPawStartThroughSlot(iTrial),pelletMissingFlag(iTrial),initPellet3D,slot_z_wrt_pellet,pawPref,trialOutcome);
             reachData(iTrial).trialNumbers = trialNumbers(iTrial,:);
+            
+            sessionSummary = sessionKinematicsSummary(reachData);
         end
         
         save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');

@@ -93,7 +93,7 @@ for i_rat = 32:32%4:13%numRatFolders
     
     switch ratID
         case 'R0229'
-            startSession = 7;
+            startSession = numSessions;
             endSession = numSessions;
         otherwise
             startSession = 1;

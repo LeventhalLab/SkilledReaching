@@ -252,8 +252,8 @@ y_lim = [-20 5];
 axes(h_axes)
 
 numTrials = length(reachData);
-pd_endpt = NaN(numTrials,3);
-dig2_endpt = NaN(numTrials,3);
+pd_z_endpt = NaN(numTrials,3);
+dig2_z_endpt = NaN(numTrials,3);
 for iTrial = 1 : numTrials
     if isempty(reachData(iTrial).pdEndPoints)
         continue;

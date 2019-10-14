@@ -10,6 +10,8 @@ function reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,s
 %   frameRate
 %
 % OUTPUTS
+%   reachData - 
+%
 
 [~,~,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 pd_trajectory = squeeze(interp_trajectory(:,:,pawDorsumIdx));
@@ -20,6 +22,8 @@ num_reaches = length(reachData.reachEnds);
 reachData.pdEndPoints = zeros(num_reaches,3);
 reachData.slotBreachFrame = zeros(num_reaches,1);
 reachData.firstDigitKinematicsFrame = zeros(num_reaches,1);
+reachData.max_pd_v = zeros(num_reaches,1);
+reachData.max_dig2_v = zeros(num_reaches,1);
 for i_reach = 1 : num_reaches
 
     reach_startFrame = reachData.reachStarts(i_reach);
@@ -36,17 +40,26 @@ for i_reach = 1 : num_reaches
     pd_v = diff(reachData.pd_trajectory{i_reach},1,1) * frameRate;
     pd_v = sqrt(sum(pd_v.^2,2));
     reachData.pd_v{i_reach} = pd_v;
-    
-    reachData.dig2_trajectory{i_reach} = dig2_trajectory(reach_startFrame:reach_endFrame,:);
     try
-    reachData.slotBreachFrame(i_reach) = grasp_startFrame + find(reachData.dig2_trajectory{i_reach}(:,3) < slot_z_wrt_pellet,1) - 1;
+    reachData.max_pd_v(i_reach) = max(pd_v);
     catch
         keyboard
     end
+    
+    reachData.dig2_trajectory{i_reach} = dig2_trajectory(reach_startFrame:reach_endFrame,:);
+    % find the last frame before the paw breaches the frame for this grasp
+    last_frame_behind_slot = find(reachData.dig2_trajectory{i_reach}(:,3) > slot_z_wrt_pellet,1,'last');
+    if isempty(last_frame_behind_slot)
+        % digit 2 must have started on the outside of the box during this
+        % reach/grasp
+        last_frame_behind_slot = 0;
+    end
+    reachData.slotBreachFrame(i_reach) = grasp_startFrame + last_frame_behind_slot;
 
     dig2_v = diff(reachData.dig2_trajectory{i_reach},1,1) * frameRate;
     dig2_v = sqrt(sum(dig2_v.^2,2));
     reachData.dig2_v{i_reach} = dig2_v;
+    reachData.max_dig2_v(i_reach) = max(dig2_v);
     
     % reach endpoints
     reachData.pdEndPoints(i_reach,:) = pd_trajectory(reach_endFrame,:);

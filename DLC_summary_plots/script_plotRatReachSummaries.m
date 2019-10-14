@@ -1,13 +1,13 @@
-% script_plotSessionReachSummaries
+% script_plotRatReachSummaries
 
 ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
            'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
-           'R0228'};
+           'R0228','R0229','R0230'};
 numRats = length(ratList);
 
-firstRat = 13;
+firstRat = 1;
 lastRat = 30;
 
 x_lim = [-30 10];
@@ -184,8 +184,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0190'
-            startSession = 9;
+        case 'R0171'
+            startSession = 1;
             endSession = numSessions;
         case 'R0192'
             startSession = 1;
