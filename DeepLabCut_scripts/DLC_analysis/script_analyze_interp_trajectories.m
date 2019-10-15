@@ -71,7 +71,7 @@ for i_rat = 1 : numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     switch ratID
-        case 'R0158'
+        case 'R0186'
             startSession = 1;
             endSession = numSessions;
         case 'R0159'
@@ -80,7 +80,7 @@ for i_rat = 1 : numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0190'
+        case 'R0191'
             startSession = 1;
             endSession = numSessions;
         case 'R0216'

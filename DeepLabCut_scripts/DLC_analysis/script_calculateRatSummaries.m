@@ -9,6 +9,10 @@
 % 6. minimum z, by type
 % 7. number of reaches, by type
 
+trialOutcomeColors = {'k','g','b','r','y','c','m'};
+validTrialOutcomes = {0:10,1,2,[3,4,7],0,11,6};
+validOutcomeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
+
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 histoFolder = '/Volumes/LL EXHD #2/SR Histo by rat';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
@@ -23,7 +27,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-temp_ratSummary = initializeRatSummaryStruct();
+
 for i_rat = 1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
@@ -49,6 +53,8 @@ for i_rat = 1 : numRatFolders
     histo_ratFolder = fullfile(histoFolder,ratID);
     
     cd(ratRootFolder);
+    ratSummaryName = [ratID '_kinematicsSummary.mat'];
+    
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
@@ -56,10 +62,11 @@ for i_rat = 1 : numRatFolders
     sessionTable = readSessionInfoTable(sessionCSV);
     
     sessions_to_analyze = getRetrainingThroughOcclusionSessions(sessionTable);
-    
+    numSessions = size(sessions_to_analyze,1);
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
 
-    for iSession = startSession : 1 : endSession
+    ratSummary = initializeRatSummaryStruct(ratID,validTrialOutcomes,validOutcomeNames,numSessions);
+    for iSession = 1 : numSessions
         
         curSessionDir = sessionDirectories{iSession};
         fullSessionDir = fullfile(ratRootFolder,curSessionDir);
@@ -90,7 +97,29 @@ for i_rat = 1 : numRatFolders
         
         numTrials = length(reachData);
         
+        ratSummary.sessionDates = sessions_to_analyze.date;
+        [ratSummary.num_trials(iSession,:),~] = breakDownTrialScores(reachData,validTrialOutcomes);
+        ratSummary.outcomePercent(iSession,:) = ratSummary.num_trials(iSession,:) / ratSummary.num_trials(iSession,1);
+        
+        [ratSummary.mean_num_reaches(iSession,:), ratSummary.std_num_reaches(iSession,:)] = ...
+            breakDownReachesByOutcome(reachData,validTrialOutcomes);
+        
+        [ratSummary.mean_pd_endPt(iSession,:,:),ratSummary.cov_pd_endPts(iSession,:,:,:),...
+            ratSummary.mean_dig2_endPt(iSession,:,:),ratSummary.cov_dig2_endPts(iSession,:,:,:)] = ...
+                breakDownReachEndPointsByOutcome(reachData,validTrialOutcomes);
+            
+        [ratSummary.mean_pd_v(iSession,:), ratSummary.std_pd_v(iSession,:)] = ...
+            breakDownVelocityByOutcome(reachData,validTrialOutcomes);
+        
+        [ratSummary.mean_aperture(iSession,:), ratSummary.std_aperture(iSession,:)] = ...
+            breakDownApertureByOutcome(reachData,validTrialOutcomes);
+        
+        [ratSummary.mean_orientations(iSession,:),ratSummary.MRL(iSession,:)] = breakDownOrientationByOutcome(reachData,validTrialOutcomes);
+        
     end
+    
+    cd(ratRootFolder);
+    save(ratSummaryName,ratSummary);
     
 end
         

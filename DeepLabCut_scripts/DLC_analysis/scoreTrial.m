@@ -17,7 +17,11 @@ function reachData = scoreTrial(reachData,interp_trajectory,bodyparts,didPawStar
 
 % number of frames to look ahead after the end of the first reach to see if
 % the pellet is still there
-frames_to_look_past_reach = 10;
+
+
+% eventually look to see if pellet is still there afetr reach
+% frames_to_look_past_reach = 10;
+
 [~,~,digIdx,~] = findReachingPawParts(bodyparts,pawPref);
 
 numScores = 0;

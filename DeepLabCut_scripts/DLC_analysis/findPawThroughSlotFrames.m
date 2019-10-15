@@ -1,4 +1,4 @@
-function [part_through_slot_frames,firstSlotBreachFrame,didPawStartThroughSlot] = findPawThroughSlotFrames(trajectories, slot_z)
+function [part_through_slot_frames,firstSlotBreachFrame,firstPawPastSlotFrame,didPawStartThroughSlot] = findPawThroughSlotFrames(trajectories, slot_z)
 %
 % find the frames at which each paw part breached the reaching slot
 %
@@ -37,9 +37,11 @@ end
 
 % find the first frame where any part of the paw is in front of the slot
 firstPawPastSlotFrame = min(first_paw_past_slot_frame);
-if firstPawPastSlotFrame < firstSlotBreachFrame   
+if firstPawPastSlotFrame < 10 %firstSlotBreachFrame   
     % if the paw was through the slot before the first time it passed from
     % inside to outside the box, assume paw started outside the box
     didPawStartThroughSlot = true;
+    
+    % was the non-reaching paw identified through the slot?
 end
 end

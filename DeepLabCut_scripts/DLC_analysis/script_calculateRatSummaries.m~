@@ -9,6 +9,10 @@
 % 6. minimum z, by type
 % 7. number of reaches, by type
 
+trialOutcomeColors = {'k','g','b','r','y','c','m'};
+validTrialOutcomes = {0:10,1,2,[3,4,7],0,11,6};
+validOutcomeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
+
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 histoFolder = '/Volumes/LL EXHD #2/SR Histo by rat';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
@@ -22,6 +26,7 @@ ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
+
 
 for i_rat = 1 : numRatFolders
     
@@ -55,31 +60,11 @@ for i_rat = 1 : numRatFolders
     sessionTable = readSessionInfoTable(sessionCSV);
     
     sessions_to_analyze = getRetrainingThroughOcclusionSessions(sessionTable);
-    
+    numSessions = size(sessions_to_analyze,1);
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    
-%     switch ratID
-%         case 'R0158'
-%             startSession = 1;
-%             endSession = numSessions;
-%         case 'R0159'
-%             startSession = 5;
-%             endSession = numSessions;
-%         case 'R0160'
-%             startSession = 1;
-%             endSession = 22;
-%         case 'R0171'
-%             startSession = 1;
-%             endSession = numSessions;
-%         case 'R0216'
-%             startSession = 1;
-%             endSession = numSessions;
-%         otherwise
-%             startSession = 1;
-%             endSession = numSessions;
-%     end
-    
-    for iSession = startSession : 1 : endSession
+
+    ratSummary = initializeRatSummaryStruct(ratID,validTrialOutcomes,validOutcomeNames,numSessions);
+    for iSession = 1 : numSessions
         
         curSessionDir = sessionDirectories{iSession};
         fullSessionDir = fullfile(ratRootFolder,curSessionDir);
@@ -107,6 +92,18 @@ for i_rat = 1 : numRatFolders
         end
         
         load(reachDataName);
+        
+        numTrials = length(reachData);
+        
+        ratSummary.sessionDates = sessions_to_analyze.date;
+        [ratSummary.num_trials(iSession,:),~] = breakDownTrialScores(reachData,validTrialOutcomes);
+        ratSummary.outcomePercent(iSession,:) = ratSummary.num_trials(iSession,:) / ratSummary.num_trials(iSession,1);
+        
+        [ratSummary.mean_num_reaches, ratSummary.std_num_reaches] = ...
+            breakDownReachesByOutcome(reachData,validTrialOutcomes);
+        
+        [ratSummary.mean_pd_endPt(iSession,:,:),cov_pd_endPts,mean_dig2_endPt,cov_dig2_endPts] = ...
+            breakDownReachEndPointsByOutcome(reachData,validTrialOutcomes);
         
     end
     

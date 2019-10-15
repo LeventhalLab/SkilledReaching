@@ -823,9 +823,7 @@ for i_trialType = 1 : num_trial_types
             cur_v = sqrt(sum(cur_v.^2,2));
             try
             cur_v_interp = pchip(pd_z,cur_v,zq);
-            catch
-                keyboard
-            end
+            
 
             cur_v_interp(zq < min(pd_z)) = NaN;
             cur_v_interp(zq > max(pd_z)) = NaN;
