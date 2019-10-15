@@ -55,7 +55,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 1:numRatFolders
+for i_rat = 2:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -83,8 +83,8 @@ for i_rat = 1:numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0191'
-            startSession = 1;
+        case 'R0159'
+            startSession = 5;
             endSession = numSessions;
         otherwise
             startSession = 1;

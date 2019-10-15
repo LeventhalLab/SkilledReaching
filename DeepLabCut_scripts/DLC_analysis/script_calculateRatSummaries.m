@@ -56,19 +56,28 @@ for i_rat = 1 : numRatFolders
     ratSummaryName = [ratID '_kinematicsSummary.mat'];
     
     sessionDirectories = listFolders([ratID '_2*']);
-    numSessions = length(sessionDirectories);
+%     numSessions = length(sessionDirectories);
     
     sessionCSV = [ratID '_sessions.csv'];
     sessionTable = readSessionInfoTable(sessionCSV);
     
-    sessions_to_analyze = getRetrainingThroughOcclusionSessions(sessionTable);
-    numSessions = size(sessions_to_analyze,1);
+    sessions_analyzed = getRetrainingThroughOcclusionSessions(sessionTable);
+    numSessions = size(sessions_analyzed,1);
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
 
     ratSummary = initializeRatSummaryStruct(ratID,validTrialOutcomes,validOutcomeNames,numSessions);
     for iSession = 1 : numSessions
         
-        curSessionDir = sessionDirectories{iSession};
+        sessionDate = sessions_analyzed.date(iSession);
+        sessionDateString = datestr(sessionDate,'yyyymmdd');
+        
+        cd(ratRootFolder);
+        testDirName = [ratID '_' sessionDateStr '*'];
+        validSessionDir = dir(testDirName);
+        if isempty(validSessionDir)
+            continue;
+        end
+        curSessionDir = validSessionDir.name;
         fullSessionDir = fullfile(ratRootFolder,curSessionDir);
         
         if ~isfolder(fullSessionDir)
@@ -76,14 +85,15 @@ for i_rat = 1 : numRatFolders
         end
         
         cd(fullSessionDir);
-        C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
+        % not sure if the following is necessary, but it's been working
+        C = textscan(curSessionDir,[ratID '_%8c']);
         sessionDateString = C{1}; % this will be in format yyyymmdd
                             % note date formats from the scores spreadsheet
                             % are in m/d/yy
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
         
-        curSessionTableRow = (sessions_to_analyze.date == sessionDate);
-        cur_sessionInfo = sessions_to_analyze(curSessionTableRow,:);
+        curSessionTableRow = (sessions_analyzed.date == sessionDate);
+        cur_sessionInfo = sessions_analyzed(curSessionTableRow,:);
         
         reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
         reachDataName = fullfile(fullSessionDir,reachDataName);
@@ -97,7 +107,6 @@ for i_rat = 1 : numRatFolders
         
         numTrials = length(reachData);
         
-        ratSummary.sessionDates = sessions_to_analyze.date;
         [ratSummary.num_trials(iSession,:),~] = breakDownTrialScores(reachData,validTrialOutcomes);
         ratSummary.outcomePercent(iSession,:) = ratSummary.num_trials(iSession,:) / ratSummary.num_trials(iSession,1);
         
@@ -119,7 +128,9 @@ for i_rat = 1 : numRatFolders
     end
     
     cd(ratRootFolder);
-    save(ratSummaryName,ratSummary);
+    save(ratSummaryName,'ratSummary','sessions_analyzed');
+    clear ratSummary
+    clear sessions_analyzed;
     
 end
         

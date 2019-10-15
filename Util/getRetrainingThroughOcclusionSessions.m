@@ -6,10 +6,15 @@ function new_sessionTable = getRetrainingThroughOcclusionSessions(sessionTable)
     
 % divide sessionTable into blocks of similar sessions
 sessionBlockLabels = identifySessionTransitions(sessionTable);
-sessions_remaining = calcSessionsRemainingFromBlockLabels(sessionBlockLabels);
+% sessions_remaining = calcSessionsRemainingFromBlockLabels(sessionBlockLabels);
 
 % find the table row with the second-to-last "retraining" session
 retrainingRows = sessionTable.trainingStage == 'retraining';
+if ~any(retrainingRows)
+    % workaround until all session tables are updated to label sessions
+    % after fiber implant as "training"
+    retrainingRows = sessionTable.trainingStage == 'training';
+end
 startRow = find(retrainingRows,2,'last');
 startRow = startRow(1);
 
