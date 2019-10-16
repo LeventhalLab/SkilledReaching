@@ -18,3 +18,4 @@ reachData.orientation = {};
 reachData.aperture = {};
 reachData.trialScores = [];
 reachData.trialNumbers = [];
+reachData.slot_z_wrt_pellet = [];

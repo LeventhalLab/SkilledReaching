@@ -167,7 +167,7 @@ for i_rat = 1 : numRatFolders
             end
             reachData(iTrial) = scoreTrial(reachData(iTrial),interp_trajectory,bodyparts,all_didPawStartThroughSlot(iTrial),pelletMissingFlag(iTrial),initPellet3D,slot_z_wrt_pellet,pawPref,trialOutcome);
             reachData(iTrial).trialNumbers = trialNumbers(iTrial,:);
-            
+            reachData(iTrial).slot_z_wrt_pellet = slot_z_wrt_pellet;
             sessionSummary = sessionKinematicsSummary(reachData);
         end
         

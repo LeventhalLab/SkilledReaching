@@ -211,18 +211,9 @@ function plot_z_endpoints(reachData,ind_trial_type,trialTypeColors,all_slot_z_wr
 
 axes(h_axes)
 
-numTrials = length(reachData);
-trialNumbers = zeros(numTrials,1);
-pd_z_endpt = NaN(numTrials,1);
-dig2_z_endpt = NaN(numTrials,1);
-for iTrial = 1 : numTrials
-    if isempty(reachData(iTrial).pdEndPoints)
-        continue;
-    end
-    pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
-    dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
-    trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
-end
+[trialNumbers,pd_endPts, dig2_endPts] = extractReachEndPoints(reachData);
+pd_z_endpt = pd_endPts(:,3);
+dig2_z_endpt = dig2_endPts(:,3);
 
 for ii = 1 : max(ind_trial_type)
     if any(ind_trial_type == ii)
@@ -251,16 +242,7 @@ y_lim = [-20 5];
 
 axes(h_axes)
 
-numTrials = length(reachData);
-pd_endpt = NaN(numTrials,3);
-dig2_endpt = NaN(numTrials,3);
-for iTrial = 1 : numTrials
-    if isempty(reachData(iTrial).pdEndPoints)
-        continue;
-    end
-    pd_endpt(iTrial,:) = reachData(iTrial).pdEndPoints(1,:);
-    dig2_endpt(iTrial,:) = reachData(iTrial).dig2_endPoints(1,:);
-end
+[~,pd_endpt, dig2_endpt] = extractReachEndPoints(reachData);
 
 for ii = 1 : max(ind_trial_type)
     if any(ind_trial_type == ii)
@@ -301,19 +283,7 @@ function plot_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axe
 
 axes(h_axes)
 
-numTrials = length(reachData);
-trialNumbers = NaN(numTrials,1);
-end_orientation = NaN(numTrials,1);
-for iTrial = 1 : numTrials
-    if isempty(reachData(iTrial).orientation)
-        continue;
-    end
-    if isempty(reachData(iTrial).orientation{1})
-        continue;
-    end
-    end_orientation(iTrial) = reachData(iTrial).orientation{1}(end);
-    trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
-end
+[trialNumbers,end_orientation] = extractReachEndOrientation(reachData);
 
 for ii = 1 : max(ind_trial_type)
     if any(ind_trial_type == ii)
@@ -392,7 +362,7 @@ for ii = 1 : max(ind_trial_type)
         hold on
     end
 end
-set(gca,'ylim',[10,25])
+set(gca,'ylim',[5,25])
 title('digit aperture at reach end')
 end
 
