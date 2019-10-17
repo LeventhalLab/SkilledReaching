@@ -9,8 +9,8 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
 repeatCalculations = true;   % if cropped video file already exists, don't repeat?
 useSessionsFrom_DLCoutput_folder = false;
 
-vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
-sharedX_root_metadata_SavePath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+vidRootPath = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
+sharedX_root_metadata_SavePath = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
 cropped_vidSaveRootPath = fullfile('/Volumes','LL EXHD #2','Skilled Reaching');
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 cd(labeledBodypartsFolder)
@@ -25,9 +25,9 @@ ratInfo_IDs = [ratInfo.ratID];
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
     
-for i_rat = 32 : numRatFolders
+for i_rat = 22 : numRatFolders
     
-    ratID = ratFolders(i_rat).name;
+    ratID = ratFolders(i_rat).name
     ratFolder = fullfile(labeledBodypartsFolder,ratFolders(i_rat).name);
     
     sharedX_rat_metadata_savePath = fullfile(sharedX_root_metadata_SavePath,ratID);
@@ -120,7 +120,7 @@ for i_rat = 32 : numRatFolders
                    1,400,450,450;
                    1650,400,390,450];
             startSess = 1;
-            endSess = length(sessionsToExtract);
+            endSess = 1;%length(sessionsToExtract);
         otherwise
             ROI = [750,450,550,550;
                   1,450,450,400;
@@ -187,7 +187,7 @@ for i_rat = 32 : numRatFolders
 
         numVidsExtracted = 0;
 
-        for vid = 1:length(vidList)
+        for vid = 16:16%1:length(vidList)
             frameTimeLimits = [-1,3.3]; 
             vidName = vidList(vid).name;
             vidNameNumber = vidName(end-6:end-4);
@@ -215,7 +215,7 @@ for i_rat = 32 : numRatFolders
             end             
             frameRate = video.FrameRate;
             frameSize = [video.height,video.width];
-%                 cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
+            cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
 
             [fp,fn,fext] = fileparts(vidName);
 

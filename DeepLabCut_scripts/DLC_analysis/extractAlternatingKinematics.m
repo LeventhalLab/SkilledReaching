@@ -1,4 +1,4 @@
-function alternateKinematics = extractAlternatingKinematics(reachData,alternateKinematics)
+function alternateKinematics = extractAlternatingKinematics(reachData,alternateKinematics,firstTrial)
 
 % assume 5 reaches per on/off block
 trials_per_block = 5;

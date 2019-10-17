@@ -3,7 +3,7 @@
 % script_analyzeAlternateStimSessions
 alternatingStimFolder = 'Volumes/LL EXHD #2/alternating stim analysis';
 alternateKinematicsName = 'alternating_stim_kinematics_summary.mat';
-% alternateKinematicsName = fullfile(alternatingStimFolder,alternateKinematicsName);
+alternateKinematicsName = fullfile(alternatingStimFolder,alternateKinematicsName);
 load(alternateKinematicsName);
 
 numSessions = length(alternateKinematics);
@@ -14,7 +14,6 @@ reachEnd_zlim = [-15 30];
 x_lim = [-30 10];
 y_lim = [-20 10];
 
-pawPref = char(thisRatInfo.pawPref);
 figProps.m = 5;
 figProps.n = 5;
 

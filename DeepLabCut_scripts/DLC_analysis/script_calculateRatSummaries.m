@@ -19,6 +19,11 @@ xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Shee
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readRatInfoTable(csvfname);
 
+ratSummaryDir = fullfile(labeledBodypartsFolder,'rat kinematic summaries');
+if ~exist(ratSummaryDir,'dir')
+    mkdir(ratSummaryDir);
+end
+
 ratInfo_IDs = [ratInfo.ratID];
 
 cd(labeledBodypartsFolder)
@@ -28,7 +33,7 @@ numRatFolders = length(ratFolders);
 temp_reachData = initializeReachDataStruct();
 
 
-for i_rat = 24 : numRatFolders
+for i_rat = 1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -125,7 +130,7 @@ for i_rat = 24 : numRatFolders
     end
     
     cd(ratRootFolder);
-    save(ratSummaryName,'ratSummary','sessions_analyzed');
+    save(fullfile(ratSummaryDir,ratSummaryName),'ratSummary','sessions_analyzed');
     clear ratSummary
     clear sessions_analyzed;
     

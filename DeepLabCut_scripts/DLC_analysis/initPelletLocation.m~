@@ -70,12 +70,9 @@ validPelletPts = initPelletPts(~isnan(initPelletPts(:,1)),:);
 
 if isempty(validPelletPts)
     initPellet3D = [];
-    try
+    tr
     if all(pellet_direct_p(preTriggerFrame:firstSlotBreachFrame) < min_pellet_direct_p)
         pelletMissingFlag = true;
-    end
-    catch
-        keyboard
     end
 else
     initPellet3D = mean(validPelletPts,1);

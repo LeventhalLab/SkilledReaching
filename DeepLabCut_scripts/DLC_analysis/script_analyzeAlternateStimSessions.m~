@@ -56,13 +56,8 @@ for iSession = 1 : numSessions
 
     load(reachDataName);
         
-    if alternateSessions(iSession,:).ratID == 197 && alternateSessions(iSession,:).date == datetime('20171217','inputformat','yyyyMMdd')
-        % skip past trials before labview restarted
-        firstTrial = 7;
-    else
-        firstTrial = 1;
-    end
-    alternateKinematics(iSession) = extractAlternatingKinematics(reachData,alternateKinematics(iSession),firstTrial);
+    if alternateSessions(iSession,).ratID == 197 && alternateSessions(iSession,:).
+    alternateKinematics(iSession) = extractAlternatingKinematics(reachData,alternateKinematics(iSession));
     alternateKinematics(iSession).slot_z_wrt_pellet = all_slot_z_wrt_pellet;
     alternateKinematics(iSession).thisRatInfo = thisRatInfo;
 end
@@ -71,5 +66,5 @@ alternateKinematics = analyzeAlternatingKinematics(alternateKinematics);
 
 alternateKinematicsName = 'alternating_stim_kinematics_summary.mat';
 alternateKinematicsName = fullfile(alternatingStimFolder,alternateKinematicsName);
-alternateKinematicsName
+
 save(alternateKinematicsName,'alternateSessions','alternateKinematics');
