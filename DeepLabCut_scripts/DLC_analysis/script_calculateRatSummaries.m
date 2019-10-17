@@ -33,7 +33,7 @@ numRatFolders = length(ratFolders);
 temp_reachData = initializeReachDataStruct();
 
 
-for i_rat = 1 : numRatFolders
+for i_rat = 6:6% 31 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -130,7 +130,7 @@ for i_rat = 1 : numRatFolders
     end
     
     cd(ratRootFolder);
-    save(fullfile(ratSummaryDir,ratSummaryName),'ratSummary','sessions_analyzed');
+    save(fullfile(ratSummaryDir,ratSummaryName),'ratSummary','sessions_analyzed','thisRatInfo');
     clear ratSummary
     clear sessions_analyzed;
     
