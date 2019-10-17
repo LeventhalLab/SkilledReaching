@@ -23,10 +23,11 @@ for iTrial = 1 : num_trials
 end
 
 for i_outcome = 1 : length(validTrialOutcomes)
-
-    if any(outcomeFlag(:,i_outcome))   % is there at least one trial of this type?
-        mean_orientations(i_outcome) = nancirc_mean(end_orientation(outcomeFlag(:,i_outcome)));
-        MRL(i_outcome) = nancirc_r(end_orientation(outcomeFlag(:,i_outcome)));
+    try
+        if isempty(
+    mean_orientations(i_outcome) = nancirc_mean(end_orientation(outcomeFlag(:,i_outcome)));
+    catch
+        keyboard
     end
-    
+    MRL(i_outcome) = nancirc_r(end_orientation(outcomeFlag(:,i_outcome)));
 end

@@ -28,7 +28,7 @@ numRatFolders = length(ratFolders);
 temp_reachData = initializeReachDataStruct();
 
 
-for i_rat = 1 : numRatFolders
+for i_rat = 24 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
