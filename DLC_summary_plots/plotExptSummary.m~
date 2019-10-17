@@ -37,18 +37,25 @@ exptSummary_figProps.leftMargin = 2.54;
 
 % number of trials
 axes(h_axes(1,1))
-toPlot = mean(exptSummary.num_trials,2);
-scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
+toPlot = nanmean(exptSummary.num_trials,2);
+numValidPts = sum(~isnan(exptSummary.num_trials),2);
+e_bars = nanstd(exptSummary.num_trials,0,2) ./ sqrt(numValidPts);
 hold on
+scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[0 maxTrials]);
 set(gca,'xtick',[1,22])
 title('number of trials')
 
 % first reach success
 axes(h_axes(1,2))
-toPlot = mean(exptSummary.firstReachSuccess,2);
+toPlot = nanmean(exptSummary.firstReachSuccess,2);
+numValidPts = sum(~isnan(exptSummary.firstReachSuccess),2);
+e_bars = nanstd(exptSummary.num_trials,0,2) ./ sqrt(numValidPts);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -58,7 +65,9 @@ title('first reach success')
 
 % any reach success
 axes(h_axes(1,3))
-toPlot = mean(exptSummary.anyReachSuccess,2);
+toPlot = nanmean(exptSummary.anyReachSuccess,2);
+toPlot = nanmean(exptSummary.firstReachSuccess,2);
+numValidPts = sum(~isnan(exptSummary.firstReachSuccess),2);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -68,7 +77,7 @@ title('any reach success')
 
 % number of reaches per trial
 axes(h_axes(1,4))
-toPlot = mean(exptSummary.mean_num_reaches,2);
+toPlot = nanmean(exptSummary.mean_num_reaches,2);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -78,7 +87,7 @@ title('reaches per trial')
 
 % max paw velocity
 axes(h_axes(2,1))
-toPlot = mean(exptSummary.mean_pd_v,2);
+toPlot = nanmean(exptSummary.mean_pd_v,2);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -88,7 +97,7 @@ title('max paw velocity')
 
 % mean end aperture
 axes(h_axes(3,1))
-toPlot = mean(exptSummary.mean_aperture,2);
+toPlot = nanmean(exptSummary.mean_aperture,2);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -98,7 +107,7 @@ title('mean end aperture')
 
 % std end aperture
 axes(h_axes(3,2))
-toPlot = mean(exptSummary.std_aperture,2);
+toPlot = nanmean(exptSummary.std_aperture,2);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -108,7 +117,7 @@ title('std end aperture')
 
 % end orientation vector
 axes(h_axes(3,3))
-toPlot = mean(exptSummary.mean_aperture,2);
+toPlot = nanmean(exptSummary.mean_aperture,2);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -118,7 +127,7 @@ set(gca,'ylim',[5 25]);
 % 3D pd endpoints
 title('mean 3D endpoints')
 axes(h_axes(4,1))
-pd_toPlot = squeeze(mean(exptSummary.mean_pd_endPt,1));
+pd_toPlot = squeeze(nanmean(exptSummary.mean_pd_endPt,1));
 scatter3(pd_toPlot(retrainSessions,1),pd_toPlot(retrainSessions,3),pd_toPlot(retrainSessions,2),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter3(pd_toPlot(laserOnSessions,1),pd_toPlot(laserOnSessions,3),pd_toPlot(laserOnSessions,2),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -132,7 +141,7 @@ title('pd endpoints')
 % 3D dig2 endpoints
 title('mean 3D endpoints')
 axes(h_axes(4,2))
-dig2_toPlot = squeeze(mean(exptSummary.mean_dig2_endPt,1));
+dig2_toPlot = squeeze(nanmean(exptSummary.mean_dig2_endPt,1));
 scatter3(dig2_toPlot(retrainSessions,1),dig2_toPlot(retrainSessions,3),dig2_toPlot(retrainSessions,2),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter3(dig2_toPlot(laserOnSessions,1),dig2_toPlot(laserOnSessions,3),dig2_toPlot(laserOnSessions,2),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
@@ -159,10 +168,9 @@ scatter(occludeSessions,dig2_z_toPlot(occludeSessions),'markeredgecolor',occlude
 set(gca,'ylim',reachEnd_zlim);
 title('mean z endpoint')
 
-textString{1} = sprintf('5 off(red), 5 on (blue); R%04d, %s', ...
-    curKinematics.ratID, sessionDateString);
-textString{2} = sprintf('laser on at %s, laser off at %s', ...
-    laserOnString, laserOffString);
+textString{1} = exptSummary.experimentInfo.type;
 
+h_figAxis = createFigAxes(h_fig);
 axes(h_figAxis);
-text(figProps.leftMargin,figProps.height-0.75,textString,'units','centimeters','interpreter','none');
+text(exptSummary_figProps.leftMargin,exptSummary_figProps.height-0.75,textString,...
+    'units','centimeters','interpreter','none');

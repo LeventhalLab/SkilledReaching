@@ -38,10 +38,15 @@ exptSummary_figProps.leftMargin = 2.54;
 % number of trials
 axes(h_axes(1,1))
 toPlot = nanmean(exptSummary.num_trials,2);
-scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
+numValidPts = sum(~isnan(exptSummary.num_trials),2);
+e_bars = nanstd(exptSummary.num_trials,0,2) ./ sqrt(numValidPts);
 hold on
+scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[0 maxTrials]);
 set(gca,'xtick',[1,22])
 title('number of trials')
@@ -49,30 +54,45 @@ title('number of trials')
 % first reach success
 axes(h_axes(1,2))
 toPlot = nanmean(exptSummary.firstReachSuccess,2);
+numValidPts = sum(~isnan(exptSummary.firstReachSuccess),2);
+e_bars = nanstd(exptSummary.firstReachSuccess,0,2) ./ sqrt(numValidPts);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[0 1]);
 title('first reach success')
 
 % any reach success
 axes(h_axes(1,3))
 toPlot = nanmean(exptSummary.anyReachSuccess,2);
+numValidPts = sum(~isnan(exptSummary.anyReachSuccess),2);
+e_bars = nanstd(exptSummary.anyReachSuccess,0,2) ./ sqrt(numValidPts);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[0 1]);
 title('any reach success')
 
 % number of reaches per trial
 axes(h_axes(1,4))
 toPlot = nanmean(exptSummary.mean_num_reaches,2);
+numValidPts = sum(~isnan(exptSummary.mean_num_reaches),2);
+e_bars = nanstd(exptSummary.mean_num_reaches,0,2) ./ sqrt(numValidPts);
 scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[0 6]);
 title('reaches per trial')
 
@@ -83,6 +103,9 @@ scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[0 1000]);
 title('max paw velocity')
 
@@ -93,6 +116,9 @@ scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[5 25]);
 title('mean end aperture')
 
@@ -103,6 +129,9 @@ scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[0 10]);
 title('std end aperture')
 
@@ -113,6 +142,9 @@ scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'
 hold on
 scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
 set(gca,'ylim',[5 25]);
 
 % 3D pd endpoints
@@ -151,10 +183,16 @@ scatter(retrainSessions,pd_z_toPLot(retrainSessions),'markeredgecolor',retrainCo
 hold on
 scatter(laserOnSessions,pd_z_toPLot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor,'markeredgealpha',0.5,'markerfacealpha',0.5);
 scatter(occludeSessions,pd_z_toPLot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor,'markeredgealpha',0.5,'markerfacealpha',0.5);
+errorbar(retrainSessions,toPlot(retrainSessions),pd_e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),pd_e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),pd_e_bars(occludeSessions),occludeColor,'linestyle','none');
 
 scatter(retrainSessions,dig2_z_toPlot(retrainSessions),'markeredgecolor',retrainColor,'markerfacecolor',retrainColor);
 scatter(laserOnSessions,dig2_z_toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,dig2_z_toPlot(occludeSessions),'markeredgecolor',occludeColor,'markerfacecolor',occludeColor);
+errorbar(retrainSessions,toPlot(retrainSessions),dig2_e_bars(retrainSessions),retrainColor,'linestyle','none');
+errorbar(laserOnSessions,toPlot(laserOnSessions),dig2_e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+errorbar(occludeSessions,toPlot(occludeSessions),dig2_e_bars(occludeSessions),occludeColor,'linestyle','none');
 
 set(gca,'ylim',reachEnd_zlim);
 title('mean z endpoint')

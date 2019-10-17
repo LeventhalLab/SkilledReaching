@@ -21,7 +21,7 @@ sessions_to_analyze = getSessionsToAnalyze();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-for i_expt = 3 : length(experimentInfo)
+for i_expt = 1 : length(experimentInfo)
     
     curRatList = getExptRats(ratInfo,experimentInfo(i_expt));
     
