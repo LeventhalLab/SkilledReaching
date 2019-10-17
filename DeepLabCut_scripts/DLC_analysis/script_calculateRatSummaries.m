@@ -46,9 +46,6 @@ for i_rat = 1 : numRatFolders
         pawPref = pawPref{1};
     end
     
-    if any(ratIDs_with_new_date_format == ratIDnum)
-        csvDateFormat = 'yyyyMMdd';
-    end
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
     histo_ratFolder = fullfile(histoFolder,ratID);
     
@@ -63,7 +60,7 @@ for i_rat = 1 : numRatFolders
     
     sessions_analyzed = getRetrainingThroughOcclusionSessions(sessionTable);
     numSessions = size(sessions_analyzed,1);
-    sessionType = determineSessionType(thisRatInfo, allSessionDates);
+%     sessionType = determineSessionType(thisRatInfo, allSessionDates);
 
     ratSummary = initializeRatSummaryStruct(ratID,validTrialOutcomes,validOutcomeNames,numSessions);
     for iSession = 1 : numSessions
@@ -72,7 +69,7 @@ for i_rat = 1 : numRatFolders
         sessionDateString = datestr(sessionDate,'yyyymmdd');
         
         cd(ratRootFolder);
-        testDirName = [ratID '_' sessionDateStr '*'];
+        testDirName = [ratID '_' sessionDateString '*'];
         validSessionDir = dir(testDirName);
         if isempty(validSessionDir)
             continue;
@@ -104,7 +101,7 @@ for i_rat = 1 : numRatFolders
         end
         
         load(reachDataName);
-        
+       
         numTrials = length(reachData);
         
         [ratSummary.num_trials(iSession,:),~] = breakDownTrialScores(reachData,validTrialOutcomes);
