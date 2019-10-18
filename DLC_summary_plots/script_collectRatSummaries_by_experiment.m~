@@ -21,7 +21,7 @@ sessions_to_analyze = getSessionsToAnalyze();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-for i_expt = 2 : length(experimentInfo)
+for i_expt = 1 : 4%length(experimentInfo)
     
     curRatList = getExptRats(ratInfo,experimentInfo(i_expt));
     
@@ -30,7 +30,14 @@ for i_expt = 2 : length(experimentInfo)
         curRatList = curRatList(2:end,:);
     end
     if i_expt == 2
+        % workaround for now to exclude R0230 until completed
         curRatList = curRatList(1:9,:);
+    end
+    if i_expt == 4
+        % workaround for now to exclude rats that haven't been completed
+        curRatList = curRatList([2,4,5,6,7,9],:);
+    end
+    
     % plots to make:
     %   1. plot all mean x,y,z-endpoints per session and overall mean
     %   2. plot all mean end apertures per session and overall mean
@@ -51,14 +58,28 @@ for i_expt = 2 : length(experimentInfo)
         summary(i_rat) = load(ratSummaryName);
 
     end
-    exptSummary(i_expt) = summarizeKinematicsAcrossSessionsByExperiment(summary);
-    exptSummary.experimentInfo = experimentInfo(i_expt);
+    cur_summary = summarizeKinematicsAcrossSessionsByExperiment(summary);
+    cur_summary.experimentInfo = experimentInfo(i_expt);
     
-    plotExptSummary(exptSummary)
+    exptSummary(i_expt) = cur_summary;
+    
+    h_fig = plotExptSummary(exptSummary(i_expt));
+    
+    summary_pdf_name = [experimentInfo(i_expt).type '_summary.pdf'];
+    summary_fig_name = [experimentInfo(i_expt).type '_summary.fig'];
+    summary_pdf_name = fullfile(ratSummaryDir,summary_pdf_name);
+    summary_fig_name = fullfile(ratSummaryDir,summary_fig_name);
+    
+    savefig(h_fig,summary_fig_name);
+    print(h_fig,summary_pdf_name,'-dpdf');
+    close(h_fig);
+    
     
     clear summary
     
     
 end
+
+
     
     

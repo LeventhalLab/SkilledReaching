@@ -33,7 +33,7 @@ numRatFolders = length(ratFolders);
 temp_reachData = initializeReachDataStruct();
 
 
-for i_rat = 6:6% 31 : numRatFolders
+for i_rat = 5:5% 31 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));

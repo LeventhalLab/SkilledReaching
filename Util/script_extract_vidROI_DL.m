@@ -187,7 +187,7 @@ for i_rat = 22 : 22%numRatFolders
 
         numVidsExtracted = 0;
 
-        for vid = 55:55%1:length(vidList)
+        for vid = 1:length(vidList)
             frameTimeLimits = [-1,3.3]; 
             vidName = vidList(vid).name;
             vidNameNumber = vidName(end-6:end-4);

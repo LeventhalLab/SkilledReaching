@@ -3,8 +3,8 @@ function experimentInfo = getExperimentFeatures()
 experimentInfo(1).type = 'chr2_during';
 experimentInfo(2).type = 'chr2_between';
 experimentInfo(3).type = 'arch_during';
-experimentInfo(4).type = 'arch_between';
-experimentInfo(5).type = 'eyfp';
+experimentInfo(4).type = 'eyfp';
+experimentInfo(5).type = 'arch_between';
 
 for iExpt = 1 : length(experimentInfo)
     switch experimentInfo(iExpt).type

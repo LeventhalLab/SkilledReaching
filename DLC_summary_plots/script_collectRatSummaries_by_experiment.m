@@ -21,7 +21,7 @@ sessions_to_analyze = getSessionsToAnalyze();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-for i_expt = 1 : length(experimentInfo)
+for i_expt = 1 : 4%length(experimentInfo)
     
     curRatList = getExptRats(ratInfo,experimentInfo(i_expt));
     
@@ -32,6 +32,10 @@ for i_expt = 1 : length(experimentInfo)
     if i_expt == 2
         % workaround for now to exclude R0230 until completed
         curRatList = curRatList(1:9,:);
+    end
+    if i_expt == 4
+        % workaround for now to exclude rats that haven't been completed
+        curRatList = curRatList([2,4,5,6,7,9],:);
     end
     
     % plots to make:
@@ -59,11 +63,23 @@ for i_expt = 1 : length(experimentInfo)
     
     exptSummary(i_expt) = cur_summary;
     
-    plotExptSummary(exptSummary(i_expt))
+    h_fig = plotExptSummary(exptSummary(i_expt));
+    
+    summary_pdf_name = [experimentInfo(i_expt).type '_summary.pdf'];
+    summary_fig_name = [experimentInfo(i_expt).type '_summary.fig'];
+    summary_pdf_name = fullfile(ratSummaryDir,summary_pdf_name);
+    summary_fig_name = fullfile(ratSummaryDir,summary_fig_name);
+    
+    savefig(h_fig,summary_fig_name);
+    print(h_fig,summary_pdf_name,'-dpdf');
+    close(h_fig);
+    
     
     clear summary
     
     
 end
+
+save('experiment_summaries.mat','exptSummary')
     
     
