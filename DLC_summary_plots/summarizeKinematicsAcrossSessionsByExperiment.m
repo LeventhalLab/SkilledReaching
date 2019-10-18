@@ -26,6 +26,7 @@ exptSummary.mean_orientation_traj = NaN(num_rats,num_sessions,num_z_points);
 exptSummary.MRL_traj = NaN(num_rats,num_sessions,num_z_points);
 
 for i_rat = 1 : num_rats
+    
     exptSummary.pawPref(i_rat) = summary(i_rat).thisRatInfo.pawPref;
     
     try

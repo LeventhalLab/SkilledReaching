@@ -38,7 +38,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 22:numRatFolders
+for i_rat = 26:numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -78,7 +78,7 @@ for i_rat = 22:numRatFolders
             startSession = 1;
             endSession = numSessions;
         case 'R0216'
-            startSession = 18;
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;
