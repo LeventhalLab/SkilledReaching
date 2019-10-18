@@ -77,8 +77,8 @@ for i_rat = 22:numRatFolders
         case 'R0189'
             startSession = 1;
             endSession = numSessions;
-        case 'R0195'
-            startSession = 1;
+        case 'R0216'
+            startSession = 18;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -256,4 +256,3 @@ for i_rat = 22:numRatFolders
     end
     
 end
-            

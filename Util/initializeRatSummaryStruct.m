@@ -1,4 +1,4 @@
-function ratSummary = initializeRatSummaryStruct(ratID,outcomeCategories,outcomeNames,numSessions_to_analyze)
+function ratSummary = initializeRatSummaryStruct(ratID,outcomeCategories,outcomeNames,numSessions_to_analyze,z_interp_digits)
 
 % calculate the following kinematic parameters:
 % number of trials
@@ -35,11 +35,23 @@ ratSummary.cov_dig2_endPts = NaN(numSessions_to_analyze,num_outcome_categories,3
 ratSummary.mean_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
 ratSummary.std_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
 
-ratSummary.mean_orientations = NaN(numSessions_to_analyze,num_outcome_categories);
-ratSummary.MRL = NaN(numSessions_to_analyze,num_outcome_categories);
+ratSummary.mean_end_orientations = NaN(numSessions_to_analyze,num_outcome_categories);
+ratSummary.end_MRL = NaN(numSessions_to_analyze,num_outcome_categories);
 
-ratSummary.mean_aperture = NaN(numSessions_to_analyze,num_outcome_categories);
-ratSummary.std_aperture = NaN(numSessions_to_analyze,num_outcome_categories);
+ratSummary.mean_end_aperture = NaN(numSessions_to_analyze,num_outcome_categories);
+ratSummary.std_end_aperture = NaN(numSessions_to_analyze,num_outcome_categories);
+
+ratSummary.aperture_traj = [];%NaN(numSessions_to_analyze,num_outcome_categories,length(z_interp_digits));
+ratSummary.orientation_traj = [];%NaN(numSessions_to_analyze,num_outcome_categories,length(z_interp_digits));
+
+ratSummary.mean_aperture_traj = NaN(numSessions_to_analyze,length(z_interp_digits));
+ratSummary.mean_orientation_traj = NaN(numSessions_to_analyze,length(z_interp_digits));
+
+ratSummary.std_aperture_traj = NaN(numSessions_to_analyze,length(z_interp_digits));
+ratSummary.sem_aperture_traj = NaN(numSessions_to_analyze,length(z_interp_digits));
+ratSummary.MRL_traj = NaN(numSessions_to_analyze,length(z_interp_digits));
+
+ratSummary.z_interp_digits = z_interp_digits;
 
 ratSummary.sessionDates = NaT(numSessions_to_analyze,1);
 ratSummary.sessionTypes = cell(numSessions_to_analyze,1);
