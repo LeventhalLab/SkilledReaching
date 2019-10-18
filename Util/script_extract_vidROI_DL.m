@@ -119,8 +119,8 @@ for i_rat = 22 : 22%numRatFolders
             ROI = [750,350,550,600;
                    1,400,450,450;
                    1650,400,390,450];
-            startSess = 19;
-            endSess = 19;%length(sessionsToExtract);
+            startSess = 26;
+            endSess = 26;%length(sessionsToExtract);
         otherwise
             ROI = [750,450,550,550;
                   1,450,450,400;
@@ -187,7 +187,7 @@ for i_rat = 22 : 22%numRatFolders
 
         numVidsExtracted = 0;
 
-        for vid = 48:48%1:length(vidList)
+        for vid = 27:27%1:length(vidList)
             frameTimeLimits = [-1,3.3]; 
             vidName = vidList(vid).name;
             vidNameNumber = vidName(end-6:end-4);

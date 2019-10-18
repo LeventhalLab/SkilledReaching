@@ -140,7 +140,7 @@ scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'
 errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
 errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
 errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
-set(gca,'ylim',[0 10],'xlim',[-5,20]);
+set(gca,'ylim',[0 10]);
 title('std end aperture')
 
 % mean aperture trajectory
@@ -158,7 +158,7 @@ for i_occludeSession = 1 : length(occludeSessions)
     plot(z,aperture_data(occludeSessions(i_occludeSession),:),'color',occludeColor);
 end
 
-set(gca,'ylim',[5 25],'xdir','reverse','xlim',[-5,20]);
+set(gca,'ylim',[5 25],'xdir','reverse');
 title('aperture post-slot')
 
 % mean paw orientation at reach end
@@ -168,16 +168,17 @@ final_MRLs = nanmean(exptSummary.end_MRL,2);
 toPlot = final_MRLs .* exp(1i*final_orientations);
 h_line = compass(toPlot(retrainSessions));
 hold on
-for ii = 1 : length(h_line)
-    h_line(ii).Color = retrainColor;
+for ii = 1 : leng
+h_line.Color = retrainColor;
 end
-h_line2 = compass(toPlot(laserOnSessions));
-for ii = 1 : length(h_line2)
-    h_line2(ii).Color = laserOnColor;
+for i_laserOnSession = 1 : length(laserOnSessions)
+    h_line = compass(toPlot(laserOnSessions(i_laserOnSession)));
+    hold on
+    h_line.Color = [0 0 1];
 end
-h_line3 = compass(toPlot(occludeSessions));
-for ii = 1 : length(h_line2)
-    h_line3(ii).Color = occludeColor;
+for i_occludeSession = 1 : length(occludeSessions)
+    h_line = compass(toPlot(occludeSessions(i_occludeSession)));
+    h_line.Color = [1 0 0];
 end
 
 
@@ -200,7 +201,7 @@ end
 for i_occludeSession = 1 : length(occludeSessions)
     plot(z,MRL_traj(occludeSessions(i_occludeSession),:),'color',occludeColor);
 end
-set(gca,'ylim',[0 1],'xdir','reverse','xlim',[-5,20]);
+set(gca,'ylim',[0 1],'xdir','reverse');
 title('MRL post-slot')
 
 % mean orientation trajectory
@@ -219,7 +220,7 @@ for i_occludeSession = 1 : length(occludeSessions)
     plot(z,orientation_data(occludeSessions(i_occludeSession),:),'color',occludeColor);
     hold on
 end
-set(gca,'ylim',[0 pi/2],'xdir','reverse','xlim',[-5,20]);
+set(gca,'ylim',[0 pi/2],'xdir','reverse');
 title('paw orientation post-slot')
 
 
