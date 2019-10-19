@@ -1,4 +1,4 @@
-function plot_end_aperture_acrossExperiments(exptSummary)
+function plot_end_end_aperture_acrossExperiments(exptSummary)
 %
 % exptSummary - types
 %   1 - chr2 during
@@ -7,10 +7,10 @@ function plot_end_aperture_acrossExperiments(exptSummary)
 %   4 - eyfp
 
 exptTypeIdx = [1,2,3,4];
-aperture_lim = [10 20];
+end_aperture_lim = [10 20];
 
 saveDir = '/Users/dleventh/Box/Leventhal Lab/Meetings, Presentations/SfN/SFN 2019/Bova/figures';
-saveName = 'final_aperture.pdf';
+saveName = 'final_end_aperture.pdf';
 saveName = fullfile(saveDir,saveName);
 
 figProps.m = 1;
@@ -62,11 +62,11 @@ for i_exptType = 1 : length(exptTypeIdx)
             laserOnColor = 'r';
     end
     
-    toPlot = squeeze(nanmean(curSummary.mean_aperture,2));
-    numValidPts = sum(~isnan(curSummary.mean_aperture),2);
-    e_bars = nanstd(curSummary.mean_aperture,0,2) ./ sqrt(numValidPts);
+    toPlot = squeeze(nanmean(curSummary.mean_end_aperture,2));
+    numValidPts = sum(~isnan(curSummary.mean_end_aperture),2);
+    e_bars = nanstd(curSummary.mean_end_aperture,0,2) ./ sqrt(numValidPts);
     
-    set(gca,'ylim',aperture_lim,...
+    set(gca,'ylim',end_aperture_lim,...
         'xtick',[1,2,3,12,13,22],...
         'xticklabel',[1,2,1,10,1,10],...
         'ytick',[10 15 20],...
