@@ -1,4 +1,4 @@
-function plotNumTrials_normalized_acrossExperiments(exptSummary)
+function plot_end_aperture_acrossExperiments(exptSummary)
 %
 % exptSummary - types
 %   1 - chr2 during
@@ -6,8 +6,11 @@ function plotNumTrials_normalized_acrossExperiments(exptSummary)
 %   3 - arch
 %   4 - eyfp
 
+exptTypeIdx = [1,2,3,4];
+aperture_lim = [10 20];
+
 saveDir = '/Users/dleventh/Box/Leventhal Lab/Meetings, Presentations/SfN/SFN 2019/Bova/figures';
-saveName = 'num_reaches_summary.pdf';
+saveName = 'final_aperture.pdf';
 saveName = fullfile(saveDir,saveName);
 
 figProps.m = 1;
@@ -17,13 +20,13 @@ figProps.topMargin = 0.5;
 figProps.leftMargin = 2.5;
 
 figProps.width = 39.01;
-figProps.height = 12;
+figProps.height = 10;
 
 figProps.colSpacing = ones(figProps.n-1,1) * 0.5;
 figProps.rowSpacing = 0.5;%ones(figProps.m-1,1) * 1;
 
 figProps.panelWidth = ones(1,figProps.n)*((figProps.width - sum(figProps.colSpacing) - figProps.leftMargin - 0.5) / figProps.n);
-figProps.panelHeight = 9;%ones(figProps.m,1) * 4;
+figProps.panelHeight = 7;%ones(figProps.m,1) * 4;
 
 [h_fig,h_axes] = createFigPanels5(figProps);
 
@@ -36,24 +39,17 @@ retrainSessions = 1 : 2;
 laserOnSessions = 3 : 12;
 occludeSessions = 13 : 22;
 
-summaries_to_plot = [1,2,3,4];
 retrainColor = 'k';
 
 patchX = [2.5 2.5 12.5 12.5];
 
 n = zeros(length(exptSummary),1);
 
-for i_exptType = 1 : length(summaries_to_plot)
+for i_exptType = 1 : length(exptTypeIdx)
     
-    curSummary = exptSummary(summaries_to_plot(i_exptType));
-    n(i_exptType) = size(curSummary.num_trials,2);
-    numSessions = size(curSummary.num_trials,1);
+    curSummary = exptSummary(exptTypeIdx(i_exptType));
     
     axes(h_axes(i_exptType));
-    
-    baseline_num = nanmean(curSummary.num_trials(retrainSessions,:),1);
-    norm_num = curSummary.num_trials ./ repmat(baseline_num,numSessions,1);
-    toPlot = nanmean(norm_num,2);
     
     switch i_exptType
         case 1
@@ -66,12 +62,14 @@ for i_exptType = 1 : length(summaries_to_plot)
             laserOnColor = 'r';
     end
     
-    numValidPts = sum(~isnan(curSummary.num_trials),2);
-    e_bars = nanstd(norm_num,0,2) ./ sqrt(numValidPts);
+    toPlot = squeeze(nanmean(curSummary.mean_aperture,2));
+    numValidPts = sum(~isnan(curSummary.mean_aperture),2);
+    e_bars = nanstd(curSummary.mean_aperture,0,2) ./ sqrt(numValidPts);
     
-    set(gca,'ylim',[minTrials maxTrials],...
+    set(gca,'ylim',aperture_lim,...
         'xtick',[1,2,3,12,13,22],...
         'xticklabel',[1,2,1,10,1,10],...
+        'ytick',[10 15 20],...
         'fontsize',16,...
         'fontname','arial');
     
@@ -84,21 +82,16 @@ for i_exptType = 1 : length(summaries_to_plot)
     h_on = scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor);
     h_occlude = scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
     
-%     for ii = 1 : n(i_exptType)
-%         plot(retrainSessions,curSummary.num_trials(retrainSessions,ii),'color',retrainColor);
-%     end
     errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
     errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
     errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),laserOnColor,'linestyle','none');
-    
-    line([0,22],[1,1],'color','k')
     
 %     h_leg = legend([h_retrain,h_on,h_occlude],'baseline','laser on','occlude');
 %     h_leg.Location = 'southeast';
     
     if i_exptType == 1
-        ylabel('normalized trials/session','fontname','arial','fontsize',18)
-        set(gca,'yticklabel',[0,1,2]);
+        ylabel('aperture at reach end (mm)','fontname','arial','fontsize',18)
+        set(gca,'yticklabel',[10 15 20]);
     else
         set(gca,'yticklabel',[]);
     end

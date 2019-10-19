@@ -1,4 +1,4 @@
-function plotNumTrials_normalized_acrossExperiments(exptSummary)
+function plotFirstSuccessRate_normalized_acrossExperiments(exptSummary)
 %
 % exptSummary - types
 %   1 - chr2 during
@@ -7,7 +7,7 @@ function plotNumTrials_normalized_acrossExperiments(exptSummary)
 %   4 - eyfp
 
 saveDir = '/Users/dleventh/Box/Leventhal Lab/Meetings, Presentations/SfN/SFN 2019/Bova/figures';
-saveName = 'num_reaches_summary.pdf';
+saveName = 'first_success_summary.pdf';
 saveName = fullfile(saveDir,saveName);
 
 figProps.m = 1;
@@ -27,8 +27,8 @@ figProps.panelHeight = 9;%ones(figProps.m,1) * 4;
 
 [h_fig,h_axes] = createFigPanels5(figProps);
 
-minTrials = 0;
-maxTrials = 2;
+minSuccess = 0;
+maxSuccess = 1.5;
 
 patchAlpha = 0.01;
 
@@ -46,14 +46,14 @@ n = zeros(length(exptSummary),1);
 for i_exptType = 1 : length(summaries_to_plot)
     
     curSummary = exptSummary(summaries_to_plot(i_exptType));
-    n(i_exptType) = size(curSummary.num_trials,2);
-    numSessions = size(curSummary.num_trials,1);
+    n(i_exptType) = size(curSummary.firstReachSuccess,2);
+    numSessions = size(curSummary.firstReachSuccess,1);
     
     axes(h_axes(i_exptType));
     
-    baseline_num = nanmean(curSummary.num_trials(retrainSessions,:),1);
-    norm_num = curSummary.num_trials ./ repmat(baseline_num,numSessions,1);
-    toPlot = nanmean(norm_num,2);
+    baseline_success = nanmean(curSummary.firstReachSuccess(retrainSessions,:),1);
+    norm_success = curSummary.firstReachSuccess ./ repmat(baseline_success,numSessions,1);
+    toPlot = nanmean(norm_success,2);
     
     switch i_exptType
         case 1
@@ -67,9 +67,9 @@ for i_exptType = 1 : length(summaries_to_plot)
     end
     
     numValidPts = sum(~isnan(curSummary.num_trials),2);
-    e_bars = nanstd(norm_num,0,2) ./ sqrt(numValidPts);
+    e_bars = nanstd(norm_success,0,2) ./ sqrt(numValidPts);
     
-    set(gca,'ylim',[minTrials maxTrials],...
+    set(gca,'ylim',[minSuccess maxSuccess],...
         'xtick',[1,2,3,12,13,22],...
         'xticklabel',[1,2,1,10,1,10],...
         'fontsize',16,...
@@ -97,8 +97,8 @@ for i_exptType = 1 : length(summaries_to_plot)
 %     h_leg.Location = 'southeast';
     
     if i_exptType == 1
-        ylabel('normalized trials/session','fontname','arial','fontsize',18)
-        set(gca,'yticklabel',[0,1,2]);
+        ylabel('normalized 1st success rate','fontname','arial','fontsize',18)
+        set(gca,'ytick','yticklabel',[0,1,maxSuccess]);
     else
         set(gca,'yticklabel',[]);
     end

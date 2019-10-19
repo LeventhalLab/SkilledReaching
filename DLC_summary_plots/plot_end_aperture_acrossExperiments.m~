@@ -1,4 +1,4 @@
-function plotNumTrials_normalized_acrossExperiments(exptSummary)
+function plot_z_coord_acrossExperiments(exptSummary)
 %
 % exptSummary - types
 %   1 - chr2 during
@@ -6,8 +6,11 @@ function plotNumTrials_normalized_acrossExperiments(exptSummary)
 %   3 - arch
 %   4 - eyfp
 
+exptTypeIdx = [1,2,3,4];
+reachEnd_zlim = [-15 20];
+
 saveDir = '/Users/dleventh/Box/Leventhal Lab/Meetings, Presentations/SfN/SFN 2019/Bova/figures';
-saveName = 'num_reaches_summary.pdf';
+saveName = 'final_aperture.pdf';
 saveName = fullfile(saveDir,saveName);
 
 figProps.m = 1;
@@ -36,24 +39,19 @@ retrainSessions = 1 : 2;
 laserOnSessions = 3 : 12;
 occludeSessions = 13 : 22;
 
-summaries_to_plot = [1,2,3,4];
 retrainColor = 'k';
 
 patchX = [2.5 2.5 12.5 12.5];
 
 n = zeros(length(exptSummary),1);
 
-for i_exptType = 1 : length(summaries_to_plot)
+for i_exptType = 1 : length(exptTypeIdx)
     
-    curSummary = exptSummary(summaries_to_plot(i_exptType));
+    curSummary = exptSummary(exptTypeIdx(i_exptType));
     n(i_exptType) = size(curSummary.num_trials,2);
     numSessions = size(curSummary.num_trials,1);
     
     axes(h_axes(i_exptType));
-    
-    baseline_num = nanmean(curSummary.num_trials(retrainSessions,:),1);
-    norm_num = curSummary.num_trials ./ repmat(baseline_num,numSessions,1);
-    toPlot = nanmean(norm_num,2);
     
     switch i_exptType
         case 1
@@ -66,10 +64,17 @@ for i_exptType = 1 : length(summaries_to_plot)
             laserOnColor = 'r';
     end
     
-    numValidPts = sum(~isnan(curSummary.num_trials),2);
-    e_bars = nanstd(norm_num,0,2) ./ sqrt(numValidPts);
+    pd_z_endpt = squeeze(curSummary.mean_pd_endPt(:,:,3));
+    toPlot = squeeze(nanmean(pd_z_endpt,1));
+    numValidPts = sum(~isnan(pd_z_endpt),2);
+    pd_e_bars = nanstd(pd_z_endpt,0,1) ./ sqrt(numValidPts);
     
-    set(gca,'ylim',[minTrials maxTrials],...
+    dig2_z_endpt = squeeze(curSummary.mean_dig2_endPt(:,:,3));
+    dig2_toPlot = squeeze(nanmean(dig2_z_endpt,1));
+    numValidPts = sum(~isnan(dig2_z_endpt),2);
+    dig2_e_bars = nanstd(dig2_z_endpt,0,1) ./ sqrt(numValidPts);
+    
+    set(gca,'ylim',reachEnd_zlim,...
         'xtick',[1,2,3,12,13,22],...
         'xticklabel',[1,2,1,10,1,10],...
         'fontsize',16,...
@@ -80,25 +85,21 @@ for i_exptType = 1 : length(summaries_to_plot)
     patch(patchX,patchY,laserOnColor,'facealpha',patchAlpha);
     
     hold on
-    h_retrain = scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor);
-    h_on = scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor);
-    h_occlude = scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
+    h_retrain = scatter(retrainSessions,toPlot(retrainSessions),'markeredgecolor',retrainColor,'markeredgealpha',0.5,'markerfacealpha',0.5);
+    h_on = scatter(laserOnSessions,toPlot(laserOnSessions),'markeredgecolor',laserOnColor,'markeredgealpha',0.5,'markerfacealpha',0.5);
+    h_occlude = scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor,'markeredgealpha',0.5,'markerfacealpha',0.5);
     
-%     for ii = 1 : n(i_exptType)
-%         plot(retrainSessions,curSummary.num_trials(retrainSessions,ii),'color',retrainColor);
-%     end
-    errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
-    errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
-    errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),laserOnColor,'linestyle','none');
+    errorbar(retrainSessions,toPlot(retrainSessions),pd_e_bars(retrainSessions),retrainColor,'linestyle','none');
+    errorbar(laserOnSessions,toPlot(laserOnSessions),pd_e_bars(laserOnSessions),laserOnColor,'linestyle','none');
+    errorbar(occludeSessions,toPlot(occludeSessions),pd_e_bars(occludeSessions),laserOnColor,'linestyle','none');
     
-    line([0,22],[1,1],'color','k')
+    line([0,22],[0,0],'color','k')
     
 %     h_leg = legend([h_retrain,h_on,h_occlude],'baseline','laser on','occlude');
 %     h_leg.Location = 'southeast';
     
     if i_exptType == 1
-        ylabel('normalized trials/session','fontname','arial','fontsize',18)
-        set(gca,'yticklabel',[0,1,2]);
+        ylabel('final z w.r.t. pellet (mm)','fontname','arial','fontsize',18)
     else
         set(gca,'yticklabel',[]);
     end
