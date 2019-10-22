@@ -2,11 +2,11 @@
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 ratSummaryDir = fullfile(labeledBodypartsFolder,'rat kinematic summaries');
-[plotsDir,~,~] = fileparts(labeledBodypartsFolder);
-plotsDir = fullfile(plotsDir,'DLC output plots');
-if ~exist(plotsDir,'dir')
-    mkdir(plotsDir);
-end
+% [plotsDir,~,~] = fileparts(labeledBodypartsFolder);
+% plotsDir = fullfile(plotsDir,'DLC output plots');
+% if ~exist(plotsDir,'dir')
+%     mkdir(plotsDir);
+% end
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
@@ -63,23 +63,23 @@ for i_expt = 1 : 4%length(experimentInfo)
     
     exptSummary(i_expt) = cur_summary;
     
-    h_fig = plotExptSummary(exptSummary(i_expt));
-    
-    summary_pdf_name = [experimentInfo(i_expt).type '_summary.pdf'];
-    summary_fig_name = [experimentInfo(i_expt).type '_summary.fig'];
-    summary_pdf_name = fullfile(ratSummaryDir,summary_pdf_name);
-    summary_fig_name = fullfile(ratSummaryDir,summary_fig_name);
-    
-    savefig(h_fig,summary_fig_name);
-    print(h_fig,summary_pdf_name,'-dpdf');
-    close(h_fig);
+%     h_fig = plotExptSummary(exptSummary(i_expt));
+%     
+%     summary_pdf_name = [experimentInfo(i_expt).type '_summary.pdf'];
+%     summary_fig_name = [experimentInfo(i_expt).type '_summary.fig'];
+%     summary_pdf_name = fullfile(ratSummaryDir,summary_pdf_name);
+%     summary_fig_name = fullfile(ratSummaryDir,summary_fig_name);
+%     
+%     savefig(h_fig,summary_fig_name);
+%     print(h_fig,summary_pdf_name,'-dpdf');
+%     close(h_fig);
     
     
     clear summary
     
     
 end
-
+cd(ratSummaryDir)
 save('experiment_summaries.mat','exptSummary')
     
     

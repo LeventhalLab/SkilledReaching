@@ -1,7 +1,8 @@
 % script_plotAlternateStimResults
 
 % script_analyzeAlternateStimSessions
-alternatingStimFolder = 'Volumes/LL EXHD #2/alternating stim analysis';
+% alternatingStimFolder = 'Volumes/LL EXHD #2/alternating stim analysis';
+alternatingStimFolder = '/Users/dleventh/Documents/alternating stim analysis';
 alternateKinematicsName = 'alternating_stim_kinematics_summary.mat';
 alternateKinematicsName = fullfile(alternatingStimFolder,alternateKinematicsName);
 load(alternateKinematicsName);
