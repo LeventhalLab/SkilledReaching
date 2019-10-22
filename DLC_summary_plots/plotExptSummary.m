@@ -140,7 +140,7 @@ scatter(occludeSessions,toPlot(occludeSessions),'markeredgecolor',occludeColor,'
 errorbar(retrainSessions,toPlot(retrainSessions),e_bars(retrainSessions),retrainColor,'linestyle','none');
 errorbar(laserOnSessions,toPlot(laserOnSessions),e_bars(laserOnSessions),laserOnColor,'linestyle','none');
 errorbar(occludeSessions,toPlot(occludeSessions),e_bars(occludeSessions),occludeColor,'linestyle','none');
-set(gca,'ylim',[0 10],'xlim',[-5,20]);
+set(gca,'ylim',[0 10],'xlim',[-10,20]);
 title('std end aperture')
 
 % mean aperture trajectory
@@ -158,7 +158,7 @@ for i_occludeSession = 1 : length(occludeSessions)
     plot(z,aperture_data(occludeSessions(i_occludeSession),:),'color',occludeColor);
 end
 
-set(gca,'ylim',[5 25],'xdir','reverse','xlim',[-5,20]);
+set(gca,'ylim',[5 25],'xdir','reverse','xlim',[-10,20]);
 title('aperture post-slot')
 
 % mean paw orientation at reach end
@@ -200,7 +200,7 @@ end
 for i_occludeSession = 1 : length(occludeSessions)
     plot(z,MRL_traj(occludeSessions(i_occludeSession),:),'color',occludeColor);
 end
-set(gca,'ylim',[0 1],'xdir','reverse','xlim',[-5,20]);
+set(gca,'ylim',[0 1],'xdir','reverse','xlim',[-10,20]);
 title('MRL post-slot')
 
 % mean orientation trajectory
@@ -219,7 +219,7 @@ for i_occludeSession = 1 : length(occludeSessions)
     plot(z,orientation_data(occludeSessions(i_occludeSession),:),'color',occludeColor);
     hold on
 end
-set(gca,'ylim',[0 pi/2],'xdir','reverse','xlim',[-5,20]);
+set(gca,'ylim',[0 pi/2],'xdir','reverse','xlim',[-10,20]);
 title('paw orientation post-slot')
 
 
