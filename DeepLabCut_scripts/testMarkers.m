@@ -1,14 +1,14 @@
 %%
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 % vidRootPath = fullfile('/Volumes','Tbolt_01','Skilled Reaching');
-vidRootPath = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
+vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
 % shouldn't need this - calibration should be included in the pawTrajectory
 % files
 % calImageDir = '/Volumes/Tbolt_01/Skilled Reaching/calibration_images';
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190708.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 % parameters for find_invalid_DLC_points
@@ -22,10 +22,10 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 10;
-iSession = 20;
-iVid = 1;
-iFrame = 310;
+i_rat = 28;
+iSession = 2;
+iVid = 7;
+iFrame = 287;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));

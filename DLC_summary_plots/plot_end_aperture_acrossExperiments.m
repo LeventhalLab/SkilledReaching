@@ -1,4 +1,4 @@
-function plot_end_end_aperture_acrossExperiments(exptSummary)
+function plot_end_aperture_acrossExperiments(exptSummary)
 %
 % exptSummary - types
 %   1 - chr2 during

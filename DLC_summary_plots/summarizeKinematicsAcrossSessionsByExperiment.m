@@ -29,11 +29,7 @@ for i_rat = 1 : num_rats
     
     exptSummary.pawPref(i_rat) = summary(i_rat).thisRatInfo.pawPref;
     
-    try
     exptSummary.num_trials(:,i_rat) = summary(i_rat).ratSummary.num_trials(:,1);
-    catch
-        keyboard
-    end
     exptSummary.firstReachSuccess(:,i_rat) = summary(i_rat).ratSummary.outcomePercent(:,2);
     exptSummary.anyReachSuccess(:,i_rat) = summary(i_rat).ratSummary.outcomePercent(:,3) + exptSummary.firstReachSuccess(:,i_rat);
     exptSummary.mean_num_reaches(:,i_rat) = summary(i_rat).ratSummary.mean_num_reaches(:,1);

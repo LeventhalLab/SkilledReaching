@@ -1,6 +1,7 @@
 % script_collectRatSummaries_by_experiment
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+rootAnalysisFolder = '/Volumes/LL EXHD #2/SR opto analysis';
 ratSummaryDir = fullfile(labeledBodypartsFolder,'rat kinematic summaries');
 % [plotsDir,~,~] = fileparts(labeledBodypartsFolder);
 % plotsDir = fullfile(plotsDir,'DLC output plots');
