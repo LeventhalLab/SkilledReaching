@@ -90,31 +90,22 @@ else
     img_out = img_in;
 end
 
-switch pawPref
-    case 'right'
-        Pn = squeeze(boxCal.Pn(:,:,2));
-        sf = mean(boxCal.scaleFactor(2,:));
-    case 'left'
-        Pn = squeeze(boxCal.Pn(:,:,3));
-        sf = mean(boxCal.scaleFactor(3,:));
-end
-P = boxCal.P;
 K = boxCal.cameraParams.IntrinsicMatrix;
 % need to set colors for each of the point types
 
-for i_bp = 1 : length(parts_to_show)
-    
-    i_directBP = find(strcmpi(direct_bp, bodyparts{parts_to_show(i_bp)}));
-    currentPt = final_direct_pt(i_directBP,:);
-    
-    markerColor = getMarkerColor(direct_bp{i_directBP}, bodypartColor, pawPref);
-    
-    if isEstimate(i_directBP,1)
-        img_out = insertMarker(img_out, currentPt, DLC_isEstimateType,...
-            'color',markerColor,'size',markerSize);
-    end
-        
-end
+% for i_bp = 1 : length(parts_to_show)
+%     
+%     i_directBP = find(strcmpi(direct_bp, bodyparts{parts_to_show(i_bp)}));
+%     currentPt = final_direct_pt(i_directBP,:);
+%     
+%     markerColor = getMarkerColor(direct_bp{i_directBP}, bodypartColor, pawPref);
+%     
+%     if isEstimate(i_directBP,1)
+%         img_out = insertMarker(img_out, currentPt, DLC_isEstimateType,...
+%             'color',markerColor,'size',markerSize);
+%     end
+%         
+% end
 
 for i_bp = 1 : length(parts_to_show)
     
@@ -129,22 +120,24 @@ for i_bp = 1 : length(parts_to_show)
             'color',markerColor,'size',markerSize);
     end
 
+
 end
 
+switch pawPref
+    case 'right'
+        Pn = squeeze(boxCal.Pn(:,:,2));
+        sf = mean(boxCal.scaleFactor(2,:));
+    case 'left'
+        Pn = squeeze(boxCal.Pn(:,:,3));
+        sf = mean(boxCal.scaleFactor(3,:));
+end
 for i_bp = 1 : length(parts_to_show)
-    currentPt3D = points3D(parts_to_show(i_bp),:);
-    if all(currentPt3D==0) || isnan(currentPt3D(1))
+    currentPt = points3D(parts_to_show(i_bp),:);
+    if all(currentPt==0)
         % 3D point wasn't computed for this body part
         continue;
     end
-    [direct_pt,mirror_pt] = reproj_single_point(currentPt3D,P,Pn,K,sf);
-    markerColor = getMarkerColor(mirror_bp{i_mirrorBP}, bodypartColor, pawPref);
-    img_out = insertMarker(img_out, direct_pt, DLC_reprojMarkerType,...
-            'color',markerColor,'size',markerSize);
-        
-    img_out = insertMarker(img_out, mirror_pt, DLC_reprojMarkerType,...
-            'color',markerColor,'size',markerSize);
-    
+
 end
 
 % insert text that gives a key for symbols and colors

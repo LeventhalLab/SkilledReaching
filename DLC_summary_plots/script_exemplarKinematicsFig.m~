@@ -45,7 +45,13 @@ end
 
 interp_data_root = '*_interp_trajectories.mat';
 interp_data_file = dir(interp_data_root);
+if isempty(interp_data_file)
+    fprintf('no interpolated trajectories file found for %s on %s\n',exemplar_ratID,sessionDateString);
+    return
+end
+
 load(processed_data_file.name);
+load(interp_data_file.name);
 % find the reach data for this part
 pawPref = thisRatInfo.pawPref;
 
@@ -59,26 +65,30 @@ cd(exemplarVidFolder);
 
 vidObj = VideoReader(full_exemplar_vidName);
 
+initPellet3D = all_initPellet3D(reachDataIdx,:);
+interp_traj_wrt_pellet = squeeze(all_interp_traj_wrt_pellet(:,:,:,reachDataIdx));
 for i_frame = 1 : length(frames_of_interest)
     
-    vidObj.CurrentTime = frames_of_interest(i_frame) / vidObj.FrameRate;
+    curFrameIdx = frames_of_interest(i_frame);
+    vidObj.CurrentTime = curFrameIdx / vidObj.FrameRate;
     
     curFrame = readFrame(vidObj);
     curFrame_ud = undistortImage(curFrame, activeBoxCal.cameraParams);
     
-    points3D = squeeze(pawTrajectory(i_frame,:,:))';
-    direct_pt = squeeze(final_direct_pts(:,i_frame,:));
-    mirror_pt = squeeze(final_mirror_pts(:,i_frame,:));
-    frame_direct_p = squeeze(direct_p(:,i_frame));
-    frame_mirror_p = squeeze(mirror_p(:,i_frame));
+    interp_points3D = squeeze(interp_traj_wrt_pellet(curFrameIdx,:,:))';
+    points3D_wrt_camera = bsxfun(@plus,interp_points3D,initPellet3D);
+    direct_pt = squeeze(final_direct_pts(:,curFrameIdx,:));
+    mirror_pt = squeeze(final_mirror_pts(:,curFrameIdx,:));
+    frame_direct_p = squeeze(direct_p(:,curFrameIdx));
+    frame_mirror_p = squeeze(mirror_p(:,curFrameIdx));
 %     isPointValid{1} = ~direct_invalid_points(:,i_frame);
 %     isPointValid{2} = ~mirror_invalid_points(:,i_frame);
-    frameEstimate = squeeze(isEstimate(:,i_frame,:));
+    frameEstimate = squeeze(isEstimate(:,curFrameIdx,:));
     
     curFrame_out2 = overlayDLC_for_fig(curFrame_ud, points3D, ...
         direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
         direct_bp, mirror_bp, bodyparts, frameEstimate, ...
-        activeBoxCal, pawPref);
+        activeBoxCal, pawPref,initPellet3D);
     imshow(curFrame_out2)
 end
 
