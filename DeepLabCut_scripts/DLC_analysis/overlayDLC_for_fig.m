@@ -38,10 +38,10 @@ makeKey = false;
 
 bodypartColor.dig = [1 0 0;
                      1 0 1;
-                     1 1 0;
+                     0 0 1;
                      0 1 0];
 bodypartColor.otherPaw = [0 1 1];
-bodypartColor.paw_dorsum = [0 0 1];
+bodypartColor.paw_dorsum = [0 0 0];
 bodypartColor.pellet = [0 0 0];
 bodypartColor.nose = [0 0 0];
 
@@ -60,7 +60,7 @@ textColor = 'black';
 markerSize = 6;
 p_cutoff = 0.9;
 
-parts_to_show = 1 : length(bodyparts);
+parts_to_show = [9:13,15];
 
 DLC_isEstimateType = 'square';
 DLC_invalidMarkerType = '*';
@@ -109,9 +109,11 @@ for i_bp = 1 : length(parts_to_show)
     
     markerColor = getMarkerColor(direct_bp{i_directBP}, bodypartColor, pawPref);
     
-    if isEstimate(i_directBP,1)
-        img_out = insertMarker(img_out, currentPt, DLC_isEstimateType,...
-            'color',markerColor,'size',markerSize);
+    if ~isnan(currentPt(1))
+%         img_out = insertMarker(img_out, currentPt, DLC_highProbMarkerType,...
+%             'color',markerColor,'size',markerSize);
+        img_out = insertShape(img_out,'FilledCircle', [currentPt,markerSize],...
+            'color',markerColor);
     end
         
 end
@@ -125,8 +127,11 @@ for i_bp = 1 : length(parts_to_show)
     markerColor = getMarkerColor(mirror_bp{i_mirrorBP}, bodypartColor, pawPref);
 
     if ~isnan(currentPt(1))
-        img_out = insertMarker(img_out, currentPt, DLC_lowProbMarkerType,...
-            'color',markerColor,'size',markerSize);
+%         img_out = insertMarker(img_out, currentPt, DLC_highProbMarkerType,...
+%             'color',markerColor,'size',markerSize);
+        img_out = insertShape(img_out,'FilledCircle', [currentPt,markerSize],...
+            'color',markerColor);
+        
     end
 
 end
@@ -137,13 +142,20 @@ for i_bp = 1 : length(parts_to_show)
         % 3D point wasn't computed for this body part
         continue;
     end
+    i_mirrorBP = find(strcmpi(direct_bp, bodyparts{parts_to_show(i_bp)}));
+    
     [direct_pt,mirror_pt] = reproj_single_point(currentPt3D,P,Pn,K,sf);
     markerColor = getMarkerColor(mirror_bp{i_mirrorBP}, bodypartColor, pawPref);
-    img_out = insertMarker(img_out, direct_pt, DLC_reprojMarkerType,...
-            'color',markerColor,'size',markerSize);
-        
-    img_out = insertMarker(img_out, mirror_pt, DLC_reprojMarkerType,...
-            'color',markerColor,'size',markerSize);
+%     img_out = insertMarker(img_out, direct_pt, DLC_reprojMarkerType,...
+%             'color',markerColor,'size',markerSize);
+%         
+%     img_out = insertMarker(img_out, mirror_pt, DLC_reprojMarkerType,...
+%             'color',markerColor,'size',markerSize);
+    img_out = insertShape(img_out,'circle', [direct_pt,markerSize],...
+        'color',markerColor);
+    
+    img_out = insertShape(img_out,'circle', [mirror_pt,markerSize],...
+        'color',markerColor);
     
 end
 

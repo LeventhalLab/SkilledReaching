@@ -4,11 +4,11 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
            'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
-           'R0228','R0229'};
+           'R0228'};
 numRats = length(ratList);
 
-firstRat = 31;
-lastRat = 31;
+firstRat = 1;
+lastRat = 5;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -100,11 +100,9 @@ labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 sharedX_plotsDir = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output plots';
 [plotsDir,~,~] = fileparts(labeledBodypartsFolder);
 plotsDir = fullfile(plotsDir,'DLC output plots');
+sh
 if ~exist(plotsDir,'dir')
     mkdir(plotsDir);
-end
-if ~exist(sharedX_plotsDir,'dir')
-    mkdir(sharedX_plotsDir);
 end
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
@@ -118,7 +116,7 @@ numRatFolders = length(ratFolders);
 
 for i_rat = firstRat:1:lastRat%:numRatFolders
     
-    ratID = ratList{i_rat}
+    ratID = ratList{i_rat};
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
@@ -269,8 +267,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         savefig(h_fig,figName_sessionSummary);
         print(h_fig,pdfName_sessionSummary,'-dpdf');
         
-        savefig(h_fig,sharedX_figName_sessionSummary);
-        print(h_fig,sharedX_pdfName_sessionSummary,'-dpdf');
+        savefig(h_fig,figName_sessionSummary);
+        print(h_fig,pdfName_sessionSummary,'-dpdf');
         
         close(h_fig);
     end

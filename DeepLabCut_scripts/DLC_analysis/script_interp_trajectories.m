@@ -28,8 +28,9 @@ ratIDs_with_new_date_format = [284];
 % across x = 0. I think this will be OK. -DL 20181015
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
@@ -38,7 +39,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 26:numRatFolders
+for i_rat = 32:32%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -60,6 +61,7 @@ for i_rat = 26:numRatFolders
         csvDateFormat = 'yyyyMMdd';
     end
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
     cd(ratRootFolder);
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
@@ -87,6 +89,7 @@ for i_rat = 26:numRatFolders
     for iSession = startSession : 1 : endSession
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
         
         if ~isfolder(fullSessionDir)
             continue;
@@ -109,6 +112,7 @@ for i_rat = 26:numRatFolders
         fprintf('working on %s\n',sessionDirectories{iSession});
         numTrials = length(pawTrajectoryList);
         interpTrajectoryName = [ratID '_' sessionDateString '_interp_trajectories.mat'];
+        sharedX_interpTrajectoryName = fullfile(sharedX_fullSessionDir,interpTrajectoryName);
         % find the maximum number of frames across videos
         maxFrames = 0;
         for iTrial = 1 : numTrials
@@ -250,6 +254,10 @@ for i_rat = 26:numRatFolders
         end
             
         save(interpTrajectoryName,'all_interp_traj_wrt_pellet','all_frameRange','all_didPawStartThroughSlot',...
+            'all_initPellet3D','all_firstPawPastSlotFrame','all_firstSlotBreachFrame','pelletMissingFlag','trialNumbers',...
+            'bodyparts','invalid3Dpoints','slot_z','all_slot_z_wrt_pellet','frameRate');
+        
+        save(sharedX_interpTrajectoryName,'all_interp_traj_wrt_pellet','all_frameRange','all_didPawStartThroughSlot',...
             'all_initPellet3D','all_firstPawPastSlotFrame','all_firstSlotBreachFrame','pelletMissingFlag','trialNumbers',...
             'bodyparts','invalid3Dpoints','slot_z','all_slot_z_wrt_pellet','frameRate');
         

@@ -10,7 +10,8 @@ switch partType
     case 'digit'
         markerColor = bodypartColor.dig(partNumber,:);
     case 'pawdorsum'
-        if strcmpi(laterality, pawPref)
+%         if strcmpi(laterality, pawPref)
+        if pawPref == laterality
             markerColor = bodypartColor.paw_dorsum;
         else
             markerColor = bodypartColor.otherPaw;

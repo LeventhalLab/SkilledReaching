@@ -28,6 +28,7 @@ ratInfo_IDs = [ratInfo.ratID];
 % labeledBodypartsFolder = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/DLC output';
 % labeledBodypartsFolder = '/Volumes/SharedX-1/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
 
 % calImageDir = '/Volumes/Tbolt_02/Skilled Reaching/calibration_images';   % where the calibration files are
 % calImageDir = '/Volumes/Leventhal_lab_HD01/Skilled Reaching/calibration_images';   % where the calibration files are
@@ -86,6 +87,7 @@ for i_rat = 33:33%numRatFolders
     end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
     
     cd(ratRootFolder);
     
@@ -147,6 +149,7 @@ for i_rat = 33:33%numRatFolders
         end
     
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
         [directViewDir,mirrorViewDir,direct_csvList,mirror_csvList] = getDLC_csvList(fullSessionDir);
 
         if isempty(direct_csvList)
@@ -195,7 +198,7 @@ for i_rat = 33:33%numRatFolders
             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv))
             fullTrajName = fullfile(fullSessionDir, trajName);
-            
+            sharedX_fullTrajName = fullfile(sharedX_fullSessionDir,trajName);
 %             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
             
             if exist(fullTrajName,'file')
@@ -289,6 +292,7 @@ for i_rat = 33:33%numRatFolders
 %             else
 %                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','firstSlotBreak','initPellet3D','reproj_error','high_p_invalid','low_p_valid','paw_through_slot_frame');
                 save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
+                save(sharedX_fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
                 clear manually_invalidated_points
 %             end
             

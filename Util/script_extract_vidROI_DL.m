@@ -4,7 +4,7 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
            'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
-           'R0228','R0229','R0230'};
+           'R0228','R0229','R0230','R0235'};
        
 repeatCalculations = true;   % if cropped video file already exists, don't repeat?
 useSessionsFrom_DLCoutput_folder = false;
@@ -25,7 +25,7 @@ ratInfo_IDs = [ratInfo.ratID];
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
     
-for i_rat = numRatFolders:numRatFolders
+for i_rat = 34:34%numRatFolders:numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratFolder = fullfile(labeledBodypartsFolder,ratFolders(i_rat).name);

@@ -18,8 +18,9 @@ ratIDs_with_new_date_format = [284];
 % 7. number of reaches, by type
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
@@ -30,7 +31,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 1 : numRatFolders
+for i_rat = 32:32%1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -52,6 +53,7 @@ for i_rat = 1 : numRatFolders
         csvDateFormat = 'yyyyMMdd';
     end
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
     
     % read in scores from manual review of each trial
     reachScoresFile = [ratID '_scores.csv'];
@@ -96,6 +98,7 @@ for i_rat = 1 : numRatFolders
         end
         curSessionDir = sessionDirectories{iSession};
         fullSessionDir = fullfile(ratRootFolder,curSessionDir);
+        sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
         
         if ~isfolder(fullSessionDir)
             continue;
@@ -107,8 +110,9 @@ for i_rat = 1 : numRatFolders
                             % note date formats from the scores spreadsheet
                             % are in m/d/yy
 
-        reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
-        reachDataName = fullfile(fullSessionDir,reachDataName);
+        base_reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
+        reachDataName = fullfile(fullSessionDir,base_reachDataName);
+        sharedX_reachDataName = fullfile(sharedX_fullSessionDir,base_reachDataName);
         
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
         allSessionIdx = find(sessionDate == allSessionDates);
@@ -172,7 +176,8 @@ for i_rat = 1 : numRatFolders
         end
         
         save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
-
+        save(sharedX_reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
+        
     end
     
 end
