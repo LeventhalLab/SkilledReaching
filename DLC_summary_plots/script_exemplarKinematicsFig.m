@@ -4,8 +4,8 @@ labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 rootAnalysisFolder = '/Volumes/LL EXHD #2/SR opto analysis';
 vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
 
-cropRegion = [900,600,1200,850,...   % direct view
-              1,600,400,850,...
+cropRegion = [900,600,1200,850;...   % direct view
+              1,600,400,850;...     % left view
               1700,600,2040,850];   % right view
 
 exemplar_vidName = 'R0229_20181020_11-04-55_044';
@@ -94,7 +94,19 @@ for i_frame = 1 : length(frames_of_interest)
     
     switch pawPref
         % crop the images
-    imshow(curFrame_out2)
+        case 'left'
+            mirror_img = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
+        case 'right'
+            mirror_img = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
+    end
+    direct_img = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
+
+    figure(1)
+    imshow(direct_img)
+    
+    figure(2)
+    imshow(mirror_img)
+    
 end
 
 clear vidObj
