@@ -97,7 +97,7 @@ traj2D_xlim = [250 320];
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-sharedX_plotsDir = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output plots';
+sharedX_plotsDir = '/Volumes/SharedX/Neuro-Leventhal/analysis';
 [plotsDir,~,~] = fileparts(labeledBodypartsFolder);
 plotsDir = fullfile(plotsDir,'DLC output plots');
 if ~exist(plotsDir,'dir')
@@ -192,7 +192,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
             startSession = 1;
             endSession = numSessions;
         case 'R0229'
-            startSession = 14;
+            startSession = 30;
             endSession = numSessions;
         otherwise
             startSession = 1;

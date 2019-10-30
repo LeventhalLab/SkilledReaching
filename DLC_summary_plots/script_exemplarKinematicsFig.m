@@ -4,11 +4,12 @@ labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 rootAnalysisFolder = '/Volumes/LL EXHD #2/SR opto analysis';
 vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
 
-cropRegion = [900,600,1200,850;...   % direct view
-              1,600,400,850;...     % left view
-              1700,600,2040,850];   % right view
+frameTextPos = [50,10];
+cropRegion = [900,400,1200,800;...   % direct view
+              1,400,450,800;...     % left view
+              1700,400,2040,800];   % right view
 
-exemplar_vidName = 'R0229_20181020_11-04-55_044';
+exemplar_vidName = 'R0216_20180202_10-07-29_015';
 full_exemplar_vidName = [exemplar_vidName '.avi'];
 
 exemplar_ratID = exemplar_vidName(1:5);
@@ -61,7 +62,7 @@ pawPref = thisRatInfo.pawPref;
 load(trajectory_name);
 
 current_reachData = reachData(reachDataIdx);
-frames_of_interest = [287,300,current_reachData.reachEnds(1)];
+frames_of_interest = [270,300,current_reachData.reachEnds(1)];
 
 cd(exemplarVidFolder);
 
@@ -92,21 +93,50 @@ for i_frame = 1 : length(frames_of_interest)
         direct_bp, mirror_bp, bodyparts, frameEstimate, ...
         activeBoxCal, pawPref);
     
+    
     switch pawPref
         % crop the images
         case 'left'
-            mirror_img = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
+            if i_frame == 1
+                mirror_img = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
+            else
+                temp = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
+                mirror_img = [mirror_img;temp];
+            end
         case 'right'
-            mirror_img = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
+            if i_frame == 1
+                mirror_img = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
+            else
+                temp = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
+                mirror_img = [mirror_img;temp];
+            end
+            
     end
-    direct_img = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
+    if i_frame == 1
+        direct_img = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
+    else
+        temp = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
+        direct_img = [direct_img;temp];
+    end
 
-    figure(1)
-    imshow(direct_img)
-    
-    figure(2)
-    imshow(mirror_img)
-    
 end
 
+switch pawPref
+    % crop the images
+    case 'left'
+        full_img = [direct_img,mirror_img];
+    case 'right'
+        full_img = [mirror_img,direct_img];
+end
 clear vidObj
+
+h_fig = figure;
+imshow(full_img);
+
+% for annotating the images at the end
+frameHeight = cropRegion(1,4)-cropRegion(1,2) + 1;
+for i_frame = 1 : length(frames_of_interest)
+    textPos = [frameTextPos(1),(i_frame-1)*frameHeight + frameTextPos(2)];
+    textString = sprintf('frame %03d',frames_of_interest(i_frame));
+    text(textPos(1),textPos(2),textString,'color','w')
+end
