@@ -1,13 +1,13 @@
 % script_analyzeAlternateStimSessions
 
-alternatingStimFolder = 'Volumes/LL EXHD #2/alternating stim analysis';
+alternatingStimFolder = '/Volumes/LL EXHD #2/alternating stim analysis';
 DLCoutput_folder = '/Volumes/LL EXHD #2/DLC output';
 if ~exist(alternatingStimFolder,'dir')
     mkdir(alternatingStimFolder);
 end
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 alternateSessions = identifyAlternateSessions(ratInfo, 'beamBreak', 'vidTrigger+3000', ...

@@ -136,28 +136,29 @@ for i_bp = 1 : length(parts_to_show)
 
 end
 
-for i_bp = 1 : length(parts_to_show)
-    currentPt3D = points3D(parts_to_show(i_bp),:);
-    if all(currentPt3D==0) || isnan(currentPt3D(1))
-        % 3D point wasn't computed for this body part
-        continue;
-    end
-    i_mirrorBP = find(strcmpi(direct_bp, bodyparts{parts_to_show(i_bp)}));
-    
-    [direct_pt,mirror_pt] = reproj_single_point(currentPt3D,P,Pn,K,sf);
-    markerColor = getMarkerColor(mirror_bp{i_mirrorBP}, bodypartColor, pawPref);
-%     img_out = insertMarker(img_out, direct_pt, DLC_reprojMarkerType,...
-%             'color',markerColor,'size',markerSize);
-%         
-%     img_out = insertMarker(img_out, mirror_pt, DLC_reprojMarkerType,...
-%             'color',markerColor,'size',markerSize);
-    img_out = insertShape(img_out,'circle', [direct_pt,markerSize],...
-        'color',markerColor);
-    
-    img_out = insertShape(img_out,'circle', [mirror_pt,markerSize],...
-        'color',markerColor);
-    
-end
+% reprojected points
+% for i_bp = 1 : length(parts_to_show)
+%     currentPt3D = points3D(parts_to_show(i_bp),:);
+%     if all(currentPt3D==0) || isnan(currentPt3D(1))
+%         % 3D point wasn't computed for this body part
+%         continue;
+%     end
+%     i_mirrorBP = find(strcmpi(direct_bp, bodyparts{parts_to_show(i_bp)}));
+%     
+%     [direct_pt,mirror_pt] = reproj_single_point(currentPt3D,P,Pn,K,sf);
+%     markerColor = getMarkerColor(mirror_bp{i_mirrorBP}, bodypartColor, pawPref);
+% %     img_out = insertMarker(img_out, direct_pt, DLC_reprojMarkerType,...
+% %             'color',markerColor,'size',markerSize);
+% %         
+% %     img_out = insertMarker(img_out, mirror_pt, DLC_reprojMarkerType,...
+% %             'color',markerColor,'size',markerSize);
+%     img_out = insertShape(img_out,'circle', [direct_pt,markerSize],...
+%         'color',markerColor);
+%     
+%     img_out = insertShape(img_out,'circle', [mirror_pt,markerSize],...
+%         'color',markerColor);
+%     
+% end
 
 % insert text that gives a key for symbols and colors
 if makeKey

@@ -1,4 +1,4 @@
-% script_exemplarKinematicsFig
+% script_exemplarKinematicsFig_b
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 rootAnalysisFolder = '/Volumes/LL EXHD #2/SR opto analysis';
@@ -8,6 +8,8 @@ frameTextPos = [50,10];
 cropRegion = [900,400,1200,800;...   % direct view
               1,400,450,800;...     % left view
               1700,400,2040,800];   % right view
+          
+          
 
 exemplar_vidName = 'R0216_20180202_10-07-29_015';
 full_exemplar_vidName = [exemplar_vidName '.avi'];

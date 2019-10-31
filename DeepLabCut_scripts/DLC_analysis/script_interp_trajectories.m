@@ -39,7 +39,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 32:32%numRatFolders
+for i_rat = 26:32%numRatFolders
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -79,8 +79,8 @@ for i_rat = 32:32%numRatFolders
         case 'R0189'
             startSession = 1;
             endSession = numSessions;
-        case 'R0216'
-            startSession = 1;
+        case 'R0220'
+            startSession = 19;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -91,6 +91,9 @@ for i_rat = 32:32%numRatFolders
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
         
+        if ~exist(sharedX_fullSessionDir,'dir')
+            mkdir(sharedX_fullSessionDir)
+        end
         if ~isfolder(fullSessionDir)
             continue;
         end
@@ -113,6 +116,7 @@ for i_rat = 32:32%numRatFolders
         numTrials = length(pawTrajectoryList);
         interpTrajectoryName = [ratID '_' sessionDateString '_interp_trajectories.mat'];
         sharedX_interpTrajectoryName = fullfile(sharedX_fullSessionDir,interpTrajectoryName);
+
         % find the maximum number of frames across videos
         maxFrames = 0;
         for iTrial = 1 : numTrials

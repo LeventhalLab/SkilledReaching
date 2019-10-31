@@ -1,8 +1,8 @@
 % script_plotAlternateStimResults
 
 % script_analyzeAlternateStimSessions
-% alternatingStimFolder = 'Volumes/LL EXHD #2/alternating stim analysis';
-alternatingStimFolder = '/Users/dleventh/Documents/alternating stim analysis';
+alternatingStimFolder = '/Volumes/LL EXHD #2/alternating stim analysis';
+% alternatingStimFolder = '/Users/dleventh/Documents/alternating stim analysis';
 alternateKinematicsName = 'alternating_stim_kinematics_summary.mat';
 alternateKinematicsName = fullfile(alternatingStimFolder,alternateKinematicsName);
 load(alternateKinematicsName);
@@ -44,8 +44,8 @@ for iSession = 1 : numSessions
     
     pdfName = sprintf('R%04d_%s_alternating_stim.pdf',ratID,sessionDateString);
     figName = sprintf('R%04d_%s_alternating_stim.fig',ratID,sessionDateString);
-%     pdfName = fullfile(alternatingStimFolder, pdfName);
-%     figName = fullfile(alternatingStimFolder, figName);
+    pdfName = fullfile(alternatingStimFolder, pdfName);
+    figName = fullfile(alternatingStimFolder, figName);
 %     if exist(pdfName,'file')
 %         continue;
 %     end

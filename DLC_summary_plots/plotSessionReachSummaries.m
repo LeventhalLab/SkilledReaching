@@ -697,7 +697,8 @@ numTrials = length(reachData);
 for iTrial = 1 : numTrials
     cur_v = reachData(iTrial).dig2_v{1};
     cur_v = sqrt(sum(cur_v.^2,2));
-    plot(reachData(iTrial).dig2_trajectory{1}(1:end-1,3),cur_v,'color',trialTypeColors{ind_trial_type(iTrial)});
+    dig2_traj = squeeze(reachData(iTrial).dig_trajectory{1}(:,:,2));
+    plot(dig2_traj(1:end-1,3),cur_v,'color',trialTypeColors{ind_trial_type(iTrial)});
     hold on
 end
 

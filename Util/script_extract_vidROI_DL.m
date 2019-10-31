@@ -25,7 +25,7 @@ ratInfo_IDs = [ratInfo.ratID];
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
     
-for i_rat = 34:34%numRatFolders:numRatFolders
+for i_rat = 33:33%numRatFolders:numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratFolder = fullfile(labeledBodypartsFolder,ratFolders(i_rat).name);
@@ -110,8 +110,8 @@ for i_rat = 34:34%numRatFolders:numRatFolders
 
     switch ratID
         case 'R0230'
-            startSess = 22;%1;
-            endSess = 22;%length(sessionsToExtract);
+            startSess = 28;%1;
+            endSess = 28;%length(sessionsToExtract);
             ROI = [750,450,550,550;
                   1,450,450,400;
                   1650,435,390,400];

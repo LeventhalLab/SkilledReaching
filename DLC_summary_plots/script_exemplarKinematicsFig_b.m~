@@ -1,0 +1,246 @@
+% script_exemplarKinematicsFig_b
+
+bodypartColor.dig = [1 0 0;
+                     1 0 1;
+                     0 0 1;
+                     0 1 0];
+bodypartColor.otherPaw = [0 1 1];
+bodypartColor.paw_dorsum = [0 0 0];
+bodypartColor.pellet = [0 0 0];
+bodypartColor.nose = [0 0 0];
+
+traj_3D_x_lim = [-30 10];
+traj_3D_y_lim = [-20 10];
+full_traj_z_lim = [-15 50];
+
+labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+rootAnalysisFolder = '/Volumes/LL EXHD #2/SR opto analysis';
+vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
+
+frameTextPos = [50,10];
+cropRegion = [900,400,1200,800;...   % direct view
+              1,400,450,800;...     % left view
+              1700,400,2040,800];   % right view
+          
+
+
+exemplar_vidName = 'R0216_20180203_12-23-25_013';
+full_exemplar_vidName = [exemplar_vidName '.avi'];
+
+exemplar_ratID = exemplar_vidName(1:5);
+exemplar_ratIDnum = str2double(exemplar_ratID(2:end));
+
+sessionDateString = exemplar_vidName(7:14);
+sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
+vidNumString = exemplar_vidName(25:27);
+vidNum = str2double(vidNumString);
+
+ratVidFolder = fullfile(vidRootPath,exemplar_ratID);
+cd(ratVidFolder);
+sessionVidRoot = [exemplar_ratID '_' sessionDateString '*'];
+sessionVidFolder = dir(sessionVidRoot);
+
+if isempty(sessionVidFolder)
+    fprintf('no sessions for %s on %s\n',exemplar_ratID,sessionDateString);
+    return
+end
+
+if length(sessionVidFolder) > 1
+    fprintf('more than one session for %s on %s\n',exemplar_ratID,sessionDateString);
+    return
+end
+
+exemplarVidFolder = fullfile(vidRootPath,exemplar_ratID,sessionVidFolder.name);
+exemplarKinematicsFolder = fullfile(labeledBodypartsFolder,exemplar_ratID,sessionVidFolder.name);
+
+cd(exemplarKinematicsFolder);
+processed_data_root = '*_processed_reaches.mat';
+processed_data_file = dir(processed_data_root);
+if isempty(processed_data_file)
+    fprintf('no session summary found for %s on %s\n',exemplar_ratID,sessionDateString);
+    return
+end
+
+interp_data_root = '*_interp_trajectories.mat';
+interp_data_file = dir(interp_data_root);
+if isempty(interp_data_file)
+    fprintf('no interpolated trajectories file found for %s on %s\n',exemplar_ratID,sessionDateString);
+    return
+end
+
+load(processed_data_file.name);
+load(interp_data_file.name);
+% find the reach data for this part
+pawPref = thisRatInfo.pawPref;
+
+[reachDataIdx,trajectory_name] = identifyCorrectVidIdx(exemplar_vidName,exemplarKinematicsFolder);
+load(trajectory_name);
+
+current_reachData = reachData(reachDataIdx);
+frames_of_interest = [270,300,current_reachData.reachEnds(1)];
+
+cd(exemplarVidFolder);
+
+vidObj = VideoReader(full_exemplar_vidName);
+
+initPellet3D = all_initPellet3D(reachDataIdx,:);
+interp_traj_wrt_pellet = squeeze(all_interp_traj_wrt_pellet(:,:,:,reachDataIdx));
+mirror_img = cell(length(frames_of_interest),1);
+direct_img = cell(length(frames_of_interest),1);
+pd_traj_pts = NaN(length(frames_of_interest),3);
+mcp_traj_pts = NaN(length(frames_of_interest),4,3);
+dig_traj_pts = NaN(length(frames_of_interest),4,3);
+for i_frame = 1 : length(frames_of_interest)
+    
+    curFrameIdx = frames_of_interest(i_frame);
+    vidObj.CurrentTime = curFrameIdx / vidObj.FrameRate;
+    
+    curFrame = readFrame(vidObj);
+    curFrame_ud = undistortImage(curFrame, activeBoxCal.cameraParams);
+    
+    interp_points3D = squeeze(interp_traj_wrt_pellet(curFrameIdx,:,:))';
+    points3D_wrt_camera = bsxfun(@plus,interp_points3D,initPellet3D);
+    direct_pt = squeeze(final_direct_pts(:,curFrameIdx,:));
+    mirror_pt = squeeze(final_mirror_pts(:,curFrameIdx,:));
+    frame_direct_p = squeeze(direct_p(:,curFrameIdx));
+    frame_mirror_p = squeeze(mirror_p(:,curFrameIdx));
+%     isPointValid{1} = ~direct_invalid_points(:,i_frame);
+%     isPointValid{2} = ~mirror_invalid_points(:,i_frame);
+    frameEstimate = squeeze(isEstimate(:,curFrameIdx,:));
+    
+    pd_traj_pts(i_frame,:) = interp_points3D(13,:);
+    mcp_traj_pts(i_frame,:,:) = interp_points3D(1:4,:);
+    dig_traj_pts(i_frame,:,:) = interp_points3D(9:12,:);
+    curFrame_out2 = overlayDLC_for_fig(curFrame_ud, points3D_wrt_camera, ...
+        direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
+        direct_bp, mirror_bp, bodyparts, frameEstimate, ...
+        activeBoxCal, pawPref,'bodypartcolor',bodypartColor);
+    
+    
+%     switch pawPref
+%         % crop the images
+%         case 'left'
+%             if i_frame == 1
+%                 mirror_img = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
+%             else
+%                 temp = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
+%                 mirror_img = [mirror_img;temp];
+%             end
+%         case 'right'
+%             if i_frame == 1
+%                 mirror_img = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
+%             else
+%                 temp = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
+%                 mirror_img = [mirror_img;temp];
+%             end
+%             
+%     end
+%     if i_frame == 1
+%         direct_img = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
+%     else
+%         temp = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
+%         direct_img = [direct_img;temp];
+%     end
+    switch pawPref
+        case 'left'
+            mirror_img{i_frame} = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
+        case 'right'
+            mirror_img{i_frame} = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
+    end
+    direct_img{i_frame} = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
+
+end
+
+switch pawPref
+    % crop the images
+    case 'left'
+        full_img = [direct_img,mirror_img];
+    case 'right'
+        full_img = [mirror_img,direct_img];
+end
+clear vidObj
+
+figProps.m = 3;
+figProps.n = 4;
+
+figProps.panelWidth = ones(figProps.n,1) * 5;
+figProps.panelHeight = ones(figProps.m,1) * 4;
+
+figProps.colSpacing = [0;ones(figProps.n-2,1) * 0.5];
+figProps.rowSpacing = ones(figProps.m-1,1) * 0.25;
+
+figProps.topMargin = 1;
+figProps.leftMargin = 1;
+
+figProps.width = sum(figProps.panelWidth) + ...
+    sum(figProps.colSpacing) + ...
+    figProps.leftMargin + 2.54;
+figProps.height = sum(figProps.panelHeight) + ...
+    sum(figProps.rowSpacing) + ...
+    figProps.topMargin + 2.54;
+
+[h_fig,h_axes] = createFigPanels5(figProps);
+
+
+cur_pd_trajectory = current_reachData.pd_trajectory{1};
+cur_dig_trajectory = current_reachData.dig_trajectory{1};
+switch pawPref
+    case 'left'
+        mirror_idx = 2;
+        direct_idx = 1;
+        cur_pd_trajectory(:,1) = -cur_pd_trajectory(:,1);
+        cur_dig_trajectory(:,1,:) = -cur_dig_trajectory(:,1,:);
+    case 'right'
+        mirror_idx = 1;
+        direct_idx = 2;
+end
+
+% for annotating the images at the end
+frameHeight = cropRegion(1,4)-cropRegion(1,2) + 1;
+for i_frame = 1 : length(frames_of_interest)
+    axes(h_axes(i_frame,direct_idx))
+    imshow(direct_img{i_frame});
+    axes(h_axes(i_frame,mirror_idx))
+    imshow(mirror_img{i_frame});
+    
+    axes(h_axes(i_frame,1))
+%     textPos = [frameTextPos(1),(i_frame-1)*frameHeight + frameTextPos(2)];
+    textString = sprintf('frame %03d',frames_of_interest(i_frame));
+    text(frameTextPos(1),frameTextPos(2),textString,'color','w','fontname','arial')
+end
+
+% plot trajectory for this reach
+axes(h_axes(1,3));
+plot3(cur_pd_trajectory(:,1),cur_pd_trajectory(:,3),cur_pd_trajectory(:,2),'k','linewidth',2);
+hold on
+% for i_dig = 1 : 4
+%     toPlot = squeeze(cur_dig_trajectory(:,:,i_dig));
+%     plot3(toPlot(:,1),toPlot(:,3),toPlot(:,2),'color',bodypartColor.dig(i_dig,:),'linewidth',1);
+% end
+for i_frame = 1 : length(frames_of_interest)
+    scatter3(pd_traj_pts(i_frame,1),pd_traj_pts(i_frame,3),pd_traj_pts(i_frame,2),15,'marker','o','markerfacecolor','none','markeredgecolor','k');
+%     for i_dig = 1 : 4
+%         toPlot = squeeze(dig_traj_pts(i_frame,i_dig,:));
+%         scatter3(toPlot(1),toPlot(3),toPlot(2),15,'marker','o','markerfacecolor','none','markeredgecolor',bodypartColor.dig(i_dig,:));
+%     end
+    lineStart = [pd_traj_pts(i_frame,1),pd_traj_pts(i_frame,3),pd_traj_pts(i_frame,2)];
+    for i_dig = 1 : 4
+        toPlot = squeeze(dig_traj_pts(i_frame,i_dig,:));
+        lineEnd = toPlot([1,3,2]);
+        line([lineStart(1),lineEnd(1)],[lineStart(2),lineEnd(2)],[lineStart(3),lineEnd(3)],'color',bodypartColor.dig(i_dig,:))
+        scatter3(toPlot(1),toPlot(3),toPlot(2),15,'marker','o','markerfacecolor','none','markeredgecolor',bodypartColor.dig(i_dig,:));
+    end
+end
+scatter3(0,0,0,25,'marker','o','markerfacecolor','k','markeredgecolor','k');
+set(gca,'zdir','reverse','xlim',traj_3D_x_lim,'ylim',full_traj_z_lim,'zlim',traj_3D_y_lim,...
+    'view',[-70,30])
+% xlabel('x');ylabel('z');zlabel('y');
+
+slot_z = current_reachData.slot_z_wrt_pellet;
+h_patch = patch([traj_3D_x_lim(1),traj_3D_x_lim(1),traj_3D_x_lim(2),traj_3D_x_lim(2)],...
+                [slot_z,slot_z,slot_z,slot_z],...
+                [traj_3D_y_lim(1),traj_3D_y_lim(2),traj_3D_y_lim(2),traj_3D_y_lim(1)],...
+                'k','facealpha',0.1);
+
+line([traj_3D_x_lim(1)
+set(gca,'visible','off')

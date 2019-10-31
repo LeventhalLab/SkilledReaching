@@ -15,7 +15,7 @@ function reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,s
 
 [~,~,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 pd_trajectory = squeeze(interp_trajectory(:,:,pawDorsumIdx));
-dig2_trajectory = squeeze(interp_trajectory(:,:,digIdx(2)));
+dig_trajectory = squeeze(interp_trajectory(:,:,digIdx));
 
 num_reaches = length(reachData.reachEnds);
 
@@ -46,9 +46,10 @@ for i_reach = 1 : num_reaches
         keyboard
     end
     
-    reachData.dig2_trajectory{i_reach} = dig2_trajectory(reach_startFrame:reach_endFrame,:);
+    reachData.dig_trajectory{i_reach} = dig_trajectory(reach_startFrame:reach_endFrame,:,:);
     % find the last frame before the paw breaches the frame for this grasp
-    last_frame_behind_slot = find(reachData.dig2_trajectory{i_reach}(:,3) > slot_z_wrt_pellet,1,'last');
+    % (looking at the second digit)
+    last_frame_behind_slot = find(squeeze(reachData.dig_trajectory{i_reach}(:,3,2)) > slot_z_wrt_pellet,1,'last');
     if isempty(last_frame_behind_slot)
         % digit 2 must have started on the outside of the box during this
         % reach/grasp
@@ -56,14 +57,15 @@ for i_reach = 1 : num_reaches
     end
     reachData.slotBreachFrame(i_reach) = grasp_startFrame + last_frame_behind_slot;
 
-    dig2_v = diff(reachData.dig2_trajectory{i_reach},1,1) * frameRate;
+    dig2_traj = squeeze(reachData.dig_trajectory{i_reach}(:,:,2));
+    dig2_v = diff(dig2_traj,1,1) * frameRate;
     dig2_v = sqrt(sum(dig2_v.^2,2));
     reachData.dig2_v{i_reach} = dig2_v;
     reachData.max_dig2_v(i_reach) = max(dig2_v);
     
     % reach endpoints
     reachData.pdEndPoints(i_reach,:) = pd_trajectory(reach_endFrame,:);
-    reachData.dig2_endPoints(i_reach,:) = dig2_trajectory(reach_endFrame,:);   % should this be reach_endFrame or grasp_endFrame? probably doesn't matter much
+    reachData.dig2_endPoints(i_reach,:) = dig2_traj(end,:);   % should this be reach_endFrame or grasp_endFrame? probably doesn't matter much
     
     % paw orientation
 %     [reachData.orientation{i_reach},firstValidFrame] = ...
