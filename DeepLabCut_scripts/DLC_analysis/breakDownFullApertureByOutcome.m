@@ -15,8 +15,8 @@ for iTrial = 1 : num_trials
     
     graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : ...
         traj_limits(iTrial).reach_aperture_lims(1,2);
-    dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
-    
+%     dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
+    dig2_z = reachData(iTrial).dig_trajectory{1}(graspFrames,3,2);
     if length(reachData(iTrial).aperture{1}) > 1
         cur_apertures = pchip(dig2_z,reachData(iTrial).aperture{1},z_interp_digits);
     else

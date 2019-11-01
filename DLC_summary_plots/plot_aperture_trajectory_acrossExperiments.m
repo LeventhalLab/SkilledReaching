@@ -10,6 +10,8 @@ exptTypeIdx = [1,2,3,4];
 aperture_lim = [5 20];
 zlimit = [-10 15];
 
+occludeRatio = 0.25;
+
 saveDir = '/Users/dleventh/Box/Leventhal Lab/Meetings, Presentations/SfN/SFN 2019/Bova/figures';
 saveName = 'aperture_trajectories_across_expt.pdf';
 saveName = fullfile(saveDir,saveName);
@@ -31,18 +33,11 @@ figProps.panelHeight = 7;%ones(figProps.m,1) * 4;
 
 [h_fig,h_axes] = createFigPanels5(figProps);
 
-min_v = 0;
-max_v = 1000;
-
-patchAlpha = 0.01;
-
 retrainSessions = 1 : 2;
 laserOnSessions = 3 : 12;
 occludeSessions = 13 : 22;
 
 retrainColor = 'k';
-
-patchX = [2.5 2.5 12.5 12.5];
 
 n = zeros(length(exptSummary),1);
 
@@ -51,7 +46,6 @@ for i_exptType = 1 : length(exptTypeIdx)
     curSummary = exptSummary(exptTypeIdx(i_exptType));
     
     axes(h_axes(i_exptType));
-    occludeRatio = 0.25;
     switch i_exptType
         case 1
             laserOnColor = 'b';
@@ -67,7 +61,7 @@ for i_exptType = 1 : length(exptTypeIdx)
             occludeColor = [1 0.0 0.0] * occludeRatio;
     end
     
-    % mean orientation trajectory
+    % mean aperture trajectory
     aperture_data = squeeze(nanmean(curSummary.mean_aperture_traj,1));
     z = curSummary.z_interp_digits;
     for i_retrainSession = 1 : length(retrainSessions)

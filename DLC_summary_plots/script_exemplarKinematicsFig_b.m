@@ -13,20 +13,29 @@ traj_3D_x_lim = [-30 10];
 traj_3D_y_lim = [-20 10];
 full_traj_z_lim = [-15 50];
 
+endPt_3D_x_lim = [-30 10];
+endPt_3D_y_lim = [-20 10];
+endPt_z_lim = [-15 30];
+
 scale3D_length = 10;
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 rootAnalysisFolder = '/Volumes/LL EXHD #2/SR opto analysis';
 vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
+alternatingStimFolder = '/Volumes/LL EXHD #2/alternating stim analysis';
+ratSummaryDir = fullfile('/Volumes/LL EXHD #2/','rat kinematic summaries');
+histoFolder = fullfile('/Volumes/LL EXHD #2/','SR_opto_histology','stitched_images');
 
 frameTextPos = [50,30];
-cropRegion = [900,400,1200,800;...   % direct view
+cropRegion = [900,450,1200,850;...   % direct view
               1,400,450,800;...     % left view
-              1700,400,2040,800];   % right view
+              1700,450,2040,850];   % right view
           
 
 
 exemplar_vidName = 'R0216_20180203_12-23-25_013';
+alternateStimRatID = 216;
+alternateStimDate = datetime('20180301','inputformat','yyyyMMdd');
 full_exemplar_vidName = [exemplar_vidName '.avi'];
 
 exemplar_ratID = exemplar_vidName(1:5);
@@ -168,7 +177,7 @@ figProps.n = 4;
 figProps.panelWidth = ones(figProps.n,1) * 5;
 figProps.panelHeight = ones(figProps.m,1) * 4;
 
-figProps.colSpacing = [0;ones(figProps.n-2,1) * 0.5];
+figProps.colSpacing = [0;0.25;0.5];
 figProps.rowSpacing = ones(figProps.m-1,1) * 0.25;
 
 figProps.topMargin = 1;
@@ -213,7 +222,7 @@ for i_frame = 1 : length(frames_of_interest)
 end
 
 % plot trajectory for this reach
-axes(h_axes(1,3));
+axes(h_axes(2,3));
 plot3(cur_pd_trajectory(:,1),cur_pd_trajectory(:,3),cur_pd_trajectory(:,2),'k','linewidth',2);
 hold on
 % for i_dig = 1 : 4
@@ -249,3 +258,70 @@ line([traj_3D_x_lim(1),traj_3D_x_lim(1)+scale3D_length],[full_traj_z_lim(2),full
 line([traj_3D_x_lim(1),traj_3D_x_lim(1)],[full_traj_z_lim(2),full_traj_z_lim(2)-scale3D_length],[traj_3D_y_lim(1),traj_3D_y_lim(1)],'color','k','linewidth',2)
 line([traj_3D_x_lim(1),traj_3D_x_lim(1)],[full_traj_z_lim(2),full_traj_z_lim(2)],[traj_3D_y_lim(1),traj_3D_y_lim(1)+scale3D_length],'color','k','linewidth',2)
 set(gca,'visible','off')
+
+
+% plot gradual change in reach endpoint z, orientation, reach trajectory in
+% last column
+
+
+% plot average 3D digit 2 endpoints for alternating session
+axes(h_axes(3,3))
+cd(alternatingStimFolder)
+load('alternating_stim_kinematics_summary.mat');
+% find the alternating_stim entry for the desired session
+sessionIdx = identifyAlternateStimIdx(alternateKinematics,alternateStimRatID,alternateStimDate);
+
+cur_alternateKinematics = alternateKinematics(sessionIdx);
+on_dig2_endPts = cur_alternateKinematics.on_dig2_endPts;
+off_dig2_endPts = cur_alternateKinematics.off_dig2_endPts;
+
+for i_onBlock = 1 : size(on_dig2_endPts,1)
+    cur_pts = squeeze(on_dig2_endPts(i_onBlock,:,:));
+    scatter3(cur_pts(:,1),cur_pts(:,3),cur_pts(:,2),15,'marker','o','markerfacecolor','none',...
+        'markeredgecolor','b');
+    hold on
+end
+
+for i_offBlock = 1 : size(off_dig2_endPts,1)
+    cur_pts = squeeze(off_dig2_endPts(i_offBlock,:,:));
+    scatter3(cur_pts(:,1),cur_pts(:,3),cur_pts(:,2),15,'marker','o','markerfacecolor','b',...
+        'markeredgecolor','b');
+    hold on
+end
+scatter3(0,0,0,25,'marker','o','markerfacecolor',bodypartColor.pellet,'markeredgecolor','k');
+
+line([endPt_3D_x_lim(1),endPt_3D_x_lim(1)+scale3D_length],[endPt_z_lim(2),endPt_z_lim(2)],[endPt_3D_y_lim(1),endPt_3D_y_lim(1)],'color','k','linewidth',2)
+line([endPt_3D_x_lim(1),endPt_3D_x_lim(1)],[endPt_z_lim(2),endPt_z_lim(2)-scale3D_length],[endPt_3D_y_lim(1),endPt_3D_y_lim(1)],'color','k','linewidth',2)
+line([endPt_3D_x_lim(1),endPt_3D_x_lim(1)],[endPt_z_lim(2),endPt_z_lim(2)],[endPt_3D_y_lim(1),endPt_3D_y_lim(1)+scale3D_length],'color','k','linewidth',2)
+
+slot_z = nanmean(cur_alternateKinematics.slot_z_wrt_pellet);
+h_patch = patch([endPt_3D_x_lim(1),endPt_3D_x_lim(1),endPt_3D_x_lim(2),endPt_3D_x_lim(2)],...
+                [slot_z,slot_z,slot_z,slot_z],...
+                [endPt_3D_y_lim(1),endPt_3D_y_lim(2),endPt_3D_y_lim(2),endPt_3D_y_lim(1)],...
+                'k','facealpha',0.1);
+set(gca,'zdir','reverse','xlim',endPt_3D_x_lim,'ylim',endPt_z_lim,'zlim',endPt_3D_y_lim,...
+    'view',[-70,30])
+set(gca,'visible','off')
+
+
+cd(ratSummaryDir)
+load('experiment_summaries.mat')
+
+plot_dig2_z_end_for_one_experiment(exptSummary(1),h_axes(1,4))
+plot_dig2_z_end_for_one_experiment(exptSummary(2),h_axes(1,4))
+% plot_dig2_z_end_for_one_experiment(exptSummary(3),h_axes(1,4))
+
+plot_end_aperture_for_one_experiment(exptSummary(1),h_axes(2,4));
+plot_end_aperture_for_one_experiment(exptSummary(2),h_axes(2,4));
+xlabel('session number','fontname','arial','fontsize',11)
+
+plot_aperture_trajectory_for_one_experiment(exptSummary(1),h_axes(3,4));
+
+cd(histoFolder)
+testName = [exemplar_ratID '_*'];
+current_rat_histo = dir(testName);
+hist_img = imread(current_rat_histo.name);
+
+axes(h_axes(1,3))
+new_hist_img = imadjust(hist_img,[0.1,0.99]);
+imshow(new_hist_img)

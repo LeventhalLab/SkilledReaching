@@ -16,10 +16,10 @@ validOutcomeNames = {'all','1st success','any success','failed','no pellet','paw
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 histoFolder = '/Volumes/LL EXHD #2/SR Histo by rat';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 ratInfo = readRatInfoTable(csvfname);
 
-ratSummaryDir = fullfile(labeledBodypartsFolder,'rat kinematic summaries');
+ratSummaryDir = fullfile('/Volumes/LL EXHD #2/','rat kinematic summaries');
 if ~exist(ratSummaryDir,'dir')
     mkdir(ratSummaryDir);
 end
