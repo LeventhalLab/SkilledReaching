@@ -18,7 +18,7 @@ ratIDs_with_new_date_format = [284];
 % 7. number of reaches, by type
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 ratInfo = readRatInfoTable(csvfname);
@@ -31,7 +31,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 33 : numRatFolders
+for i_rat = 33 : 33%%numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));

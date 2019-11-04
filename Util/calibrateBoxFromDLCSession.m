@@ -1,4 +1,4 @@
-function [boxCal_fromSession,mp_direct,mp_mirror] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,ROIs,varargin)
+function [boxCal_fromSession,mp_direct,mp_mirror] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,varargin)
 %
 %
 %
@@ -36,9 +36,9 @@ min_valid_p = 0.85;
 min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
-imSize = [1024,2040];   % hard-coded for now
+frameSize = [1024,2040];   % hard-coded for now
 
-for iarg = 1 : 2 : nargin - 5
+for iarg = 1 : 2 : nargin - 4
     switch lower(varargin{iarg})
         case 'min_valid_p_for_calibration'
             min_valid_p_for_calibration = varargin{iarg + 1};
@@ -50,8 +50,8 @@ for iarg = 1 : 2 : nargin - 5
             min_certain_p = varargin{iarg + 1};   % p values above this are considered to be well-determined points (and include in subsequent analysis)
         case 'maxneighbordist'
             maxDistFromNeighbor_invalid = varargin{iarg + 1};
-        case 'imsize'
-            imSize = varargin{iarg + 1};
+        case 'framesize'
+            frameSize = varargin{iarg + 1};
         case 'usepriortrajfile'
             usePriorTrajFile = varargin{iarg + 1};
     end
@@ -145,9 +145,22 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
         end
         cd(mirrorViewDir)
         [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
+        mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name);
+        mirror_metadataName = fullfile(mirrorViewDir, mirror_metadataName);
+        mirror_metadata = load(mirror_metadataName);
         cd(directViewDir)
         [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
+        direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name);
+        direct_metadataName = fullfile(directViewDir, direct_metadataName);
+        direct_metadata = load(direct_metadataName);
         
+            % ROIs loaded from cropping metadata files
+            ROIs = [direct_metadata.viewROI;mirror_metadata.viewROI];
+            triggerTime = direct_metadata.triggerTime; % assume same as mirror view
+            frameTimeLimits = direct_metadata.frameTimeLimits;
+            frameRate = direct_metadata.frameRate;
+            frameSize = direct_metadata.frameSize;
+            
         [invalid_mirror, ~] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
             'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
         [invalid_direct, ~] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
@@ -219,7 +232,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     
 end
 
-[F,~] = refineFundMatrixMirror(mp_direct,mp_mirror,imSize);
+[F,~] = refineFundMatrixMirror(mp_direct,mp_mirror,frameSize);
 % F = fundMatrix_mirror(mp_direct, mp_mirror);
 
 E = K * F * K';

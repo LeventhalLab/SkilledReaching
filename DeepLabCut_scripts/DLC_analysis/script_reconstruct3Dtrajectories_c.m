@@ -1,12 +1,8 @@
-% script_repair_mislabeled_direct_paw
+% script_reconstruct3Dtrajectories
 
 % script to perform 3D reconstruction on videos
 
-% in many videos,, the paw dorsum was misidentified in the direct
-% view. This can probably be fixed with retraining networks, especially for
-% unmarked paws. In the mean time, this script will invalidate those direct
-% view points and recalculate the 3D trajectories using estimated paw
-% dorsum locations
+repeatCalculations = false;
 
 % points to the camera parameter file with camera intrinsics
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
@@ -22,19 +18,16 @@ min_valid_p = 0.85;
 min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
-% parameters to determine invalid paw dorsum points in the direct view
-maxPawFromDigitsDist = 70;
-maxPawDorsumReprojError = 10;
-
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-calImageDir = '/Volumes/LL EXHD #2/calibration_images';   % where the calibration files are
-
+sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
+calImageDir = '/Volumes/LL EXHD #2/calibration_images';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
 % change this if the videos were cropped at different coordinates
@@ -46,8 +39,7 @@ calImageDir = '/Volumes/LL EXHD #2/calibration_images';   % where the calibratio
 % frameRate = 300;
 % 
 % frameSize = [1024,2040];
-%
-% these are now loaded in from the trajectory files themselves
+% these are now loaded in from crop metadata files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       
 cd(labeledBodypartsFolder)
@@ -57,7 +49,18 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 33:33%20:numRatFolders
+% find the list of calibration files
+% cd(calImageDir);
+% calFileList = dir('SR_boxCalibration_*.mat');
+% calDateList = cell(1,length(calFileList));
+% calDateNums = zeros(length(calFileList),1);
+% for iFile = 1 : length(calFileList)
+%     C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
+%     calDateList{iFile} = C{1};
+%     calDateNums(iFile) = str2double(calDateList{iFile});
+% end
+
+for i_rat = 34:34%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -78,21 +81,22 @@ for i_rat = 33:33%20:numRatFolders
     end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
     
     cd(ratRootFolder);
     
+%     sessionDirectories = dir([ratID '_*']);
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    switch ratID
-        case 'R0159'
-            startSession = 5;
-            endSession = numSessions;
-        otherwise
-            startSession = 1;
-            endSession = numSessions;
+    if i_rat == 34
+        startSession = 3;
+        endSession = numSessions;
+    else
+        startSession = 1;
+        endSession = numSessions;
     end
-    for iSession = startSession : 1 : endSession
+    for iSession = startSession : 4 : endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -125,62 +129,113 @@ for i_rat = 33:33%20:numRatFolders
         
         switch pawPref
             case 'right'
+%                 ROIs = vidROI(1:2,:);
                 Pn = squeeze(boxCal.Pn(:,:,2));
                 sf = mean(boxCal.scaleFactor(2,:));
                 F = squeeze(boxCal.F(:,:,2));
+                mirrorView = 'left';
             case 'left'
+%                 ROIs = vidROI([1,3],:);
                 Pn = squeeze(boxCal.Pn(:,:,3));
                 sf = mean(boxCal.scaleFactor(3,:));
                 F = squeeze(boxCal.F(:,:,3));
+                mirrorView = 'right';
         end
     
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
-        cd(fullSessionDir);
-        % find all the single trial .mat trajectory files
-        trajFiles = dir([ratID '_' sessionDate '_*_3dtrajectory_new.mat']);
-        numTrajFiles = length(trajFiles);
+        sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
+        [directViewDir,mirrorViewDir,direct_csvList,mirror_csvList] = getDLC_csvList(fullSessionDir);
+
+        if isempty(direct_csvList)
+            continue;
+        end
         
-        for iTrial = 1 : numTrajFiles   
-    
-            % ROI info is now saved into the trajectory file
-            load(trajFiles(iTrial).name);
+        numMarkedVids = length(direct_csvList);
+        % ratID, date, etc. for each individual video
+        directVidTime = cell(1, numMarkedVids);
+        directVidNum = zeros(numMarkedVids,1);
+
+        % find all the direct view videos that are available
+        uniqueDateList = {};
+        for ii = 1 : numMarkedVids   
+
+            [directVid_ratID(ii),directVidDate{ii},directVidTime{ii},directVidNum(ii)] = ...
+                extractDLC_CSV_identifiers(direct_csvList(ii).name);
+
+            if isempty(uniqueDateList)
+                uniqueDateList{1} = directVidDate{ii};
+            elseif ~any(strcmp(uniqueDateList,directVidDate{ii}))
+                uniqueDateList{end+1} = directVidDate{ii};
+            end
+        end
+
+        cd(mirrorViewDir)
+
+        for i_mirrorcsv = 1 : length(mirror_csvList)
+
+            % make sure we have matching mirror and direct view files
+            [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
+            foundMatch = false;
+            for i_directcsv = 1 : numMarkedVids
+                if mirror_ratID == ratIDnum && ...      % match ratID
+                   strcmp(mirror_vidDate, sessionDate) && ...  % match date
+                   strcmp(mirror_vidTime, directVidTime{i_directcsv}) && ...  % match time
+                   mirror_vidNum == directVidNum(i_directcsv)                % match vid number
+                    foundMatch = true;
+                    break;
+                end
+            end
+            if ~foundMatch
+                continue;
+            end
+
+            trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
+                directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv))
+            fullTrajName = fullfile(fullSessionDir, trajName);
+            sharedX_fullTrajName = fullfile(sharedX_fullSessionDir,trajName);
+%             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
             
+            if exist(fullTrajName,'file')
+                % already did this calculation
+                if repeatCalculations
+                    load(fullTrajName)
+                else
+                    continue;
+                end
+            end
+            
+            cd(mirrorViewDir)
+            [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = fullfile(mirrorViewDir, mirror_metadataName);
+            mirror_metadata = load(mirror_metadataName);
+            
+            cd(directViewDir)
+            [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
+            direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name);
+            direct_metadataName = fullfile(directViewDir, direct_metadataName);
+            direct_metadata = load(direct_metadataName);
+            
+            % ROIs loaded from cropping metadata files
+            ROIs = [direct_metadata.viewROI;mirror_metadata.viewROI];
+            triggerTime = direct_metadata.triggerTime; % assume same as mirror view
+            frameTimeLimits = direct_metadata.frameTimeLimits;
+            frameRate = direct_metadata.frameRate;
+            frameSize = direct_metadata.frameSize;
+
             if ~exist('manually_invalidated_points','var')
                 numFrames = size(direct_p,2);
                 num_bodyparts = length(direct_bp);
                 manually_invalidated_points = false(numFrames,num_bodyparts,2);
             end
-
-            [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
-            pawDorsum_reproj_error = squeeze(reproj_error(pawDorsumIdx,:,:));
-            
-            pts_to_invalidate = pawDorsum_reproj_error(:,1) > maxPawDorsumReprojError;
-
-            % check if paw dorsum is far away from the other paw points
-            otherPawIdx = [mcpIdx,pipIdx,digIdx];
-            frames_to_check = find(pts_to_invalidate);
-            
-            for iFrame = 1 : length(frames_to_check)
-                % how far is the paw dorsum from other points identified in
-                % the direct view?
-                pawDorsum_direct = squeeze(final_direct_pts(pawDorsumIdx,frames_to_check(iFrame),:));
-                otherPaw_direct = squeeze(final_direct_pts(otherPawIdx,frames_to_check(iFrame),:));
-                [nndist,~] = findNearestNeighbor(pawDorsum_direct,otherPaw_direct);
-                
-                if nndist < maxPawFromDigitsDist
-                    pts_to_invalidate(frames_to_check(iFrame)) = false;
-                end
+                    
+            numDirectFrames = size(direct_p,2);
+            numMirrorFrames = size(mirror_p,2);
+    
+            if numDirectFrames ~= numMirrorFrames
+                fprintf('number of frames in the direct and mirror views do not match for %s\n', direct_csvList(i_directcsv).name);
             end
-            
-            if ~any(pts_to_invalidate(:))
-                % nothing to invalidate in this trial, so just keep going
-                continue
-            end
-            
-            fprintf('working on %s\n',trajFiles(iTrial).name);
-            manually_invalidated_points(:,13,1) = pts_to_invalidate;
-            frames_to_recalculate = find(pts_to_invalidate);
-            
+    
             [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
             [invalid_direct, direct_dist_perFrame] = find_invalid_DLC_points(direct_pts, direct_p,direct_bp,pawPref,...
@@ -210,24 +265,19 @@ for i_rat = 33:33%20:numRatFolders
                 activeBoxCal = boxCal;
             end
             
-            [final_direct_pts_new, final_mirror_pts_new, isEstimate_new] = ...
-                recalc3D_DLC_trajectory_frames(direct_pts_ud, ...
+            [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstimate] = ...
+                calc3D_DLC_trajectory_20190924(direct_pts_ud, ...
                                       mirror_pts_ud, invalid_direct, invalid_mirror,...
                                       direct_bp, mirror_bp, ...
-                                      frameSize,frames_to_recalculate,activeBoxCal,pawPref,...
+                                      activeBoxCal, pawPref, frameSize,...
                                       'maxdistfromneighbor',maxDistFromNeighbor);
-            
-            isEstimate = isEstimate | isEstimate_new;
-            final_direct_pts(:,frames_to_recalculate,:) = final_direct_pts_new(:,frames_to_recalculate,:);
-            final_mirror_pts(:,frames_to_recalculate,:) = final_mirror_pts_new(:,frames_to_recalculate,:);
-            [pawTrajectory, bodyparts] = calc3Dpoints(final_direct_pts, final_mirror_pts, isEstimate, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, vidROI, pawPref);
-            
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
-            
+
             cd(fullSessionDir)
-            
-            save(trajFiles(iTrial).name, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
+
+            save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
+            save(sharedX_fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
             clear manually_invalidated_points
             
         end

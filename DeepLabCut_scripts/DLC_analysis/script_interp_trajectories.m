@@ -28,7 +28,7 @@ ratIDs_with_new_date_format = [284];
 % across x = 0. I think this will be OK. -DL 20181015
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/Rats';
+sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 ratInfo = readRatInfoTable(csvfname);
@@ -80,7 +80,7 @@ for i_rat = 33:numRatFolders
             startSession = 1;
             endSession = numSessions;
         case 'R0230'
-            startSession = 16;
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;

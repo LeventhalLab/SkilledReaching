@@ -1,5 +1,7 @@
 % script_exemplarKinematicsFig_b
 
+rootName = 'exemplarFig';
+
 bodypartColor.dig = [1 0 0;
                      1 0 1;
                      0 0 1;
@@ -19,12 +21,16 @@ endPt_z_lim = [-15 30];
 
 scale3D_length = 10;
 
+fsize = 12;
+
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 rootAnalysisFolder = '/Volumes/LL EXHD #2/SR opto analysis';
 vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
 alternatingStimFolder = '/Volumes/LL EXHD #2/alternating stim analysis';
 ratSummaryDir = fullfile('/Volumes/LL EXHD #2/','rat kinematic summaries');
 histoFolder = fullfile('/Volumes/LL EXHD #2/','SR_opto_histology','stitched_images');
+
+saveDir = '/Volumes/SharedX/Neuro-Leventhal/analysis/';
 
 frameTextPos = [50,30];
 cropRegion = [900,450,1200,850;...   % direct view
@@ -33,13 +39,14 @@ cropRegion = [900,450,1200,850;...   % direct view
           
 
 
-exemplar_vidName = 'R0216_20180203_12-23-25_013';
+exemplar_vidName = 'R0230_20181027_14-13-02_026';
 alternateStimRatID = 216;
 alternateStimDate = datetime('20180301','inputformat','yyyyMMdd');
 full_exemplar_vidName = [exemplar_vidName '.avi'];
 
 exemplar_ratID = exemplar_vidName(1:5);
 exemplar_ratIDnum = str2double(exemplar_ratID(2:end));
+histo_ratID = 'R0216';
 
 sessionDateString = exemplar_vidName(7:14);
 sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
@@ -88,7 +95,8 @@ pawPref = thisRatInfo.pawPref;
 load(trajectory_name);
 
 current_reachData = reachData(reachDataIdx);
-frames_of_interest = [270,300,current_reachData.reachEnds(1)];
+% frames_of_interest = [270,300,current_reachData.reachEnds(1)];
+frames_of_interest = [current_reachData.reachEnds(1)-45,current_reachData.reachEnds(1)-15,current_reachData.reachEnds(1)];
 times_of_interest = (frames_of_interest - current_reachData.reachEnds(1))/300;
 cd(exemplarVidFolder);
 
@@ -101,6 +109,10 @@ direct_img = cell(length(frames_of_interest),1);
 pd_traj_pts = NaN(length(frames_of_interest),3);
 mcp_traj_pts = NaN(length(frames_of_interest),4,3);
 dig_traj_pts = NaN(length(frames_of_interest),4,3);
+
+[mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
+pd_trajectory = squeeze(interp_traj_wrt_pellet(:,:,pawDorsumIdx));
+dig_trajectory = squeeze(interp_traj_wrt_pellet(:,:,digIdx));
 for i_frame = 1 : length(frames_of_interest)
     
     curFrameIdx = frames_of_interest(i_frame);
@@ -119,39 +131,14 @@ for i_frame = 1 : length(frames_of_interest)
 %     isPointValid{2} = ~mirror_invalid_points(:,i_frame);
     frameEstimate = squeeze(isEstimate(:,curFrameIdx,:));
     
-    pd_traj_pts(i_frame,:) = interp_points3D(13,:);
-    mcp_traj_pts(i_frame,:,:) = interp_points3D(1:4,:);
-    dig_traj_pts(i_frame,:,:) = interp_points3D(9:12,:);
+    pd_traj_pts(i_frame,:) = interp_points3D(pawDorsumIdx,:);
+    mcp_traj_pts(i_frame,:,:) = interp_points3D(mcpIdx,:);
+    dig_traj_pts(i_frame,:,:) = interp_points3D(digIdx,:);
     curFrame_out2 = overlayDLC_for_fig(curFrame_ud, points3D_wrt_camera, ...
         direct_pt, mirror_pt, frame_direct_p, frame_mirror_p, ...
         direct_bp, mirror_bp, bodyparts, frameEstimate, ...
         activeBoxCal, pawPref,'bodypartcolor',bodypartColor);
     
-    
-%     switch pawPref
-%         % crop the images
-%         case 'left'
-%             if i_frame == 1
-%                 mirror_img = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
-%             else
-%                 temp = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
-%                 mirror_img = [mirror_img;temp];
-%             end
-%         case 'right'
-%             if i_frame == 1
-%                 mirror_img = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
-%             else
-%                 temp = curFrame_out2(cropRegion(2,2):cropRegion(2,4),cropRegion(2,1):cropRegion(2,3),:);
-%                 mirror_img = [mirror_img;temp];
-%             end
-%             
-%     end
-%     if i_frame == 1
-%         direct_img = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
-%     else
-%         temp = curFrame_out2(cropRegion(1,2):cropRegion(1,4),cropRegion(1,1):cropRegion(1,3),:);
-%         direct_img = [direct_img;temp];
-%     end
     switch pawPref
         case 'left'
             mirror_img{i_frame} = curFrame_out2(cropRegion(3,2):cropRegion(3,4),cropRegion(3,1):cropRegion(3,3),:);
@@ -172,7 +159,7 @@ end
 clear vidObj
 
 figProps.m = 3;
-figProps.n = 4;
+figProps.n = 3;
 
 figProps.panelWidth = ones(figProps.n,1) * 5;
 figProps.panelHeight = ones(figProps.m,1) * 4;
@@ -218,51 +205,12 @@ for i_frame = 1 : length(frames_of_interest)
 %     textPos = [frameTextPos(1),(i_frame-1)*frameHeight + frameTextPos(2)];
 %     textString = sprintf('frame %03d',frames_of_interest(i_frame));
     textString = sprintf('t = %.2f s',times_of_interest(i_frame));
-    text(frameTextPos(1),frameTextPos(2),textString,'color','w','fontname','arial','fontsize',11)
+    text(frameTextPos(1),frameTextPos(2),textString,'color','w','fontname','arial','fontsize',fsize)
 end
 
 % plot trajectory for this reach
-axes(h_axes(2,3));
-plot3(cur_pd_trajectory(:,1),cur_pd_trajectory(:,3),cur_pd_trajectory(:,2),'k','linewidth',2);
-hold on
-% for i_dig = 1 : 4
-%     toPlot = squeeze(cur_dig_trajectory(:,:,i_dig));
-%     plot3(toPlot(:,1),toPlot(:,3),toPlot(:,2),'color',bodypartColor.dig(i_dig,:),'linewidth',1);
-% end
-for i_frame = 1 : length(frames_of_interest)
-    scatter3(pd_traj_pts(i_frame,1),pd_traj_pts(i_frame,3),pd_traj_pts(i_frame,2),15,'marker','o','markerfacecolor','none','markeredgecolor','k');
-%     for i_dig = 1 : 4
-%         toPlot = squeeze(dig_traj_pts(i_frame,i_dig,:));
-%         scatter3(toPlot(1),toPlot(3),toPlot(2),15,'marker','o','markerfacecolor','none','markeredgecolor',bodypartColor.dig(i_dig,:));
-%     end
-    lineStart = [pd_traj_pts(i_frame,1),pd_traj_pts(i_frame,3),pd_traj_pts(i_frame,2)];
-    for i_dig = 1 : 4
-        toPlot = squeeze(dig_traj_pts(i_frame,i_dig,:));
-        lineEnd = toPlot([1,3,2]);
-        line([lineStart(1),lineEnd(1)],[lineStart(2),lineEnd(2)],[lineStart(3),lineEnd(3)],'color',bodypartColor.dig(i_dig,:))
-        scatter3(toPlot(1),toPlot(3),toPlot(2),15,'marker','o','markerfacecolor','none','markeredgecolor',bodypartColor.dig(i_dig,:));
-    end
-end
-scatter3(0,0,0,25,'marker','o','markerfacecolor',bodypartColor.pellet,'markeredgecolor','k');
-set(gca,'zdir','reverse','xlim',traj_3D_x_lim,'ylim',full_traj_z_lim,'zlim',traj_3D_y_lim,...
-    'view',[-70,30])
-% xlabel('x');ylabel('z');zlabel('y');
-
-slot_z = current_reachData.slot_z_wrt_pellet;
-h_patch = patch([traj_3D_x_lim(1),traj_3D_x_lim(1),traj_3D_x_lim(2),traj_3D_x_lim(2)],...
-                [slot_z,slot_z,slot_z,slot_z],...
-                [traj_3D_y_lim(1),traj_3D_y_lim(2),traj_3D_y_lim(2),traj_3D_y_lim(1)],...
-                'k','facealpha',0.1);
-
-line([traj_3D_x_lim(1),traj_3D_x_lim(1)+scale3D_length],[full_traj_z_lim(2),full_traj_z_lim(2)],[traj_3D_y_lim(1),traj_3D_y_lim(1)],'color','k','linewidth',2)
-line([traj_3D_x_lim(1),traj_3D_x_lim(1)],[full_traj_z_lim(2),full_traj_z_lim(2)-scale3D_length],[traj_3D_y_lim(1),traj_3D_y_lim(1)],'color','k','linewidth',2)
-line([traj_3D_x_lim(1),traj_3D_x_lim(1)],[full_traj_z_lim(2),full_traj_z_lim(2)],[traj_3D_y_lim(1),traj_3D_y_lim(1)+scale3D_length],'color','k','linewidth',2)
-set(gca,'visible','off')
-
-
-% plot gradual change in reach endpoint z, orientation, reach trajectory in
-% last column
-
+plot_single_trajectory(current_reachData,pd_trajectory,dig_trajectory,frames_of_interest,bodypartColor,h_axes(1,3),'vieworientation',[-70,30]);
+% plot_single_trajectory(current_reachData,pd_trajectory,dig_trajectory,frames_of_interest,bodypartColor,h_axes(1,4),'vieworientation',[50 20]);
 
 % plot average 3D digit 2 endpoints for alternating session
 axes(h_axes(3,3))
@@ -294,6 +242,10 @@ line([endPt_3D_x_lim(1),endPt_3D_x_lim(1)+scale3D_length],[endPt_z_lim(2),endPt_
 line([endPt_3D_x_lim(1),endPt_3D_x_lim(1)],[endPt_z_lim(2),endPt_z_lim(2)-scale3D_length],[endPt_3D_y_lim(1),endPt_3D_y_lim(1)],'color','k','linewidth',2)
 line([endPt_3D_x_lim(1),endPt_3D_x_lim(1)],[endPt_z_lim(2),endPt_z_lim(2)],[endPt_3D_y_lim(1),endPt_3D_y_lim(1)+scale3D_length],'color','k','linewidth',2)
 
+text(endPt_3D_x_lim(1)+scale3D_length,endPt_z_lim(2),endPt_3D_y_lim(1),'x','fontname','arial','fontsize',fsize)
+text(endPt_3D_x_lim(1),endPt_z_lim(2),endPt_3D_y_lim(1)+scale3D_length,'y','fontname','arial','fontsize',fsize)
+text(endPt_3D_x_lim(1),endPt_z_lim(2)-scale3D_length,endPt_3D_y_lim(1),'z','fontname','arial','fontsize',fsize)
+
 slot_z = nanmean(cur_alternateKinematics.slot_z_wrt_pellet);
 h_patch = patch([endPt_3D_x_lim(1),endPt_3D_x_lim(1),endPt_3D_x_lim(2),endPt_3D_x_lim(2)],...
                 [slot_z,slot_z,slot_z,slot_z],...
@@ -307,21 +259,36 @@ set(gca,'visible','off')
 cd(ratSummaryDir)
 load('experiment_summaries.mat')
 
-plot_dig2_z_end_for_one_experiment(exptSummary(1),h_axes(1,4))
-plot_dig2_z_end_for_one_experiment(exptSummary(2),h_axes(1,4))
+plot_dig2_z_end_for_one_experiment(exptSummary(1),h_axes(2,3))
+plot_dig2_z_end_for_one_experiment(exptSummary(2),h_axes(2,3))
 % plot_dig2_z_end_for_one_experiment(exptSummary(3),h_axes(1,4))
+xlabel('session number','fontname','arial','fontsize',fsize)
+ylabel('digit 2 z-endpoint (mm)','fontname','arial','fontsize',fsize)
 
-plot_end_aperture_for_one_experiment(exptSummary(1),h_axes(2,4));
-plot_end_aperture_for_one_experiment(exptSummary(2),h_axes(2,4));
-xlabel('session number','fontname','arial','fontsize',11)
+% plot_end_aperture_for_one_experiment(exptSummary(1),h_axes(3,3));
+% plot_end_aperture_for_one_experiment(exptSummary(2),h_axes(3,3));
+% xlabel('session number','fontname','arial','fontsize',fsize)
+% ylabel('aperture (mm)','fontname','arial','fontsize',fsize)
 
-plot_aperture_trajectory_for_one_experiment(exptSummary(1),h_axes(3,4));
+% plot_aperture_trajectory_for_one_experiment(exptSummary(1),h_axes(2,4));
+% xlabel('z (mm)','fontname','arial','fontsize',fsize)
+% ylabel('aperture (mm)','fontname','arial','fontsize',fsize)
 
 cd(histoFolder)
-testName = [exemplar_ratID '_*'];
+testName = [histo_ratID '_*'];
 current_rat_histo = dir(testName);
 hist_img = imread(current_rat_histo.name);
 
-axes(h_axes(1,3))
-new_hist_img = imadjust(hist_img,[0.1,0.99]);
-imshow(new_hist_img)
+% axes(h_axes(1,4))
+% new_hist_img = imadjust(hist_img,[0.1,0.99]);
+% imshow(new_hist_img)
+
+figName = [rootName,'.fig'];
+pdfName = [rootName,'.pdf'];
+epsName = [rootName,'.eps'];
+pdfName = fullfile(saveDir,pdfName);
+figName = fullfile(saveDir,figName);
+epsName = fullfile(saveDir,epsName);
+savefig(h_fig,figName);
+print(h_fig,pdfName,'-dpdf');
+print(h_fig,epsName,'-depsc');

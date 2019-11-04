@@ -27,18 +27,18 @@ calImageDir = '/Volumes/LL EXHD #2/calibration_images';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
 % change this if the videos were cropped at different coordinates
-vidROI = [750,450,550,550;
-          1,450,450,400;
-          1650,435,390,400];
-triggerTime = 1;    % seconds
-frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
-frameRate = 300;
-
-frameSize = [1024,2040];
+% vidROI = [750,450,550,550;
+%           1,450,450,400;
+%           1650,435,390,400];
+% triggerTime = 1;    % seconds
+% frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
+% frameRate = 300;
+% 
+% frameSize = [1024,2040];
 % would be nice to have these parameters stored with DLC output so they can
 % be read in directly. Might they be in the .h files?
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-      
+
 cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
@@ -57,7 +57,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 33:33%4:13%numRatFolders
+for i_rat = 34:34%4:13%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -85,8 +85,8 @@ for i_rat = 33:33%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0230'
-            startSession = numSessions-1;
+        case 'R0235'
+            startSession = 4;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -131,12 +131,12 @@ for i_rat = 33:33%4:13%numRatFolders
         
         switch pawPref
             case 'right'
-                ROIs = vidROI(1:2,:);
+%                 ROIs = vidROI(1:2,:);
                 Pn = squeeze(boxCal.Pn(:,:,2));
                 sf = mean(boxCal.scaleFactor(2,:));
                 F = squeeze(boxCal.F(:,:,2));
             case 'left'
-                ROIs = vidROI([1,3],:);
+%                 ROIs = vidROI([1,3],:);
                 Pn = squeeze(boxCal.Pn(:,:,3));
                 sf = mean(boxCal.scaleFactor(3,:));
                 F = squeeze(boxCal.F(:,:,3));
@@ -145,7 +145,7 @@ for i_rat = 33:33%4:13%numRatFolders
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
         tic
-        [boxCal_fromSession(sessionIdx),~,~] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,ROIs,'imsize',frameSize);
+        [boxCal_fromSession(sessionIdx),~,~] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref);
         toc
 %         boxCal_fromSession(numValidSessions).sessionName = 
         
