@@ -2,7 +2,9 @@
 
 % template name for viable trajectory files (for searching)
 trajectory_file_name = 'R*3dtrajectory_new.mat';
-
+num_traj_segments = 100;   % number of points into which trajectories will be segmented for averaging
+max_pd_z = 30;   % z-coordinate at which to start paw dorsum analysis
+max_dig_z = 20;  % z-coordinate at which to start digit trajectory analysis
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
@@ -31,7 +33,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 33 : 33%%numRatFolders
+for i_rat = 1 : 33%%numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -172,8 +174,9 @@ for i_rat = 33 : 33%%numRatFolders
             reachData(iTrial) = scoreTrial(reachData(iTrial),interp_trajectory,bodyparts,all_didPawStartThroughSlot(iTrial),pelletMissingFlag(iTrial),initPellet3D,slot_z_wrt_pellet,pawPref,trialOutcome);
             reachData(iTrial).trialNumbers = trialNumbers(iTrial,:);
             reachData(iTrial).slot_z_wrt_pellet = slot_z_wrt_pellet;
-            sessionSummary = sessionKinematicsSummary(reachData);
+%             sessionSummary = sessionKinematicsSummary(reachData);
         end
+        sessionSummary = sessionKinematicsSummary(reachData,num_traj_segments);
         
         save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
         save(sharedX_reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');

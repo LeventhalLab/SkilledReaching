@@ -1,4 +1,4 @@
-function reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref,frameRate)
+function reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref,frameRate,num_traj_segments)
 %
 % determine reach kinematics for each reach within a trial
 %
@@ -69,6 +69,9 @@ reachData.trialScores = [];
 reachData.trialNumbers = [];
 reachData.slot_z_wrt_pellet = [];
 
+% where is slot_z_wrt_pellet for this session?
+all_slot_z = [reachData.slot_z_wrt_pellet];
+
 for i_reach = 1 : num_reaches
 
     reach_startFrame = reachData.reachStarts(i_reach);
@@ -80,6 +83,7 @@ for i_reach = 1 : num_reaches
     
     % paw dorsum trajectory
     reachData.pd_trajectory{i_reach} = pd_trajectory(reach_startFrame:reach_endFrame,:);
+    reachData.segmented_pd_trajectory = standardizeSingleTrajectory(reachData.pd_trajectory{i_reach},max_pd_z,num_traj_segments);
     
     % velocity profile
     pd_v = diff(reachData.pd_trajectory{i_reach},1,1) * frameRate;
@@ -92,7 +96,9 @@ for i_reach = 1 : num_reaches
     end
     
     reachData.dig_trajectory{i_reach} = dig_trajectory(reach_startFrame:reach_endFrame,:,:);
-
+    
+    reachData.segmented_dig_trajectory
+    
     % find the last frame before the paw breaches the frame for this grasp
     % (looking at the second digit)
     last_frame_behind_slot = find(squeeze(reachData.dig_trajectory{i_reach}(:,3,2)) > slot_z_wrt_pellet,1,'last');

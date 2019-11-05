@@ -7,6 +7,3 @@ function standardized_trajectory = standardizeSingleTrajectory(interp_trajectory
 
 traj_to_segment = interp_trajectory(interp_trajectory(:,3) <= max_z,:);
 
-standardized_trajectory = interparc(n,traj_to_segment(:,1),traj_to_segment(:,2),traj_to_segment(:,3),'pchip');
-
-end
