@@ -53,12 +53,12 @@ reachData.segmented_pd_trajectory = {};
 
 
 reachData.pd_trajectory = {};
-reachData.pd_pathlength = {};
+reachData.pd_pathlength = NaN(num_reaches,1);
 reachData.segmented_pd_trajectory = {};
 reachData.pd_v = {};
 reachData.max_pd_v = [];
 reachData.dig_trajectory = {};
-reachData.dig_pathlength = {};
+reachData.dig_pathlength = NaN(num_reaches,4);
 reachData.segmented_dig_trajectory = {};
 reachData.dig2_v = {};
 reachData.max_dig2_v = [];
@@ -76,11 +76,9 @@ for i_reach = 1 : num_reaches
     reach_endFrame = reachData.reachEnds(i_reach);
 %     grasp_endFrame = reachData.reach_to_grasp_end(i_reach);
     
-    % add in pathlength later?
-    
     % paw dorsum trajectory
     reachData.pd_trajectory{i_reach} = pd_trajectory(reach_startFrame:reach_endFrame,:);
-    
+    reachData.pd_pathlength(i_reach) = trajectory_pathlength(reachData.pd_trajectory{i_reach});
     % velocity profile
     pd_v = diff(reachData.pd_trajectory{i_reach},1,1) * frameRate;
     pd_v = sqrt(sum(pd_v.^2,2));
@@ -92,7 +90,9 @@ for i_reach = 1 : num_reaches
     end
     
     reachData.dig_trajectory{i_reach} = dig_trajectory(reach_startFrame:reach_endFrame,:,:);
-
+    for i_dig = 1 : 4
+        reachData.dig_pathlength(i_reach,i_dig) = trajectory_pathlength(squeeze(dig_trajectory(:,:,i_dig)));
+    end
     % find the last frame before the paw breaches the frame for this grasp
     % (looking at the second digit)
     last_frame_behind_slot = find(squeeze(reachData.dig_trajectory{i_reach}(:,3,2)) > slot_z_wrt_pellet,1,'last');

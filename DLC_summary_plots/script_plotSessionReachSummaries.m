@@ -7,7 +7,16 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0228','R0229'};
 numRats = length(ratList);
 
-firstRat = 31;
+bodypartColor.dig = [1 0 0;
+                     1 0 1;
+                     0 0 1;
+                     0 1 0];
+bodypartColor.otherPaw = [0 1 1];
+bodypartColor.paw_dorsum = [0 0 0];
+bodypartColor.pellet = [0 1 1];
+bodypartColor.nose = [0 0 0];
+
+firstRat = 1;
 lastRat = 31;
 
 x_lim = [-30 10];
@@ -192,7 +201,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
             startSession = 1;
             endSession = numSessions;
         case 'R0229'
-            startSession = 30;
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -264,7 +273,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
             pawPref = pawPref{1};
         end
         
-        h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType);
+        h_fig = plotSessionReachSummaries(reachData, sessionSummary, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType, bodypartColor);
         
         savefig(h_fig,figName_sessionSummary);
         print(h_fig,pdfName_sessionSummary,'-dpdf');

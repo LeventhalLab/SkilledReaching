@@ -59,24 +59,6 @@ reaches_to_keep = islocalmin(dig2_z,1,...
             'prominencewindow',[0,1000],...
             'minseparation',minGraspSeparation);
 reachMins = reachMins & reaches_to_keep;
-
-% find local maxima in pd_z; if one of them is too close to the next
-% minimum, exclude that minimum as a potential reach
-% [reachMaxes,~] = islocalmax(pd_z,1);
-% reachMax_idx = find(reachMaxes);
-% reachMin_idx = find(reachMins);
-% mins_to_exclude = false(size(reachMins));
-% for i_min = 1 : length(reachMin_idx)
-%     % how far is the local max just before the current local min from that
-%     % local min in the z-direction? if it's too small, then exclude that
-%     % local min
-% 	prev_max_idx = find(reachMax_idx < reachMin_idx(i_min),1,'last');
-%     if pd_z(reachMax_idx(prev_max_idx)) - pd_z(reachMin_idx(i_min)) < minReachProminence
-%         mins_to_exclude(reachMin_idx(i_min)) = true;
-%     end
-% end
-
-% reachMins = reachMins & ~mins_to_exclude;
         
 [graspMins,~] = islocalmin(dig2_z,1,...
             'flatselection','first',...
@@ -163,11 +145,13 @@ for i_reach = 1 : num_reaches
     lastFrame = reachData.reachEnds(i_reach);
 
     interval_dig2_z_max = max(dig2_z(startFrame:lastFrame));
-    if isnan(interval_dig2_z_max)   % paw dorsum wasn't found before this reach end point; can happen if rat reaches with wrong paw first
+    interval_pd_z_max = max(pd_z(startFrame:lastFrame));
+    if isnan(interval_pd_z_max)   % paw dorsum wasn't found before this reach end point; can happen if rat reaches with wrong paw first
         % invalidate this reach
         removeReachEndFlag(i_reach) = true;
     end
-    reachStarts(dig2_z == interval_dig2_z_max) = true;
+%     reachStarts(dig2_z == interval_dig2_z_max) = true;
+    reachStarts(pd_z == interval_pd_z_max) = true;
 
 end
 reachData.reachEnds = reachData.reachEnds(~removeReachEndFlag);    

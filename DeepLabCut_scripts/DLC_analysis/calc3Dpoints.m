@@ -1,4 +1,4 @@
-function [pawTrajectory, bodyparts] = calc3Dpoints(final_direct_pts, final_mirror_pts, isEstimate, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, ROIs, pawPref)
+function [pawTrajectory, bodyparts] = calc3Dpoints(final_direct_pts, final_mirror_pts, isEstimate, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, pawPref)
 
 cameraParams = boxCal.cameraParams;
 K = cameraParams.IntrinsicMatrix;
@@ -7,11 +7,9 @@ numFrames = size(final_direct_pts,2);
 
 switch pawPref
     case 'right'
-        ROIs = ROIs(1:2,:);
         Pn = squeeze(boxCal.Pn(:,:,2));
         scaleFactor = mean(boxCal.scaleFactor(2,:));
     case 'left'
-        ROIs = ROIs([1,3],:);
         Pn = squeeze(boxCal.Pn(:,:,3));
         scaleFactor = mean(boxCal.scaleFactor(3,:));
 end

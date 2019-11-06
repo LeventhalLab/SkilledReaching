@@ -6,6 +6,6 @@ function pl = trajectory_pathlength(interp_trajectory)
 
 traj_diff = diff(interp_trajectory,1);
 
-segment_distances = sqrt(sum(traj_diff.^2),2);
+segment_distances = sqrt(sum(traj_diff.^2,2));
 
 pl = sum(segment_distances);

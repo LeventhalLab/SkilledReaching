@@ -339,7 +339,7 @@ for iTrial = 1 : numTrials
     % points
     % frame limits for the first reach_to_grasp movement
     graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
-    dig2_z = squeeze(reachData(iTrial).dig_trajectory{1}(graspFrames,3,2));
+    dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
     plot(dig2_z,reach_orientation{iTrial},trialTypeColors{ind_trial_type(iTrial)});
     hold on
 end
@@ -402,7 +402,7 @@ for iTrial = 1 : numTrials
     end
     digit_aperture{iTrial} = reachData(iTrial).aperture{1};
     graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
-    dig2_z = squeeze(reachData(iTrial).dig_trajectory{1}(graspFrames,3,2));
+    dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
 
     plot(dig2_z,digit_aperture{iTrial},trialTypeColors{ind_trial_type(iTrial)});
     hold on
@@ -514,7 +514,7 @@ for i_trialType = 1 : num_trial_types
             
             trialCount = trialCount + 1;
             graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
-            dig2_z = squeeze(reachData(iTrial).dig_trajectory{1}(graspFrames,3,2));
+            dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
            
             if length(reachData(iTrial).aperture{1}) > 1
                 cur_apertures = pchip(dig2_z,reachData(iTrial).aperture{1},zq);
@@ -610,7 +610,8 @@ for i_trialType = 1 : num_trial_types
             
             trialCount = trialCount + 1;
             graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
-            dig2_z = squeeze(reachData(iTrial).dig_trajectory{1}(graspFrames,3,2));
+            dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
+            
             
 %             or_interp = NaN(length(zq),1);
             if length(reachData(iTrial).orientation{1}) > 1
@@ -845,6 +846,8 @@ y_lim = [-20 10];
 
 axes(h_axes)
 
+numTrials = length(reachData);
+
 mean_pd_trajectory = sessionSummary.mean_pd_trajectory;
 mean_dig_trajectories = sessionSummary.mean_dig_trajectories;
 switch pawPref
@@ -859,21 +862,13 @@ switch pawPref
             plot3(-toPlot(:,1),...
                   toPlot(:,3),...
                   toPlot(:,2),...
-                  'color',bodypartColor.dig(i_dig,:));
-        end
+                  'k');
     case 'right'
         plot3(-mean_pd_trajectory(:,1),...
               mean_pd_trajectory(:,3),...
               mean_pd_trajectory(:,2),...
               'k');
         hold on
-        for i_dig = 1 : 4
-            toPlot = squeeze(mean_dig_trajectories(:,:,i_dig));
-            plot3(toPlot(:,1),...
-                  toPlot(:,3),...
-                  toPlot(:,2),...
-                  'color',bodypartColor.dig(i_dig,:));
-        end
 end
     
 
@@ -882,6 +877,6 @@ set(gca,'zdir','reverse','xlim',x_lim,'ylim',full_traj_z_lim,'zlim',y_lim,...
     'view',[-70,30])
 xlabel('x');ylabel('z');zlabel('y');
 
-title('mean 3D paw/digit trajectories')
+title('3D paw trajectories')
 
 end

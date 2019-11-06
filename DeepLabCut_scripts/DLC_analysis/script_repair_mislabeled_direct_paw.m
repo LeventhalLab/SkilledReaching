@@ -57,7 +57,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 33:33%20:numRatFolders
+for i_rat = 34:34%20:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,6 +88,9 @@ for i_rat = 33:33%20:numRatFolders
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
+        case 'R0235'
+            startSession = 14;
+            endSession = 14;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -220,7 +223,7 @@ for i_rat = 33:33%20:numRatFolders
             isEstimate = isEstimate | isEstimate_new;
             final_direct_pts(:,frames_to_recalculate,:) = final_direct_pts_new(:,frames_to_recalculate,:);
             final_mirror_pts(:,frames_to_recalculate,:) = final_mirror_pts_new(:,frames_to_recalculate,:);
-            [pawTrajectory, bodyparts] = calc3Dpoints(final_direct_pts, final_mirror_pts, isEstimate, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, vidROI, pawPref);
+            [pawTrajectory, bodyparts] = calc3Dpoints(final_direct_pts, final_mirror_pts, isEstimate, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
             
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);

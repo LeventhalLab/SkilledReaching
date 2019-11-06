@@ -57,12 +57,8 @@ for i_dig = 1 : 4
 end
 
 % calculate means, covariance matrices for paw dorsum and digit endpoints
-sessionSummary.mean_pd_endPt = nanmean(sessionSummary.pd_endPts);
-sessionSummary.cov_pd_endPt = nancov(sessionSummary.pd_endPts);
-sessionSummary.mean_dig_endPts = nanmean(sessionSummary.dig_endPts);
-sessionSummary.cov_dig_endPts = NaN(3,3,4);
-for i_dig = 1 : 4
-    sessionSummary.cov_dig_endPts(:,:,i_dig) = nancov(squeeze(sessionSummary.dig_endPts(:,:,i_dig)));
-end
-    
+sessionSummary.mean_pd_endPt = nanmean(sessonSummary.pd_endPts);
+sessionSummary.mean_pd_endPt = nanmean(sessonSummary.pd_endPts);
+sessionSummary.mean_dig_endPts = nanmean(sessonSummary.dig_endPts);
+
 end

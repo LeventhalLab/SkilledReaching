@@ -75,7 +75,7 @@ for i_rat = 1 : 33%%numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     switch ratID
-        case 'R0186'
+        case 'R0161'
             startSession = 1;
             endSession = numSessions;
         case 'R0159'
@@ -176,10 +176,10 @@ for i_rat = 1 : 33%%numRatFolders
             reachData(iTrial).slot_z_wrt_pellet = slot_z_wrt_pellet;
 %             sessionSummary = sessionKinematicsSummary(reachData);
         end
-        sessionSummary = sessionKinematicsSummary(reachData,num_traj_segments);
+        [sessionSummary,reachData] = sessionKinematicsSummary(reachData,num_traj_segments);
         
-        save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
-        save(sharedX_reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
+        save(reachDataName,'reachData','sessionSummary','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
+        save(sharedX_reachDataName,'reachData','sessionSummary','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
         
     end
     
