@@ -17,6 +17,9 @@ function h_fig = plotSessionReachSummaries(reachData, sessionSummary, all_slot_z
 
 full_traj_z_lim = [-5 50];
 reachEnd_zlim = [-15 10];
+reachCov_zlim = [-20 10];
+x_lim = [-30 10];
+y_lim = [-20 10];
 
 pawPref = char(thisRatInfo.pawPref);
 figProps.m = 5;
@@ -99,6 +102,11 @@ hist_z_endPoints(reachData,ind_trial_type,trialTypeColors,h_axes(2,1));
 % average 3D trajectory
 plot_3DmeanTrajectories(sessionSummary,bodypartColor,pawPref,h_axes(2,2),full_traj_z_lim)
 
+% plot mean distance from 3D trajectory
+plot_mean_dist_from_pd_trajectory(sessionSummary,h_axes(2,3));
+
+plot_error_ellipsoids(sessionSummary,pawPref,bodypartColor,h_axes(2,4),...
+    'reachEnd_zlim',reachCov_zlim,'x_lim',x_lim,'y_lim',y_lim);
 
 % WORKING HERE...
 
@@ -862,7 +870,7 @@ switch pawPref
                   'color',bodypartColor.dig(i_dig,:));
         end
     case 'right'
-        plot3(-mean_pd_trajectory(:,1),...
+        plot3(mean_pd_trajectory(:,1),...
               mean_pd_trajectory(:,3),...
               mean_pd_trajectory(:,2),...
               'k');
@@ -883,5 +891,109 @@ set(gca,'zdir','reverse','xlim',x_lim,'ylim',full_traj_z_lim,'zlim',y_lim,...
 xlabel('x');ylabel('z');zlabel('y');
 
 title('mean 3D paw/digit trajectories')
+
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function plot_mean_dist_from_pd_trajectory(sessionSummary,h_axes,varargin)
+
+pd_traj_error_lim = [0,15];
+
+for i_arg = 1 : 2 : nargin - 2
+    switch lower(varargin{i_arg})
+        case 'pd_traj_error_lim'
+            pd_traj_error_lim = varargin{i_arg + 1};
+    end
+end
+axes(h_axes)
+plot(sessionSummary.pd_mean_euc_dist_from_trajectory);
+
+set(gca,'ylim',pd_traj_error_lim);
+xlabel('dist along trajectory')
+title('mean distance from mean trajectory')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function plot_error_ellipsoids(sessionSummary,pawPref,bodypartColor,h_axes,varargin)
+
+reachEnd_zlim = [-15 10];
+x_lim = [-30 10];
+y_lim = [-20 10];
+
+for i_arg = 1 : 2 : nargin - 4
+    switch lower(varargin{i_arg})
+        case 'reachend_zlim'
+            reachEnd_zlim = varargin{i_arg + 1};
+        case 'x_lim'
+            x_lim = varargin{i_arg + 1};
+        case 'y_lim'
+            y_lim = varargin{i_arg + 1};
+    end
+end
+axes(h_axes)
+
+pd_mean = sessionSummary.mean_pd_endPt;
+pd_mean(2:3) = fliplr(pd_mean(2:3));   % plot y on the z-axis and z on the y-axes
+pd_cov = sessionSummary.cov_pd_endPt;
+if all(isnan(pd_cov(:)))
+    % only one valid reach for this session (probably)
+    switch pawPref
+        case 'left'
+            pd_mean(1) = -pd_mean(1);
+        case 'right'
+    end
+    scatter3(pd_mean(:,1),pd_mean(:,2),pd_mean(:,3),...
+        'markerfacecolor',bodypartColor.paw_dorsum,'markeredgecolor',bodypartColor.paw_dorsum)
+else
+    pd_cov(2:end,:) = flipud(pd_cov(2:end,:));
+    pd_cov(:,2:end) = fliplr(pd_cov(:,2:end));
+    switch pawPref
+        case 'left'
+            pd_mean(1) = -pd_mean(1);
+            pd_cov(1,2:end) = -pd_cov(1,2:end);
+            pd_cov(2:end,1) = -pd_cov(2:end,1);
+        case 'right'
+    end
+    h_pd = error_ellipse(pd_cov,pd_mean);
+end
+hold on
+
+% h_dig = zeros(4,1);
+for i_dig = 1 : 4
+    cur_dig_mean = squeeze(sessionSummary.mean_dig_endPts(:,i_dig));
+    if iscolumn(cur_dig_mean)
+        cur_dig_mean = cur_dig_mean';
+    end
+    cur_dig_mean(2:3) = fliplr(cur_dig_mean(2:3));   % plot y on the z-axis and z on the y-axes
+    cur_dig_cov = squeeze(sessionSummary.cov_dig_endPts(:,:,i_dig));
+    
+    if all(isnan(cur_dig_cov(:)))
+        % only one valid reach for this session (probably)
+        switch pawPref
+            case 'left'
+                cur_dig_mean(1) = -cur_dig_mean(1);
+            case 'right'
+        end
+        scatter3(cur_dig_mean(:,1),cur_dig_mean(:,2),cur_dig_mean(:,3),...
+            'markerfacecolor',bodypartColor.dig(i_dig,:),'markeredgecolor',bodypartColor.dig(i_dig,:))
+    else
+        cur_dig_cov(2:end,:) = flipud(cur_dig_cov(2:end,:));
+        cur_dig_cov(:,2:end) = fliplr(cur_dig_cov(:,2:end));
+        switch pawPref
+            case 'left'
+                cur_dig_mean(1) = -cur_dig_mean(1);
+                cur_dig_cov(2:end,1) = -cur_dig_cov(2:end,1);
+                cur_dig_cov(2:end,1) = -cur_dig_cov(2:end,1);
+            case 'right'
+        end
+        h_dig = error_ellipse(cur_dig_cov,cur_dig_mean);
+    end
+    
+end
+
+scatter3(0,0,0,25,'marker','*','markerfacecolor','k','markeredgecolor','k');
+set(gca,'zdir','reverse','xlim',x_lim,'ylim',reachEnd_zlim,'zlim',y_lim,...
+    'view',[-70,30])
 
 end

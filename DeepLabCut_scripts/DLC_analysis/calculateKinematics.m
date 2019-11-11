@@ -83,10 +83,9 @@ for i_reach = 1 : num_reaches
     pd_v = diff(reachData.pd_trajectory{i_reach},1,1) * frameRate;
     pd_v = sqrt(sum(pd_v.^2,2));
     reachData.pd_v{i_reach} = pd_v;
-    try
-    reachData.max_pd_v(i_reach) = max(pd_v);
-    catch
-        keyboard
+    
+    if ~isempty(pd_v)
+        reachData.max_pd_v(i_reach) = max(pd_v);
     end
     
     reachData.dig_trajectory{i_reach} = dig_trajectory(reach_startFrame:reach_endFrame,:,:);
@@ -107,7 +106,9 @@ for i_reach = 1 : num_reaches
     dig2_v = diff(dig2_traj,1,1) * frameRate;
     dig2_v = sqrt(sum(dig2_v.^2,2));
     reachData.dig2_v{i_reach} = dig2_v;
-    reachData.max_dig2_v(i_reach) = max(dig2_v);
+    if ~isempty(dig2_v)
+        reachData.max_dig2_v(i_reach) = max(dig2_v);
+    end
     
     % reach endpoints
     reachData.pdEndPoints(i_reach,:) = pd_trajectory(reach_endFrame,:);

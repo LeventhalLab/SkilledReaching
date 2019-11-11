@@ -21,5 +21,7 @@ reachData.dig2_endPoints = [];
 reachData.orientation = {};
 reachData.aperture = {};
 reachData.trialScores = [];
+reachData.ratIDnum = [];
+reachData.sessionDate = datetime();
 reachData.trialNumbers = [];
 reachData.slot_z_wrt_pellet = [];

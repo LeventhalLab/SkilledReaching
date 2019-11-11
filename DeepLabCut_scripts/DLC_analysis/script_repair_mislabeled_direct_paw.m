@@ -89,8 +89,8 @@ for i_rat = 34:34%20:numRatFolders
             startSession = 5;
             endSession = numSessions;
         case 'R0235'
-            startSession = 14;
-            endSession = 14;
+            startSession = 1;
+            endSession = numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
