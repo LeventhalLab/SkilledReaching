@@ -18,7 +18,7 @@ ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191112.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
@@ -115,7 +115,7 @@ for i_rat = 35:numRatFolders
             ROI = [750,450,550,550;
                   1,450,450,400;
                   1650,435,390,400];
-        case {'R0216','R0311'}
+        case 'R0216'
             ROI = [750,350,550,600;
                    1,400,450,450;
                    1650,400,390,450];
@@ -215,7 +215,7 @@ for i_rat = 35:numRatFolders
             end             
             frameRate = video.FrameRate;
             frameSize = [video.height,video.width];
-            cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
+%             cropVideo(vidName,destVidName,frameTimeLimits,triggerTime,ROI);
 
             [fp,fn,fext] = fileparts(vidName);
 

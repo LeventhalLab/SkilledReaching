@@ -17,7 +17,7 @@ function h_fig = plotSessionReachSummaries(reachData, sessionSummary, all_slot_z
 
 full_traj_z_lim = [-5 50];
 reachEnd_zlim = [-15 10];
-reachCov_zlim = [-20 10];
+reachCov_zlim = [-30 10];
 x_lim = [-30 10];
 y_lim = [-20 10];
 
@@ -955,7 +955,13 @@ else
             pd_cov(2:end,1) = -pd_cov(2:end,1);
         case 'right'
     end
-    h_pd = error_ellipse(pd_cov,pd_mean);
+    eigenvals = eig(pd_cov);
+    if all(eigenvals > 0)
+        % sometimes, when there are only a few reaches, the covariance
+        % matrix is barely positive-definite, and matlab gets confused.
+        % For now, just skip these.
+        h_pd = error_ellipse(pd_cov,pd_mean);
+    end
 end
 hold on
 
@@ -987,7 +993,13 @@ for i_dig = 1 : 4
                 cur_dig_cov(2:end,1) = -cur_dig_cov(2:end,1);
             case 'right'
         end
-        h_dig = error_ellipse(cur_dig_cov,cur_dig_mean);
+        eigenvals = eig(cur_dig_cov);
+        if all(eigenvals > 0)
+            % sometimes, when there are only a few reaches, the covariance
+            % matrix is barely positive-definite, and matlab gets confused.
+            % For now, just skip these.
+            h_dig = error_ellipse(cur_dig_cov,cur_dig_mean);
+        end
     end
     
 end

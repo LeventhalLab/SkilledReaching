@@ -90,13 +90,13 @@ for i_rat = 34:34%numRatFolders
     numSessions = length(sessionDirectories);
     
     if i_rat == 34
-        startSession = 4;
+        startSession = 29;
         endSession = numSessions;
     else
         startSession = 1;
         endSession = numSessions;
     end
-    for iSession = startSession : 4 : endSession
+    for iSession = startSession : 1 : endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -171,7 +171,7 @@ for i_rat = 34:34%numRatFolders
 
         cd(mirrorViewDir)
 
-        for i_mirrorcsv = 1 : length(mirror_csvList)
+        for i_mirrorcsv = length(mirror_csvList)-10 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);

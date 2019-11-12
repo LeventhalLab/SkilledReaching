@@ -17,7 +17,7 @@ bodypartColor.pellet = [0 1 1];
 bodypartColor.nose = [0 0 0];
 
 firstRat = 1;
-lastRat = 31;
+lastRat = 33;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -197,7 +197,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0170'
+        case 'R0189'
             startSession = 1;
             endSession = numSessions;
         case 'R0229'

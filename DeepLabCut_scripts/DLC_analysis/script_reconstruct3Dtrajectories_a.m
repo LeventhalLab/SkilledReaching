@@ -9,7 +9,7 @@ camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual
 load(camParamFile);
 
 % parameter for calc3D_DLC_trajectory_20181204
-maxDistFromNeighbor = 40;   % maximum distance an estimated point can be from its neighbor
+maxDistFromNeighbor = 50;   % maximum distance an estimated point can be from its neighbor
 maxReprojError = 10;
 
 % parameters for find_invalid_DLC_points
@@ -60,7 +60,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 34:34%numRatFolders
+for i_rat = 12:12%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -89,8 +89,8 @@ for i_rat = 34:34%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 34
-        startSession = 1;
+    if i_rat == 12
+        startSession = 9;
         endSession = numSessions;
     else
         startSession = 1;
@@ -171,7 +171,7 @@ for i_rat = 34:34%numRatFolders
 
         cd(mirrorViewDir)
 
-        for i_mirrorcsv = 1 : length(mirror_csvList)
+        for i_mirrorcsv = 6 : length(mirror_csvList)
 
             % make sure we have matching mirror and direct view files
             [mirror_ratID,mirror_vidDate,mirror_vidTime,mirror_vidNum] = extractDLC_CSV_identifiers(mirror_csvList(i_mirrorcsv).name);
