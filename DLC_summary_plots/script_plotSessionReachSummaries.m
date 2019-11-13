@@ -16,8 +16,8 @@ bodypartColor.paw_dorsum = [0 0 0];
 bodypartColor.pellet = [0 1 1];
 bodypartColor.nose = [0 0 0];
 
-firstRat = 1;
-lastRat = 12;
+firstRat = 9;
+lastRat = 27;
 
 x_lim = [-30 10];
 y_lim = [-20 10];

@@ -6,7 +6,7 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
            'R0228','R0229','R0230','R0235'};
        
-repeatCalculations = true;   % if cropped video file already exists, don't repeat?
+repeatCalculations = false;   % if cropped video file already exists, don't repeat?
 useSessionsFrom_DLCoutput_folder = false;
 
 vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';

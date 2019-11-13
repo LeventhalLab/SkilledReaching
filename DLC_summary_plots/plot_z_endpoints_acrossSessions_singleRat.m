@@ -97,7 +97,7 @@ for iSession = 1 : numSessions
         'markeredgecolor',laserOnColor);
 
 end
-
+line([0,22],[0,0],'color','k')
 ylabel('z-endpoint (mm)')
 xlabel('session #')
 set(gca,'xtick',[1,2,3,12,13,22]);

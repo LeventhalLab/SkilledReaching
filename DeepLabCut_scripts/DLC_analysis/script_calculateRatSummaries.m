@@ -30,7 +30,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-temp_reachData = initializeReachDataStruct();
+% temp_reachData = initializeReachDataStruct();
 
 z_interp_digits = 20:-0.1:-15;  % for interpolating z-coordinated for aperture and orientation calculations
 

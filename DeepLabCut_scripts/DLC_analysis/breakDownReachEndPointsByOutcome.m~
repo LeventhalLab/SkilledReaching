@@ -5,7 +5,7 @@ num_trials = length(reachData);
 num_possOutcomes = length(validTrialOutcomes);
 
 pd_endPts = NaN(num_trials,3);
-dig_endPts = NaN(num_trials,4,3);
+dig2_endPts = NaN(num_trials,3);
 
 mean_pd_endPt = zeros(num_possOutcomes,3);
 mean_dig2_endPt = zeros(num_possOutcomes,3);
@@ -26,9 +26,7 @@ for iTrial = 1 : num_trials
     
     if ~isempty(reachData(iTrial).reachEnds)
         pd_endPts(iTrial,:) = reachData(iTrial).pdEndPoints(1,:);
-        for i_dig = 1 : 4
-            dig_endPts(iTrial,i_dig,:) = reachData(iTrial).dig2_endPoints(1,:);
-        end
+        dig2_endPts(iTrial,:) = reachData(iTrial).dig2_endPoints(1,:);
     end
     
 end
