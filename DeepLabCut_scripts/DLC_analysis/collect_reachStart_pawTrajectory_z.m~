@@ -10,10 +10,11 @@ for i_trial = 1 : num_trials
        any(reachData(i_trial).trialScores == 8)             % only used contralateral paw
         continue;
     end
-    if ~isempty(reachData(i_trial).pd_trajectory)
-        % sometimes the paw dorsum is caught behind the slot and the reach
-        % trajectory doesn't exist
-        reachStart_z(i_trial) = reachData(i_trial).pd_trajectory{1}(1,3);
+    try
+    if isempty(reachData(i_trial).pd_trajectory
+    reachStart_z(i_trial) = reachData(i_trial).pd_trajectory{1}(1,3);
+    catch
+        keyboard
     end
 end
 

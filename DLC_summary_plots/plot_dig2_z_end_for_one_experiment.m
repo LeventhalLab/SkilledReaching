@@ -21,7 +21,7 @@ switch exptSummary.experimentInfo.type
         laserOnColor = 'c';
     case 'arch_during'
         laserOnColor = 'g';
-    case 'eyfp'
+    case 'eyfp_during'
         laserOnColor = 'r';
 end
     

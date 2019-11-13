@@ -19,8 +19,8 @@ min_slot_z = min([reachData.slot_z_wrt_pellet]);
 sessionSummary.reachStart_z = collect_reachStart_pawTrajectory_z(reachData);   % first z-coordinate at which the paw dorsum was first identified for the first reach in this trial
 min_reachStart_pd_z = min(sessionSummary.reachStart_z);
 
-segmented_pd_trajectories = zeros(num_traj_segments,3,num_trials);
-segmented_dig_trajectories = zeros(num_traj_segments,3,4,num_trials);
+segmented_pd_trajectories = NaN(num_traj_segments,3,num_trials);
+segmented_dig_trajectories = NaN(num_traj_segments,3,4,num_trials);
 
 sessionSummary.pd_endPts = NaN(num_trials,3);
 sessionSummary.dig_endPts = NaN(num_trials,3,4);
@@ -29,18 +29,20 @@ for i_trial = 1 : num_trials
        ~any(reachData(i_trial).trialScores == 6)  && ... % no reach on this trial
        ~any(reachData(i_trial).trialScores == 8)         % only used contralateral paw
        
-        sessionSummary.pd_endPts(i_trial,:) = reachData(i_trial).pd_trajectory{1}(end,:);
-        reachData(i_trial).segmented_pd_trajectory = standardizeSingleTrajectory(reachData(i_trial).pd_trajectory{1},min_reachStart_pd_z,num_traj_segments);
+        if ~isempty(reachData(i_trial).pd_trajectory)
+            sessionSummary.pd_endPts(i_trial,:) = reachData(i_trial).pd_trajectory{1}(end,:);
+            reachData(i_trial).segmented_pd_trajectory = standardizeSingleTrajectory(reachData(i_trial).pd_trajectory{1},min_reachStart_pd_z,num_traj_segments);
         
-        segmented_pd_trajectories(:,:,i_trial) = reachData(i_trial).segmented_pd_trajectory;
+            segmented_pd_trajectories(:,:,i_trial) = reachData(i_trial).segmented_pd_trajectory;
 
-        reachData(i_trial).segmented_dig_trajectory = zeros(num_traj_segments,3,4);
-        for i_dig = 1 : 4
-            cur_dig_trajectory = squeeze(reachData(i_trial).dig_trajectory{1}(:,:,i_dig));
-            sessionSummary.dig_endPts(i_trial,:,i_dig) = cur_dig_trajectory(end,:);
-            reachData(i_trial).segmented_dig_trajectory(:,:,i_dig) = standardizeSingleTrajectory(cur_dig_trajectory,min_slot_z,num_traj_segments);
+            reachData(i_trial).segmented_dig_trajectory = zeros(num_traj_segments,3,4);
+            for i_dig = 1 : 4
+                cur_dig_trajectory = squeeze(reachData(i_trial).dig_trajectory{1}(:,:,i_dig));
+                sessionSummary.dig_endPts(i_trial,:,i_dig) = cur_dig_trajectory(end,:);
+                reachData(i_trial).segmented_dig_trajectory(:,:,i_dig) = standardizeSingleTrajectory(cur_dig_trajectory,min_slot_z,num_traj_segments);
+            end
+            segmented_dig_trajectories(:,:,:,i_trial) = reachData(i_trial).segmented_dig_trajectory;
         end
-        segmented_dig_trajectories(:,:,:,i_trial) = reachData(i_trial).segmented_dig_trajectory;
     end
     
 end

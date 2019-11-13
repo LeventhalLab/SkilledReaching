@@ -34,7 +34,7 @@ temp_reachData = initializeReachDataStruct();
 
 z_interp_digits = 20:-0.1:-15;  % for interpolating z-coordinated for aperture and orientation calculations
 
-for i_rat = 1 : numRatFolders
+for i_rat = 1 : 12%numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -59,16 +59,53 @@ for i_rat = 1 : numRatFolders
     ratSummaryName = [ratID '_kinematicsSummary.mat'];
     
     sessionDirectories = listFolders([ratID '_2*']);
-%     numSessions = length(sessionDirectories);
     
     sessionCSV = [ratID '_sessions.csv'];
     sessionTable = readSessionInfoTable(sessionCSV);
     
     sessions_analyzed = getRetrainingThroughOcclusionSessions(sessionTable);
     numSessions = size(sessions_analyzed,1);
-%     sessionType = determineSessionType(thisRatInfo, allSessionDates);
 
-    ratSummary = initializeRatSummaryStruct(ratID,validTrialOutcomes,validOutcomeNames,numSessions,z_interp_digits);
+    ratSummary = initializeRatSummaryStruct(ratID,validTrialOutcomes,validOutcomeNames,sessions_analyzed,thisRatInfo,z_interp_digits);
+    
+    % load the first file to set up array dimensions
+    sessionDate = sessions_analyzed.date(1);
+    sessionDateString = datestr(sessionDate,'yyyymmdd');
+
+    cd(ratRootFolder);
+    testDirName = [ratID '_' sessionDateString '*'];
+    validSessionDir = dir(testDirName);
+    if isempty(validSessionDir)
+        continue;
+    end
+    curSessionDir = validSessionDir.name;
+    fullSessionDir = fullfile(ratRootFolder,curSessionDir);
+
+    cd(fullSessionDir);
+    % not sure if the following is necessary, but it's been working
+    C = textscan(curSessionDir,[ratID '_%8c']);
+    sessionDateString = C{1}; % this will be in format yyyymmdd
+                        % note date formats from the scores spreadsheet
+                        % are in m/d/yy
+    sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
+
+    curSessionTableRow = (sessions_analyzed.date == sessionDate);
+    cur_sessionInfo = sessions_analyzed(curSessionTableRow,:);
+
+    reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
+    reachDataName = fullfile(fullSessionDir,reachDataName);
+
+    if ~exist(reachDataName,'file')
+        sprintf('no reach data summary found for %s\n',curSessionDir);
+        continue;
+    end
+    load(reachDataName);
+        
+    num_trajectory_points = size(sessionSummary.mean_pd_trajectory,1);
+    ratSummary.mean_pd_trajectory = NaN(numSessions,num_trajectory_points,3);
+    ratSummary.mean_dist_from_pd_trajectory = NaN(numSessions,num_trajectory_points);
+    ratSummary.mean_dig_trajectories = NaN(numSessions,num_trajectory_points,3,4);
+    ratSummary.mean_dist_from_dig_trajectories = NaN(numSessions,num_trajectory_points,4);
     for iSession = 1 : numSessions
         
         sessionDate = sessions_analyzed.date(iSession);
@@ -132,10 +169,17 @@ for i_rat = 1 : numRatFolders
             breakDownFullApertureByOutcome(reachData,z_interp_digits);
         [temp_orientation_traj,ratSummary.mean_orientation_traj(iSession,:),ratSummary.MRL_traj(iSession,:)] = ...
             breakDownFullOrientationByOutcome(reachData,z_interp_digits);
+        
+        ratSummary.mean_pd_trajectory(iSession,:,:) = sessionSummary.mean_pd_trajectory;
+        ratSummary.mean_dist_from_pd_trajectory(iSession,:) = sessionSummary.pd_mean_euc_dist_from_trajectory';
+        ratSummary.mean_dig_trajectories(iSession,:,:,:) = sessionSummary.mean_dig_trajectories;
+        ratSummary.mean_dist_from_dig_trajectories(iSession,:,:) = sessionSummary.dig_mean_euc_dist_from_trajectory;
+        
+        
     end
     
     cd(ratRootFolder);
-    save(fullfile(ratSummaryDir,ratSummaryName),'ratSummary','sessions_analyzed','thisRatInfo');
+    save(fullfile(ratSummaryDir,ratSummaryName),'ratSummary','thisRatInfo');
     clear ratSummary
     clear sessions_analyzed;
     

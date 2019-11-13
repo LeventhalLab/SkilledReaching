@@ -109,9 +109,9 @@ for i_rat = 35:numRatFolders
     end
 
     switch ratID
-        case 'R0230'
-            startSess = 28;%1;
-            endSess = 28;%length(sessionsToExtract);
+        case 'R0309'
+            startSess = 3;%1;
+            endSess = length(sessionsToExtract);
             ROI = [750,450,550,550;
                   1,450,450,400;
                   1650,435,390,400];
@@ -119,8 +119,8 @@ for i_rat = 35:numRatFolders
             ROI = [750,350,550,600;
                    1,400,450,450;
                    1650,400,390,450];
-            startSess = 26;
-            endSess = 26;%length(sessionsToExtract);
+            startSess = 1;
+            endSess = length(sessionsToExtract);
         otherwise
             ROI = [750,450,550,550;
                   1,450,450,400;

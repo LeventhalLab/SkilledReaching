@@ -1,4 +1,4 @@
-function h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, sessionName, sessionType, varargin)
+function h_fig = plotRatReachSummaries(ratSummary, thisRatInfo, varargin)
 
 % REACHING SCORES:
 %
@@ -37,7 +37,8 @@ figProps.height = sum(figProps.rowSpacing) + sum(figProps.panelHeight) + figProp
 [h_fig,h_axes] = createFigPanels5(figProps);
 
 % first row of plots: 
-%   column 1: breakdown of trial outcomes
+%   column 1: number of trials
+%   column 2: breakdown of trial outcomes across sessions
 %   column 2: number of reaches in each trial
 %   column 3: "event frames" - frames at which paw dorsum is first seen, 
 %       paw breaches slot, 1st reach end framez-endpoints vs trial #
@@ -49,25 +50,24 @@ figProps.height = sum(figProps.rowSpacing) + sum(figProps.panelHeight) + figProp
 % column 2: paw orientation for 1st reach in each trial
 % column 3: aperture at end of 1st reach in each trial
 
+% number of trials
+plotNumTrials_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(1,1));
 
+% first and any reach success rates
+plotReachSuccess_acrossSessions_singleRat(ratSummary,'both','h_axes',h_axes(1,2))
+
+% mean trajectories
+plotMeanPDTrajectory_acrossSessions(ratSummary,thisRatInfo,'h_axes',h_axes(1,3))
+
+plot3Dendpoints_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(1,4))
+
+plot_z_endpoints_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(1,5))
 % second row of plots
 %   overlay 3D trajectories for each trial type across each column
 
 % reach velocity profiles
 
-numTrials = length(reachData);
-
-trialTypeColors = {'k','g','b','r','y','c','m'};
-validTrialTypes_for_outcomes = {0:10,1,[1,2],[3,4,7],0,11,6};
-validTrialTypes = {0:10,1,2,[3,4,7],0,11,6};
-validTypeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
-
-% breakdown of trial outcomes
-[score_breakdown,~] = breakDownTrialScores(reachData,validTrialTypes_for_outcomes);
-h_scoreBreakdown = plotTrialOutcomeBreakdown(score_breakdown,trialTypeColors,h_axes(1,1));
-set(gca,'ylim',[0 100])
-ylabel('number of trials');
-legend(validTypeNames)
+% max reach velocity
 
 % repeat for subsequent plots so first and any success aren't plotted over
 % each other

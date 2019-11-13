@@ -4,20 +4,11 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
            'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
-           'R0228','R0229'};
+           'R0228','R0229','R0230'};
 numRats = length(ratList);
 
-bodypartColor.dig = [1 0 0;
-                     1 0 1;
-                     0 0 1;
-                     0 1 0];
-bodypartColor.otherPaw = [0 1 1];
-bodypartColor.paw_dorsum = [0 0 0];
-bodypartColor.pellet = [0 1 1];
-bodypartColor.nose = [0 0 0];
-
 firstRat = 1;
-lastRat = 12;
+lastRat = 30;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -106,18 +97,14 @@ traj2D_xlim = [250 320];
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-sharedX_plotsDir = '/Volumes/SharedX/Neuro-Leventhal/analysis';
 [plotsDir,~,~] = fileparts(labeledBodypartsFolder);
 plotsDir = fullfile(plotsDir,'DLC output plots');
 if ~exist(plotsDir,'dir')
     mkdir(plotsDir);
 end
-if ~exist(sharedX_plotsDir,'dir')
-    mkdir(sharedX_plotsDir);
-end
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
@@ -127,7 +114,7 @@ numRatFolders = length(ratFolders);
 
 for i_rat = firstRat:1:lastRat%:numRatFolders
     
-    ratID = ratList{i_rat}
+    ratID = ratList{i_rat};
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
@@ -197,10 +184,10 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0189'
+        case 'R0171'
             startSession = 1;
             endSession = numSessions;
-        case 'R0229'
+        case 'R0192'
             startSession = 1;
             endSession = numSessions;
         otherwise
@@ -216,29 +203,18 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         sessionDates{iSession} = sessionDate;
         
         fname_root = [ratID '_' sessionDateString];
-        base_pdfName_sessionSummary = sprintf('%s_session_summary.pdf',fname_root);
+        pdfName_sessionSummary = sprintf('%s_session_summary.pdf',fname_root);
         pdf_Directory = fullfile(plotsDir,'pdf',ratID);
-        sharedX_pdf_Directory = fullfile(sharedX_plotsDir,'pdf',ratID);
         if ~isfolder(pdf_Directory)
             mkdir(pdf_Directory);
         end
-        if ~isfolder(sharedX_pdf_Directory)
-            mkdir(sharedX_pdf_Directory);
-        end
-        pdfName_sessionSummary = fullfile(pdf_Directory,base_pdfName_sessionSummary);
-        sharedX_pdfName_sessionSummary = fullfile(sharedX_pdf_Directory,base_pdfName_sessionSummary);
-        
-        base_figName_sessionSummary = sprintf('%s_session_summary.fig',fname_root);
+        pdfName_sessionSummary = fullfile(pdf_Directory,pdfName_sessionSummary);
+        figName_sessionSummary = sprintf('%s_session_summary.fig',fname_root);
         fig_Directory = fullfile(plotsDir,'fig',ratID);
-        sharedX_fig_Directory = fullfile(sharedX_plotsDir,'fig',ratID);
         if ~isfolder(fig_Directory)
             mkdir(fig_Directory);
         end
-        if ~isfolder(sharedX_fig_Directory)
-            mkdir(sharedX_fig_Directory);
-        end
-        figName_sessionSummary = fullfile(fig_Directory,base_figName_sessionSummary);
-        sharedX_figName_sessionSummary = fullfile(sharedX_fig_Directory,base_figName_sessionSummary);
+        figName_sessionSummary = fullfile(fig_Directory,figName_sessionSummary);
         
 %         if exist(pdfName_sessionSummary,'file')
 %             continue;
@@ -258,7 +234,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
 %             mkdir(sessionDir_fig);
 %         end
         
-        reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
+        ratSummaryName = [ratID '_kinematicsSummary.mat'];
         reachDataName = fullfile(fullSessionDir,reachDataName);
         
         try
@@ -273,15 +249,12 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
             pawPref = pawPref{1};
         end
         
-        h_fig = plotSessionReachSummaries(reachData, sessionSummary, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType, bodypartColor);
+        h_fig = plotRatReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType);
         
         savefig(h_fig,figName_sessionSummary);
         print(h_fig,pdfName_sessionSummary,'-dpdf');
-        
-        savefig(h_fig,sharedX_figName_sessionSummary);
-        print(h_fig,sharedX_pdfName_sessionSummary,'-dpdf');
-        
         close(h_fig);
     end
     
 end
+        
