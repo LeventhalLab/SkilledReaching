@@ -72,6 +72,8 @@ plot_max_v_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(2,1))
 
 % mean dist from mean trajectory
 plot_mean_dist_from_traj_acrossSessions_singleRat(ratSummary,'h_axes',h_axes(2,3))
+
+plot_generalized_variance_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(2,4))
 % repeat for subsequent plots so first and any success aren't plotted over
 % each other
 [~,ind_trial_type] = breakDownTrialScores(reachData,validTrialTypes);
@@ -223,7 +225,7 @@ for iTrial = 1 : numTrials
         continue;
     end
     pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
-    dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
+    dig2_z_endpt(iTrial) = reachData(iTrial).dig_endPoints(1,2,3);
     trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
 end
 
@@ -262,7 +264,7 @@ for iTrial = 1 : numTrials
         continue;
     end
     pd_endpt(iTrial,:) = reachData(iTrial).pdEndPoints(1,:);
-    dig2_endpt(iTrial,:) = reachData(iTrial).dig2_endPoints(1,:);
+    dig2_endpt(iTrial,:) = reachData(iTrial).dig_endPoints(1,2,:);
 end
 
 for ii = 1 : max(ind_trial_type)

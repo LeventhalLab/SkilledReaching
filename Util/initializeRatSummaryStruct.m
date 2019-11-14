@@ -42,10 +42,10 @@ ratSummary.mean_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
 ratSummary.std_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
 
 ratSummary.mean_pd_endPt = NaN(numSessions_to_analyze,num_outcome_categories,3);
-ratSummary.mean_dig2_endPt = NaN(numSessions_to_analyze,num_outcome_categories,3);
+ratSummary.mean_dig_endPts = NaN(numSessions_to_analyze,num_outcome_categories,4,3);
 
 ratSummary.cov_pd_endPts = NaN(numSessions_to_analyze,num_outcome_categories,3,3);
-ratSummary.cov_dig2_endPts = NaN(numSessions_to_analyze,num_outcome_categories,3,3);
+ratSummary.cov_dig_endPts = NaN(numSessions_to_analyze,num_outcome_categories,4,3,3);
 
 ratSummary.mean_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
 ratSummary.std_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);

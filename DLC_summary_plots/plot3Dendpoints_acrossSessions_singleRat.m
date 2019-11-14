@@ -71,7 +71,7 @@ for iSession = 1 : numSessions
     end
     
     % plot digit 2 endpoints
-    toPlot = squeeze(ratSummary.mean_dig2_endPt(:,1,:));
+    toPlot = squeeze(ratSummary.mean_dig_endPts(:,1,2,:));
     switch pawPref
         case 'left'
             toPlot(:,1) = -toPlot(:,1);

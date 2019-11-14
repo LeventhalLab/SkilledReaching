@@ -1,4 +1,4 @@
-% script_plotRatReachSummaries
+% script_plotSessionReachSummaries
 
 ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
@@ -16,7 +16,7 @@ bodypartColor.paw_dorsum = [0 0 0];
 bodypartColor.pellet = [0 1 1];
 bodypartColor.nose = [0 0 0];
 
-firstRat = 9;
+firstRat = 1;
 lastRat = 27;
 
 x_lim = [-30 10];

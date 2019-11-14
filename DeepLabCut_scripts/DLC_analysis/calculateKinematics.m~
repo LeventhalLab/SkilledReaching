@@ -113,9 +113,7 @@ for i_reach = 1 : num_reaches
     % reach endpoints
     reachData.pdEndPoints(i_reach,:) = pd_trajectory(reach_endFrame,:);
     for i_dig = 1 : 4
-        cur_dig_traj = squeeze(reachData.dig_trajectory{i_reach}(:,:,i_dig));
-        reachData.dig_endPoints(i_reach,i_dig,:) = cur_dig_traj(end,:);  
-    end
+    reachData.dig2_endPoints(i_reach,:) = dig2_traj(end,:);   % should this be reach_endFrame or grasp_endFrame? probably doesn't matter much
     
     % paw orientation
     [reachData.orientation{i_reach},firstValidFrame] = ...

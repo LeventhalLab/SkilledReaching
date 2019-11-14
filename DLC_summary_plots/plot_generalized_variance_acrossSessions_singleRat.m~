@@ -69,11 +69,14 @@ end
     
 scatter(baseLineSessions,pd_gv(baseLineSessions),'markeredgecolor',baselineColor);
 hold on
-scatter(laserOnSessions,pd_gv(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
-scatter(occludeSessions,pd_gv(occludeSessions),'markeredgecolor',laserOnColor);
+scatter(laserOnSessions,pd_gvlaserOnSessions,1),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
+scatter(occludeSessions,ratSummary.mean_pd_v(occludeSessions,1),'markeredgecolor',laserOnColor);
 
+errorbar(baseLineSessions,ratSummary.mean_pd_v(baseLineSessions,1),ratSummary.std_pd_v(baseLineSessions,1),'linestyle','none');
+errorbar(laserOnSessions,ratSummary.mean_pd_v(laserOnSessions,1),ratSummary.std_pd_v(laserOnSessions,1),'linestyle','none');
+errorbar(occludeSessions,ratSummary.mean_pd_v(occludeSessions,1),ratSummary.std_pd_v(occludeSessions,1),'linestyle','none');
 
-ylabel('generalized var')
+ylabel('mean max v (mm/s)')
 xlabel('session #')
 set(gca,'xtick',[1,2,3,12,13,22]);
-set(gca,'ylim',[1 500],'ytick',[0 250 500]);
+set(gca,'ylim',[200 1200],'ytick',[200 700 1200]);

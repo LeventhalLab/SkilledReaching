@@ -656,11 +656,11 @@ numTrials = length(reachData);
 pd_z_endpt = NaN(numTrials,1);
 dig2_z_endpt = NaN(numTrials,1);
 for iTrial = 1 : numTrials
-    if isempty(reachData(iTrial).pdEndPoints) || isempty(reachData(iTrial).dig2_endPoints)
+    if isempty(reachData(iTrial).pdEndPoints) || isempty(reachData(iTrial).dig_endPoints)
         continue
     end
     pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
-    dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
+    dig2_z_endpt(iTrial) = reachData(iTrial).dig_endPoints(1,2,3);
 end
 
 for ii = 1 : max(ind_trial_type)

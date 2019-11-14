@@ -1,4 +1,4 @@
-function [mean_pd_endPt,cov_pd_endPts,mean_dig2_endPt,cov_dig2_endPts] = ...
+function [mean_pd_endPt,cov_pd_endPts,mean_dig_endPts,cov_dig_endPts] = ...
     breakDownReachEndPointsByOutcome(reachData,validTrialOutcomes)
 
 num_trials = length(reachData);
@@ -8,10 +8,10 @@ pd_endPts = NaN(num_trials,3);
 dig_endPts = NaN(num_trials,4,3);
 
 mean_pd_endPt = zeros(num_possOutcomes,3);
-mean_dig2_endPt = zeros(num_possOutcomes,3);
+mean_dig_endPts = zeros(num_possOutcomes,4,3);
 
-cov_pd_endPts = zeros(num_possOutcomes,3,3);
-cov_dig_endPts = zeros(num_possOutcomes,4,3,3);
+cov_pd_endPts = NaN(num_possOutcomes,3,3);
+cov_dig_endPts = NaN(num_possOutcomes,4,3,3);
 
 outcomeFlag = false(num_trials,length(validTrialOutcomes));
 for iTrial = 1 : num_trials
@@ -26,9 +26,9 @@ for iTrial = 1 : num_trials
     
     if ~isempty(reachData(iTrial).reachEnds)
         pd_endPts(iTrial,:) = reachData(iTrial).pdEndPoints(1,:);
-        for i_dig = 1 : 4
-            dig_endPts(iTrial,i_dig,:) = reachData(iTrial).dig2_endPoints(1,:);
-        end
+%         for i_dig = 1 : 4
+            dig_endPts(iTrial,:,:) = reachData(iTrial).dig_endPoints(1,:,:);
+%         end
     end
     
 end
@@ -38,10 +38,8 @@ for i_outcome = 1 : length(validTrialOutcomes)
     cov_pd_endPts(i_outcome,:,:) = nancov(pd_endPts(outcomeFlag(:,i_outcome),:));
     
     for i_dig = 1 : 4
-        mean_dig2_endPt(i_outcome,:) = nanmean(dig2_endPts(outcomeFlag(:,i_outcome),:));
-        cov_dig2_endPts(i_outcome,:,:) = nancov(dig2_endPts(outcomeFlag(:,i_outcome),:));
+        cur_dig_endPts = squeeze(dig_endPts(outcomeFlag(:,i_outcome),i_dig,:));
+        mean_dig_endPts(i_outcome,i_dig,:) = nanmean(cur_dig_endPts,1);
+        cov_dig_endPts(i_outcome,i_dig,:,:) = nancov(cur_dig_endPts);
     end
 end
-
-ratSummary.cov_dig_endPts = NaN(numSessions_to_analyze,num_outcome_categories,4,3,3);
-ratSummary.mean_dig_endPt = NaN(numSessions_to_analyze,num_outcome_categories,4,3);
