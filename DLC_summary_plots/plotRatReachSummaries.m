@@ -76,66 +76,10 @@ plot_mean_dist_from_traj_acrossSessions_singleRat(ratSummary,'h_axes',h_axes(2,3
 plot_generalized_variance_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(2,4))
 % repeat for subsequent plots so first and any success aren't plotted over
 % each other
-[~,ind_trial_type] = breakDownTrialScores(reachData,validTrialTypes);
-
-% number of reaches
-plotNumReaches(reachData,ind_trial_type,trialTypeColors,h_axes(1,2));
-set(gca,'ylim',[0 10])
-
-% event frames
-plotEventFrames(reachData,h_axes(1,3))
-    
-% z at reach end points
-plot_z_endpoints(reachData,ind_trial_type,trialTypeColors,all_slot_z_wrt_pellet,h_axes(1,4));
-
-% 3D endpoints
-plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(1,5),reachEnd_zlim);
-
-%%%%%%%%%%%%%%%%%% ROW 2
-% 3-D trajectories
-plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(2,5),full_traj_z_lim);
-
-% x,y,z trajectories
-% plot_reachTrajectories(reachData,ind_trial_type,trialTypeColors,h_axes(2,1));
-
-% histogram of reach orientations at reach end points by trial type
-hist_z_endPoints(reachData,ind_trial_type,trialTypeColors,h_axes(2,4));
-
-%%%%%%%%%%%%%%%%%%% ROW 3
-% paw velocity
-plot_pawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes(3,1),full_traj_z_lim);
-
-% mean paw velocity by trial type
-
-plot_meanPawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes(3,2),full_traj_z_lim)
-%%%%%%%%%%%%%%%%%% ROW 4
-% reach orientation at reach end point
-plot_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,1));
-
-% histogram of reach orientations at reach end points by trial type
-hist_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,2));
-
-% reach orientation post-slot
-plot_reachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,3))
-
-% mean reach orientation across trial types
-plot_meanReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,4))
-
-%%%%%%%%%%%%%%%%%% ROW 5
-% digit aperture at reach end point
-plot_endReachAperture(reachData,ind_trial_type,trialTypeColors,h_axes(5,1));
-
-hist_endReachAperture(reachData,ind_trial_type,trialTypeColors,h_axes(5,2));
-
-% digit aperture post-slot
-plot_digitApertures(reachData,ind_trial_type,trialTypeColors,h_axes(5,3))
-
-plot_meanDigitApertures(reachData,ind_trial_type,trialTypeColors,h_axes(5,4))
-
 h_figAxis = createFigAxes(h_fig);
 
-textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block, Virus: %s', ...
-    sessionName, sessionType.type, sessionType.sessionsInBlock, sessionType.sessionsLeftInBlock, char(thisRatInfo.Virus));
+textString{1} = sprintf('%s rat summary; %s, %d days left in block, Virus: %s', ...
+    ratID, ratSummary.exptType, char(thisRatInfo.Virus));
 % textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
 % textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
 axes(h_figAxis);
