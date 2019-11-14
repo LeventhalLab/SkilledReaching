@@ -39,6 +39,15 @@ for i_rat = 1 : numRatFolders
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
     
+    switch ratID
+        case 'R0159'
+            startSession = 5;
+            endSession = numSessions;
+        otherwise
+            startSession = 1;
+            endSession = numSessions;
+    end
+    
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
     if isempty(ratInfo_idx)
         error('no entry in ratInfo structure for rat %d\n',C{1});
@@ -69,7 +78,7 @@ for i_rat = 1 : numRatFolders
     ratSummary = initializeRatSummaryStruct(ratID,validTrialOutcomes,validOutcomeNames,sessions_analyzed,thisRatInfo,z_interp_digits);
     
     % load the first file to set up array dimensions
-    sessionDate = sessions_analyzed.date(1);
+    sessionDate = sessions_analyzed.date(startSession);
     sessionDateString = datestr(sessionDate,'yyyymmdd');
 
     cd(ratRootFolder);
@@ -96,7 +105,7 @@ for i_rat = 1 : numRatFolders
     reachDataName = fullfile(fullSessionDir,reachDataName);
 
     if ~exist(reachDataName,'file')
-        sprintf('no reach data summary found for %s\n',curSessionDir);
+        fprintf('no reach data summary found for %s\n',curSessionDir);
         continue;
     end
     load(reachDataName);
@@ -106,7 +115,7 @@ for i_rat = 1 : numRatFolders
     ratSummary.mean_dist_from_pd_trajectory = NaN(numSessions,num_trajectory_points);
     ratSummary.mean_dig_trajectories = NaN(numSessions,num_trajectory_points,3,4);
     ratSummary.mean_dist_from_dig_trajectories = NaN(numSessions,num_trajectory_points,4);
-    for iSession = 1 : numSessions
+    for iSession = startSession : endSession
         
         sessionDate = sessions_analyzed.date(iSession);
         sessionDateString = datestr(sessionDate,'yyyymmdd');
