@@ -59,10 +59,11 @@ switch successType
         plotTitle = 'first/any reach success';
 end
 numSessions = size(ratSummary.mean_pd_trajectory,1);
+sessions_analyzed = ratSummary.sessions_analyzed;
 
-baseLineSessions = 1:2;
-laserOnSessions = 3:12;
-occludeSessions = 13:22;
+baseLineSessions = find(sessions_analyzed.trainingStage == 'retraining');
+laserOnSessions = find(sessions_analyzed.laserStim == 'on');
+occludeSessions = find(sessions_analyzed.laserStim == 'occlude');
 
 for ii = 1 : size(toPlot,2)
     plot(baseLineSessions,toPlot(baseLineSessions,ii),'marker','o','markeredgecolor',baselineColor,'color',laserOnColor);

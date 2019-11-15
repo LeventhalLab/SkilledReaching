@@ -998,7 +998,11 @@ for i_dig = 1 : 4
             % sometimes, when there are only a few reaches, the covariance
             % matrix is barely positive-definite, and matlab gets confused.
             % For now, just skip these.
+            try
             h_dig = error_ellipse(cur_dig_cov,cur_dig_mean);
+            catch
+                fprintf('error_ellipse error, digit %d\n',i_dig);
+            end
         end
     end
     

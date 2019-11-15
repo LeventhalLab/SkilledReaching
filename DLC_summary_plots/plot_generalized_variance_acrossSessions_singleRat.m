@@ -49,16 +49,17 @@ if isempty(h_axes)
     h_axes = gca;
 end
 
-numSessions = size(ratSummary.mean_pd_trajectory,1);
 pawPref = thisRatInfo.pawPref;
+sessions_analyzed = ratSummary.sessions_analyzed;
+numSessions = size(sessions_analyzed,1);
 
-baseLineSessions = 1:2;
-laserOnSessions = 3:12;
-occludeSessions = 13:22;
+baseLineSessions = find(sessions_analyzed.trainingStage == 'retraining');
+laserOnSessions = find(sessions_analyzed.laserStim == 'on');
+occludeSessions = find(sessions_analyzed.laserStim == 'occlude');
 
 pd_gv = NaN(22,1);
 dig_gv = NaN(22,4);
-for iSession = 1 : 22
+for iSession = 1 : numSessions
     
     session_pd_cov = squeeze(ratSummary.cov_pd_endPts(iSession,1,:,:));
     pd_gv(iSession) = det(session_pd_cov);

@@ -16,8 +16,8 @@ bodypartColor.paw_dorsum = [0 0 0];
 bodypartColor.pellet = [0 1 1];
 bodypartColor.nose = [0 0 0];
 
-firstRat = 1;
-lastRat = 27;
+firstRat = 25;
+lastRat = numRats;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -188,8 +188,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
     switch ratID
-        case 'R0158'
-            startSession = 1;
+        case 'R0219'
+            startSession = 13;
             endSession = numSessions;
         case 'R0159'
             startSession = 5;

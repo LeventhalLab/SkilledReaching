@@ -49,12 +49,11 @@ if isempty(h_axes)
     h_axes = gca;
 end
 
-numSessions = size(ratSummary.mean_pd_trajectory,1);
-pawPref = thisRatInfo.pawPref;
+sessions_analyzed = ratSummary.sessions_analyzed;
 
-baseLineSessions = 1:2;
-laserOnSessions = 3:12;
-occludeSessions = 13:22;
+baseLineSessions = find(sessions_analyzed.trainingStage == 'retraining');
+laserOnSessions = find(sessions_analyzed.laserStim == 'on');
+occludeSessions = find(sessions_analyzed.laserStim == 'occlude');
 
 scatter(baseLineSessions,ratSummary.num_trials(baseLineSessions,1),'markeredgecolor',baselineColor);
 hold on

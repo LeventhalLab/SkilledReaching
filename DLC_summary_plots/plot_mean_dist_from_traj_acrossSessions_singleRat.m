@@ -7,9 +7,11 @@ function [h_fig,h_axes] = plot_mean_dist_from_traj_acrossSessions_singleRat(ratS
 % OUTPUTS
 %
 
-baseLineSessions = 1:2;
-laserOnSessions = 3:12;
-occludeSessions = 13:22;
+sessions_analyzed = ratSummary.sessions_analyzed;
+
+baseLineSessions = find(sessions_analyzed.trainingStage == 'retraining');
+laserOnSessions = find(sessions_analyzed.laserStim == 'on');
+occludeSessions = find(sessions_analyzed.laserStim == 'occlude');
 
 occludeRatio=0.5;
 
@@ -52,8 +54,8 @@ numSessions = size(ratSummary.mean_pd_trajectory,1);
 
 for iSession = 1 : numSessions
     
-    sessionStage = ratSummary.sessions_analyzed(iSession,:).trainingStage;
-    sessionLaser = ratSummary.sessions_analyzed(iSession,:).laserStim;
+    sessionStage = sessions_analyzed(iSession,:).trainingStage;
+    sessionLaser = sessions_analyzed(iSession,:).laserStim;
     
     if sessionStage == 'retraining'
         plotColor = baselineColor;

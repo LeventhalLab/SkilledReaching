@@ -78,7 +78,7 @@ plot_generalized_variance_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axe
 % each other
 h_figAxis = createFigAxes(h_fig);
 
-textString{1} = sprintf('%s rat summary; %s, %d days left in block, Virus: %s', ...
+textString{1} = sprintf('%s rat summary; %s, %s, Virus: %s', ...
     ratSummary.ratID, ratSummary.exptType, char(thisRatInfo.Virus));
 % textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
 % textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';

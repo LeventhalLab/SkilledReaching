@@ -39,14 +39,6 @@ for i_rat = 1 : numRatFolders
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
     
-    switch ratID
-        case 'R0159'
-            startSession = 5;
-            endSession = numSessions;
-        otherwise
-            startSession = 1;
-            endSession = numSessions;
-    end
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
     if isempty(ratInfo_idx)
@@ -74,6 +66,15 @@ for i_rat = 1 : numRatFolders
     
     sessions_analyzed = getRetrainingThroughOcclusionSessions(sessionTable);
     numSessions = size(sessions_analyzed,1);
+    
+    switch ratID
+        case 'R0159'
+            startSession = 5;
+            endSession = numSessions;
+        otherwise
+            startSession = 1;
+            endSession = numSessions;
+    end
 
     ratSummary = initializeRatSummaryStruct(ratID,validTrialOutcomes,validOutcomeNames,sessions_analyzed,thisRatInfo,z_interp_digits);
     
@@ -115,6 +116,7 @@ for i_rat = 1 : numRatFolders
     ratSummary.mean_dist_from_pd_trajectory = NaN(numSessions,num_trajectory_points);
     ratSummary.mean_dig_trajectories = NaN(numSessions,num_trajectory_points,3,4);
     ratSummary.mean_dist_from_dig_trajectories = NaN(numSessions,num_trajectory_points,4);
+    
     for iSession = startSession : endSession
         
         sessionDate = sessions_analyzed.date(iSession);
