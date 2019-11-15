@@ -3,8 +3,8 @@
 ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
-           'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
-           'R0228','R0229'};
+           'R0216','R0217','R0218','R0219','R0220','R0221','R0223','R0225','R0227',...
+           'R0228','R0229','R0230','R0235'};
 numRats = length(ratList);
 
 bodypartColor.dig = [1 0 0;
@@ -16,8 +16,8 @@ bodypartColor.paw_dorsum = [0 0 0];
 bodypartColor.pellet = [0 1 1];
 bodypartColor.nose = [0 0 0];
 
-firstRat = 25;
-lastRat = numRats;
+firstRat = 27;
+lastRat = 27;%numRats;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -188,8 +188,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
 %     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
     
     switch ratID
-        case 'R0219'
-            startSession = 13;
+        case 'R0221'
+            startSession = 10;
             endSession = numSessions;
         case 'R0159'
             startSession = 5;

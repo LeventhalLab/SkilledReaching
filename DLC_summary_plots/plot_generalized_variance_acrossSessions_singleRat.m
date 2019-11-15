@@ -73,7 +73,7 @@ hold on
 scatter(laserOnSessions,pd_gv(laserOnSessions),'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
 scatter(occludeSessions,pd_gv(occludeSessions),'markeredgecolor',laserOnColor);
 
-
+title('generalized variance, paw dorsum')
 ylabel('generalized var')
 xlabel('session #')
 set(gca,'xtick',[1,2,3,12,13,22]);

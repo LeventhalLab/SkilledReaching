@@ -71,7 +71,11 @@ for iSession = 1 : numSessions
             toPlot(:,1) = -toPlot(:,1);
         case 'right'
     end
+    try
     plot3(toPlot(:,1),toPlot(:,3),toPlot(:,2),'color',plotColor)
+    catch
+        keyboard
+    end
     hold on
 
 end

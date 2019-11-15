@@ -33,7 +33,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 12 : 12%numRatFolders
+for i_rat = 27 : 27%numRatFolders
     
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -77,9 +77,9 @@ for i_rat = 12 : 12%numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     switch ratID
-        case 'R0186'
-            startSession = 1;
-            endSession = numSessions;
+        case 'R0221'
+            startSession = 10;
+            endSession = 10;%numSessions;
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
