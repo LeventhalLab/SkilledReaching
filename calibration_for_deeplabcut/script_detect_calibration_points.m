@@ -9,7 +9,7 @@
 % % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 % =======
 
-month_to_analyze = '201811';
+month_to_analyze = '201911';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -79,7 +79,7 @@ numDates = length(dateList);
 for iDate = 1 : numDates
     
     curDate = dateList{iDate};
-    if ~any(strcmp({'20181119'}, curDate))
+    if ~any(strcmp({'20191115','20191117'}, curDate))
         continue;
     end
     
