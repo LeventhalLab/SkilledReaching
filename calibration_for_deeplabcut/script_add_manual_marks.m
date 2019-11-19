@@ -95,9 +95,9 @@ numDates = length(csv_dateList);
 for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
-%     if ~any(strcmp({'20181119'}, curDate))
-%         continue;
-%     end
+    if ~any(strcmp({'20191115','20191117'}, curDate))
+        continue;
+    end
     
     fprintf('working on %s\n',curDate);
     num_csvPerDate = length(csvFiles_from_same_date{iDate});

@@ -20,7 +20,7 @@ maxDistFromNeighbor_invalid = 70;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];

@@ -40,9 +40,9 @@ for iMat = 1 : length(all_pt_matList)
         clear pointsStillDistorted
     end
     load(all_pt_matList(iMat).name);
-%     if ~any(strcmp({'20181119'}, curDate))
-%         continue;
-%     end
+    if ~any(strcmp({'20191115','20191117'}, curDate))
+        continue;
+    end
     
     fprintf('working on %s\n',curDate);
     % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each
