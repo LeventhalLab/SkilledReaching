@@ -22,10 +22,10 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-i_rat = 12;
-iSession = 12;
-iVid = 17;
-iFrame = 100;
+i_rat = 1;
+iSession = 19;
+iVid = 27;
+iFrame = 283;
 
 ratID = ratFolders(i_rat).name;
 ratIDnum = str2double(ratID(2:end));

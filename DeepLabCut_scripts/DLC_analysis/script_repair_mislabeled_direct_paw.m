@@ -57,7 +57,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 12:12%20:numRatFolders
+for i_rat = 1:1%20:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,9 +88,9 @@ for i_rat = 12:12%20:numRatFolders
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
-        case 'R0189'
-            startSession = 9;
-            endSession = 9;
+        case 'R0158'
+            startSession = 19;
+            endSession = 19;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -143,7 +143,7 @@ for i_rat = 12:12%20:numRatFolders
         trajFiles = dir([ratID '_' sessionDate '_*_3dtrajectory_new.mat']);
         numTrajFiles = length(trajFiles);
         
-        for iTrial = 1 : numTrajFiles   
+        for iTrial = 27:27%1 : numTrajFiles   
     
             % ROI info is now saved into the trajectory file
             load(trajFiles(iTrial).name);
@@ -156,8 +156,13 @@ for i_rat = 12:12%20:numRatFolders
 
             [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
             pawDorsum_reproj_error = squeeze(reproj_error(pawDorsumIdx,:,:));
+            % also, any paw dorsum x-values > 1200 should be invalidated
+            temp = squeeze(final_direct_pts(pawDorsumIdx,:,1))';
+            pts_too_far_right = temp > 1200;
+            
             
             pts_to_invalidate = pawDorsum_reproj_error(:,1) > maxPawDorsumReprojError;
+            pts_to_invalidate = pts_to_invalidate | pts_too_far_right;
 
             % check if paw dorsum is far away from the other paw points
             otherPawIdx = [mcpIdx,pipIdx,digIdx];

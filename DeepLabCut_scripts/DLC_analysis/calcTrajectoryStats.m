@@ -8,10 +8,13 @@ mean_trajectory = nanmean(all_trajectories, 3);
 
 dist_from_mean_trajectory = bsxfun(@minus,all_trajectories,mean_trajectory);
 
-euc_dist_from_mean_trajectory = squeeze(sqrt(sum(dist_from_mean_trajectory.^2,2)));
+euc_dist_from_mean_trajectory = squeeze(sqrt(nansum(dist_from_mean_trajectory.^2,2)));
 
 mean_euc_dist_from_trajectory = mean(euc_dist_from_mean_trajectory,2);
 
-var_euc_dist_from_trajectory = mean_euc_dist_from_trajectory / size(all_trajectories,3);
+% figure out number of valid trajectories
+temp = squeeze(all_trajectories(1,1,:));
+numValidTrajectories = sum(~isnan(temp));
+var_euc_dist_from_trajectory = mean_euc_dist_from_trajectory / numValidTrajectories;
 
 end
