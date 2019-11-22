@@ -76,6 +76,15 @@ plot_mean_dist_from_traj_acrossSessions_singleRat(ratSummary,'h_axes',h_axes(2,3
 plot_generalized_variance_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(2,4))
 % repeat for subsequent plots so first and any success aren't plotted over
 % each other
+
+plot_endAperture_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(3,1));
+
+plot_meanAperture_acrossSessions_singleRat(ratSummary,'h_axes',h_axes(3,2))
+
+plot_endOrientation_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(4,1));
+
+plot_meanOrientation_acrossSessions_singleRat(ratSummary,'h_axes',h_axes(4,2))
+
 h_figAxis = createFigAxes(h_fig);
 
 textString{1} = sprintf('%s rat summary; %s, %s, Virus: %s', ...
@@ -832,3 +841,4 @@ xlabel('x');ylabel('z');zlabel('y');
 title('3D paw trajectories')
 
 end
+

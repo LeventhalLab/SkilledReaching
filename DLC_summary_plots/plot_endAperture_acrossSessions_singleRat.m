@@ -1,4 +1,4 @@
-function [h_fig,h_axes] = plot_z_endpoints_acrossSessions_singleRat(ratSummary,thisRatInfo,varargin)
+function [h_fig,h_axes] = plot_endAperture_acrossSessions_singleRat(ratSummary,thisRatInfo,varargin)
 %
 % INPUTS
 %   ratSummary
@@ -31,7 +31,7 @@ switch ratSummary.exptType
 end
 baselineColor = [0 0 0];
 
-reachEnd_zlim = [-15 15];
+aperture_lim = [5,25];
 
 h_axes = [];
 
@@ -41,8 +41,8 @@ for i_arg = 1 : 2 : nargin - 2
             h_axes = varargin{i_arg+1};
             axes(h_axes);
             h_fig = gcf;
-        case 'full_traj_z_lim'
-            full_traj_z_lim = varargin{i_arg+1};
+        case 'aperture_lim'
+            aperture_lim = varargin{i_arg+1};
         case 'x_lim'
             x_lim = varargin{i_arg+1};
         case 'y_lim'
@@ -71,26 +71,26 @@ for iSession = 1 : numSessions
     end
     
     % plot digit 2 endpoints
-    toPlot = squeeze(ratSummary.mean_dig_endPts(:,1,2,3));
-    plot(baseLineSessions,toPlot(baseLineSessions),'marker','o',...
+    toPlot = squeeze(ratSummary.mean_end_aperture(:,1));
+    scatter(baseLineSessions,toPlot(baseLineSessions),'marker','o',...
         'markeredgecolor',baselineColor,'markerfacecolor',baselineColor);
     hold on
-    plot(laserOnSessions,toPlot(laserOnSessions),'marker','o',...
+    scatter(laserOnSessions,toPlot(laserOnSessions),'marker','o',...
         'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
-    plot(occludeSessions,toPlot(occludeSessions),'marker','o',...
+    scatter(occludeSessions,toPlot(occludeSessions),'marker','o',...
         'markeredgecolor',laserOnColor);
     
-    toPlot = squeeze(ratSummary.mean_pd_endPt(:,1,3));
-    plot(baseLineSessions,toPlot(baseLineSessions),'marker','o',...
-        'markeredgecolor',baselineColor,'markerfacecolor',baselineColor);
-    plot(laserOnSessions,toPlot(laserOnSessions),'marker','o',...
-        'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor);
-    plot(occludeSessions,toPlot(occludeSessions),'marker','o',...
-        'markeredgecolor',laserOnColor);
+    ebars = squeeze(ratSummary.std_end_aperture(:,1));
+    errorbar(baseLineSessions,toPlot(baseLineSessions),ebars(baseLineSessions),'marker','o',...
+        'markeredgecolor',baselineColor,'markerfacecolor',baselineColor,'linestyle','none');
+    errorbar(laserOnSessions,toPlot(laserOnSessions),ebars(laserOnSessions),'marker','o',...
+        'markeredgecolor',laserOnColor,'markerfacecolor',laserOnColor,'linestyle','none');
+    errorbar(occludeSessions,toPlot(occludeSessions),ebars(occludeSessions),'marker','o',...
+        'markeredgecolor',laserOnColor,'linestyle','none');
 
 end
 line([0,22],[0,0],'color','k')
-ylabel('z-endpoint (mm)')
+ylabel('aperture at extension (mm)')
 xlabel('session #')
 set(gca,'xtick',[1,2,3,12,13,22]);
-set(gca,'ylim',reachEnd_zlim);
+set(gca,'ylim',aperture_lim);

@@ -107,8 +107,8 @@ ratSummaryPlotsDir_pdf = fullfile(ratSummaryPlotsDir,'pdf');
 if ~exist(ratSummaryPlotsDir_fig,'dir')
     mkdir(ratSummaryPlotsDir_fig);
 end
-if ~exist(ratSummaryPlotsDir_pdf,'dir')
-    mkdir(ratSummaryPlotsDir_pdf);
+if ~exist(ratSummaryPlotsDir_fig,'dir')
+    mkdir(ratSummaryPlotsDir_fig);
 end
 
 ratInfo_IDs = [ratInfo.ratID];

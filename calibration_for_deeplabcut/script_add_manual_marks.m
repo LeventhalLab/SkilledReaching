@@ -95,7 +95,7 @@ numDates = length(csv_dateList);
 for iDate = 1 : numDates
     
     curDate = csv_dateList{iDate};
-    if ~any(strcmp({'20191115','20191117'}, curDate))
+    if ~any(strcmp({'20191118','20191119','20191120'}, curDate))
         continue;
     end
     
