@@ -40,7 +40,7 @@ for iMat = 1 : length(all_pt_matList)
         clear pointsStillDistorted
     end
     load(all_pt_matList(iMat).name);
-    if ~any(strcmp({'20191118','20191119','20191120'}, curDate))
+    if ~any(strcmp({'20191121'}, curDate))
         continue;
     end
     

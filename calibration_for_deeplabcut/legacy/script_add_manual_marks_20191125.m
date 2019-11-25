@@ -1,12 +1,8 @@
 % add manually marked calibration images to automatically marked calibration images
-%
-% revised 20191125 to incorporate time and box number in calibration
-% names
 
-% set which month to detect calibration points for
-% eventually, change directory structure to have a separate set of
-% calibration images for each box
-month_to_analyze = '201908';
+camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+
+month_to_analyze = '201911';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -24,7 +20,6 @@ if ~exist(allMarkedDir,'dir')
     mkdir(allMarkedDir);
 end
 
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 load(camParamFile);
 
 pointsStillDistorted = true;
@@ -56,6 +51,11 @@ SEsize = 3;
 direct_hsvThresh = [0,0.1,0.9,1,0.9,1;
                     0.33,0.1,0.9,1,0.9,1;
                     0.66,0.1,0.9,1,0.9,1];
+                
+% for 20170804
+% direct_hsvThresh = [0,0.1,0.9,1,0.9,1;
+%                     0.2,0.1,0.9,1,0.9,1;
+%                     0.66,0.1,0.9,1,0.9,1];
 
 mirror_hsvThresh = [0,0.1,0.85,1,0.85,1;
                     0.30,0.05,0.85,1,0.85,1;
@@ -86,83 +86,38 @@ ROIs = [700,270,650,705;
 numBoards = size(ROIs,1) - 1;
 
 mirrorOrientation = {'top','left','right'};
-
+   
 cd(calImageDir);
-[imFiles_from_same_boxdate, boxList, datesForBox] = groupCalibrationImagesbyDateBoxTime(imgList);
+[imFiles_from_same_date, img_dateList] = groupCalibrationImagesbyDate(imgList);
+[csvFiles_from_same_date, csv_dateList] = group_csv_files_by_date(csvList);
+numDates = length(csv_dateList);
 
-[csvFiles_from_same_boxdate, csv_boxList, csv_datesForBox] = group_csv_files_by_boxdate(csvList);
-numBoxes = length(csv_boxList);
-% numDates = length(csv_dateList);
-
-for iBox = 1 : numBoxes
+for iDate = 1 : numDates
     
-    curBox = csv_boxList(iBox);
-    imgBoxIdx = find(boxList == curBox);
-    if isempty(imgBoxIdx)
+    curDate = csv_dateList{iDate};
+    if ~any(strcmp({'20191121'}, curDate))
         continue;
     end
-    numDatesForBox = length(csv_datesForBox{iBox});
     
-    for iDate = 1 : numDatesForBox
-        curDate = csv_datesForBox{iBox}{iDate};
-        
-        % comment in if only want to analyze specific boxes from specific dates
-%         if ~any(strcmp({'20191121'}, curDate))
-%             continue;
-%         end
-        curDateString = datestr(curDate,'yyyymmdd');
-        
-        fprintf('working on box %d, %s\n',csv_boxList(iBox),curDateString);
-        
-        % find the csvFiles_from_same_boxdate structure for this box/date
-        % combination
-        validBoxDateCombo = false;
-        for i_boxDate = 1 : length(csvFiles_from_same_boxdate)
-            if (csvFiles_from_same_boxdate(i_boxDate).box == curBox && ...
-                csvFiles_from_same_boxdate(i_boxDate).date == curDate)
-                
-                validBoxDateCombo = true;
-                break
-                
-            end
-        end
-        if ~validBoxDateCombo
-            continue
-        end
-        
-        num_csvPerDate = length(csvFiles_from_same_boxdate(i_boxDate).fnames);
-        
-        validImgBoxDateCombo = false;
-        % find this box/date combo in imFiles_from_same_boxdate
-        for i_imgBoxDate = 1 : length(imFiles_from_same_boxdate)
-            if (imFiles_from_same_boxdate(i_imgBoxDate).box == curBox && ...
-                imFiles_from_same_boxdate(i_imgBoxDate).date == curDate)
-                
-                validImgBoxDateCombo = true;
-                break
-                
-            end
-        end
-        if ~validImgBoxDateCombo
-            continue
-        end
-        
-        img_date_idx = find(datesForBox{imgBoxIdx} == curDate);
+    fprintf('working on %s\n',curDate);
+    num_csvPerDate = length(csvFiles_from_same_date{iDate});
     
-        numImgPerDate = length(imFiles_from_same_boxdate(i_imgBoxDate).fnames);
-        img = cell(1, numImgPerDate);
+    % find this date in the img_dateList
+    img_date_idx = find(strcmp(img_dateList, curDate));
     
-        csvData = cell(1,num_csvPerDate);
-        csvNumList = zeros(1,num_csvPerDate);
-        cd(manuallyMarkedDir)
+    numImgPerDate = length(imFiles_from_same_date{img_date_idx});
+    img = cell(1, numImgPerDate);
     
-        for i_csv = 1 : num_csvPerDate
-            cur_csvName = csvFiles_from_same_boxdate(i_boxDate).fnames{i_csv};
-            csvNamePrefix = sprintf('GridCalibration_box%02d',curBox);
-            C = textscan(cur_csvName,[csvNamePrefix '_' curDateString '_%d.csv']);
-            csvNumList(i_csv) = C{1};
-            csvData{i_csv} = readFIJI_csv(cur_csvName);
-        end
+    csvData = cell(1,num_csvPerDate);
+    csvNumList = zeros(1,num_csvPerDate);
+    cd(manuallyMarkedDir)
+    
+    for i_csv = 1 : num_csvPerDate
+        cur_csvName = csvFiles_from_same_date{iDate}{i_csv};
+        C = textscan(cur_csvName,['GridCalibration_' curDate '_%d.csv']);
+        csvNumList(i_csv) = C{1};
+        csvData{i_csv} = readFIJI_csv(cur_csvName);
+    end
     
     % load images, but only ones for which there is a .csv file
     cd(calImageDir)
