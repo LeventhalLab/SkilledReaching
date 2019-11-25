@@ -164,86 +164,76 @@ for iBox = 1 : numBoxes
             csvData{i_csv} = readFIJI_csv(cur_csvName);
         end
     
-    % load images, but only ones for which there is a .csv file
-    cd(calImageDir)
-    imgNumList = zeros(1,numImgPerDate);
-    numImgLoaded = 0;
-    if exist('img','var')
-        clear img
-    end
-    for iImg = 1 : numImgPerDate
-        curImgName = imFiles_from_same_date{img_date_idx}{iImg};
-        C = textscan(curImgName,['GridCalibration_' curDate '_%d.png']);
-        imageNumber = C{1};
-        if any(csvNumList == imageNumber)
-            % load this image
-            numImgLoaded = numImgLoaded + 1;
-            img{numImgLoaded} = imread(curImgName);
-            imgNumList(numImgLoaded) = imageNumber;
+        % load images, but only ones for which there is a .csv file
+        cd(calImageDir)
+        imgNumList = zeros(1,numImgPerDate);
+        numImgLoaded = 0;
+        if exist('img','var')
+            clear img
         end
-    end
-        
-    if any(strcmp({'20181101','20181106'}, curDate))
-        % this is a goofy session where the calibration cube was left
-        % inside the reaching box. Assume first 12 marks are the green face
-        % in the left mirror, next 12 are the green face, direct view, next
-        % 12 are blue face, direct view, last 12 are blue face, mirror view
-        
-        directChecks = NaN(prod(boardSize-1),2,3,numImgPerDate);
-        mirrorChecks = NaN(prod(boardSize-1),2,3,numImgPerDate);
-        
-        old_directChecks = NaN(prod(boardSize-1),2,3,numImgPerDate);
-        old_mirrorChecks = NaN(prod(boardSize-1),2,3,numImgPerDate);
-    
-        for i_csv = 1 : num_csvPerDate
-
-            % figure out what image index to use
-            img_idx = i_csv;
-            
-            % update directChecks and mirrorChecks arrays
-            mirrorChecks(:,:,2,img_idx) = csvData{i_csv}(1:12,:);
-            directChecks(:,:,2,img_idx) = csvData{i_csv}(13:24,:);
-            
-            mirrorChecks(:,:,3,img_idx) = csvData{i_csv}(37:48,:);
-            directChecks(:,:,3,img_idx) = csvData{i_csv}(25:36,:);
-            
+        for iImg = 1 : numImgPerDate
+            curImgName = imFiles_from_same_boxdate(i_imgBoxDate).fnames{iImg};
+            imgNamePrefix = sprintf('GridCalibration_box%02d',curBox);
+            C = textscan(curImgName,[imgNamePrefix '_' curDate '_%d.png']);
+            imageNumber = C{1};
+            if any(csvNumList == imageNumber)
+                % load this image
+                numImgLoaded = numImgLoaded + 1;
+                img{numImgLoaded} = imread(curImgName);
+                imgNumList(numImgLoaded) = imageNumber;
+            end
         end
-    else
-        
-        [directBorderMask, initDirBorderMask] = findDirectBorders(img, direct_hsvThresh, ROIs, ...
-                'diffthresh', diffThresh, 'threshstepsize', threshStepSize, 'maxthresh', maxThresh, ...
-                'maxdistfrommainblob', maxDistFromMainBlob, 'mincheckerboardarea', minDirectCheckerboardArea, ...
-                'maxcheckerboardarea', maxDirectCheckerboardArea, 'sesize', SEsize, 'minsolidity', minSolidity);
-        [mirrorBorderMask, initMirBorderMask] = findMirrorBorders(img, mirror_hsvThresh, ROIs, ...
-                'diffthresh', diffThresh, 'threshstepsize', threshStepSize, 'maxthresh', maxThresh, ...
-                'maxdistfrommainblob', maxDistFromMainBlob, 'mincheckerboardarea', minMirrorCheckerboardArea, ...
-                'maxcheckerboardarea', maxMirrorCheckerboardArea, 'sesize', SEsize, 'minsolidity', minSolidity);
 
-        % undistort masks - assume points were marked on the undistorted images
-    %     for ii = 1 : length(directBorderMask)
-    %         for jj = 1 : size(directBorderMask{ii},3)
-    %             directBorderMask{ii}(:,:,jj) = undistortImage(squeeze(directBorderMask{ii}(:,:,jj)), cameraParams);
-    %         end
-    %     end
-    %     for ii = 1 : length(mirrorBorderMask)
-    %         for jj = 1 : size(mirrorBorderMask{ii},3)
-    %             mirrorBorderMask{ii}(:,:,jj) = undistortImage(squeeze(mirrorBorderMask{ii}(:,:,jj)), cameraParams);
-    %         end
-    %     end
-    %     
-        % read in corresponding .mat file if it exists
-        cd(autoImageDir)
-        matFileName = ['GridCalibration_' csv_dateList{iDate} '_auto.mat'];
-        foundMatFile = false;
-        if exist(matFileName,'file')
-            load(matFileName);
-            foundMatFile = true;
+        if any(strcmp({'20181101','20181106'}, curDate))
+            % this is a goofy session where the calibration cube was left
+            % inside the reaching box. Assume first 12 marks are the green face
+            % in the left mirror, next 12 are the green face, direct view, next
+            % 12 are blue face, direct view, last 12 are blue face, mirror view
+
+            directChecks = NaN(prod(boardSize-1),2,3,numImgPerDate);
+            mirrorChecks = NaN(prod(boardSize-1),2,3,numImgPerDate);
+
+            old_directChecks = NaN(prod(boardSize-1),2,3,numImgPerDate);
+            old_mirrorChecks = NaN(prod(boardSize-1),2,3,numImgPerDate);
+
+            for i_csv = 1 : num_csvPerDate
+
+                % figure out what image index to use
+                img_idx = i_csv;
+
+                % update directChecks and mirrorChecks arrays
+                mirrorChecks(:,:,2,img_idx) = csvData{i_csv}(1:12,:);
+                directChecks(:,:,2,img_idx) = csvData{i_csv}(13:24,:);
+
+                mirrorChecks(:,:,3,img_idx) = csvData{i_csv}(37:48,:);
+                directChecks(:,:,3,img_idx) = csvData{i_csv}(25:36,:);
+
+            end
         else
-            % create arrays to hold the marked checkerboard points if not
-            % already loaded from the auto-detection .mat file
-            directChecks = NaN(prod(boardSize-1),2,size(directBorderMask{1},3),numImgPerDate);
-            mirrorChecks = NaN(prod(boardSize-1),2,size(mirrorBorderMask{1},3),numImgPerDate);
-        end
+        
+            [directBorderMask, initDirBorderMask] = findDirectBorders(img, direct_hsvThresh, ROIs, ...
+                    'diffthresh', diffThresh, 'threshstepsize', threshStepSize, 'maxthresh', maxThresh, ...
+                    'maxdistfrommainblob', maxDistFromMainBlob, 'mincheckerboardarea', minDirectCheckerboardArea, ...
+                    'maxcheckerboardarea', maxDirectCheckerboardArea, 'sesize', SEsize, 'minsolidity', minSolidity);
+            [mirrorBorderMask, initMirBorderMask] = findMirrorBorders(img, mirror_hsvThresh, ROIs, ...
+                    'diffthresh', diffThresh, 'threshstepsize', threshStepSize, 'maxthresh', maxThresh, ...
+                    'maxdistfrommainblob', maxDistFromMainBlob, 'mincheckerboardarea', minMirrorCheckerboardArea, ...
+                    'maxcheckerboardarea', maxMirrorCheckerboardArea, 'sesize', SEsize, 'minsolidity', minSolidity);
+
+            % read in corresponding .mat file if it exists
+            cd(autoImageDir)
+            matBaseName = sprintf('GridCalibration_box%02d',curBox);
+            matFileName = [matBaseName '_' curDateString '_auto.mat'];
+            foundMatFile = false;
+            if exist(matFileName,'file')
+                load(matFileName);
+                foundMatFile = true;
+            else
+                % create arrays to hold the marked checkerboard points if not
+                % already loaded from the auto-detection .mat file
+                directChecks = NaN(prod(boardSize-1),2,size(directBorderMask{1},3),numImgPerDate);
+                mirrorChecks = NaN(prod(boardSize-1),2,size(mirrorBorderMask{1},3),numImgPerDate);
+            end
 
         old_directChecks = directChecks;
         old_mirrorChecks = mirrorChecks;

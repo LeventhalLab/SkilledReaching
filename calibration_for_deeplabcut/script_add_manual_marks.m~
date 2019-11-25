@@ -97,6 +97,10 @@ numBoxes = length(csv_boxList);
 for iBox = 1 : numBoxes
     
     curBox = csv_boxList(iBox);
+    imgBoxIdx = find(boxList == curBox);
+    if isempty(imgBoxIdx)
+        continue;
+    end
     numDatesForBox = length(csv_datesForBox{iBox});
     
     for iDate = 1 : numDatesForBox
@@ -143,7 +147,7 @@ for iBox = 1 : numBoxes
             continue
         end
         
-        img_date_idx = find(strcmp(img_dateList, curDate));
+        img_date_idx = find(datesForBox{imgBoxIdx} == curDate);
     
         numImgPerDate = length(imFiles_from_same_boxdate(i_imgBoxDate).fnames);
         img = cell(1, numImgPerDate);
@@ -153,30 +157,32 @@ for iBox = 1 : numBoxes
         cd(manuallyMarkedDir)
     
         for i_csv = 1 : num_csvPerDate
-            cur_csvName = csvFiles_from_same_date{iDate}{i_csv};
-            C = textscan(cur_csvName,['GridCalibration_' curDate '_%d.csv']);
+            cur_csvName = csvFiles_from_same_boxdate(i_boxDate).fnames{i_csv};
+            csvNamePrefix = sprintf('GridCalibration_box%02d',curBox);
+            C = textscan(cur_csvName,[csvNamePrefix '_' curDateString '_%d.csv']);
             csvNumList(i_csv) = C{1};
             csvData{i_csv} = readFIJI_csv(cur_csvName);
         end
     
-    % load images, but only ones for which there is a .csv file
-    cd(calImageDir)
-    imgNumList = zeros(1,numImgPerDate);
-    numImgLoaded = 0;
-    if exist('img','var')
-        clear img
-    end
-    for iImg = 1 : numImgPerDate
-        curImgName = imFiles_from_same_date{img_date_idx}{iImg};
-        C = textscan(curImgName,['GridCalibration_' curDate '_%d.png']);
-        imageNumber = C{1};
-        if any(csvNumList == imageNumber)
-            % load this image
-            numImgLoaded = numImgLoaded + 1;
-            img{numImgLoaded} = imread(curImgName);
-            imgNumList(numImgLoaded) = imageNumber;
+        % load images, but only ones for which there is a .csv file
+        cd(calImageDir)
+        imgNumList = zeros(1,numImgPerDate);
+        numImgLoaded = 0;
+        if exist('img','var')
+            clear img
         end
-    end
+        for iImg = 1 : numImgPerDate
+            curImgName = imFiles_from_same_boxdate(i_imgBoxDate).fnames{iImg};
+            imgNamePrefix = sprintf('GridCalibration_box%02d',curBox);
+            C = textscan(curImgName,[imgNamePrefix '_' curDate '_%d.png']);
+            imageNumber = C{1};
+            if any(csvNumList == imageNumber)
+                % load this image
+                numImgLoaded = numImgLoaded + 1;
+                img{numImgLoaded} = imread(curImgName);
+                imgNumList(numImgLoaded) = imageNumber;
+            end
+        end
         
     if any(strcmp({'20181101','20181106'}, curDate))
         % this is a goofy session where the calibration cube was left
