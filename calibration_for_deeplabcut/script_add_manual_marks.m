@@ -104,7 +104,7 @@ for iBox = 1 : numBoxes
     numDatesForBox = length(csv_datesForBox{iBox});
     
     for iDate = 1 : numDatesForBox
-        curDate = csv_datesForBox{iBox}{iDate};
+        curDate = csv_datesForBox{iBox}(iDate);
         
         % comment in if only want to analyze specific boxes from specific dates
 %         if ~any(strcmp({'20191121'}, curDate))
@@ -158,9 +158,11 @@ for iBox = 1 : numBoxes
     
         for i_csv = 1 : num_csvPerDate
             cur_csvName = csvFiles_from_same_boxdate(i_boxDate).fnames{i_csv};
-            csvNamePrefix = sprintf('GridCalibration_box%02d',curBox);
-            C = textscan(cur_csvName,[csvNamePrefix '_' curDateString '_%d.csv']);
-            csvNumList(i_csv) = C{1};
+%             csvNamePrefix = sprintf('GridCalibration_box%02d',curBox);
+%             C = textscan(cur_csvName,[csvNamePrefix '_' curDateString '_%d.csv']);
+%             csvNumList(i_csv) = C{1};
+            [~,csv_nosuffix,~] = fileparts(cur_csvName);
+            csvNumList(i_csv) = str2double(csv_nosuffix(end));
             csvData{i_csv} = readFIJI_csv(cur_csvName);
         end
     
@@ -173,9 +175,11 @@ for iBox = 1 : numBoxes
         end
         for iImg = 1 : numImgPerDate
             curImgName = imFiles_from_same_boxdate(i_imgBoxDate).fnames{iImg};
-            imgNamePrefix = sprintf('GridCalibration_box%02d',curBox);
-            C = textscan(curImgName,[imgNamePrefix '_' curDate '_%d.png']);
-            imageNumber = C{1};
+            [~,img_nosuffix,~] = fileparts(curImgName);
+%             imgNamePrefix = sprintf('GridCalibration_box%02d',curBox);
+%             C = textscan(curImgName,[imgNamePrefix '_' curDateString '_%d.png']);
+%             imageNumber = C{1};
+            imageNumber = str2double(img_nosuffix(end));
             if any(csvNumList == imageNumber)
                 % load this image
                 numImgLoaded = numImgLoaded + 1;
@@ -184,7 +188,7 @@ for iBox = 1 : numBoxes
             end
         end
 
-        if any(strcmp({'20181101','20181106'}, curDate))
+        if any(strcmp({'20181101','20181106'}, curDateString))
             % this is a goofy session where the calibration cube was left
             % inside the reaching box. Assume first 12 marks are the green face
             % in the left mirror, next 12 are the green face, direct view, next
@@ -234,6 +238,8 @@ for iBox = 1 : numBoxes
                 directChecks = NaN(prod(boardSize-1),2,size(directBorderMask{1},3),numImgPerDate);
                 mirrorChecks = NaN(prod(boardSize-1),2,size(mirrorBorderMask{1},3),numImgPerDate);
             end
+            
+        end
 
         old_directChecks = directChecks;
         old_mirrorChecks = mirrorChecks;
@@ -278,93 +284,95 @@ for iBox = 1 : numBoxes
             end
 
         end
-    
-    end
-    
-    %directChecks(:,:,1,1)=undistortPoints(directChecks(:,:,1,1),cameraParams);
-    
-    allMatchedPoints = NaN(points_per_board * numImgPerDate, 2, 2, numBoards);
-    for iImg = 1 : numImgPerDate
-        for iBoard = 1 : numBoards
-            curDirectChecks = squeeze(directChecks(:,:,iBoard,iImg));
-            curMirrorChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
-            
-            if all(isnan(curDirectChecks(:))) || all(isnan(curMirrorChecks(:)))
-                % don't have matching points for the direct and mirror view
-                continue;
-            end 
-            matchIdx = matchCheckerboardPoints(curDirectChecks, curMirrorChecks);
 
-            matchStartIdx = (iImg-1) * points_per_board + 1;
-            matchEndIdx = (iImg) * points_per_board;
-
-            allMatchedPoints(matchStartIdx:matchEndIdx,:,1,iBoard) = curDirectChecks(matchIdx(:,1),:);
-            allMatchedPoints(matchStartIdx:matchEndIdx,:,2,iBoard) = curMirrorChecks(matchIdx(:,2),:);
-            
-            directChecks(:,:,iBoard,iImg) = curDirectChecks(matchIdx(:,1),:);
-            mirrorChecks(:,:,iBoard,iImg) = curMirrorChecks(matchIdx(:,2),:);
-        end
-    end
-    
-    matSaveFileName = ['GridCalibration_' csv_dateList{iDate} '_all.mat'];
-    matSaveFileName = fullfile(allMarkedDir,matSaveFileName);
-    imFileList = imFiles_from_same_date{img_date_idx};
-    save(matSaveFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList','curDate','pointsStillDistorted');
-    
-    if saveMarkedImages
+        allMatchedPoints = NaN(points_per_board * numImgPerDate, 2, 2, numBoards);
         for iImg = 1 : numImgPerDate
-            
-            % was there a previously marked image?
-            curImgName = imFiles_from_same_date{img_date_idx}{iImg};
-            cd(calImageDir);
-            oldImg = imread(curImgName,'png');
-%             newImg = undistortImage(oldImg,cameraParams);
-            newImg = oldImg;
-            
             for iBoard = 1 : numBoards
-                
-                curChecks = squeeze(directChecks(:,:,iBoard,iImg));
-                for i_pt = 1 : size(curChecks,1)
-                    if isnan(curChecks(i_pt,1)); continue; end
-                    newImg = insertShape(newImg,'rectangle',...
-                        [curChecks(i_pt,1),curChecks(i_pt,2),2*markRadius,2*markRadius],...
-                        'color',colorList{iBoard},'opacity',markOpacity);
-                end
-                
-                curChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
-                for i_pt = 1 : size(curChecks,1)
-                    if isnan(curChecks(i_pt,1)); continue; end
-                    newImg = insertShape(newImg,'rectangle',...
-                        [curChecks(i_pt,1),curChecks(i_pt,2),2*markRadius,2*markRadius],...
-                        'color',colorList{iBoard},'opacity',markOpacity);
-                end
-                
-                % plot points that had been detected automatically
-                curChecks = squeeze(old_directChecks(:,:,iBoard,iImg));
-                for i_pt = 1 : size(curChecks,1)
-                    if isnan(curChecks(i_pt,1)); continue; end
-                    newImg = insertShape(newImg,'circle',...
-                        [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
-                        'color',colorList{iBoard},'opacity',markOpacity);
-                end
-                
-                curChecks = squeeze(old_mirrorChecks(:,:,iBoard,iImg));
-                for i_pt = 1 : size(curChecks,1)
-                    if isnan(curChecks(i_pt,1)); continue; end
-                    newImg = insertShape(newImg,'circle',...
-                        [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
-                        'color',colorList{iBoard},'opacity',markOpacity);
-                end
-                
-            end
+                curDirectChecks = squeeze(directChecks(:,:,iBoard,iImg));
+                curMirrorChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
 
-            h_fig = figure;
-            imshow(newImg);
-            newImgName = strrep(curImgName,'.png','_all_marked.png');
-            newImgName = fullfile(allMarkedDir,newImgName);
-            set(gcf,'name',newImgName);
-            imwrite(newImg,newImgName,'png');
-            close(h_fig)
-        end       
+                if all(isnan(curDirectChecks(:))) || all(isnan(curMirrorChecks(:)))
+                    % don't have matching points for the direct and mirror view
+                    continue;
+                end 
+                matchIdx = matchCheckerboardPoints(curDirectChecks, curMirrorChecks);
+
+                matchStartIdx = (iImg-1) * points_per_board + 1;
+                matchEndIdx = (iImg) * points_per_board;
+
+                allMatchedPoints(matchStartIdx:matchEndIdx,:,1,iBoard) = curDirectChecks(matchIdx(:,1),:);
+                allMatchedPoints(matchStartIdx:matchEndIdx,:,2,iBoard) = curMirrorChecks(matchIdx(:,2),:);
+
+                directChecks(:,:,iBoard,iImg) = curDirectChecks(matchIdx(:,1),:);
+                mirrorChecks(:,:,iBoard,iImg) = curMirrorChecks(matchIdx(:,2),:);
+            end
+        end
+    
+        matSaveFileName = sprintf('GridCalibration_box%02d_%s_all.mat',boxList(iBox),curDateString);
+        matSaveFileName = fullfile(allMarkedDir,matSaveFileName);
+        imFileList = imFiles_from_same_boxdate(i_imgBoxDate).fnames;
+        save(matSaveFileName, 'directChecks','mirrorChecks','allMatchedPoints','cameraParams','imFileList','curDate','pointsStillDistorted');
+    
+        if saveMarkedImages
+            for iImg = 1 : numImgPerDate
+
+                % was there a previously marked image?
+                curImgName = imFileList{iImg};
+                cd(calImageDir);
+                oldImg = imread(curImgName,'png');
+    %             newImg = undistortImage(oldImg,cameraParams);
+                newImg = oldImg;
+
+                for iBoard = 1 : numBoards
+
+                    curChecks = squeeze(directChecks(:,:,iBoard,iImg));
+                    for i_pt = 1 : size(curChecks,1)
+                        if isnan(curChecks(i_pt,1)); continue; end
+                        newImg = insertShape(newImg,'rectangle',...
+                            [curChecks(i_pt,1),curChecks(i_pt,2),2*markRadius,2*markRadius],...
+                            'color',colorList{iBoard},'opacity',markOpacity);
+                    end
+
+                    curChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
+                    for i_pt = 1 : size(curChecks,1)
+                        if isnan(curChecks(i_pt,1)); continue; end
+                        newImg = insertShape(newImg,'rectangle',...
+                            [curChecks(i_pt,1),curChecks(i_pt,2),2*markRadius,2*markRadius],...
+                            'color',colorList{iBoard},'opacity',markOpacity);
+                    end
+
+                    % plot points that had been detected automatically
+                    curChecks = squeeze(old_directChecks(:,:,iBoard,iImg));
+                    for i_pt = 1 : size(curChecks,1)
+                        if isnan(curChecks(i_pt,1)); continue; end
+                        newImg = insertShape(newImg,'circle',...
+                            [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
+                            'color',colorList{iBoard},'opacity',markOpacity);
+                    end
+
+                    curChecks = squeeze(old_mirrorChecks(:,:,iBoard,iImg));
+                    for i_pt = 1 : size(curChecks,1)
+                        if isnan(curChecks(i_pt,1)); continue; end
+                        newImg = insertShape(newImg,'circle',...
+                            [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
+                            'color',colorList{iBoard},'opacity',markOpacity);
+                    end
+
+                end
+
+                h_fig = figure;
+                imshow(newImg);
+                imgTime = imFiles_from_same_boxdate(i_imgBoxDate).picTimes(iImg);
+                timeString = datestr(imgTime,'HH-MM-SS');
+                [~,curImg_nosuffix,~] = fileparts(curImgName);
+                imgNum = str2double(curImg_nosuffix(end));
+                newImgName = sprintf('GridCalibration_box%02d_%s_%s_%d_all_marked.png', boxList(iBox),curDateString,timeString,imgNum);
+%                 newImgName = strrep(curImgName,'.png','_all_marked.png');
+                newImgName = fullfile(allMarkedDir,newImgName);
+                set(gcf,'name',newImgName);
+                imwrite(newImg,newImgName,'png');
+                close(h_fig)
+            end       
+        end
     end
 end

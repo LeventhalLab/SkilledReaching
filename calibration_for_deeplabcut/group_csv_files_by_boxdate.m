@@ -20,7 +20,7 @@ datesForBox = {};    % list of dates for an individual box
 for iFile = 1 : length(csvList)
     
     if contains(lower(csvList(iFile).name),'box')
-        C = textscan(lower(csvList(iFile).name),'gridcalibration_box%d_%8s_*');
+        C = textscan(lower(csvList(iFile).name),'gridcalibration_box%d_%8s_%8s_*');
         curBox = C{1};
         fileDateString = C{2}{1};
         picTimeString = C{3}{1};
@@ -34,6 +34,7 @@ for iFile = 1 : length(csvList)
         curBox = 99;
         picTime = datetime([fileDateString '-00-00-01'],'inputformat','yyyyMMdd-HH-mm-ss');
     end        
+    boxIdx = find(boxList == curBox);
     
     if iFile == 1
         % first file, so of course need a new structure for this box/date
@@ -41,7 +42,7 @@ for iFile = 1 : length(csvList)
         csvFiles_from_same_boxdate.box = curBox;
         csvFiles_from_same_boxdate.date = fileDate;
         csvFiles_from_same_boxdate.picTimes = picTime;
-        csvFiles_from_same_boxdate.fnames{1} = imgList(iFile).name;
+        csvFiles_from_same_boxdate.fnames{1} = csvList(iFile).name;
         boxList = curBox;
         datesForBox{1}(1) = fileDate;
     elseif length(datesForBox) <= boxIdx   % this box has already been found
