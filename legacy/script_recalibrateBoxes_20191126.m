@@ -1,11 +1,16 @@
-% script to recalibrate reaching boxes for a specific session based on
-% matched points in videos in addition to matched points from the
-% calibration cubes
+% script to perform 3D reconstruction on videos
+
+% slot_z = 200;    % distance from camera of slot in mm. hard coded for now
+% time_to_average_prior_to_reach = 0.1;   % in seconds, the time prior to the reach over which to average pellet location
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 load(camParamFile);
 
-% parameters for calibrateBoxFromDLCSession
+% parameter for calc3D_DLC_trajectory_20181204
+maxDistFromNeighbor = 40;   % maximum distance an estimated point can be from its neighbor
+maxReprojError = 10;
+
+% parameters for find_invalid_DLC_points
 maxDistPerFrame = 30;
 min_valid_p = 0.85;
 min_certain_p = 0.97;
@@ -41,6 +46,17 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
+% % find the list of calibration files
+% cd(calImageDir);
+% calFileList = dir('SR_boxCalibration_*.mat');
+% calDateList = cell(1,length(calFileList));
+% calDateNums = zeros(length(calFileList),1);
+% for iFile = 1 : length(calFileList)
+%     C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
+%     calDateList{iFile} = C{1};
+%     calDateNums(iFile) = str2double(calDateList{iFile});
+% end
+
 for i_rat = 36:36%4:13%numRatFolders
 
     ratID = ratFolders(i_rat).name;
@@ -69,8 +85,8 @@ for i_rat = 36:36%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0310'
-            startSession = 18;
+        case 'R0235'
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -92,19 +108,7 @@ for i_rat = 36:36%4:13%numRatFolders
  
         fprintf('working on session %s_%s\n',ratID,sessionDate);
         
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
-        cd(fullSessionDir);
-        
-        logFiles = dir('*.log');
-        curLog = readLogData(logFiles(1).name);
-        
-        if isfield(curLog,'boxnumber')
-            boxNum = curLog.boxnumber;
-        else
-            boxNum = 99;   % used 99 as box number before this was written into .log files 20191126
-        end
-        
-        calibrationFileName = findCalibrationFile(calImageDir,boxNum,sessionDate);
+        calibrationFileName = findCalibrationFile(calImageDir,sessionDate);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else
@@ -138,14 +142,10 @@ for i_rat = 36:36%4:13%numRatFolders
                 F = squeeze(boxCal.F(:,:,3));
         end
     
-        
+        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
         tic
-        [boxCal_fromSession(sessionIdx),~,~] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,...
-                                                                          'min_valid_p',min_valid_p,...
-                                                                          'min_certain_p',min_certain_p,...
-                                                                          'maxneighbordist',maxDistFromNeighbor_invalid,...
-                                                                          'maxdistperframe',maxDistPerFrame);
+        [boxCal_fromSession(sessionIdx),~,~] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref);
         toc
 %         boxCal_fromSession(numValidSessions).sessionName = 
         

@@ -1,4 +1,4 @@
-% script to recalibrate reaching boxes for a specific session based on
+% script to recalibratio reaching boxes for a specific session based on
 % matched points in videos in addition to matched points from the
 % calibration cubes
 
@@ -69,8 +69,8 @@ for i_rat = 36:36%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0310'
-            startSession = 18;
+        case 'R0235'
+            startSession = 1;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -92,19 +92,7 @@ for i_rat = 36:36%4:13%numRatFolders
  
         fprintf('working on session %s_%s\n',ratID,sessionDate);
         
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
-        cd(fullSessionDir);
-        
-        logFiles = dir('*.log');
-        curLog = readLogData(logFiles(1).name);
-        
-        if isfield(curLog,'boxnumber')
-            boxNum = curLog.boxnumber;
-        else
-            boxNum = 99;   % used 99 as box number before this was written into .log files 20191126
-        end
-        
-        calibrationFileName = findCalibrationFile(calImageDir,boxNum,sessionDate);
+        calibrationFileName = findCalibrationFile(calImageDir,sessionDate);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else
@@ -138,7 +126,7 @@ for i_rat = 36:36%4:13%numRatFolders
                 F = squeeze(boxCal.F(:,:,3));
         end
     
-        
+        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
         tic
         [boxCal_fromSession(sessionIdx),~,~] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,...

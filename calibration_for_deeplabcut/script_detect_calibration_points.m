@@ -6,7 +6,7 @@
 % set which month to detect calibration points for
 % eventually, change directory structure to have a separate set of
 % calibration images for each box
-month_to_analyze = '201908';
+month_to_analyze = '201910';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -74,11 +74,12 @@ for iBox = 1 : numBoxes
     for iDate = 1 : numDatesForBox
     
         curDate = datesForBox{iBox}(iDate);
-        % comment in if only want to analyze specific boxes from specific dates
-    %     if ~any(strcmp({'20191121'}, curDate))
-    %         continue;
-    %     end
         curDateString = datestr(curDate,'yyyymmdd');
+        % comment in if only want to analyze specific boxes from specific dates
+%         if ~any(strcmp({'20191122','20191124','20191125'}, curDateString))
+%             continue;
+%         end
+        
         fprintf('processing box %d, %s\n',boxList(iBox),curDateString);
         
         % find the imFiles_from_same_boxdate structure for this box/date
@@ -145,7 +146,7 @@ for iBox = 1 : numBoxes
         dateString = datestr(curDate,'yyyymmdd');
         matFileName = sprintf('GridCalibration_box%02d_%s_auto.mat',boxList(iBox),dateString);
         matFileName = fullfile(autoImageDir,matFileName);
-        imFileList = imFiles_from_same_date{iDate};
+        imFileList = imFiles_from_same_boxdate(i_boxDate).fnames;
         save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','dir_foundValidPoints','mir_foundValidPoints','imFileList','cameraParams','curDate');
 
         if saveMarkedImages

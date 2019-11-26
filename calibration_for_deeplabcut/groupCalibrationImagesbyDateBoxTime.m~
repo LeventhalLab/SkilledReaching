@@ -74,13 +74,16 @@ for iFile = 1 : length(imgList)
             datesForBox{boxIdx}(end+1) = fileDate;
         end
     else   % this box hasn't been used before
-        boxList(end+1) = curBox;
-        boxIdx = length(boxList);
         imFiles_from_same_boxdate(end+1).box = curBox;
         imFiles_from_same_boxdate(end).date = fileDate;
         imFiles_from_same_boxdate(end).picTimes = picTime;
         imFiles_from_same_boxdate(end).fnames{1} = imgList(iFile).name;
+        try
         datesForBox{boxIdx} = fileDate;
+        catch
+            keyboard
+        end
+        boxList(end+1) = curBox;
     end
     
 end 

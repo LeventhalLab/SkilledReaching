@@ -1,9 +1,8 @@
 % calibrate boxes given marked checkerboard points
 
-% rootDir = '/Volumes/LL EXHD #2/calibration_images';
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 
-month_to_analyze = '201911';
+month_to_analyze = '201908';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -39,12 +38,23 @@ for iMat = 1 : length(all_pt_matList)
     if exist('pointsStillDistorted','var')
         clear pointsStillDistorted
     end
-    load(all_pt_matList(iMat).name);
-    if ~any(strcmp({'20191121'}, curDate))
-        continue;
-    end
     
-    fprintf('working on %s\n',curDate);
+    if contains(all_pt_matList(iMat).name,'box')
+        C = textscan(all_pt_matList(iMat).name,'GridCalibration_box%02d_*');
+        boxNum = C{1};
+    else
+        boxNum = 99;
+    end
+    load(all_pt_matList(iMat).name);
+%     if ~any(strcmp({'20191121'}, curDate))
+%         continue;
+%     end
+    if isdatetime(curDate)
+        curDateString = datestr(curDate,'yyyymmdd');
+    else
+        curDateString = curDate;
+    end
+    fprintf('working on %s\n',curDateString);
     % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each
     %   totalNumPts x 2 subarray contains (x,y) points for each matched
     %   point in a mirror view across calibration images.
@@ -162,7 +172,7 @@ for iMat = 1 : length(all_pt_matList)
     end
     
     % write box calibration information to disk
-    calibrationFileName = ['SR_boxCalibration_' curDate '.mat'];
+    calibrationFileName = sprintf('SR_boxCalibration_box%02d_%s.mat',boxNum,curDateString);
     calibrationFileName = fullfile(calFileDir,calibrationFileName);
     save(calibrationFileName,'P','Pn','F','E','scaleFactor','directChecks','mirrorChecks','cameraParams','curDate','imFileList');
     
