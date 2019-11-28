@@ -6,7 +6,7 @@
 % set which month to detect calibration points for
 % eventually, change directory structure to have a separate set of
 % calibration images for each box
-month_to_analyze = '201908';
+month_to_analyze = '201909';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -105,12 +105,13 @@ for iBox = 1 : numBoxes
     
     for iDate = 1 : numDatesForBox
         curDate = csv_datesForBox{iBox}(iDate);
+        curDateString = datestr(curDate,'yyyymmdd');
         
         % comment in if only want to analyze specific boxes from specific dates
-%         if ~any(strcmp({'20191121'}, curDate))
-%             continue;
-%         end
-        curDateString = datestr(curDate,'yyyymmdd');
+        if ~any(strcmp({'20190927'}, curDateString))
+            continue;
+        end
+        
         
         fprintf('working on box %d, %s\n',csv_boxList(iBox),curDateString);
         
