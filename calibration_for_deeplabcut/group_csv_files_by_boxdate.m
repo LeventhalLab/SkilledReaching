@@ -68,12 +68,13 @@ for iFile = 1 : length(csvList)
             datesForBox{boxIdx}(end+1) = fileDate;
         end
     else   % this box hasn't been used before
+        boxList(end+1) = curBox;
+        boxIdx = length(boxList);
         csvFiles_from_same_boxdate(end+1).box = curBox;
         csvFiles_from_same_boxdate(end).date = fileDate;
         csvFiles_from_same_boxdate(end).picTimes = picTime;
-        csvFiles_from_same_boxdate(end).fnames{1} = imgList(iFile).name;
+        csvFiles_from_same_boxdate(end).fnames{1} = csvList(iFile).name;
         datesForBox{boxIdx} = fileDate;
-        boxList(end+1) = curBox;
     end
     
 end 
