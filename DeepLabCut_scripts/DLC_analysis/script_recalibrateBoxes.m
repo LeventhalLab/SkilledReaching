@@ -41,7 +41,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 36:36%4:13%numRatFolders
+for i_rat = 35:35%4:13%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -69,9 +69,9 @@ for i_rat = 36:36%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0310'
-            startSession = 7;
-            endSession = 17;
+        case 'R0309'
+            startSession = 21;
+            endSession = 24;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -83,11 +83,7 @@ for i_rat = 36:36%4:13%numRatFolders
         if exist('boxCal_fromSession','var')
             clear boxCal_fromSession;
         end
-        try
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
-        catch
-            keyboard
-        end
         sessionDate = C{1};
  
         fprintf('working on session %s_%s\n',ratID,sessionDate);
@@ -98,8 +94,11 @@ for i_rat = 36:36%4:13%numRatFolders
         logFiles = dir('*.log');
         curLog = readLogData(logFiles(1).name);
         
+        box_1_dates = {'20191122','20191123','20191124','20191125'};
         if isfield(curLog,'boxnumber')
             boxNum = curLog.boxnumber;
+        elseif any(ismember(box_1_dates,sessionDate))
+            boxNum = 01;
         else
             boxNum = 99;   % used 99 as box number before this was written into .log files 20191126
         end

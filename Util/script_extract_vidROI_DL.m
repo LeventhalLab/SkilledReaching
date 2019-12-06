@@ -156,7 +156,7 @@ for i_rat = 35:numRatFolders
         viewList = {'direct','left','right'};
         viewSavePath = cell(1,3);
         for iView = 1 : length(viewList)
-            viewSavePath{iView} = fullfile(cropped_vidSavePath, [viewList{iView} '_view']);
+            viewSavePath{iView} = fullfile(cropped_vidSavePath, [viewList{iView} '_view'],[ratID '_' sessionDateString '_' viewList{iView}]);
             if ~isfolder(viewSavePath{iView})
                 mkdir(viewSavePath{iView});
             end

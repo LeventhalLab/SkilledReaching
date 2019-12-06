@@ -49,7 +49,6 @@ uniqueDateList = {};
 for ii = 1 : numMarkedVids   
     [directVid_ratID(ii),directVidDate{ii},directVidTime{ii},directVidNum(ii)] = ...
                 extractDLC_CSV_identifiers(direct_csvList(ii).name);
-
     if isempty(uniqueDateList)
         uniqueDateList{1} = directVidDate{ii};
     elseif ~any(strcmp(uniqueDateList,directVidDate{ii}))
