@@ -11,6 +11,7 @@ min_valid_p = 0.85;
 min_certain_p = 0.97;
 maxDistFromNeighbor_invalid = 70;
 
+vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 
@@ -41,7 +42,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 36:36%4:13%numRatFolders
+for i_rat = 37:37%4:13%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -69,9 +70,9 @@ for i_rat = 36:36%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0310'
-            startSession = 41;
-            endSession = 41;
+        case 'R0311'
+            startSession = 1;
+            endSession = 2;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -92,6 +93,10 @@ for i_rat = 36:36%4:13%numRatFolders
         cd(fullSessionDir);
         
         logFiles = dir('*.log');
+        if isempty(logFiles)
+            status = copyLogToDLCOutput(sessionDirectories{iSession},labeledBodypartsFolder,vidRootPath);
+            logFiles = dir('*.log');
+        end
         curLog = readLogData(logFiles(1).name);
         
         box_1_dates = {'20191122','20191123','20191124','20191125'};

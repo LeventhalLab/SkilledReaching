@@ -145,7 +145,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
         end
         cd(mirrorViewDir)
         [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
-        mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name);
+        mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name,pawPref);
         mirror_metadataName = fullfile(mirrorViewDir, mirror_metadataName);
         mirror_metadata = load(mirror_metadataName);
         cd(directViewDir)

@@ -73,6 +73,7 @@ mirror_csvList = dir('*.csv');
 % eliminate hidden files whose name starts with '._'. Not sure where those
 % come from but it's annoying...
 new_csvList = mirror_csvList(1);
+
 numValidNames = 0;
 for ii = 1 : length(mirror_csvList)
     if strcmp(mirror_csvList(ii).name(1:2),'._')
