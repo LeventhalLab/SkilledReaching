@@ -60,7 +60,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 36:numRatFolders
+for i_rat = 37:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -89,7 +89,7 @@ for i_rat = 36:numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 36
+    if i_rat == 37
         startSession = 2;
         endSession = numSessions;
     else
@@ -217,13 +217,13 @@ for i_rat = 36:numRatFolders
             
             cd(mirrorViewDir)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
-            mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name,pawPref);
             mirror_metadataName = fullfile(mirrorViewDir, mirror_metadataName);
             mirror_metadata = load(mirror_metadataName);
             
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
-            direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name);
+            direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name,pawPref);
             direct_metadataName = fullfile(directViewDir, direct_metadataName);
             direct_metadata = load(direct_metadataName);
             

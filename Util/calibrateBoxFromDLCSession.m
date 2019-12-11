@@ -150,7 +150,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
         mirror_metadata = load(mirror_metadataName);
         cd(directViewDir)
         [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
-        direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name);
+        direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name,pawPref);
         direct_metadataName = fullfile(directViewDir, direct_metadataName);
         direct_metadata = load(direct_metadataName);
         
