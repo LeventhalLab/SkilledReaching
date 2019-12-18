@@ -52,7 +52,7 @@ for iMat = 1 : length(all_pt_matList)
         curDateString = curDate;
     end
     
-    if ~any(strcmp({'20191211','20191212'}, curDateString))
+    if ~any(strcmp({'20191216'}, curDateString))
         continue;
     end
 

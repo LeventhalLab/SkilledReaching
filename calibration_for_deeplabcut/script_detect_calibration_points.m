@@ -76,7 +76,7 @@ for iBox = 1 : numBoxes
         curDate = datesForBox{iBox}(iDate);
         curDateString = datestr(curDate,'yyyymmdd');
 %         comment in if only want to analyze specific boxes from specific dates
-        if ~any(strcmp({'20191211','20191212'}, curDateString))
+        if ~any(strcmp({'20191216'}, curDateString))
             continue;
         end
         
