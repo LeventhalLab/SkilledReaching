@@ -25,7 +25,7 @@ function reachScores = readReachScores(fname, varargin)
 % 11 - paw started out through the slot
 
 csvDateFormat = 'MM/dd/yyyy';
-alt_csvDateFormat = 'yyyyMMdd';
+csvDateFormat = 'MM/dd/yyyy';
 
 for iarg = 1 : 2 : nargin - 1
     switch lower(varargin{iarg})
@@ -59,9 +59,9 @@ for iCol = 2 : numCols
                  continue;
              end
              try
-                sessionDate = datetime(sessionDate,'inputformat',csvDateFormat);
+             sessionDate = datetime(sessionDate,'inputformat',csvDateFormat);
              catch
-                 sessionDate = datetime(sessionDate,'inputformat',alt_csvDateFormat);
+                 keyboard
              end
              numValidSessions = numValidSessions + 1;
          else

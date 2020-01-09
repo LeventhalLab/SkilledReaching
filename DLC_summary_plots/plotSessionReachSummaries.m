@@ -21,7 +21,7 @@ reachCov_zlim = [-30 10];
 x_lim = [-30 10];
 y_lim = [-20 10];
 
-dig_z_lims = [25 -15];
+dig_z_lims = [-15 25];
 
 pawPref = char(thisRatInfo.pawPref);
 figProps.m = 5;
@@ -346,7 +346,11 @@ for iTrial = 1 : numTrials
     hold on
 end
 
-set(gca,'ylim',[0,pi],'xlim',dig_z_lims)
+try
+    set(gca,'ylim',[0,pi],'xlim',dig_z_lims)
+catch
+    keyboard
+end
 set(gca,'xdir','reverse')
 title('paw orientation')
 end

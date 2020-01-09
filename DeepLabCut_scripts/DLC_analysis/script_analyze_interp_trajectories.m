@@ -8,7 +8,7 @@ max_dig_z = 20;  % z-coordinate at which to start digit trajectory analysis
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
-ratIDs_with_new_date_format = [284];
+ratIDs_with_new_date_format = [284,309,310,311,312];
 
 % calculate the following kinematic parameters:
 % 1. max velocity, by reach type
@@ -22,7 +22,7 @@ ratIDs_with_new_date_format = [284];
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191112.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
@@ -33,7 +33,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 1 : numRatFolders
+for i_rat = 42 : 45%numRatFolders
     
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -89,8 +89,8 @@ for i_rat = 1 : numRatFolders
         case 'R0189'
             startSession = 1;
             endSession = numSessions;
-        case 'R0216'
-            startSession = 1;
+        case 'R0309'
+            startSession = 22;
             endSession = numSessions;
         otherwise
             startSession = 1;

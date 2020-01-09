@@ -16,7 +16,7 @@ validOutcomeNames = {'all','1st success','any success','failed','no pellet','paw
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 histoFolder = '/Volumes/LL EXHD #2/SR Histo by rat';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratSummaryDir = fullfile('/Volumes/LL EXHD #2/','rat kinematic summaries');
@@ -34,7 +34,7 @@ numRatFolders = length(ratFolders);
 
 z_interp_digits = 20:-0.1:-15;  % for interpolating z-coordinated for aperture and orientation calculations
 
-for i_rat = 34:34%1 : numRatFolders
+for i_rat = 42:45%1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));

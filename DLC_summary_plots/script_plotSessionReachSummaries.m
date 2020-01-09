@@ -4,7 +4,7 @@ ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
            'R0216','R0217','R0218','R0219','R0220','R0221','R0223','R0225','R0227',...
-           'R0228','R0229','R0230','R0235'};
+           'R0228','R0229','R0230','R0235','R0309','R0310','R0311','R0312'};
 numRats = length(ratList);
 
 bodypartColor.dig = [1 0 0;
@@ -16,8 +16,8 @@ bodypartColor.paw_dorsum = [0 0 0];
 bodypartColor.pellet = [0 1 1];
 bodypartColor.nose = [0 0 0];
 
-firstRat = 1;
-lastRat = numRats;
+firstRat = 42;
+lastRat = 45;%numRats;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -116,18 +116,20 @@ if ~exist(sharedX_plotsDir,'dir')
     mkdir(sharedX_plotsDir);
 end
 
+ratFolders = findRatFolders(labeledBodypartsFolder);
+numRatFolders = length(ratFolders);
+
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
 
-ratFolders = findRatFolders(labeledBodypartsFolder);
-numRatFolders = length(ratFolders);
+
 
 for i_rat = firstRat:1:lastRat%:numRatFolders
     
-    ratID = ratList{i_rat}
+    ratID = ratFolders{i_rat}
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
@@ -200,8 +202,8 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0189'
             startSession = 1;
             endSession = numSessions;
-        case 'R0229'
-            startSession = 1;
+        case 'R0309'
+            startSession = 22;
             endSession = numSessions;
         otherwise
             startSession = 1;

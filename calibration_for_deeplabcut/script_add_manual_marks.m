@@ -108,7 +108,7 @@ for iBox = 1 : numBoxes
         curDateString = datestr(curDate,'yyyymmdd');
         
         % comment in if only want to analyze specific boxes from specific dates
-        if ~any(strcmp({'20191216'}, curDateString))
+        if ~any(strcmp({'20191219'}, curDateString))
             continue;
         end
         

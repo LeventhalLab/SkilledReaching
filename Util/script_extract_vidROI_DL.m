@@ -25,7 +25,7 @@ ratInfo_IDs = [ratInfo.ratID];
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
     
-for i_rat = 35:numRatFolders
+for i_rat = 1:21%numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratFolder = fullfile(labeledBodypartsFolder,ratFolders(i_rat).name);
@@ -49,7 +49,7 @@ for i_rat = 35:numRatFolders
     if iscell(thisRatInfo.tattooDate)
         if ischar(thisRatInfo.tattooDate{1})
             tattooDateString = thisRatInfo.tattooDate{1};
-            tattooDate = datetime(tattooDateString);
+            tattooDate = datetime(tattooDateString,'inputformat','MM/dd/yy');
         elseif isdatetime(thisRatInfo.tattooDate{1})
             tattooDate = thisRatInfo.tattooDate{1};
         end
@@ -99,7 +99,11 @@ for i_rat = 35:numRatFolders
         cd(ratFolder);
         sessionCSV = [ratID '_sessions.csv'];
         sessionTable = readSessionInfoTable(sessionCSV);
-        sessions_to_crop = getSessionsToCrop(sessionTable);
+        
+        % switch which line is commented depending on which sessions want
+        % to crop
+%         sessions_to_crop = getSessionsToCrop(sessionTable);
+        sessions_to_crop = getSessionsToCrop_earlyLearning(sessionTable);
         
         for ii = 1 : size(sessions_to_crop,1)
             
@@ -231,8 +235,10 @@ for i_rat = 35:numRatFolders
                 sharedX_viewPath = fullfile(sharedX_sessionFolder,[fullSessionName '_' viewList{iView}]);
                 local_viewPath = fullfile(local_sessionFolder,[fullSessionName '_' viewList{iView}]);
                 full_metadata_name{2} = fullfile(sharedX_viewPath,metadata_name);
-                full_metadata_name{3} = fullfile(local_viewPath,metadata_name);
-                for ii = 1 : 3
+%                 full_metadata_name{3} = fullfile(local_viewPath,metadata_name);
+% turns out saving metadata files to the local DLC output path slows things
+% down
+                for ii = 1 : 2
                     [cur_path,~,~] = fileparts(full_metadata_name{ii});
                     if ~exist(cur_path,'dir')
                         mkdir(cur_path)
