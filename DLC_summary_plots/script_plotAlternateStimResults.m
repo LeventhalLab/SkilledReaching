@@ -5,6 +5,10 @@ alternateKinematicsName = 'alternating_stim_kinematics_summary.mat';
 alternateKinematicsName = fullfile(alternatingStimFolder,alternateKinematicsName);
 load(alternateKinematicsName);
 
+xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
+ratInfo = readRatInfoTable(csvfname);
+
 numSessions = length(alternateKinematics);
 
 full_traj_z_lim = [-5 50];
@@ -39,6 +43,9 @@ for iSession = 1 : numSessions
     pawPref = curKinematics.thisRatInfo.pawPref;
     
     ratID = curKinematics.ratID;
+    thisRatInfo = ratInfo(ratInfo.ratID == ratID,:);
+    
+    laserColor = char(thisRatInfo.laserWavelength);
     
     pdfName = sprintf('R%04d_%s_alternating_stim.pdf',ratID,sessionDateString);
     figName = sprintf('R%04d_%s_alternating_stim.fig',ratID,sessionDateString);
@@ -74,15 +81,15 @@ for iSession = 1 : numSessions
     hold on
     scatter(trials_per_block*2+1:3*trials_per_block,curKinematics.mean_off_pd_endPts(:,3),'markeredgecolor','r','markerfacecolor','r',...
         'markerfacealpha',0.5,'markeredgealpha',0.5)
-    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_pd_endPts(:,3),'b','markeredgecolor','b','markerfacecolor','b',...
+    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_pd_endPts(:,3),laserColor,'markeredgecolor',laserColor,'markerfacecolor',laserColor,...
         'markerfacealpha',0.5,'markeredgealpha',0.5)
-    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_pd_endPts(:,3),'b','markeredgecolor','b','markerfacecolor','b',...
+    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_pd_endPts(:,3),laserColor,'markeredgecolor',laserColor,'markerfacecolor',laserColor,...
         'markerfacealpha',0.5,'markeredgealpha',0.5)
     
     scatter(1:trials_per_block,curKinematics.mean_off_dig2_endPts(:,3),'markeredgecolor','r','markerfacecolor','r')
     scatter(trials_per_block*2+1:3*trials_per_block,curKinematics.mean_off_dig2_endPts(:,3),'markeredgecolor','r','markerfacecolor','r')
-    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_dig2_endPts(:,3),'markeredgecolor','b','markerfacecolor','b')
-    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_dig2_endPts(:,3),'markeredgecolor','b','markerfacecolor','b')
+    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_dig2_endPts(:,3),'markeredgecolor',laserColor,'markerfacecolor',laserColor)
+    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_dig2_endPts(:,3),'markeredgecolor',laserColor,'markerfacecolor',laserColor)
     
     line([1,4*trials_per_block],...
          [mean_slot_z_wrt_pellet,mean_slot_z_wrt_pellet]);
@@ -102,7 +109,7 @@ for iSession = 1 : numSessions
     end
     scatter3(x_off,curKinematics.mean_off_pd_endPts(:,3),curKinematics.mean_off_pd_endPts(:,2),'markeredgecolor','r','markerfacecolor','r')
     hold on
-    scatter3(x_on,curKinematics.mean_on_pd_endPts(:,3),curKinematics.mean_on_pd_endPts(:,2),'markeredgecolor','b','markerfacecolor','b')
+    scatter3(x_on,curKinematics.mean_on_pd_endPts(:,3),curKinematics.mean_on_pd_endPts(:,2),'markeredgecolor',laserColor,'markerfacecolor',laserColor)
     
     scatter3(0,0,0,25,'marker','*','markerfacecolor','k','markeredgecolor','k');
     set(gca,'zdir','reverse','xlim',x_lim,'ylim',reachEnd_zlim,'zlim',y_lim,...
@@ -122,7 +129,7 @@ for iSession = 1 : numSessions
     end
     scatter3(x_off,curKinematics.mean_off_dig2_endPts(:,3),curKinematics.mean_off_dig2_endPts(:,2),'markeredgecolor','r','markerfacecolor','r')
     hold on
-    scatter3(x_on,curKinematics.mean_on_dig2_endPts(:,3),curKinematics.mean_on_dig2_endPts(:,2),'markeredgecolor','b','markerfacecolor','b')
+    scatter3(x_on,curKinematics.mean_on_dig2_endPts(:,3),curKinematics.mean_on_dig2_endPts(:,2),'markeredgecolor',laserColor,'markerfacecolor',laserColor)
     
     scatter3(0,0,0,25,'marker','*','markerfacecolor','k','markeredgecolor','k');
     set(gca,'zdir','reverse','xlim',x_lim,'ylim',reachEnd_zlim,'zlim',y_lim,...
@@ -142,8 +149,8 @@ for iSession = 1 : numSessions
     scatter(1:trials_per_block,curKinematics.mean_off_endAperture,'markeredgecolor','r','markerfacecolor','r')
     hold on
     scatter(trials_per_block*2+1:3*trials_per_block,curKinematics.mean_off_endAperture,'markeredgecolor','r','markerfacecolor','r')
-    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_endAperture,'markeredgecolor','b','markerfacecolor','b')
-    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_endAperture,'markeredgecolor','b','markerfacecolor','b')
+    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_endAperture,'markeredgecolor',laserColor,'markerfacecolor',laserColor)
+    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_endAperture,'markeredgecolor',laserColor,'markerfacecolor',laserColor)
 
     title('mean aperture')
     xlabel('trial number')
@@ -161,8 +168,8 @@ for iSession = 1 : numSessions
     scatter(1:trials_per_block,curKinematics.mean_off_endOrientation,'markeredgecolor','r','markerfacecolor','r')
     hold on
     scatter(trials_per_block*2+1:3*trials_per_block,curKinematics.mean_off_endOrientation,'markeredgecolor','r','markerfacecolor','r')
-    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_endOrientation,'markeredgecolor','b','markerfacecolor','b')
-    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_endOrientation,'markeredgecolor','b','markerfacecolor','b')
+    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_endOrientation,'markeredgecolor',laserColor,'markerfacecolor',laserColor)
+    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_endOrientation,'markeredgecolor',laserColor,'markerfacecolor',laserColor)
     set(gca,'ylim',[0,pi])
     
     % max v, all trials
@@ -177,16 +184,16 @@ for iSession = 1 : numSessions
     scatter(1:trials_per_block,curKinematics.mean_off_max_pd_v,'markeredgecolor','r','markerfacecolor','r')
     hold on
     scatter(trials_per_block*2+1:3*trials_per_block,curKinematics.mean_off_max_pd_v,'markeredgecolor','r','markerfacecolor','r')
-    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_max_pd_v,'markeredgecolor','b','markerfacecolor','b')
-    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_max_pd_v,'markeredgecolor','b','markerfacecolor','b')
+    scatter(trials_per_block+1:2*trials_per_block,curKinematics.mean_on_max_pd_v,'markeredgecolor',laserColor,'markerfacecolor',laserColor)
+    scatter(trials_per_block*3+1:4*trials_per_block,curKinematics.mean_on_max_pd_v,'markeredgecolor',laserColor,'markerfacecolor',laserColor)
     set(gca,'ylim',[0 1100]);
     
     h_figAxis = createFigAxes(h_fig);
     
     laserOnString = alternateSessions(iSession,:).laserOnTiming;
     laserOffString = alternateSessions(iSession,:).laserOffTiming;
-    textString{1} = sprintf('5 off(red), 5 on (blue); R%04d, %s', ...
-        curKinematics.ratID, sessionDateString);
+    textString{1} = sprintf('5 off (red), 5 on (%s); R%04d, %s', ...
+        laserColor,curKinematics.ratID, sessionDateString);
     textString{2} = sprintf('laser on at %s, laser off at %s', ...
         laserOnString, laserOffString);
     

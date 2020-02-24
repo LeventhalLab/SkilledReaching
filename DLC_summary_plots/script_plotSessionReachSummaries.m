@@ -16,7 +16,7 @@ bodypartColor.paw_dorsum = [0 0 0];
 bodypartColor.pellet = [0 1 1];
 bodypartColor.nose = [0 0 0];
 
-firstRat = 42;
+firstRat = 45;
 lastRat = 45;%numRats;
 
 x_lim = [-30 10];
@@ -105,8 +105,15 @@ traj2D_xlim = [250 320];
 
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
+sharedX_string = 'SharedX';
+sharedX_root = fullfile('/Volumes',sharedX_string,'Neuro-Leventhal');
+if ~exist(sharedX_root,'dir')
+    sharedX_string = 'SharedX-1';
+    sharedX_root = fullfile('/Volumes',sharedX_string,'Neuro-Leventhal');
+end
+
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-sharedX_plotsDir = '/Volumes/SharedX/Neuro-Leventhal/analysis';
+sharedX_plotsDir = fullfile(sharedX_root,'analysis');
 [plotsDir,~,~] = fileparts(labeledBodypartsFolder);
 plotsDir = fullfile(plotsDir,'DLC output plots');
 if ~exist(plotsDir,'dir')
@@ -199,11 +206,11 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0189'
-            startSession = 1;
+        case 'R0169'
+            startSession = 8;
             endSession = numSessions;
-        case 'R0309'
-            startSession = 22;
+        case 'R0312'
+            startSession = numSessions-2;
             endSession = numSessions;
         otherwise
             startSession = 1;

@@ -19,8 +19,15 @@ ratIDs_with_new_date_format = [284,309,310,311,312];
 % 6. minimum z, by type
 % 7. number of reaches, by type
 
+sharedX_string = 'SharedX';
+sharedX_root = fullfile('/Volumes',sharedX_string,'Neuro-Leventhal');
+if ~exist(sharedX_root,'dir')
+    sharedX_string = 'SharedX-1';
+    sharedX_root = fullfile('/Volumes',sharedX_string,'Neuro-Leventhal');
+end
+
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
+sharedX_DLCoutput_path = fullfile(sharedX_root,'data','Skilled Reaching','DLC output');
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 ratInfo = readRatInfoTable(csvfname);
@@ -33,7 +40,7 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 42 : 45%numRatFolders
+for i_rat = 45 : 45%numRatFolders
     
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -86,11 +93,11 @@ for i_rat = 42 : 45%numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0189'
-            startSession = 1;
-            endSession = numSessions;
-        case 'R0309'
-            startSession = 22;
+        case 'R0169'
+            startSession = 8;
+            endSession = 8;
+        case 'R0312'
+            startSession = numSessions-2;
             endSession = numSessions;
         otherwise
             startSession = 1;

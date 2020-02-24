@@ -22,6 +22,8 @@ xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Shee
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 
+% ratInfo = readRatInfoTable(csvfname);   % consider commenting this in and
+% commenting out the readtable version
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
@@ -60,7 +62,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 43:numRatFolders
+for i_rat = 29:29%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -90,11 +92,11 @@ for i_rat = 43:numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0312'
-            startSession = 4;
-            endSession = numSessions;
+        case 'R0225'
+            startSession = 3;
+            endSession = 3;
         otherwise
-            startSession = 40;
+            startSession = 4;
             endSession = numSessions;
     end
     for iSession = startSession : 4 : endSession
@@ -121,13 +123,16 @@ for i_rat = 43:numRatFolders
         cd(fullSessionDir);
         
         logFiles = dir('*.log');
-        curLog = readLogData(logFiles(1).name);
         
-        if isfield(curLog,'boxnumber')
-            boxNum = curLog.boxnumber;
-        else
-            boxNum = 99;   % used 99 as box number before this was written into .log files 20191126
-        end
+        % comment below back in for non-corrupted log files
+%         curLog = readLogData(logFiles(1).name);
+%         
+%         if isfield(curLog,'boxnumber')
+%             boxNum = curLog.boxnumber;
+%         else
+%             boxNum = 99;   % used 99 as box number before this was written into .log files 20191126
+%         end
+        boxNum = 99;
 
         % find the most recent date compared to the current file for which a
         % calibration file exists. Later, write code so files are stored by

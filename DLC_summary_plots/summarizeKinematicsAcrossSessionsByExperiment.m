@@ -3,7 +3,7 @@ function exptSummary = summarizeKinematicsAcrossSessionsByExperiment(summary)
 % collect the number of trials for each 
 
 num_rats = length(summary);
-num_sessions = size(summary(1).sessions_analyzed,1);
+num_sessions = size(summary(1).ratSummary.sessions_analyzed,1);
 
 exptSummary.num_trials = zeros(num_sessions, num_rats);
 exptSummary.firstReachSuccess = zeros(num_sessions, num_rats);
@@ -29,7 +29,12 @@ for i_rat = 1 : num_rats
     
     exptSummary.pawPref(i_rat) = summary(i_rat).thisRatInfo.pawPref;
     
+    try
     exptSummary.num_trials(:,i_rat) = summary(i_rat).ratSummary.num_trials(:,1);
+    catch
+        keyboard
+    end
+    
     exptSummary.firstReachSuccess(:,i_rat) = summary(i_rat).ratSummary.outcomePercent(:,2);
     exptSummary.anyReachSuccess(:,i_rat) = summary(i_rat).ratSummary.outcomePercent(:,3) + exptSummary.firstReachSuccess(:,i_rat);
     exptSummary.mean_num_reaches(:,i_rat) = summary(i_rat).ratSummary.mean_num_reaches(:,1);
@@ -39,7 +44,7 @@ for i_rat = 1 : num_rats
     exptSummary.std_end_aperture(:,i_rat) = summary(i_rat).ratSummary.std_end_aperture(:,1);
     
     temp_pd_coords = squeeze(summary(i_rat).ratSummary.mean_pd_endPt(:,1,:));
-    temp_dig2_coords = squeeze(summary(i_rat).ratSummary.mean_dig2_endPt(:,1,:));
+    temp_dig2_coords = squeeze(summary(i_rat).ratSummary.mean_dig_endPts(:,1,2,:));
     if exptSummary.pawPref(i_rat) == 'left'
         temp_pd_coords(:,1) = -temp_pd_coords(:,1);
         temp_dig2_coords(:,1) = -temp_dig2_coords(:,1);

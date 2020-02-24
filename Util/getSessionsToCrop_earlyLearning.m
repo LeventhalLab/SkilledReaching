@@ -13,9 +13,9 @@ trainingRows = sessionTable.trainingStage == 'training';
 startRow = find(trainingRows,1,'first');
 lastTrainingRow = find(trainingRows,1,'last');
 
-tenthTrainingRow = startRow + 9;
+twentiethTrainingRow = startRow + 19;
 
-endRow = min(lastTrainingRow,tenthTrainingRow);
+endRow = min(lastTrainingRow,twentiethTrainingRow);
 
 
 sessions_to_crop = sessionTable(startRow:endRow,:);

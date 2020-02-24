@@ -13,7 +13,7 @@ maxDistFromNeighbor_invalid = 70;
 
 vidRootPath = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/SR_Opto_Raw_Data';
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 
 ratInfo = readRatInfoTable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
@@ -42,9 +42,9 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 43:43%4:13%numRatFolders
+for i_rat = 29:29%4:13%numRatFolders
 
-    ratID = ratFolders(i_rat).name;
+    ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
@@ -70,9 +70,9 @@ for i_rat = 43:43%4:13%numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0310'
-            startSession = 44;
-            endSession = numSessions;
+        case 'R0225'
+            startSession = 1;
+            endSession = 3;
         otherwise
             startSession = 1;
             endSession = numSessions;

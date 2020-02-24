@@ -6,7 +6,7 @@
 % set which month to detect calibration points for
 % eventually, change directory structure to have a separate set of
 % calibration images for each box
-month_to_analyze = '201912';
+month_to_analyze = '201701';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -82,6 +82,10 @@ ROIs = [700,270,650,705;
         750,1,600,325;
         1,400,350,500;
         rightMirrorLeftEdge,400,w-rightMirrorLeftEdge,500];
+% ROIs = [700,200,650,705;
+%         750,1,600,325;
+%         1,400,350,500;
+%         rightMirrorLeftEdge,400,w-rightMirrorLeftEdge,500];
     
 numBoards = size(ROIs,1) - 1;
 
@@ -108,7 +112,7 @@ for iBox = 1 : numBoxes
         curDateString = datestr(curDate,'yyyymmdd');
         
         % comment in if only want to analyze specific boxes from specific dates
-        if ~any(strcmp({'20191219'}, curDateString))
+        if ~any(strcmp({'20170113'}, curDateString))
             continue;
         end
         
@@ -253,12 +257,32 @@ for iBox = 1 : numBoxes
             % fill out the directChecks and mirrorChecks arrays. Assume that
             % the image number is the correct index to use. Note that
             % previously labeled images should be used in Fiji
+            
+            switch curDateString
+                case '20171110'
+                    % workaround for goofy cube orientation
+                    if i_csv == 1
+                        new_directChecks = NaN(12,2,3);
+                        new_mirrorChecks = NaN(12,2,3);
 
-            [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboards(directBorderMask{img_idx}, ...
-                                                    mirrorBorderMask{img_idx}, ...
-                                                    ROIs, csvData{i_csv}, ...
-                                                    anticipatedBoardSize, ...
-                                                    mirrorOrientation);
+                        new_mirrorChecks(:,:,1) = csvData{i_csv}(1:12,:);
+                        new_directChecks(:,:,1) = csvData{i_csv}(13:24,:);
+                        new_directChecks(:,:,3) = csvData{i_csv}(25:36,:);
+                        new_mirrorChecks(:,:,2) = csvData{i_csv}(37:48,:);
+                    else
+                        [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboards(directBorderMask{img_idx}, ...
+                                                            mirrorBorderMask{img_idx}, ...
+                                                            ROIs, csvData{i_csv}, ...
+                                                            anticipatedBoardSize, ...
+                                                            mirrorOrientation);
+                    end
+                otherwise
+                    [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboards(directBorderMask{img_idx}, ...
+                                                            mirrorBorderMask{img_idx}, ...
+                                                            ROIs, csvData{i_csv}, ...
+                                                            anticipatedBoardSize, ...
+                                                            mirrorOrientation);
+            end
 
             % update directChecks and mirrorChecks arrays
             for iBoard = 1 : size(new_directChecks,3)

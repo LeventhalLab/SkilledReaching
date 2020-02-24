@@ -63,8 +63,8 @@ figProps.height = sum(figProps.rowSpacing) + sum(figProps.panelHeight) + figProp
 % numTrials = length(reachData);
 
 trialTypeColors = {'k','g','b','r','y','c','m'};
-validTrialTypes_for_outcomes = {0:10,1,[1,2],[3,4,7],0,11,6};
-validTrialTypes = {0:10,1,2,[3,4,7],0,11,6};
+validTrialTypes_for_outcomes = {[0:7,9:10],1,[1,2],[3,4,7],0,11,6};
+validTrialTypes = {[0:7,9:10],1,2,[3,4,7],0,11,6};
 validTypeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
 
 % breakdown of trial outcomes
@@ -334,6 +334,9 @@ for iTrial = 1 : numTrials
     if isempty(reachData(iTrial).orientation{1})
         continue;
     end
+    if any(reachData(iTrial).trialScores == 8)
+        continue;
+    end
     
     reach_orientation{iTrial} = reachData(iTrial).orientation{1};
     
@@ -404,6 +407,9 @@ for iTrial = 1 : numTrials
         continue;
     end
     if isempty(reachData(iTrial).aperture{1})
+        continue;
+    end
+    if any(reachData(iTrial).trialScores == 8)
         continue;
     end
     digit_aperture{iTrial} = reachData(iTrial).aperture{1};
@@ -759,6 +765,9 @@ for i_trialType = 1 : num_trial_types
         if isempty(reachData(iTrial).pd_trajectory{1})
             continue;
         end
+        if any(reachData(iTrial).trialScores == 8)
+            continue;   % don't do trials where only the wrong paw was used
+        end
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             % check that there are enough points to do the interpolation;
             % sometimes, the paw dorsum is hidden/not found prior to the
@@ -813,14 +822,19 @@ for iTrial = 1 : numTrials
     if isempty(reachData(iTrial).pd_trajectory{1})
         continue;
     end
+    if any(reachData(iTrial).trialScores == 8)
+        continue    % skip if only the wrong paw was used
+    end
     switch pawPref
         case 'left'
-            
+            try
             plot3(-reachData(iTrial).pd_trajectory{1}(:,1),...
                   reachData(iTrial).pd_trajectory{1}(:,3),...
                   reachData(iTrial).pd_trajectory{1}(:,2),...
                   trialTypeColors{ind_trial_type(iTrial)});
-
+            catch
+                keyboard
+            end
         case 'right'
             try
             plot3(reachData(iTrial).pd_trajectory{1}(:,1),...

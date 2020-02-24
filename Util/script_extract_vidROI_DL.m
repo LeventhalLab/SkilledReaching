@@ -18,14 +18,15 @@ ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191112.csv');
-ratInfo = readtable(csvfname);
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
+ratInfo = readRatInfoTable(csvfname);
+% ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
 triggerTime = 1;    % seconds
 frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
     
-for i_rat = 1:21%numRatFolders
+for i_rat = 23:23%numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratFolder = fullfile(labeledBodypartsFolder,ratFolders(i_rat).name);
@@ -102,8 +103,8 @@ for i_rat = 1:21%numRatFolders
         
         % switch which line is commented depending on which sessions want
         % to crop
-%         sessions_to_crop = getSessionsToCrop(sessionTable);
-        sessions_to_crop = getSessionsToCrop_earlyLearning(sessionTable);
+        sessions_to_crop = getSessionsToCrop(sessionTable);
+%         sessions_to_crop = getSessionsToCrop_earlyLearning(sessionTable);
         
         for ii = 1 : size(sessions_to_crop,1)
             
@@ -113,18 +114,24 @@ for i_rat = 1:21%numRatFolders
     end
 
     switch ratID
-        case 'R0309'
-            startSess = 3;%1;
+        case 'R0312'
+            startSess = length(sessionsToExtract)-2;%1;
             endSess = length(sessionsToExtract);
             ROI = [750,450,550,550;
                   1,450,450,400;
                   1650,435,390,400];
-        case {'R0216','R0311'}
+        case {'R0216'}
             ROI = [750,350,550,600;
                    1,400,450,450;
                    1650,400,390,450];
-            startSess = 1;
-            endSess = length(sessionsToExtract);
+            startSess = 16;
+            endSess = 16;%length(sessionsToExtract);
+        case {'R0217'}
+            ROI = [750,450,550,550;
+                  1,450,450,400;
+                  1650,435,390,400];
+            startSess = 4;
+            endSess = 4;%length(sessionsToExtract);
         otherwise
             ROI = [750,450,550,550;
                   1,450,450,400;
@@ -141,14 +148,14 @@ for i_rat = 1:21%numRatFolders
             selectTattoo = 'no';
         else
             if tattooDate < sessionsToExtract(iSess).sessionDate
-                selectTattoo = 'no';
-            else
                 selectTattoo = 'yes';
+            else
+                selectTattoo = 'no';
             end
         end
         
         if strcmpi(selectTattoo,'yes')
-            cropped_vidSavePath = fullfile(cropped_vidSaveRootPath,[ratID '_cropped'],[selectPawPref, '_paw_tattooed_', digitColors]);
+            cropped_vidSavePath = fullfile(cropped_vidSaveRootPath,[ratID '_cropped'],[selectPawPref, '_paw_tattooed_', char(digitColors)]);
         else
             cropped_vidSavePath = fullfile(cropped_vidSaveRootPath,[ratID '_cropped'],[selectPawPref, '_paw_markerless']);
         end 

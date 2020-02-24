@@ -2,7 +2,7 @@
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 
-month_to_analyze = '201912';
+month_to_analyze = '201701';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -52,9 +52,9 @@ for iMat = 1 : length(all_pt_matList)
         curDateString = curDate;
     end
     
-    if ~any(strcmp({'20191219'}, curDateString))
-        continue;
-    end
+%     if ~any(strcmp({'20170102','20170103','20170105'}, curDateString))
+%         continue;
+%     end
 
     fprintf('working on %s\n',curDateString);
     % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each

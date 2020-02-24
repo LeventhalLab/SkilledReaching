@@ -13,7 +13,7 @@ end
 % end
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 experimentInfo = getExperimentFeatures();
@@ -25,7 +25,7 @@ sessions_to_analyze = getSessionsToAnalyze();
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-for i_expt = 1 : 4%length(experimentInfo)
+for i_expt = 1 : 5%length(experimentInfo)
     
     curRatList = getExptRats(ratInfo,experimentInfo(i_expt));
     
@@ -33,13 +33,13 @@ for i_expt = 1 : 4%length(experimentInfo)
         % workaround for now to exclude R0185
         curRatList = curRatList(2:end,:);
     end
-    if i_expt == 2
-        % workaround for now to exclude R0230 until completed
-        curRatList = curRatList(1:9,:);
-    end
+%     if i_expt == 2
+%         % workaround for now to exclude R0230 until completed
+%         curRatList = curRatList(1:9,:);
+%     end
     if i_expt == 4
         % workaround for now to exclude rats that haven't been completed
-        curRatList = curRatList([2,4,5,6,7,9],:);
+        curRatList = curRatList([2:end],:);
     end
     
     % plots to make:

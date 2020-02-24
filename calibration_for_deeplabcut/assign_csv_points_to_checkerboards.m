@@ -20,12 +20,15 @@ function [new_directChecks, new_mirrorChecks] = assign_csv_points_to_checkerboar
 % OUTPUTS
 %   new_directChecks, new_mirrorChecks
 
-% 
-% xlims(1) = min(min(newPoints(:,1)),1);
-% xlims(2) = max(max(newPoints(:,1)),size(directBorderMask,2));
-% 
-% ylims(1) = min(min(newPoints(:,2)),1);
-% ylims(2) = max(max(newPoints(:,2)),size(directBorderMask,1));
+
+%     figure(1)
+%     imshow(directBorderMask(:,:,1) | directBorderMask(:,:,2) | directBorderMask(:,:,3) | ...
+%         mirrorBorderMask(:,:,1) | mirrorBorderMask(:,:,2) | mirrorBorderMask(:,:,3));
+%     hold on
+
+
+
+
 
 num_newPoints = size(newPoints, 1);
 numDirectBoards = size(directBorderMask,3);   % this is one binary array instead of the cell structure that holds one array for each different image
@@ -88,6 +91,11 @@ for i_pt = 1 : num_newPoints
     
     % is this point enclosed in any of the direct or mirror border masks?
     testPoint = round(newPoints(i_pt,:));
+    
+    
+%     scatter(testPoint(1),testPoint(2))
+    
+    
     testPoint(testPoint == 0) = 1;   % sometimes the point is right on the edge of the image and gets assigned a zero coordinate
     pointAssigned = false;
     for iBoard = 1 : numDirectBoards

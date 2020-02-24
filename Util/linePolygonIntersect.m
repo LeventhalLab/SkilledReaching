@@ -41,10 +41,21 @@ min_y = min(polyPoints(:,2));
 max_y = max(polyPoints(:,2));
 
 intersectPoints = zeros(0,2);
+
+iterations = 0;
 for ii = round(min_x) : round(max_x)
-    
+    iterations = iterations + 1;
+    if iterations > 1000
+        iterations
+        keyboard
+    end
+    iterations2 = 0;
     for jj = round(min_y) : round(max_y)
-        
+            iterations2 = iterations2 + 1;
+            if iterations2 > 1000
+                iterations2
+                keyboard
+            end
         lineVal = ii * lineCoeff(1) + jj * lineCoeff(2) + lineCoeff(3);
         
         if inpolygon(ii,jj,polyPoints(:,1),polyPoints(:,2)) && abs(lineVal) < distTolerance

@@ -8,6 +8,7 @@ experimentInfo(5).type = 'arch_between';
 
 for iExpt = 1 : length(experimentInfo)
     switch experimentInfo(iExpt).type
+        
         case 'chr2_during'
             experimentInfo(iExpt).Virus = 'ChR2';
             experimentInfo(iExpt).laserWavelength = 'Blue';
