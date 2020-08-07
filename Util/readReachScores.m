@@ -34,8 +34,9 @@ for iarg = 1 : 2 : nargin - 1
     end
 end
 
-
-scoresTable = readtable(fname);
+opts = detectImportOptions(fname);
+opts = setvartype(opts, 'char');
+scoresTable = readtable(fname, opts);
 
 numValidSessions = 0;
 

@@ -9,7 +9,7 @@
 % dorsum locations
 
 % points to the camera parameter file with camera intrinsics
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+camParamFile = '/Users/dan/Documents/GitHub/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 load(camParamFile);
 
 % parameter for calc3D_DLC_trajectory_20181204
@@ -26,14 +26,19 @@ maxDistFromNeighbor_invalid = 70;
 maxPawFromDigitsDist = 70;
 maxPawDorsumReprojError = 10;
 
-xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+% xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+% csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+
+xlDir = labeledBodypartsFolder;%'/Users/dan/Box/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+csvfname = fullfile(xlDir,'SR_rat_database.csv');
+ratInfo = readRatInfoTable(csvfname);
 
 % ratInfo = readtable(csvfname);
 % ratInfo_IDs = [ratInfo.ratID];
 
-labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-calImageDir = '/Volumes/LL EXHD #2/calibration_images';   % where the calibration files are
+labeledBodypartsFolder = '/Volumes/Untitled/for_creating_3d_vids';
+calImageDir = fullfile(labeledBodypartsFolder, 'calibration_images');  %calImageDir = '/Volumes/LL EXHD #2/calibration_images';   % where the calibration files are
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
@@ -57,7 +62,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 1:1%20:numRatFolders
+for i_rat = 6:6%20:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -85,9 +90,9 @@ for i_rat = 1:1%20:numRatFolders
     numSessions = length(sessionDirectories);
     
     switch ratID
-        case 'R0159'
-            startSession = 5;
-            endSession = numSessions;
+        case 'R0216'
+            startSession = 2;
+            endSession = 2;
         case 'R0158'
             startSession = 19;
             endSession = 19;
@@ -119,7 +124,7 @@ for i_rat = 1:1%20:numRatFolders
         % calibration file exists. Later, write code so files are stored by
         % date so that this file can be found before entering the loop through
         % DLC csv files
-        [calibrationFileName, lastValidCalDate] = findCalibrationFile(calImageDir,sessionDate);
+        [calibrationFileName, lastValidCalDate] = findCalibrationFile(calImageDir, boxNum, sessionDate);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else

@@ -15,7 +15,7 @@ minGraspSeparation = 25;
 minGraspProminence = 2;
 % maxPreGraspProminence = 10;
 minReachProminence = 10;
-max_digit_paw_sep = 30;   % max distance allowed between tip of second digit and paw
+max_digit_paw_sep = 40;   % max distance allowed between tip of second digit and paw
 
 for iarg = 1 : 2 : nargin - 5
     switch lower(varargin{iarg})
@@ -84,7 +84,7 @@ dig1_pd_dist = sqrt(sum(dig1_pd_diff.^2,2));
 dig2_pd_dist = sqrt(sum(dig2_pd_diff.^2,2));
 dig4_pd_dist = sqrt(sum(dig4_pd_diff.^2,2));
 
-dig_pd_dist = max([dig1_pd_dist,dig2_pd_dist,dig4_pd_dist],[],2);
+dig_pd_dist = min([dig1_pd_dist,dig2_pd_dist,dig4_pd_dist],[],2);
 excludeFrames = dig_pd_dist > max_digit_paw_sep;
 reachMins = reachMins & ~excludeFrames;
 graspMins = graspMins & ~excludeFrames;
@@ -93,7 +93,12 @@ graspMins = graspMins & ~excludeFrames;
 % end of each grasp. They may be missing if the digits aren't all the
 % way through the slot at reach termination. Essentially, make sure all
 % digits are through the slot
-areDigitsThroughSlot = (dig1_z < slot_z_wrt_pellet) & (dig2_z < slot_z_wrt_pellet) & (dig4_z < slot_z_wrt_pellet);
+areDigitsThroughSlot = (dig1_z < slot_z_wrt_pellet) | (dig2_z < slot_z_wrt_pellet) | (dig4_z < slot_z_wrt_pellet);
+
+% comment the line immediately below back in to restore to the version as
+% of 20200628 -DL
+% areDigitsThroughSlot = (dig1_z < slot_z_wrt_pellet) & (dig2_z < slot_z_wrt_pellet) & (dig4_z < slot_z_wrt_pellet);
+% areDigitsThroughSlot = (dig2_z < slot_z_wrt_pellet) & (dig4_z < slot_z_wrt_pellet);
 reachData.reachEnds = find(reachMins & areDigitsThroughSlot);
 reachData.graspEnds = find(graspMins & areDigitsThroughSlot);
 

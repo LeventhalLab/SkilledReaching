@@ -71,9 +71,13 @@ validPelletPts = initPelletPts(~isnan(initPelletPts(:,1)),:);
 if isempty(validPelletPts)
     initPellet3D = [];
     try
-    if all(pellet_direct_p(preTriggerFrame:firstSlotBreachFrame) < min_pellet_direct_p)
-        pelletMissingFlag = true;
-    end
+        if length(pellet_direct_p) < preTriggerFrame
+            % rare event where the video was truncated before the paw got
+            % through the slot. Just ignore this trial
+            pelletMissingFlag = true;
+        elseif all(pellet_direct_p(preTriggerFrame:firstSlotBreachFrame) < min_pellet_direct_p)
+            pelletMissingFlag = true;
+        end
     catch
         keyboard
     end

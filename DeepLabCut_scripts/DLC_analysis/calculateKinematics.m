@@ -120,7 +120,11 @@ for i_reach = 1 : num_reaches
     % paw orientation
     [reachData.orientation{i_reach},firstValidFrame] = ...
         determinePawOrientation(interp_trajectory(reachData.slotBreachFrame(i_reach):reach_endFrame,:,:),bodyparts,pawPref);
-    reachData.firstDigitKinematicsFrame(i_reach) = firstValidFrame + reachData.slotBreachFrame(i_reach) - 1;
+    if isempty(firstValidFrame)    % no defined paw orientation for this reach
+        reachData.firstDigitKinematicsFrame(i_reach) = []
+    else
+        reachData.firstDigitKinematicsFrame(i_reach) = firstValidFrame + reachData.slotBreachFrame(i_reach) - 1;
+    end
     
     % aperture
     [reachData.aperture{i_reach},~] = ...

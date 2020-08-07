@@ -13,13 +13,14 @@ trialOutcomeColors = {'k','g','b','r','y','c','m'};
 validTrialOutcomes = {0:10,1,2,[3,4,7],0,11,6};
 validOutcomeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
 
-labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
+labeledBodypartsFolder = '/Volumes/Untitled/for_creating_3d_vids';
 histoFolder = '/Volumes/LL EXHD #2/SR Histo by rat';
-xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
+xlDir = labeledBodypartsFolder;%'/Users/dan/Box/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+csvfname = fullfile(xlDir,'SR_rat_database.csv');
 ratInfo = readRatInfoTable(csvfname);
 
-ratSummaryDir = fullfile('/Volumes/LL EXHD #2/','rat kinematic summaries');
+
+ratSummaryDir = fullfile(labeledBodypartsFolder,'rat kinematic summaries');
 if ~exist(ratSummaryDir,'dir')
     mkdir(ratSummaryDir);
 end
@@ -34,7 +35,7 @@ numRatFolders = length(ratFolders);
 
 z_interp_digits = 20:-0.1:-15;  % for interpolating z-coordinates for aperture and orientation calculations
 
-for i_rat = 42:45%1 : numRatFolders
+for i_rat = 6:6%1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -69,8 +70,8 @@ for i_rat = 42:45%1 : numRatFolders
     
     switch ratID
         case 'R0159'
-            startSession = 5;
-            endSession = numSessions;
+            startSession = 2;
+            endSession = 7;
         otherwise
             startSession = 1;
             endSession = numSessions;
