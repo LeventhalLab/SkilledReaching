@@ -2,6 +2,26 @@
 
 % script to perform 3D reconstruction on videos
 
+% in addition to a file tree for videos as follows:
+% Raw Data File Structure
+% -	Parent directory
+% o	Rat folder, named with rat identifier (e.g., “R0186”)
+% 	Sessions folders RXXXX_YYYYMMDDz (e.g., “R0186_20170921a” would be the first session recorded on September 21, 2017 for rat R0186)
+% 
+% Each sessions folder contains a .log file (read with readLogData) with session metadata, and videos named with the format RXXXX_YYYYMMDD_HH-MM-DD_nnn.avi, where RXXXX is the rat identifier, YYYYMMDD is the date, HH-MM-DD is the time the video was recorded, and nnn is the number of the video within the session (e.g., 001, 002, etc.). Sometimes the software crashed mid-session, and the numbering restarted. However, each video still has a unique identifier based on the time it was recorded.
+% 
+% Each rat has a RXXXX_sessions.csv file associated with it, which is a table containing metadata for each session (e.g., was laser on/occluded during that session, training vs test session, etc.)
+%
+% DLC Output File Structure
+% Similar to Raw Data File Structure
+% -	Parent directory
+% o	Rat folder, named with rat identifier (e.g., “R0186”)
+% 	Sessions folders RXXXX_YYYYMMDDz (e.g., “R0186_20170921a” would be the first session recorded on September 21, 2017 for rat R0186)
+% •	Subfolders RXXXX_YYYYMMDDz_direct/left/right that contain the actual DLC output files and metadata from cropping (i.e., cropping coordinates, frame rate, etc) that particular view (left mirror, right mirror, or direct view)
+
+% also need: a .csv file with a table containing metadata about each rat
+% ('Bova_Leventhal_2020_rat_database.csv')
+
 % flag for whether to skip calculations if analysis files already exists
 repeatCalculations = false;
 
@@ -24,36 +44,18 @@ maxDistFromNeighbor_invalid = 70;
 % labeledBodypartsFolder-->'RXXXX'-->'RXXXX_sessiondate'-->'RXXXX_sessiondate_direct/left'
 labeledBodypartsFolder = '/Volumes/Untitled/for_creating_3d_vids';
 
-% 
+% read in the rat database table
 xlDir = labeledBodypartsFolder;
-% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'SR_rat_database.csv');
-
-% ratInfo = readRatInfoTable(csvfname);   % consider commenting this in and
-% commenting out the readtable version
-% ratInfo = readtable(csvfname);
+csvfname = fullfile(xlDir,'Bova_Leventhal_2020_rat_database.csv');
 ratInfo = readRatInfoTable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
 % for saving a backup to a shared drive
-% sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
+sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
 
 % directory that contains calibration images
 % file structure: 
-calImageDir = fullfile(labeledBodypartsFolder, 'calibration_images');%'/Volumes/LL EXHD #2/calibration_images';
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
-% change this if the videos were cropped at different coordinates
-% vidROI = [750,450,550,550;
-%           1,450,450,400;
-%           1650,435,390,400];
-% triggerTime = 1;    % seconds
-% frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
-% frameRate = 300;
-% 
-% frameSize = [1024,2040];
-% these are now loaded in from crop metadata files
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+calImageDir = fullfile(labeledBodypartsFolder, 'calibration_images');
       
 cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
@@ -62,18 +64,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-% find the list of calibration files
-% cd(calImageDir);
-% calFileList = dir('SR_boxCalibration_*.mat');
-% calDateList = cell(1,length(calFileList));
-% calDateNums = zeros(length(calFileList),1);
-% for iFile = 1 : length(calFileList)
-%     C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
-%     calDateList{iFile} = C{1};
-%     calDateNums(iFile) = str2double(calDateList{iFile});
-% end
-
-for i_rat = 20:20%numRatFolders
+for i_rat = 1 : numRatFolders   % change limits to work on specific rats
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -94,23 +85,23 @@ for i_rat = 20:20%numRatFolders
     end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
-%     sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
+    
+    % comment out if not auto-backing up to a shared drive
+    sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
     
     cd(ratRootFolder);
-    
-%     sessionDirectories = dir([ratID '_*']);
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    switch ratID
+    switch ratID    % if want to analyze specific sessions for a given rat
         case 'R0216'
             startSession = 1;
             endSession = numSessions;
         otherwise
-            startSession = 2;
+            startSession = 1;
             endSession = numSessions;
     end
-    for iSession = startSession : 2 : endSession
+    for iSession = startSession : endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};

@@ -26,7 +26,6 @@ labeledBodypartsFolder = '/Volumes/Untitled/for_creating_3d_vids';
 
 % 
 xlDir = labeledBodypartsFolder;
-% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
 csvfname = fullfile(xlDir,'SR_rat_database.csv');
 
 % ratInfo = readRatInfoTable(csvfname);   % consider commenting this in and
@@ -107,7 +106,7 @@ for i_rat = 20:20%numRatFolders
             startSession = 1;
             endSession = numSessions;
         otherwise
-            startSession = 2;
+            startSession = 1;
             endSession = numSessions;
     end
     for iSession = startSession : 2 : endSession

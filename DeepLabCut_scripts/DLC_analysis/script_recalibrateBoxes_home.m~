@@ -11,10 +11,7 @@
 % Each sessions folder contains a .log file (read with readLogData) with session metadata, and videos named with the format RXXXX_YYYYMMDD_HH-MM-DD_nnn.avi, where RXXXX is the rat identifier, YYYYMMDD is the date, HH-MM-DD is the time the video was recorded, and nnn is the number of the video within the session (e.g., 001, 002, etc.). Sometimes the software crashed mid-session, and the numbering restarted. However, each video still has a unique identifier based on the time it was recorded.
 % 
 % Each rat has a RXXXX_sessions.csv file associated with it, which is a table containing metadata for each session (e.g., was laser on/occluded during that session, training vs test session, etc.)
-%
-% DLC Output File Structure - similar to raw data file structure
-% -	Parent directory
-% o	Rat folder, named with rat identifier (e.g., “R0186”)
+
 % also need: a .csv file with a table containing metadata about each rat
 % ('Bova_Leventhal_2020_rat_database.csv')
 % file storing intrinsic parameters for the camera
@@ -170,6 +167,7 @@ for i_rat = 20:20
                                                                           'maxneighbordist',maxDistFromNeighbor_invalid,...
                                                                           'maxdistperframe',maxDistPerFrame);
         toc
+%         boxCal_fromSession(numValidSessions).sessionName = 
         
         cd(calImageDir);
         save(calibrationFileName,'boxCal_fromSession','-append')

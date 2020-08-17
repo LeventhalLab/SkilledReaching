@@ -17,7 +17,7 @@ for i_var = 1 : num_vars
     if strcmpi(VariableTypes{i_var}, 'datetime')
         opts = setvaropts(opts,VariableNames{i_var},'InputFormat', dateFormat);
     end
-end          
+end
 
 ratInfo = readtable(csvfname, opts);
 
