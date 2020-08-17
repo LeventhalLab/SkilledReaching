@@ -52,15 +52,28 @@ function [boxCal_fromSession,mp_direct,mp_mirror] = calibrateBoxFromDLCSession(f
 %       potential correctly identified point for calibration purposes.
 %       generally stricter than min_valid_p since we have lots of good
 %       points for calibration (like usually set this to 1.0)
-%   maxdistperframe - 
-%   min_valid_p - minimum DLC "p" value accepted as a
-%       potential correctly identified point
+%   maxdistperframe - maximum distance a point can jump between frames
+%       before we assume that at least one of the points was a
+%       misidentification
+%   min_valid_p - minimum DLC "p" value accepted as a potential correctly 
+%       identified point
+%   min_certain_p - minimum DLC "p" value accepted as certainly a correctly
+%       identified point
+%   maxneighbordist - for points on the paw, the farthest apart they can be
+%       before at least one of them must be misidentified
+%   framesize - image size (height, width). default 1024 x 2040
+%       ([1024,2040])
+%   usepriortrajfile - boolean. if trajectory has already been calculated
+%       (meaning all valid/invalid points already identified and points
+%       have been translated and undistorted), just use that file instead
+%       of raw DLC data
 %
 % OUTPUTS:
 %   boxCal_fromSession - structure containing same fields as boxCal, but
 %       based on matched DLC points from this session
-%   mp_direct - 
-%   mp_mirror - 
+%   mp_direct - n x 2 array where n is the number of total identified
+%       points in the direct view with clear matches in the mirror view
+%   mp_mirror - n x 2 array where each row matches the points in mp_direct
 
 usePriorTrajFile = true;   % whether or not to use previously calculated trajectory info and manually invalidated points
 min_valid_p_for_calibration = 1;
@@ -206,9 +219,6 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
         
         % ROIs loaded from cropping metadata files
         ROIs = [direct_metadata.viewROI;mirror_metadata.viewROI];
-        triggerTime = direct_metadata.triggerTime; % assume same as mirror view
-        frameTimeLimits = direct_metadata.frameTimeLimits;
-        frameRate = direct_metadata.frameRate;
         frameSize = direct_metadata.frameSize;
             
         [invalid_mirror, ~] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
