@@ -27,7 +27,7 @@
 % •	YYYYMM_original_images – original calibration images
 %
 % also need: a .csv file with a table containing metadata about each rat
-% (e.g., 'SR_rat_database.csv')
+% (e.g., 'Bova_Leventhal_2020_rat_database.csv')
 
 % file storing intrinsic parameters for the camera
 camParamFile = '/Users/dan/Documents/GitHub/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
@@ -148,12 +148,10 @@ for i_rat = 1 : numRatFolders
         
         switch pawPref
             case 'right'
-%                 ROIs = vidROI(1:2,:);
                 Pn = squeeze(boxCal.Pn(:,:,2));
                 sf = mean(boxCal.scaleFactor(2,:));
                 F = squeeze(boxCal.F(:,:,2));
             case 'left'
-%                 ROIs = vidROI([1,3],:);
                 Pn = squeeze(boxCal.Pn(:,:,3));
                 sf = mean(boxCal.scaleFactor(3,:));
                 F = squeeze(boxCal.F(:,:,3));

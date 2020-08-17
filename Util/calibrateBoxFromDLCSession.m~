@@ -43,22 +43,16 @@ function [boxCal_fromSession,mp_direct,mp_mirror] = calibrateBoxFromDLCSession(f
 %           images. scaleFactor(1,:) - scale factor for top view;
 %           scaleFactor(2,:) - scale factor for left view; scaleFactor(3,:)
 %           - scale factor for right view. Converts world coordinates to mm
-%       boxCal_fromSession - structure array containing above fields, but based
+%       boxCal_fromSession - structure containing above fields, but based
 %           on DLC output as well as calibration images
 %   pawPref - 'left' or 'right'
+%   ROIs - 
 %
 % VARARGINs:
-%   min_valid_p_for_calibration - minimum DLC "p" value accepted as a
-%       potential correctly identified point for calibration purposes.
-%       generally stricter than min_valid_p since we have lots of good
-%       points for calibration (like usually set this to 1.0)
-%   maxdistperframe - 
-%   min_valid_p - minimum DLC "p" value accepted as a
-%       potential correctly identified point
-%
+%   min_valid_p_for_calibration
+%   maxdistperframe
 % OUTPUTS:
-%   boxCal_fromSession - structure containing same fields as boxCal, but
-%       based on matched DLC points from this session
+%   boxCal_fromSession - 
 %   mp_direct - 
 %   mp_mirror - 
 
@@ -230,6 +224,17 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     numValid_bp = 0;
     bodyparts = {};
     for i_bp = 1 : num_direct_bp
+%         if ~any(strcmpi(mirror_bp, direct_bp{i_bp}))
+%             % accept 'leftpaw' and 'leftpawdorsum' or 'righpaw' and
+%             % 'rightpawdorsum' as the same thing
+%             continue;
+%         end
+%         numValid_bp = numValid_bp + 1;
+%         try
+%         mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
+%         catch
+%             keyboard
+%         end
     % hard coding for now that bodypart labels are in the same order in
     % the direct and mirror views, should fix this later to make the
     % algorithm more robust to human error

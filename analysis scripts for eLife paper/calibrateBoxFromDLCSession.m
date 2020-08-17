@@ -1,66 +1,16 @@
 function [boxCal_fromSession,mp_direct,mp_mirror] = calibrateBoxFromDLCSession(fullSessionDir,cameraParams,boxCal,pawPref,varargin)
 %
-% function to calibrate a reaching chamber (i.e., calculate fundamental
-% matrix, essential matrix, camera matrices, etc) based on matched points
-% discovered by DLC during reaching
+%
 %
 % INPUTS:
-%   fullSessionDir - directory containing DLC output for the session of
-%       interest
-%   cameraParams - camera parameters structure for the real camera
-%   boxCal - box calibration structure with the following fields:
-%       E - 3 x 3 x 3 array continaing essential matrices
-%           E(:,:,1) = essential matrix for direct view, top mirror
-%           E(:,:,2) = essential matrix for direct view, left mirror
-%           E(:,:,3) = essential matrix for direct view, right mirror
-%       F - 3 x 3 x 3 array continaing fundamental matrices
-%           F(:,:,1) = fundamental matrix for direct view, top mirror
-%           F(:,:,2) = fundamental matrix for direct view, left mirror
-%           F(:,:,3) = fundamental matrix for direct view, right mirror
-%       Pn - 3 x 3 x 3 array continaing camera matrices for virtual cameras
-%           P for direct view assumed to be eye(4,3)
-%           Pn(:,:,1) = camera matrix for top mirror
-%           Pn(:,:,2) = camera matrix for left mirror
-%           Pn(:,:,3) = camera matrix for right mirror
-%       cameraParams - matlab camera parameters structure with intrinsic
-%           parameters for the real camera
-%       curDate - character array containing the date the calibration was 
-%           performed (YYYYMMDD)
-%       directChecks - ptsPerImage x 2 x number of boards x number of images
-%           array. each ptsPerImage x 2 subarray contains (x,y) pairs for
-%           matched points in a single image for a single mirror. For
-%           example, directChecks(:,:,1,1) is the checkerboard coordinates
-%           on the top panel in the first calibration image,
-%           directChecks(:,:,2,2) is the checkerboard coordinates on the
-%           left panel in the second calibration image,
-%           directChecks(:,:,3,1) is the checkerboard coordinates on the
-%           right panel in the first calibration image, etc...
-%       mirrorChecks - same as directChecks but in the corresponding mirror
-%           views
-%       imFileList - names of the grid calibration files that went into the
-%           calibration
-%       scaleFactor - n x 3 array, where n is the number of calibration
-%           images. scaleFactor(1,:) - scale factor for top view;
-%           scaleFactor(2,:) - scale factor for left view; scaleFactor(3,:)
-%           - scale factor for right view. Converts world coordinates to mm
-%       boxCal_fromSession - structure array containing above fields, but based
-%           on DLC output as well as calibration images
+%   fullSessionDir
+%   cameraParams
+%   boxCal
 %   pawPref - 'left' or 'right'
-%
-% VARARGINs:
-%   min_valid_p_for_calibration - minimum DLC "p" value accepted as a
-%       potential correctly identified point for calibration purposes.
-%       generally stricter than min_valid_p since we have lots of good
-%       points for calibration (like usually set this to 1.0)
-%   maxdistperframe - 
-%   min_valid_p - minimum DLC "p" value accepted as a
-%       potential correctly identified point
+%   ROIs
 %
 % OUTPUTS:
-%   boxCal_fromSession - structure containing same fields as boxCal, but
-%       based on matched DLC points from this session
-%   mp_direct - 
-%   mp_mirror - 
+%
 
 usePriorTrajFile = true;   % whether or not to use previously calculated trajectory info and manually invalidated points
 min_valid_p_for_calibration = 1;
@@ -204,12 +154,12 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
         direct_metadataName = fullfile(directViewDir, direct_metadataName);
         direct_metadata = load(direct_metadataName);
         
-        % ROIs loaded from cropping metadata files
-        ROIs = [direct_metadata.viewROI;mirror_metadata.viewROI];
-        triggerTime = direct_metadata.triggerTime; % assume same as mirror view
-        frameTimeLimits = direct_metadata.frameTimeLimits;
-        frameRate = direct_metadata.frameRate;
-        frameSize = direct_metadata.frameSize;
+            % ROIs loaded from cropping metadata files
+            ROIs = [direct_metadata.viewROI;mirror_metadata.viewROI];
+            triggerTime = direct_metadata.triggerTime; % assume same as mirror view
+            frameTimeLimits = direct_metadata.frameTimeLimits;
+            frameRate = direct_metadata.frameRate;
+            frameSize = direct_metadata.frameSize;
             
         [invalid_mirror, ~] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
             'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
@@ -230,6 +180,17 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
     numValid_bp = 0;
     bodyparts = {};
     for i_bp = 1 : num_direct_bp
+%         if ~any(strcmpi(mirror_bp, direct_bp{i_bp}))
+%             % accept 'leftpaw' and 'leftpawdorsum' or 'righpaw' and
+%             % 'rightpawdorsum' as the same thing
+%             continue;
+%         end
+%         numValid_bp = numValid_bp + 1;
+%         try
+%         mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
+%         catch
+%             keyboard
+%         end
     % hard coding for now that bodypart labels are in the same order in
     % the direct and mirror views, should fix this later to make the
     % algorithm more robust to human error
@@ -272,6 +233,7 @@ for i_mirrorcsv = 1 : length(mirror_csvList)
 end
 
 [F,~] = refineFundMatrixMirror(mp_direct,mp_mirror,frameSize);
+% F = fundMatrix_mirror(mp_direct, mp_mirror);
 
 E = K * F * K';
 [rot,t] = EssentialMatrixToCameraMatrix(E);

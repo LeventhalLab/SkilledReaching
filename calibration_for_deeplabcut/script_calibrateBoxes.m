@@ -1,4 +1,41 @@
 % calibrate boxes given marked checkerboard points
+%
+% saves the following structure:
+%   boxCal - box calibration structure with the following fields:
+%       E - 3 x 3 x 3 array continaing essential matrices
+%           E(:,:,1) = essential matrix for direct view, top mirror
+%           E(:,:,2) = essential matrix for direct view, left mirror
+%           E(:,:,3) = essential matrix for direct view, right mirror
+%       F - 3 x 3 x 3 array continaing fundamental matrices
+%           F(:,:,1) = fundamental matrix for direct view, top mirror
+%           F(:,:,2) = fundamental matrix for direct view, left mirror
+%           F(:,:,3) = fundamental matrix for direct view, right mirror
+%       Pn - 3 x 3 x 3 array continaing camera matrices for virtual cameras
+%           P for direct view assumed to be eye(4,3)
+%           Pn(:,:,1) = camera matrix for top mirror
+%           Pn(:,:,2) = camera matrix for left mirror
+%           Pn(:,:,3) = camera matrix for right mirror
+%       cameraParams - matlab camera parameters structure with intrinsic
+%           parameters for the real camera
+%       curDate - character array containing the date the calibration was 
+%           performed (YYYYMMDD)
+%       directChecks - ptsPerImage x 2 x number of boards x number of images
+%           array. each ptsPerImage x 2 subarray contains (x,y) pairs for
+%           matched points in a single image for a single mirror. For
+%           example, directChecks(:,:,1,1) is the checkerboard coordinates
+%           on the top panel in the first calibration image,
+%           directChecks(:,:,2,2) is the checkerboard coordinates on the
+%           left panel in the second calibration image,
+%           directChecks(:,:,3,1) is the checkerboard coordinates on the
+%           right panel in the first calibration image, etc...
+%       mirrorChecks - same as directChecks but in the corresponding mirror
+%           views
+%       imFileList - names of the grid calibration files that went into the
+%           calibration
+%       scaleFactor - n x 3 array, where n is the number of calibration
+%           images. scaleFactor(1,:) - scale factor for top view;
+%           scaleFactor(2,:) - scale factor for left view; scaleFactor(3,:)
+%           - scale factor for right view. Converts world coordinates to mm
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 

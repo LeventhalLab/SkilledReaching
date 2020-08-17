@@ -58,13 +58,6 @@ switch pawPref
 end
 K = cameraParams.IntrinsicMatrix;
 
-numFrames = size(final_direct_pts, 2);
-
-% maxDistFromEpipole = 10;   % how far away from the epipole can the line
-                           % connecting the matched direct and mirror
-                           % points be before the algorithm says there must
-                           % be a mismatch?
-
 numFrames = size(final_direct_pts,2);
 frames_to_check = 1 : numFrames;
 [final_direct_pts,final_mirror_pts,isEstimate] = estimateHiddenPoints(final_direct_pts, final_mirror_pts, invalid_direct, invalid_mirror, direct_bp, mirror_bp, boxCal, imSize, pawPref,frames_to_check,'maxDistFromNeighbor',maxDistFromNeighbor);
@@ -77,30 +70,11 @@ if size(invalid_direct,2) > numFrames
     invalid_direct = invalid_direct(:,1:numFrames);
     invalid_mirror = invalid_mirror(:,1:numFrames);
 end
-% WORKING HERE - PROBLEM WITH THROWING OUT THE WRONG POINTS WHEN THE
-% OPPOSITE PAW COMES THROUGH THE SLOT AND IS MISTAKEN FOR THE "CORRECT"
-% REACHING PAW
-% match body parts between direct and mirror views
-% mirror_bpMatch_idx = [];
-% direct_bpMatch_idx = [];
-% num_direct_bp = length(direct_bp);
-% numValid_bp = 0;
-% bodyparts = {};
-% for i_bp = 1 : num_direct_bp
-%     
-%     if isempty(strcmpi(mirror_bp, direct_bp{i_bp}))
-%         continue;
-%     end
-%     numValid_bp = numValid_bp + 1;
-%     mirror_bpMatch_idx(numValid_bp) = find(strcmpi(mirror_bp, direct_bp{i_bp}));
-%     direct_bpMatch_idx(numValid_bp) = i_bp;
-%     bodyparts{numValid_bp} = direct_bp{i_bp};
-% end
+
 [bodyparts,direct_bpMatch_idx,mirror_bpMatch_idx] = matchBodyPartIndices(direct_bp,mirror_bp);
 numValid_bp = length(bodyparts);
 
 pawTrajectory = zeros(numFrames, 3, numValid_bp);
-% dist_from_epipole = zeros(numFrames, numValid_bp);
 P = eye(4,3);
 for i_bp = 1 : numValid_bp
 
@@ -124,10 +98,6 @@ for i_bp = 1 : numValid_bp
         cur_direct_pts = cur_direct_pts';
         cur_mirror_pts = cur_mirror_pts';
     end
-%     cur_direct_pts = squeeze(final_direct_pts(direct_bpMatch_idx(i_bp), :, :));
-%     cur_mirror_pts = squeeze(final_mirror_pts(mirror_bpMatch_idx(i_bp), :, :));
-    
-%     dist_from_epipole(:,i_bp) = distanceToLine(cur_direct_pts,cur_mirror_pts,epipole);
 
     direct_hom = [cur_direct_pts, ones(size(cur_direct_pts,1),1)];
     direct_norm = (K' \ direct_hom')';
