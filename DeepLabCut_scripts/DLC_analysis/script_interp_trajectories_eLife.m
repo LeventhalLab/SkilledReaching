@@ -1,7 +1,7 @@
 % script_interp_trajectories
 % run after running script_calculateKinematics
 %
-% script to 
+% script to interpolate 
 
 % template name for viable trajectory files (for searching)
 trajectory_file_name = 'R*3dtrajectory_new.mat';
@@ -30,11 +30,10 @@ ratIDs_with_new_date_format = [284];
 % easy to make left vs right-pawed trajectories overlap - just reflect
 % across x = 0. I think this will be OK. -DL 20181015
 
+% parent directory for DLC output, metadata files, analysis output
 labeledBodypartsFolder = '/Volumes/Untitled/for_creating_3d_vids';
-% labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-xlDir = labeledBodypartsFolder;%'/Users/dan/Box/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'SR_rat_database.csv');
+xlDir = labeledBodypartsFolder;
+csvfname = fullfile(xlDir,'Bova_Leventhal_2020_rat_database.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
@@ -43,7 +42,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1 : numRatFolders
+for i_rat = 1 : numRatFolders   % change limits to analyze specific rats
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -65,15 +64,16 @@ for i_rat = 1 : numRatFolders
         csvDateFormat = 'yyyyMMdd';
     end
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
-%     sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
     cd(ratRootFolder);
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
+    % switch...case structure for analyzing specific sessions for specific
+    % rats
     switch ratID
         case 'R0158'
             startSession = 19;
-            endSession = 19;%numSessions;
+            endSession = 19;
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
@@ -93,11 +93,7 @@ for i_rat = 1 : numRatFolders
     for iSession = startSession : 1 : endSession
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
-%         sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
-%         
-%         if ~exist(sharedX_fullSessionDir,'dir')
-%             mkdir(sharedX_fullSessionDir)
-%         end
+
         if ~isfolder(fullSessionDir)
             continue;
         end
@@ -119,7 +115,6 @@ for i_rat = 1 : numRatFolders
         fprintf('working on %s\n',sessionDirectories{iSession});
         numTrials = length(pawTrajectoryList);
         interpTrajectoryName = [ratID '_' sessionDateString '_interp_trajectories.mat'];
-%         sharedX_interpTrajectoryName = fullfile(sharedX_fullSessionDir,interpTrajectoryName);
 
         % find the maximum number of frames across videos
         maxFrames = 0;
@@ -131,7 +126,6 @@ for i_rat = 1 : numRatFolders
         num_bodyparts = size(pawTrajectory,3);
         
         % initialize variables
-%         all_isEstimate = false(num_bodyparts,maxFrames,2,numTrials);
         pelletMissingFlag = false(numTrials,1);
         % sometimes the session restarted and we get duplicate trial
         % numbers. The first column of trialNumbers will contain the trial
@@ -162,18 +156,6 @@ for i_rat = 1 : numRatFolders
                 clear manually_invalidated_points
             end
             load(pawTrajectoryList(iTrial).name);
-
-            % occasionally there's a video that's too short - truncated
-            % during recording? maybe VI turned off in mid-recording?
-            % if that's the case, pad with false values
-%             if size(isEstimate,2) < size(all_isEstimate,2)
-%                 isEstimate(:,end+1:size(all_isEstimate,2),:) = false;
-%             end 
-%             % sometimes it happens to the first video...
-%             if size(isEstimate,2) > size(all_isEstimate,2)
-%                 all_isEstimate(:,end+1:size(isEstimate,2),:,:) = false;
-%             end
-%             all_isEstimate(:,:,:,iTrial) = isEstimate;
             
             [invalid_mirror, mirror_dist_perFrame] = find_invalid_DLC_points(mirror_pts, mirror_p,mirror_bp,pawPref,...
                 'maxdistperframe',maxDistPerFrame,'min_valid_p',min_valid_p,'min_certain_p',min_certain_p,'maxneighbordist',maxDistFromNeighbor_invalid);
@@ -264,10 +246,6 @@ for i_rat = 1 : numRatFolders
         save(interpTrajectoryName,'all_interp_traj_wrt_pellet','all_frameRange','all_didPawStartThroughSlot',...
             'all_initPellet3D','all_firstPawPastSlotFrame','all_firstSlotBreachFrame','pelletMissingFlag','trialNumbers',...
             'bodyparts','invalid3Dpoints','slot_z','all_slot_z_wrt_pellet','frameRate');
-        
-%         save(sharedX_interpTrajectoryName,'all_interp_traj_wrt_pellet','all_frameRange','all_didPawStartThroughSlot',...
-%             'all_initPellet3D','all_firstPawPastSlotFrame','all_firstSlotBreachFrame','pelletMissingFlag','trialNumbers',...
-%             'bodyparts','invalid3Dpoints','slot_z','all_slot_z_wrt_pellet','frameRate');
         
     end
     
