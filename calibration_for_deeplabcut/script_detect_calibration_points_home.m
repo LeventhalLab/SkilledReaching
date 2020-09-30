@@ -1,17 +1,9 @@
 % detect checkerboard calibration images, 20180605
 
-% <<<<<<< HEAD
-% % calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% % calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
-% 
-% camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
-% % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
-% =======
+rootDir = '/Users/dleventh/Documents/MATLAB/Calibration Images';
 
-month_to_analyze = '201811';
+month_to_analyze = '201911';
 year_to_analyze = month_to_analyze(1:4);
-rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
     [month_to_analyze '_calibration'],[month_to_analyze '_original_images']);
 autoImageDir = fullfile(rootDir,year_to_analyze,...
@@ -20,14 +12,9 @@ if ~exist(autoImageDir,'dir')
     mkdir(autoImageDir)
 end
 
-camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
+camParamFile = '/Users/dleventh/Documents/MATLAB/cameraParameters.mat';
 
-% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
 
-% camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
-% camParamFile = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
 
 load(camParamFile);
 
