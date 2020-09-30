@@ -6,7 +6,8 @@ function [interp_trajectory,frameRange] = extractSingleTrialKinematics(trajector
 %       number of body parts
 %
 % OUTPUTS
-%   interp_trajectory
+%   interp_trajectory - n x 3 x num_bodyparts array where n is the number
+%       of frames
 %   frameRange - num_bodyparts x 2 array; first element in each row is the
 %       first frame in which this "body part" was identified; 2nd element
 %       is the last frame

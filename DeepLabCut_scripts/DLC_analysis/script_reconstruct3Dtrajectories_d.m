@@ -9,7 +9,7 @@ camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual
 load(camParamFile);
 
 % parameter for calc3D_DLC_trajectory_20181204
-maxDistFromNeighbor = 40;   % maximum distance an estimated point can be from its neighbor
+maxDistFromNeighbor = 50;   % maximum distance an estimated point can be from its neighbor
 maxReprojError = 10;
 
 % parameters for find_invalid_DLC_points
@@ -20,8 +20,10 @@ maxDistFromNeighbor_invalid = 70;
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 % xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 
+% ratInfo = readRatInfoTable(csvfname);   % consider commenting this in and
+% commenting out the readtable version
 ratInfo = readtable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
@@ -60,7 +62,7 @@ numViews = length(vidView);
 %     calDateNums(iFile) = str2double(calDateList{iFile});
 % end
 
-for i_rat = 34:34%numRatFolders
+for i_rat = 29:29%numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -89,12 +91,13 @@ for i_rat = 34:34%numRatFolders
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    if i_rat == 34
-        startSession = 4;
-        endSession = numSessions;
-    else
-        startSession = 1;
-        endSession = numSessions;
+    switch ratID
+        case 'R0225'
+            startSession = 3;
+            endSession = 3;
+        otherwise
+            startSession = 4;
+            endSession = numSessions;
     end
     for iSession = startSession : 4 : endSession
         
@@ -115,12 +118,27 @@ for i_rat = 34:34%numRatFolders
             calDateNums(iFile) = str2double(calDateList{iFile});
         end
         fprintf('working on session %s_%s\n',ratID,sessionDate);
+        
+        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
+        cd(fullSessionDir);
+        
+        logFiles = dir('*.log');
+        
+        % comment below back in for non-corrupted log files
+%         curLog = readLogData(logFiles(1).name);
+%         
+%         if isfield(curLog,'boxnumber')
+%             boxNum = curLog.boxnumber;
+%         else
+%             boxNum = 99;   % used 99 as box number before this was written into .log files 20191126
+%         end
+        boxNum = 99;
 
         % find the most recent date compared to the current file for which a
         % calibration file exists. Later, write code so files are stored by
         % date so that this file can be found before entering the loop through
         % DLC csv files
-        [calibrationFileName, lastValidCalDate] = findCalibrationFile(calImageDir,sessionDate);
+        [calibrationFileName, lastValidCalDate] = findCalibrationFile(calImageDir,boxNum,sessionDate);
         if exist(calibrationFileName,'file')
             boxCal = load(calibrationFileName);
         else
@@ -142,7 +160,6 @@ for i_rat = 34:34%numRatFolders
                 mirrorView = 'right';
         end
     
-        fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
         [directViewDir,mirrorViewDir,direct_csvList,mirror_csvList] = getDLC_csvList(fullSessionDir);
 
@@ -206,13 +223,13 @@ for i_rat = 34:34%numRatFolders
             
             cd(mirrorViewDir)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
-            mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name);
+            mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name,pawPref);
             mirror_metadataName = fullfile(mirrorViewDir, mirror_metadataName);
             mirror_metadata = load(mirror_metadataName);
             
             cd(directViewDir)
             [direct_bp,direct_pts,direct_p] = read_DLC_csv(direct_csvList(i_directcsv).name);
-            direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name);
+            direct_metadataName = get_metadataName(direct_csvList(i_directcsv).name,pawPref);
             direct_metadataName = fullfile(directViewDir, direct_metadataName);
             direct_metadata = load(direct_metadataName);
             

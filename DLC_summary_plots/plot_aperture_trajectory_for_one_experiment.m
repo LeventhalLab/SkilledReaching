@@ -22,7 +22,7 @@ switch exptSummary.experimentInfo.type
     case 'arch_during'
         laserOnColor = 'g';
         occludeColor = [0 1 0.0] * occludeRatio;
-    case 'eyfp'
+    case 'eyfp_during'
         laserOnColor = 'r';
         occludeColor = [1 0.0 0.0] * occludeRatio;
 end

@@ -11,6 +11,9 @@ dig4_trajectory = squeeze(interp_trajectory(:,:,digIdx(4)));
 % vector connecting the tips of digits 1 and 4 onto the plane z = 0?
 validFrames = ~isnan(dig1_trajectory(:,1)) & ~isnan(dig4_trajectory(:,1));
 
+firstValidFrame = find(validFrames,1,'first');
+numValidFrames = numFrames - firstValidFrame + 1;
+
 if ~any(validFrames)   % no valid frames. this can happen on very short reaches where
                        % all the digits don't make it through the slot.
                        % Will have to think about how to deal with this -
@@ -19,8 +22,7 @@ if ~any(validFrames)   % no valid frames. this can happen on very short reaches 
     firstValidFrame = [];
     return
 end
-firstValidFrame = find(validFrames,1,'first');
-numValidFrames = numFrames - firstValidFrame + 1;
+
 pawOrientation = zeros(numValidFrames,1);
 
 for iFrame = firstValidFrame : numFrames

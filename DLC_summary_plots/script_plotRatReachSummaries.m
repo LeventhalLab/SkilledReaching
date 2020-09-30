@@ -3,12 +3,13 @@
 ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
-           'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
-           'R0228','R0229','R0230'};
+           'R0216','R0217','R0218','R0219','R0220','R0221','R0223','R0225','R0227',...
+           'R0228','R0229','R0230','R0235','R0283','R0284','R0285','R0286',...
+           'R0287','R0288','R0289','R0309','R0310','R0311','R0312'};
 numRats = length(ratList);
 
-firstRat = 1;
-lastRat = 30;
+firstRat = 42;
+lastRat = 45;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -96,21 +97,22 @@ traj2D_xlim = [250 320];
 
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
-labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-[plotsDir,~,~] = fileparts(labeledBodypartsFolder);
-plotsDir = fullfile(plotsDir,'DLC output plots');
-if ~exist(plotsDir,'dir')
-    mkdir(plotsDir);
-end
-
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20190819.csv');
 ratInfo = readRatInfoTable(csvfname);
 
-ratInfo_IDs = [ratInfo.ratID];
+ratSummaryDir = fullfile('/Volumes/LL EXHD #2/','rat kinematic summaries');
+ratSummaryPlotsDir = fullfile('/Volumes/LL EXHD #2/','rat kinematic summary plots');
+ratSummaryPlotsDir_fig = fullfile(ratSummaryPlotsDir,'fig');
+ratSummaryPlotsDir_pdf = fullfile(ratSummaryPlotsDir,'pdf');
+if ~exist(ratSummaryPlotsDir_fig,'dir')
+    mkdir(ratSummaryPlotsDir_fig);
+end
+if ~exist(ratSummaryPlotsDir_pdf,'dir')
+    mkdir(ratSummaryPlotsDir_pdf);
+end
 
-ratFolders = findRatFolders(labeledBodypartsFolder);
-numRatFolders = length(ratFolders);
+ratInfo_IDs = [ratInfo.ratID];
 
 for i_rat = firstRat:1:lastRat%:numRatFolders
     
@@ -140,121 +142,29 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
     if any(ratIDs_with_new_date_format == ratIDnum)
         csvDateFormat = 'yyyyMMdd';
     end
-    ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
-    reachScoresFile = [ratID '_scores.csv'];
-    reachScoresFile = fullfile(ratRootFolder,reachScoresFile);
-    reachScores = readReachScores(reachScoresFile,'csvdateformat',csvDateFormat);
-    allSessionDates = [reachScores.date]';
     
-    cd(ratRootFolder);
-    DLCstatsFolder = fullfile(ratRootFolder,[ratID '_DLCstats']);
-    
-    if ~exist(DLCstatsFolder,'dir')
-        mkdir(DLCstatsFolder);
+    ratSummaryName = [ratID '_kinematicsSummary.mat'];
+    full_ratSummaryName = fullfile(ratSummaryDir,ratSummaryName);
+
+    if ~exist(full_ratSummaryName,'file')
+        fprintf('%s not found\n',full_ratSummaryName);
+        continue;
     end
+
+    load(full_ratSummaryName);
+        
+    h_fig = plotRatReachSummaries(ratSummary, thisRatInfo);
+        
+    figName_ratSummary = [ratID '_kinematicsSummary.fig'];
+    pdfName_ratSummary = [ratID '_kinematicsSummary.pdf'];
     
-    sessionDirectories = listFolders([ratID '_2*']);   % all were recorded after the year 2000
-    numSessions = length(sessionDirectories);
+    figName_ratSummary = fullfile(ratSummaryPlotsDir_fig,figName_ratSummary);
+    pdfName_ratSummary = fullfile(ratSummaryPlotsDir_pdf,pdfName_ratSummary);
     
-    numSessionPages = 0;
-    sessionType = determineSessionType(thisRatInfo, allSessionDates);
-    for ii = 1 : length(sessionType)
-        sessionType(ii).typeFromScoreSheet = reachScores(ii).sessionType;
-    end
-    
-    sessionDates = cell(1,numSessions);
-    paw_endAngle = cell(1,numSessions);
-    pawOrientationTrajectories = cell(1,numSessions);
-    meanOrientations = cell(1,numSessions);
-    mean_MRL = cell(1,numSessions);
-    meanApertures = cell(1,numSessions);
-    varApertures = cell(1,numSessions);
-    endApertures = cell(1,numSessions);
-    apertureTrajectories = cell(1,numSessions);
-    numTrialsPerSession = zeros(numSessions,1);
-%     numReachingFrames = cell(1,numSessions);    % number of frames from first paw dorsum detection to max digit extension
-    
-    switch ratID
-        case 'R0158'
-            startSession = 1;
-            endSession = numSessions;
-        case 'R0159'
-            startSession = 5;
-            endSession = numSessions;
-        case 'R0160'
-            startSession = 1;
-            endSession = 22;
-        case 'R0171'
-            startSession = 1;
-            endSession = numSessions;
-        case 'R0192'
-            startSession = 1;
-            endSession = numSessions;
-        otherwise
-            startSession = 1;
-            endSession = numSessions;
-    end
-    numSessionsCalculated = 0;
-    for iSession = startSession:1:endSession
-        curSessionDir = sessionDirectories{iSession};
-        C = textscan(curSessionDir,[ratID '_%8c']);
-        sessionDateString = C{1};
-        sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
-        sessionDates{iSession} = sessionDate;
-        
-        fname_root = [ratID '_' sessionDateString];
-        pdfName_sessionSummary = sprintf('%s_session_summary.pdf',fname_root);
-        pdf_Directory = fullfile(plotsDir,'pdf',ratID);
-        if ~isfolder(pdf_Directory)
-            mkdir(pdf_Directory);
-        end
-        pdfName_sessionSummary = fullfile(pdf_Directory,pdfName_sessionSummary);
-        figName_sessionSummary = sprintf('%s_session_summary.fig',fname_root);
-        fig_Directory = fullfile(plotsDir,'fig',ratID);
-        if ~isfolder(fig_Directory)
-            mkdir(fig_Directory);
-        end
-        figName_sessionSummary = fullfile(fig_Directory,figName_sessionSummary);
-        
-%         if exist(pdfName_sessionSummary,'file')
-%             continue;
-%         end
-        
-        allSessionIdx = find(sessionDate == allSessionDates);
-        sessionReachScores = reachScores(allSessionIdx).scores;
-        
-        fullSessionDir = fullfile(ratRootFolder,curSessionDir);
-%         sessionDir_pdf = fullfile(plotsDir,'pdf',ratID,curSessionDir);
-%         if ~exist(sessionDir_pdf,'dir')
-%             mkdir(sessionDir_pdf);
-%         end
-%         sessionDir_fig = fullfile(plotsDir,'fig',ratID,curSessionDir);
-%         cd(fullSessionDir);
-%         if ~exist(sessionDir_fig,'dir')
-%             mkdir(sessionDir_fig);
-%         end
-        
-        reachDataName = [ratID '_' sessionDateString '_processed_reaches.mat'];
-        reachDataName = fullfile(fullSessionDir,reachDataName);
-        
-        try
-            load(reachDataName);
-        catch
-            fprintf('no session summary found for %s\n', curSessionDir);
-            continue
-        end
-        
-        pawPref = thisRatInfo.pawPref;
-        if iscell(pawPref)
-            pawPref = pawPref{1};
-        end
-        
-        h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType);
-        
-        savefig(h_fig,figName_sessionSummary);
-        print(h_fig,pdfName_sessionSummary,'-dpdf');
-        close(h_fig);
-    end
+    savefig(h_fig,figName_ratSummary);
+    print(h_fig,pdfName_ratSummary,'-dpdf');
+    close(h_fig);
     
 end
+    
         

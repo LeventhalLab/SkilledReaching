@@ -1,0 +1,34 @@
+ratID,Sex,Virus,trainingLevel,laserWavelength,laserTiming,tattooDate,virusDate,fiberDate,firstDatePretraining,firstDateTraining,lastDateRetraining,firstDateLaser,lastDateLaser,firstDateOcclusion,lastDateOcclusion,pawPref,digitColors,virusLot
+160,M,Arch,Well Learned,Green,During Reach,4/14/17,12/16/16,4/14/17,,,4/28/17,4/30/17,5/11/17,5/15/17,5/28/17,left,gbypr,AV4841d
+170,M,Arch,Well Learned,Green,During Reach,,1/26/17,6/8/17,,,7/7/17,7/10/17,7/21/17,7/24/17,8/3/17,right,,AV4841d
+183,M,Arch,Well Learned,Green,During Reach,7/26/17,4/14/17,7/15/17,,,8/3/17,8/8/17,8/18/17,8/20/17,8/30/17,right,gpbyr,AV4841d
+184,M,Arch,Well Learned,Green,During Reach,7/31/17,4/18/17,7/18/17,,,8/13/17,8/15/17,8/25/17,8/27/17,9/6/17,left,gpbyr,AV4841d
+186,M,ChR2,Well Learned,Blue,During Reach,7/31/17,4/20/17,7/20/17,,,8/13/17,8/15/17,8/25/17,8/27/17,9/6/17,right,gpbyr,AV4313X
+187,M,ChR2,Well Learned,Blue,During Reach,8/31/17,4/21/17,8/17/17,,,9/16/17,9/18/17,9/28/17,9/29/17,10/9/17,right,gpbyr,AV4313X
+189,M,ChR2,Well Learned,Blue,During Reach,10/14/17,4/25/17,8/29/17,,,9/22/17,9/24/17,10/4/17,10/5/17,10/16/17,right,gpybr,AV4313X
+190,M,Arch,Well Learned,Green,During Reach,8/16/17,4/26/17,8/4/17,,,8/24/17,8/26/17,9/5/17,9/6/17,9/16/17,left,gpbyr,AV4841D
+191,M,ChR2,Well Learned,Blue,During Reach,8/30/17,4/27/17,8/16/17,,,9/16/17,9/18/17,9/28/17,9/29/17,10/9/17,left,gpbyr,AV4313X
+192,F,Arch,Well Learned,Green,During Reach,10/15/17,5/16/17,8/30/17,,,9/29/17,10/1/17,10/11/17,10/15/17,10/24/17,left,gpybr,AV4841E
+193,F,ChR2,Well Learned,Blue,During Reach,10/14/17,5/18/17,8/31/17,,,9/28/17,9/30/17,10/10/17,10/11/17,10/21/17,right,gpybr,AV4313X
+195,F,ChR2,Well Learned,Blue,During Reach,10/14/17,5/22/17,9/1/17,,,9/29/17,10/1/17,10/11/17,10/12/17,10/22/17,right,gpybr,AV4313X
+196,F,EYFP,Well Learned,Blue,During Reach,11/9/17,5/24/17,10/24/17,,,11/19/17,11/21/17,12/1/17,12/3/17,12/13/17,left,gpybr,AV4310G
+197,F,ChR2,Well Learned,Blue,Between Reach,11/9/17,5/25/17,10/26/17,,,11/16/17,11/18/17,11/28/17,11/29/17,12/9/17,left,gpybr,AV4313X
+198,F,EYFP,Well Learned,Blue,During Reach,11/9/17,6/7/17,10/27/17,,,11/18/17,11/21/17,12/1/17,12/3/17,12/13/17,right,gpybr,AV4310G
+216,M,ChR2,Well Learned,Blue,Between Reach,2/1/18,9/12/17,12/18/17,,,2/2/18,2/3/18,2/14/18,2/15/18,2/25/18,right,gpybr,AV4313X
+218,M,ChR2,Well Learned,Blue,Between Reach,2/2/18,9/15/17,12/20/17,,,2/3/18,2/5/18,2/15/18,2/16/18,2/26/18,left,gpybr,AV4313X
+219,M,EYFP,Well Learned,Blue,During Reach,2/13/18,9/19/17,2/1/18,,,2/22/18,2/26/18,3/8/18,3/9/18,3/20/18,left,gpybr,AV4310G
+220,M,EYFP,Well Learned,Blue,During Reach,2/13/18,9/20/17,2/2/18,,,2/22/18,2/26/18,3/8/18,3/9/18,3/20/18,right,gpybr,AV4310G
+221,M,ChR2,Well Learned,Blue,Between Reach,3/15/18,9/26/17,3/2/18,,,3/25/18,3/27/18,4/7/18,4/9/18,4/21/18,left,gpybr,AV4313V
+225,F,ChR2,Well Learned,Blue,Between Reach,,10/5/17,4/28/18,,,5/19/18,5/21/18,5/31/18,6/1/18,6/12/18,right,,AV4313V
+227,F,EYFP,Well Learned,Blue,During Reach,,10/10/17,4/28/18,,,5/19/18,5/21/18,5/31/18,6/1/18,6/12/18,right,,AV4310G
+229,F,ChR2,Well Learned,Blue,Between Reach,,10/13/17,10/2/18,,,10/20/18,10/22/18,11/1/18,11/2/18,11/14/18,left,,AV4313V
+230,M,ChR2,Well Learned,Blue,Between Reach,,10/31/17,9/20/18,,,10/11/18,10/12/18,10/23/18,10/24/18,11/2/18,right,,AV4313V
+235,M,ChR2,Well Learned,Blue,Between Reach,,11/16/17,10/1/18,,,10/19/18,10/22/18,11/1/18,11/2/18,11/14/18,right,,AV4313V
+309,M,Arch,Well Learned,Green,Between Reach,,8/9/19,9/25/19,7/10/19,8/21/19,11/3/19,11/4/19,11/15/19,11/17/19,11/27/19,right,,AV4841G
+310,M,Arch,Well Learned,Green,Between Reach,,8/7/19,9/23/19,7/10/19,8/15/19,11/3/19,11/4/19,11/15/19,11/17/19,11/27/19,right,,AV4841G
+311,F,Arch,Well Learned,Green,Between Reach,,8/27/19,10/14/19,7/10/19,9/10/19,11/8/19,11/11/19,11/21/19,11/22/19,12/4/19,left,,AV4841G
+312,F,Arch,Well Learned,Green,Between Reach,,8/27/19,10/14/19,7/10/19,9/9/19,11/8/19,11/11/19,11/21/19,11/22/19,12/4/19,right,,AV4841G
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,,

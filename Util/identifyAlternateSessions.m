@@ -16,15 +16,16 @@ for iarg = 1 : 2 : nargin - 3
 end
 
 % find only ChR2 rats
-ChR2_rows = ratInfo.Virus == 'ChR2';
-ChR2_ratInfo = ratInfo(ChR2_rows,:);
-num_ChR2_rats = size(ChR2_ratInfo,1);
+% ChR2_rows = ratInfo.Virus == 'ChR2';
+% ChR2_ratInfo = ratInfo(ChR2_rows,:);
+% num_ChR2_rats = size(ChR2_ratInfo,1);
 
+num_rats = size(ratInfo,1);
 num_valid_alternate_sessions = 0;
 
-for i_rat = 1 : num_ChR2_rats
+for i_rat = 1 : num_rats
     
-    ratID = ChR2_ratInfo(i_rat,:).ratID;
+    ratID = ratInfo(i_rat,:).ratID;
     ratIDstring = sprintf('R%04d',ratID);
     current_rat_folder = fullfile(DLCoutput_folder,ratIDstring);
     

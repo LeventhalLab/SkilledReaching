@@ -1,5 +1,5 @@
 function [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = ...
-    findPawThroughSlotFrame_old(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
+    findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, varargin)
 %
 % find the first time the paw broke through the reaching slot
 %

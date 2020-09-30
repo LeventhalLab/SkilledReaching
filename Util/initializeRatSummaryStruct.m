@@ -1,4 +1,4 @@
-function ratSummary = initializeRatSummaryStruct(ratID,outcomeCategories,outcomeNames,numSessions_to_analyze,z_interp_digits)
+function ratSummary = initializeRatSummaryStruct(ratID,outcomeCategories,outcomeNames,sessions_analyzed,thisRatInfo,z_interp_digits)
 
 % calculate the following kinematic parameters:
 % number of trials
@@ -18,6 +18,21 @@ function ratSummary = initializeRatSummaryStruct(ratID,outcomeCategories,outcome
 ratSummary.ratID = ratID;
 num_outcome_categories = length(outcomeCategories);
 
+numSessions_to_analyze = size(sessions_analyzed,1);
+
+% figure out which type of experiment this was (stim during, between,
+% control, etc.)
+opsin_prefix = lower(char(thisRatInfo.Virus));
+switch thisRatInfo.laserTiming
+    case 'During Reach'
+        timing_suffix = 'during';
+    case 'Between Reach'
+        timing_suffix = 'between';
+end
+ratSummary.exptType = [opsin_prefix '_' timing_suffix];
+
+ratSummary.sessions_analyzed = sessions_analyzed;
+
 ratSummary.num_trials = NaN(numSessions_to_analyze,num_outcome_categories);
 ratSummary.outcomePercent = NaN(numSessions_to_analyze,num_outcome_categories);
 ratSummary.mean_num_reaches = NaN(numSessions_to_analyze,num_outcome_categories);
@@ -27,10 +42,10 @@ ratSummary.mean_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
 ratSummary.std_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
 
 ratSummary.mean_pd_endPt = NaN(numSessions_to_analyze,num_outcome_categories,3);
-ratSummary.mean_dig2_endPt = NaN(numSessions_to_analyze,num_outcome_categories,3);
+ratSummary.mean_dig_endPts = NaN(numSessions_to_analyze,num_outcome_categories,4,3);
 
 ratSummary.cov_pd_endPts = NaN(numSessions_to_analyze,num_outcome_categories,3,3);
-ratSummary.cov_dig2_endPts = NaN(numSessions_to_analyze,num_outcome_categories,3,3);
+ratSummary.cov_dig_endPts = NaN(numSessions_to_analyze,num_outcome_categories,4,3,3);
 
 ratSummary.mean_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
 ratSummary.std_pd_v = NaN(numSessions_to_analyze,num_outcome_categories);
@@ -58,3 +73,8 @@ ratSummary.sessionTypes = cell(numSessions_to_analyze,1);
 
 ratSummary.outcomeCategories = outcomeCategories;
 ratSummary.outcomeNames = outcomeNames;
+
+ratSummary.mean_pd_trajectory = [];
+ratSummary.mean_dig_trajectories = [];
+ratSummary.mean_dist_from_pd_trajectory = [];
+ratSummary.mean_dist_from_dig_trajectories = [];

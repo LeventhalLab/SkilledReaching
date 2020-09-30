@@ -1,7 +1,5 @@
 function [all_reachEndPoints,numReaches_byPart,numReaches,reachFrames,reach_endPoints] = ...
     collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,validTrialTypes,all_trialOutcomes,digIdx)
-%UNTITLED5 Summary of this function goes here
-%   Detailed explanation goes here
 %
 % collect final locations of 2nd and 3rd digit tip for each reach
 % 

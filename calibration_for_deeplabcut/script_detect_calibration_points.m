@@ -1,15 +1,12 @@
-% detect checkerboard calibration images, 20180605
+% detect checkerboard calibration images
+%
+% revised 20191125 to incorporate time and box number in calibration
+% names
 
-% <<<<<<< HEAD
-% % calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% % calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
-% 
-% camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
-% % camParamFile = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
-% =======
-
-month_to_analyze = '201811';
+% set which month to detect calibration points for
+% eventually, change directory structure to have a separate set of
+% calibration images for each box
+month_to_analyze = '201702';
 year_to_analyze = month_to_analyze(1:4);
 rootDir = '/Volumes/LL EXHD #2/calibration_images';
 calImageDir = fullfile(rootDir,year_to_analyze,...
@@ -21,14 +18,6 @@ if ~exist(autoImageDir,'dir')
 end
 
 camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
-
-% calImageDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/Users/dleventh/Box Sync/Leventhal Lab/Skilled Reaching Project/Calibration Images';
-% calImageDir = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/';
-
-% camParamFile = '/home/kkrista/Documents/Publications/JOVE_Winter2019/CalCubeImages/cameraParameters.mat';
-% camParamFile = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/multiview geometry/cameraParameters.mat';
-
 load(camParamFile);
 
 saveMarkedImages = true;
@@ -36,6 +25,7 @@ markRadius = 5;
 colorList = {'red','green','blue'};
 markOpacity = 1;
 
+% parameters for findDirectBorders and findMirrorBorders
 % first row red, second row green, third row blue
 direct_hsvThresh = [0,0.1,0.9,1,0.9,1;
                     0.33,0.1,0.9,1,0.9,1;
@@ -73,11 +63,12 @@ cd(calImageDir);
 % NOTE: the function groupCalibrationImagesbyDate removes any .png files
 % with "marked" in their filename, so that this only operates on the
 % originally acquired .png files
-[imFiles_from_same_date, dateList] = groupCalibrationImagesbyDate(imgList);
-numDates = length(dateList);
+[imFiles_from_same_boxdate, boxList, datesForBox] = groupCalibrationImagesbyDateBoxTime(imgList);
+numBoxes = length(boxList);
 
-for iDate = 1 : numDates
+for iBox = 1 : numBoxes
     
+<<<<<<< HEAD
     curDate = dateList{iDate};
     if ~any(strcmp({'20191115','20191117'}, curDate))
         continue;
@@ -92,76 +83,128 @@ for iDate = 1 : numDates
         img{iImg} = imread(curImgName);
         
     end
+=======
+    curBox = boxList(iBox);
+    numDatesForBox = length(datesForBox{iBox});
+>>>>>>> 1b20e2abb32572632a5f11e67d51b745b19b7126
     
-    [directBorderMask, initDirBorderMask] = findDirectBorders(img, direct_hsvThresh, ROIs);
-    [mirrorBorderMask, initMirBorderMask] = findMirrorBorders(img, mirror_hsvThresh, ROIs);
+    for iDate = 1 : numDatesForBox
     
-    [directChecks,dir_foundValidPoints] = findMaskedCheckerboards(img, directBorderMask, initDirBorderMask, boardSize, cameraParams);
-    [mirrorChecks,mir_foundValidPoints] = findMaskedCheckerboards(img, mirrorBorderMask, initMirBorderMask, boardSize, cameraParams);
-    
-    % find images in which checkerboard pairs were identified
-    matchedCheckerboards = dir_foundValidPoints & mir_foundValidPoints;
-    
-    allMatchedPoints = NaN(points_per_board * numFilesPerDate, 2, 2, numBoards);
-    for iImg = 1 : numFilesPerDate
-        for iBoard = 1 : numBoards
-            
-            if matchedCheckerboards(iBoard,iImg)
-                curDirectChecks = squeeze(directChecks(:,:,iBoard,iImg));
-                curMirrorChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
+        curDate = datesForBox{iBox}(iDate);
+        curDateString = datestr(curDate,'yyyymmdd');
+%         comment in if only want to analyze specific boxes from specific dates
+%         if ~any(strcmp({'20170120'}, curDateString))
+%             continue;
+%         end
+        
+        fprintf('processing box %d, %s\n',boxList(iBox),curDateString);
+        
+        % find the imFiles_from_same_boxdate structure for this box/date
+        % combination
+        validBoxDateCombo = false;
+        for i_boxDate = 1 : length(imFiles_from_same_boxdate)
+            if (imFiles_from_same_boxdate(i_boxDate).box == curBox && ...
+                imFiles_from_same_boxdate(i_boxDate).date == curDate)
                 
-                % now undistorting points in findMaskedCheckerboards
-%                 curDirectChecks = undistortPoints(curDirectChecks, cameraParams);
-%                 curMirrorChecks = undistortPoints(curMirrorChecks, cameraParams);
+                validBoxDateCombo = true;
+                break
                 
-                matchIdx = matchCheckerboardPoints(curDirectChecks, curMirrorChecks);
-                
-                matchStartIdx = (iImg-1) * points_per_board + 1;
-                matchEndIdx = (iImg) * points_per_board;
-                
-                allMatchedPoints(matchStartIdx:matchEndIdx,:,1,iBoard) = curDirectChecks(matchIdx(:,1),:);
-                allMatchedPoints(matchStartIdx:matchEndIdx,:,2,iBoard) = curMirrorChecks(matchIdx(:,2),:);
             end
+        end
+        if ~validBoxDateCombo
+            continue
+        end
+%                 numFiles = length(imFiles_from_same_boxdate(i_boxDateCombo).fnames);
+%                 
+%                 imFiles_from_same_boxdate(i_boxDateCombo).fnames{numFiles} = imgList(iFile).name;
+%                 imFiles_from_same_boxdate(i_boxDateCombo).picTimes(numFiles) = picTime;
+%             end
+
+        numFilesPerDate = length(imFiles_from_same_boxdate(i_boxDate).fnames);
+        img = cell(1, numFilesPerDate);
+        for iImg = 1 : numFilesPerDate
+            curImgName = imFiles_from_same_boxdate(i_boxDate).fnames{iImg};
+            img{iImg} = imread(curImgName);
+        end
+
+        [directBorderMask, initDirBorderMask] = findDirectBorders(img, direct_hsvThresh, ROIs);
+        [mirrorBorderMask, initMirBorderMask] = findMirrorBorders(img, mirror_hsvThresh, ROIs);
+
+        [directChecks,dir_foundValidPoints] = findMaskedCheckerboards(img, directBorderMask, initDirBorderMask, boardSize, cameraParams);
+        [mirrorChecks,mir_foundValidPoints] = findMaskedCheckerboards(img, mirrorBorderMask, initMirBorderMask, boardSize, cameraParams);
+
+        % find images in which checkerboard pairs were identified
+        matchedCheckerboards = dir_foundValidPoints & mir_foundValidPoints;
+
+        allMatchedPoints = NaN(points_per_board * numFilesPerDate, 2, 2, numBoards);
+        for iImg = 1 : numFilesPerDate
+            for iBoard = 1 : numBoards
+
+                if matchedCheckerboards(iBoard,iImg)
+                    curDirectChecks = squeeze(directChecks(:,:,iBoard,iImg));
+                    curMirrorChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
+
+                    % now undistorting points in findMaskedCheckerboards
+    %                 curDirectChecks = undistortPoints(curDirectChecks, cameraParams);
+    %                 curMirrorChecks = undistortPoints(curMirrorChecks, cameraParams);
+
+                    matchIdx = matchCheckerboardPoints(curDirectChecks, curMirrorChecks);
+
+                    matchStartIdx = (iImg-1) * points_per_board + 1;
+                    matchEndIdx = (iImg) * points_per_board;
+
+                    allMatchedPoints(matchStartIdx:matchEndIdx,:,1,iBoard) = curDirectChecks(matchIdx(:,1),:);
+                    allMatchedPoints(matchStartIdx:matchEndIdx,:,2,iBoard) = curMirrorChecks(matchIdx(:,2),:);
+                end
+
+            end
+        end
+
+        dateString = datestr(curDate,'yyyymmdd');
+        matFileName = sprintf('GridCalibration_box%02d_%s_auto.mat',boxList(iBox),dateString);
+        matFileName = fullfile(autoImageDir,matFileName);
+        imFileList = imFiles_from_same_boxdate(i_boxDate).fnames;
+        save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','dir_foundValidPoints','mir_foundValidPoints','imFileList','cameraParams','curDate');
+
+        if saveMarkedImages
+            for iImg = 1 : numFilesPerDate
+
+    %            newImg = undistortImage(img{iImg},cameraParams);
+                newImg=img{iImg};
+
+                for iBoard = 1 : numBoards
+
+                    if dir_foundValidPoints(iBoard,iImg)
+                        curChecks = squeeze(directChecks(:,:,iBoard,iImg));
+                        for i_pt = 1 : size(curChecks,1)
+                            newImg = insertShape(newImg,'filledcircle',...
+                                [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
+                                'color',colorList{iBoard},'opacity',markOpacity);
+                        end
+                    end
+
+                    if mir_foundValidPoints(iBoard,iImg)
+                        curChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
+                        for i_pt = 1 : size(curChecks,1)
+                            newImg = insertShape(newImg,'filledcircle',...
+                                [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
+                                'color',colorList{iBoard},'opacity',markOpacity);
+                        end
+                    end 
+                end
+                curImgName = imFiles_from_same_boxdate(i_boxDate).fnames{iImg};
+                [~,fn,ext] = fileparts(curImgName);
+                imgNum = str2double(fn(end));
+                picTime = imFiles_from_same_boxdate(i_boxDate).picTimes(iImg);
+                picTimeString = datestr(picTime,'HH-MM-SS');
+                newImgName = sprintf('GridCalibration_box%02d_%s_%s_%d_marked.png',boxList(iBox),dateString,picTimeString,imgNum);
+%                 newImgName = strrep(curImgName,'.png','_marked.png');
+                newImgName = fullfile(autoImageDir,newImgName);
+    %             figure(1);imshow(newImg);
+                imwrite(newImg,newImgName,'png');
+            end       
 
         end
-    end
-    
-    matFileName = ['GridCalibration_' dateList{iDate} '_auto.mat'];
-    matFileName = fullfile(autoImageDir,matFileName);
-    imFileList = imFiles_from_same_date{iDate};
-    save(matFileName, 'directChecks','mirrorChecks','allMatchedPoints','dir_foundValidPoints','mir_foundValidPoints','imFileList','cameraParams','curDate');
-    
-    if saveMarkedImages
-        for iImg = 1 : numFilesPerDate
-            
-%            newImg = undistortImage(img{iImg},cameraParams);
-            newImg=img{iImg};
-
-            for iBoard = 1 : numBoards
-                
-                if dir_foundValidPoints(iBoard,iImg)
-                    curChecks = squeeze(directChecks(:,:,iBoard,iImg));
-                    for i_pt = 1 : size(curChecks,1)
-                        newImg = insertShape(newImg,'filledcircle',...
-                            [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
-                            'color',colorList{iBoard},'opacity',markOpacity);
-                    end
-                end
-                
-                if mir_foundValidPoints(iBoard,iImg)
-                    curChecks = squeeze(mirrorChecks(:,:,iBoard,iImg));
-                    for i_pt = 1 : size(curChecks,1)
-                        newImg = insertShape(newImg,'filledcircle',...
-                            [curChecks(i_pt,1),curChecks(i_pt,2),markRadius],...
-                            'color',colorList{iBoard},'opacity',markOpacity);
-                    end
-                end 
-            end
-            curImgName = imFiles_from_same_date{iDate}{iImg};
-            newImgName = strrep(curImgName,'.png','_marked.png');
-            newImgName = fullfile(autoImageDir,newImgName);
-%             figure(1);imshow(newImg);
-            imwrite(newImg,newImgName,'png');
-        end       
-    end
-end 
+        
+    end    % for iDate
+end     % for iBox

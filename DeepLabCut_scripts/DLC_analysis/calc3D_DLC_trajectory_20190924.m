@@ -10,6 +10,7 @@ function [pawTrajectory, bodyparts, final_direct_pts, final_mirror_pts, isEstima
 %   direct_bp, mirror_bp - cell arrays containing lists of body parts
 %       descriptors
 %   boxCal - structure with the following fields:
+%       E - 
 %       cameraParams - matlab camera parameters structure
 %   pawPref - 'right' or 'left'
 %   imSize - 2-element vector with frame height x width

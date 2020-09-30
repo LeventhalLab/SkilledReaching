@@ -1,4 +1,4 @@
-function h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, sessionName, sessionType, varargin)
+function h_fig = plotRatReachSummaries(ratSummary, thisRatInfo, varargin)
 
 % REACHING SCORES:
 %
@@ -37,7 +37,8 @@ figProps.height = sum(figProps.rowSpacing) + sum(figProps.panelHeight) + figProp
 [h_fig,h_axes] = createFigPanels5(figProps);
 
 % first row of plots: 
-%   column 1: breakdown of trial outcomes
+%   column 1: number of trials
+%   column 2: breakdown of trial outcomes across sessions
 %   column 2: number of reaches in each trial
 %   column 3: "event frames" - frames at which paw dorsum is first seen, 
 %       paw breaches slot, 1st reach end framez-endpoints vs trial #
@@ -49,88 +50,45 @@ figProps.height = sum(figProps.rowSpacing) + sum(figProps.panelHeight) + figProp
 % column 2: paw orientation for 1st reach in each trial
 % column 3: aperture at end of 1st reach in each trial
 
+% number of trials
+plotNumTrials_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(1,1));
 
+% first and any reach success rates
+plotReachSuccess_acrossSessions_singleRat(ratSummary,'both','h_axes',h_axes(1,2))
+
+% mean trajectories
+plotMeanPDTrajectory_acrossSessions(ratSummary,thisRatInfo,'h_axes',h_axes(1,3))
+
+plot3Dendpoints_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(1,4))
+
+plot_z_endpoints_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(1,5))
 % second row of plots
 %   overlay 3D trajectories for each trial type across each column
 
 % reach velocity profiles
 
-numTrials = length(reachData);
+% max reach velocity
+plot_max_v_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(2,1))
 
-trialTypeColors = {'k','g','b','r','y','c','m'};
-validTrialTypes_for_outcomes = {0:10,1,[1,2],[3,4,7],0,11,6};
-validTrialTypes = {0:10,1,2,[3,4,7],0,11,6};
-validTypeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
+% mean dist from mean trajectory
+plot_mean_dist_from_traj_acrossSessions_singleRat(ratSummary,'h_axes',h_axes(2,3))
 
-% breakdown of trial outcomes
-[score_breakdown,~] = breakDownTrialScores(reachData,validTrialTypes_for_outcomes);
-h_scoreBreakdown = plotTrialOutcomeBreakdown(score_breakdown,trialTypeColors,h_axes(1,1));
-set(gca,'ylim',[0 100])
-ylabel('number of trials');
-legend(validTypeNames)
-
+plot_generalized_variance_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(2,4))
 % repeat for subsequent plots so first and any success aren't plotted over
 % each other
-[~,ind_trial_type] = breakDownTrialScores(reachData,validTrialTypes);
 
-% number of reaches
-plotNumReaches(reachData,ind_trial_type,trialTypeColors,h_axes(1,2));
-set(gca,'ylim',[0 10])
+plot_endAperture_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(3,1));
 
-% event frames
-plotEventFrames(reachData,h_axes(1,3))
-    
-% z at reach end points
-plot_z_endpoints(reachData,ind_trial_type,trialTypeColors,all_slot_z_wrt_pellet,h_axes(1,4));
+plot_meanAperture_acrossSessions_singleRat(ratSummary,'h_axes',h_axes(3,2))
 
-% 3D endpoints
-plot_3D_endpoints(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(1,5),reachEnd_zlim);
+plot_endOrientation_acrossSessions_singleRat(ratSummary,thisRatInfo,'h_axes',h_axes(4,1));
 
-%%%%%%%%%%%%%%%%%% ROW 2
-% 3-D trajectories
-plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes(2,5),full_traj_z_lim);
-
-% x,y,z trajectories
-% plot_reachTrajectories(reachData,ind_trial_type,trialTypeColors,h_axes(2,1));
-
-% histogram of reach orientations at reach end points by trial type
-hist_z_endPoints(reachData,ind_trial_type,trialTypeColors,h_axes(2,4));
-
-%%%%%%%%%%%%%%%%%%% ROW 3
-% paw velocity
-plot_pawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes(3,1),full_traj_z_lim);
-
-% mean paw velocity by trial type
-
-plot_meanPawVelocityProfiles(reachData,ind_trial_type,trialTypeColors,h_axes(3,2),full_traj_z_lim)
-%%%%%%%%%%%%%%%%%% ROW 4
-% reach orientation at reach end point
-plot_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,1));
-
-% histogram of reach orientations at reach end points by trial type
-hist_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,2));
-
-% reach orientation post-slot
-plot_reachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,3))
-
-% mean reach orientation across trial types
-plot_meanReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,4))
-
-%%%%%%%%%%%%%%%%%% ROW 5
-% digit aperture at reach end point
-plot_endReachAperture(reachData,ind_trial_type,trialTypeColors,h_axes(5,1));
-
-hist_endReachAperture(reachData,ind_trial_type,trialTypeColors,h_axes(5,2));
-
-% digit aperture post-slot
-plot_digitApertures(reachData,ind_trial_type,trialTypeColors,h_axes(5,3))
-
-plot_meanDigitApertures(reachData,ind_trial_type,trialTypeColors,h_axes(5,4))
+plot_meanOrientation_acrossSessions_singleRat(ratSummary,'h_axes',h_axes(4,2))
 
 h_figAxis = createFigAxes(h_fig);
 
-textString{1} = sprintf('%s session summary; %s, day %d, %d days left in block, Virus: %s', ...
-    sessionName, sessionType.type, sessionType.sessionsInBlock, sessionType.sessionsLeftInBlock, char(thisRatInfo.Virus));
+textString{1} = sprintf('%s rat summary; %s, %s, Virus: %s', ...
+    ratSummary.ratID, ratSummary.exptType, char(thisRatInfo.Virus));
 % textString{2} = 'rows 2-4: mean absolute difference from mean trajectory in x, y, z for each trial type';
 % textString{3} = 'row 5: mean euclidean distance from mean trajectory for each trial type';
 axes(h_figAxis);
@@ -220,7 +178,7 @@ for iTrial = 1 : numTrials
         continue;
     end
     pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
-    dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
+    dig2_z_endpt(iTrial) = reachData(iTrial).dig_endPoints(1,2,3);
     trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
 end
 
@@ -259,7 +217,7 @@ for iTrial = 1 : numTrials
         continue;
     end
     pd_endpt(iTrial,:) = reachData(iTrial).pdEndPoints(1,:);
-    dig2_endpt(iTrial,:) = reachData(iTrial).dig2_endPoints(1,:);
+    dig2_endpt(iTrial,:) = reachData(iTrial).dig_endPoints(1,2,:);
 end
 
 for ii = 1 : max(ind_trial_type)
@@ -883,3 +841,4 @@ xlabel('x');ylabel('z');zlabel('y');
 title('3D paw trajectories')
 
 end
+

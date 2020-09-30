@@ -1,4 +1,4 @@
-function h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, sessionName, sessionType, varargin)
+function h_fig = plotSessionReachSummaries(reachData, sessionSummary, all_slot_z_wrt_pellet, thisRatInfo, sessionName, sessionType, bodypartColor)
 
 % REACHING SCORES:
 %
@@ -17,6 +17,11 @@ function h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thi
 
 full_traj_z_lim = [-5 50];
 reachEnd_zlim = [-15 10];
+reachCov_zlim = [-30 10];
+x_lim = [-30 10];
+y_lim = [-20 10];
+
+dig_z_lims = [-15 25];
 
 pawPref = char(thisRatInfo.pawPref);
 figProps.m = 5;
@@ -55,11 +60,11 @@ figProps.height = sum(figProps.rowSpacing) + sum(figProps.panelHeight) + figProp
 
 % reach velocity profiles
 
-numTrials = length(reachData);
+% numTrials = length(reachData);
 
 trialTypeColors = {'k','g','b','r','y','c','m'};
-validTrialTypes_for_outcomes = {0:10,1,[1,2],[3,4,7],0,11,6};
-validTrialTypes = {0:10,1,2,[3,4,7],0,11,6};
+validTrialTypes_for_outcomes = {[0:7,9:10],1,[1,2],[3,4,7],0,11,6};
+validTrialTypes = {[0:7,9:10],1,2,[3,4,7],0,11,6};
 validTypeNames = {'all','1st success','any success','failed','no pellet','paw through slot','no reach'};
 
 % breakdown of trial outcomes
@@ -94,7 +99,20 @@ plot_3DreachTrajectories(reachData,ind_trial_type,trialTypeColors,pawPref,h_axes
 % plot_reachTrajectories(reachData,ind_trial_type,trialTypeColors,h_axes(2,1));
 
 % histogram of reach orientations at reach end points by trial type
-hist_z_endPoints(reachData,ind_trial_type,trialTypeColors,h_axes(2,4));
+hist_z_endPoints(reachData,ind_trial_type,trialTypeColors,h_axes(2,1));
+
+% average 3D trajectory
+plot_3DmeanTrajectories(sessionSummary,bodypartColor,pawPref,h_axes(2,2),full_traj_z_lim)
+
+% plot mean distance from 3D trajectory
+plot_mean_dist_from_pd_trajectory(sessionSummary,h_axes(2,3));
+
+plot_error_ellipsoids(sessionSummary,pawPref,bodypartColor,h_axes(2,4),...
+    'reachEnd_zlim',reachCov_zlim,'x_lim',x_lim,'y_lim',y_lim);
+
+
+% average trajectory
+hist_z_endPoints(reachData,ind_trial_type,trialTypeColors,h_axes(2,1));
 
 %%%%%%%%%%%%%%%%%%% ROW 3
 % paw velocity
@@ -111,10 +129,10 @@ plot_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,1));
 hist_endReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,2));
 
 % reach orientation post-slot
-plot_reachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,3))
+plot_reachOrientation(reachData,ind_trial_type,trialTypeColors,dig_z_lims,h_axes(4,3))
 
 % mean reach orientation across trial types
-plot_meanReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes(4,4))
+plot_meanReachOrientation(reachData,ind_trial_type,trialTypeColors,dig_z_lims,h_axes(4,4))
 
 %%%%%%%%%%%%%%%%%% ROW 5
 % digit aperture at reach end point
@@ -123,9 +141,9 @@ plot_endReachAperture(reachData,ind_trial_type,trialTypeColors,h_axes(5,1));
 hist_endReachAperture(reachData,ind_trial_type,trialTypeColors,h_axes(5,2));
 
 % digit aperture post-slot
-plot_digitApertures(reachData,ind_trial_type,trialTypeColors,h_axes(5,3))
+plot_digitApertures(reachData,ind_trial_type,trialTypeColors,dig_z_lims,h_axes(5,3))
 
-plot_meanDigitApertures(reachData,ind_trial_type,trialTypeColors,h_axes(5,4))
+plot_meanDigitApertures(reachData,ind_trial_type,trialTypeColors,dig_z_lims,h_axes(5,4))
 
 h_figAxis = createFigAxes(h_fig);
 
@@ -300,7 +318,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function plot_reachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes)
+function plot_reachOrientation(reachData,ind_trial_type,trialTypeColors,dig_z_lims,h_axes)
 
 axes(h_axes)
 
@@ -316,6 +334,9 @@ for iTrial = 1 : numTrials
     if isempty(reachData(iTrial).orientation{1})
         continue;
     end
+    if any(reachData(iTrial).trialScores == 8)
+        continue;
+    end
     
     reach_orientation{iTrial} = reachData(iTrial).orientation{1};
     
@@ -323,12 +344,16 @@ for iTrial = 1 : numTrials
     % points
     % frame limits for the first reach_to_grasp movement
     graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
-    dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
+    dig2_z = squeeze(reachData(iTrial).dig_trajectory{1}(graspFrames,3,2));
     plot(dig2_z,reach_orientation{iTrial},trialTypeColors{ind_trial_type(iTrial)});
     hold on
 end
 
-set(gca,'ylim',[0,pi])
+try
+    set(gca,'ylim',[0,pi],'xlim',dig_z_lims)
+catch
+    keyboard
+end
 set(gca,'xdir','reverse')
 title('paw orientation')
 end
@@ -369,7 +394,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function plot_digitApertures(reachData,ind_trial_type,trialTypeColors,h_axes)
+function plot_digitApertures(reachData,ind_trial_type,trialTypeColors,dig_z_lims,h_axes)
 
 axes(h_axes)
 
@@ -384,15 +409,18 @@ for iTrial = 1 : numTrials
     if isempty(reachData(iTrial).aperture{1})
         continue;
     end
+    if any(reachData(iTrial).trialScores == 8)
+        continue;
+    end
     digit_aperture{iTrial} = reachData(iTrial).aperture{1};
     graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
-    dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
+    dig2_z = squeeze(reachData(iTrial).dig_trajectory{1}(graspFrames,3,2));
 
     plot(dig2_z,digit_aperture{iTrial},trialTypeColors{ind_trial_type(iTrial)});
     hold on
 end
 
-set(gca,'ylim',[5,25])
+set(gca,'ylim',[5,25],'xlim',dig_z_lims)
 set(gca,'xdir','reverse')
 title('digit aperture')
 end
@@ -461,7 +489,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function plot_meanDigitApertures(reachData,ind_trial_type,trialTypeColors,h_axes)
+function plot_meanDigitApertures(reachData,ind_trial_type,trialTypeColors,dig_z_lims,h_axes)
 % 
 % INPUTS
 %
@@ -498,7 +526,7 @@ for i_trialType = 1 : num_trial_types
             
             trialCount = trialCount + 1;
             graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
-            dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
+            dig2_z = squeeze(reachData(iTrial).dig_trajectory{1}(graspFrames,3,2));
            
             if length(reachData(iTrial).aperture{1}) > 1
                 cur_apertures = pchip(dig2_z,reachData(iTrial).aperture{1},zq);
@@ -517,7 +545,7 @@ for i_trialType = 1 : num_trial_types
     hold on
 end
 
-set(gca,'ylim',[5,25])
+set(gca,'ylim',[5,25],'xlim',dig_z_lims)
 set(gca,'xdir','reverse')
 title('mean digit aperture vs z by reach outcome')
 
@@ -563,7 +591,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plot_meanReachOrientation(reachData,ind_trial_type,trialTypeColors,h_axes)
+function plot_meanReachOrientation(reachData,ind_trial_type,trialTypeColors,dig_z_lims,h_axes)
 
 axes(h_axes)
 
@@ -594,8 +622,7 @@ for i_trialType = 1 : num_trial_types
             
             trialCount = trialCount + 1;
             graspFrames = traj_limits(iTrial).reach_aperture_lims(1,1) : traj_limits(iTrial).reach_aperture_lims(1,2);
-            dig2_z = reachData(iTrial).dig2_trajectory{1}(graspFrames,3);
-            
+            dig2_z = squeeze(reachData(iTrial).dig_trajectory{1}(graspFrames,3,2));
             
 %             or_interp = NaN(length(zq),1);
             if length(reachData(iTrial).orientation{1}) > 1
@@ -615,7 +642,7 @@ for i_trialType = 1 : num_trial_types
     hold on
 end
 
-set(gca,'ylim',[0,pi])
+set(gca,'ylim',[0,pi],'xlim',dig_z_lims)
 set(gca,'xdir','reverse')
 title('mean paw orientation vs z by reach outcome')
 end
@@ -633,11 +660,11 @@ numTrials = length(reachData);
 pd_z_endpt = NaN(numTrials,1);
 dig2_z_endpt = NaN(numTrials,1);
 for iTrial = 1 : numTrials
-    if isempty(reachData(iTrial).pdEndPoints) || isempty(reachData(iTrial).dig2_endPoints)
+    if isempty(reachData(iTrial).pdEndPoints) || isempty(reachData(iTrial).dig_endPoints)
         continue
     end
     pd_z_endpt(iTrial) = reachData(iTrial).pdEndPoints(1,3);
-    dig2_z_endpt(iTrial) = reachData(iTrial).dig2_endPoints(1,3);
+    dig2_z_endpt(iTrial) = reachData(iTrial).dig_endPoints(1,2,3);
 end
 
 for ii = 1 : max(ind_trial_type)
@@ -738,6 +765,9 @@ for i_trialType = 1 : num_trial_types
         if isempty(reachData(iTrial).pd_trajectory{1})
             continue;
         end
+        if any(reachData(iTrial).trialScores == 8)
+            continue;   % don't do trials where only the wrong paw was used
+        end
         if (i_trialType==1) || (ind_trial_type(iTrial) == i_trialType)
             % check that there are enough points to do the interpolation;
             % sometimes, the paw dorsum is hidden/not found prior to the
@@ -792,6 +822,9 @@ for iTrial = 1 : numTrials
     if isempty(reachData(iTrial).pd_trajectory{1})
         continue;
     end
+    if any(reachData(iTrial).trialScores == 8)
+        continue    % skip if only the wrong paw was used
+    end
     switch pawPref
         case 'left'
             try
@@ -803,10 +836,14 @@ for iTrial = 1 : numTrials
                 keyboard
             end
         case 'right'
-            plot3(-reachData(iTrial).pd_trajectory{1}(:,1),...
+            try
+            plot3(reachData(iTrial).pd_trajectory{1}(:,1),...
                   reachData(iTrial).pd_trajectory{1}(:,3),...
                   reachData(iTrial).pd_trajectory{1}(:,2),...
                   trialTypeColors{ind_trial_type(iTrial)});
+            catch
+                keyboard
+            end
     end
       hold on
 end
@@ -817,5 +854,176 @@ set(gca,'zdir','reverse','xlim',x_lim,'ylim',full_traj_z_lim,'zlim',y_lim,...
 xlabel('x');ylabel('z');zlabel('y');
 
 title('3D paw trajectories')
+
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function plot_3DmeanTrajectories(sessionSummary,bodypartColor,pawPref,h_axes,full_traj_z_lim)
+
+x_lim = [-30 10];
+y_lim = [-20 10];
+
+
+axes(h_axes)
+
+mean_pd_trajectory = sessionSummary.mean_pd_trajectory;
+mean_dig_trajectories = sessionSummary.mean_dig_trajectories;
+switch pawPref
+    case 'left'
+        plot3(-mean_pd_trajectory(:,1),...
+              mean_pd_trajectory(:,3),...
+              mean_pd_trajectory(:,2),...
+              'k');
+        hold on
+        for i_dig = 1 : 4
+            toPlot = squeeze(mean_dig_trajectories(:,:,i_dig));
+            plot3(-toPlot(:,1),...
+                  toPlot(:,3),...
+                  toPlot(:,2),...
+                  'color',bodypartColor.dig(i_dig,:));
+        end
+    case 'right'
+        plot3(mean_pd_trajectory(:,1),...
+              mean_pd_trajectory(:,3),...
+              mean_pd_trajectory(:,2),...
+              'k');
+        hold on
+        for i_dig = 1 : 4
+            toPlot = squeeze(mean_dig_trajectories(:,:,i_dig));
+            plot3(toPlot(:,1),...
+                  toPlot(:,3),...
+                  toPlot(:,2),...
+                  'color',bodypartColor.dig(i_dig,:));
+        end
+end
+    
+
+scatter3(0,0,0,25,'marker','*','markerfacecolor','k','markeredgecolor','k');
+set(gca,'zdir','reverse','xlim',x_lim,'ylim',full_traj_z_lim,'zlim',y_lim,...
+    'view',[-70,30])
+xlabel('x');ylabel('z');zlabel('y');
+
+title('mean 3D paw/digit trajectories')
+
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function plot_mean_dist_from_pd_trajectory(sessionSummary,h_axes,varargin)
+
+pd_traj_error_lim = [0,15];
+
+for i_arg = 1 : 2 : nargin - 2
+    switch lower(varargin{i_arg})
+        case 'pd_traj_error_lim'
+            pd_traj_error_lim = varargin{i_arg + 1};
+    end
+end
+axes(h_axes)
+plot(sessionSummary.pd_mean_euc_dist_from_trajectory);
+
+set(gca,'ylim',pd_traj_error_lim);
+xlabel('dist along trajectory')
+title('mean distance from mean trajectory')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function plot_error_ellipsoids(sessionSummary,pawPref,bodypartColor,h_axes,varargin)
+
+reachEnd_zlim = [-15 10];
+x_lim = [-30 10];
+y_lim = [-20 10];
+
+for i_arg = 1 : 2 : nargin - 4
+    switch lower(varargin{i_arg})
+        case 'reachend_zlim'
+            reachEnd_zlim = varargin{i_arg + 1};
+        case 'x_lim'
+            x_lim = varargin{i_arg + 1};
+        case 'y_lim'
+            y_lim = varargin{i_arg + 1};
+    end
+end
+axes(h_axes)
+
+pd_mean = sessionSummary.mean_pd_endPt;
+pd_mean(2:3) = fliplr(pd_mean(2:3));   % plot y on the z-axis and z on the y-axes
+pd_cov = sessionSummary.cov_pd_endPt;
+if all(isnan(pd_cov(:)))
+    % only one valid reach for this session (probably)
+    switch pawPref
+        case 'left'
+            pd_mean(1) = -pd_mean(1);
+        case 'right'
+    end
+    scatter3(pd_mean(:,1),pd_mean(:,2),pd_mean(:,3),...
+        'markerfacecolor',bodypartColor.paw_dorsum,'markeredgecolor',bodypartColor.paw_dorsum)
+else
+    pd_cov(2:end,:) = flipud(pd_cov(2:end,:));
+    pd_cov(:,2:end) = fliplr(pd_cov(:,2:end));
+    switch pawPref
+        case 'left'
+            pd_mean(1) = -pd_mean(1);
+            pd_cov(1,2:end) = -pd_cov(1,2:end);
+            pd_cov(2:end,1) = -pd_cov(2:end,1);
+        case 'right'
+    end
+    eigenvals = eig(pd_cov);
+    if all(eigenvals > 0)
+        % sometimes, when there are only a few reaches, the covariance
+        % matrix is barely positive-definite, and matlab gets confused.
+        % For now, just skip these.
+        h_pd = error_ellipse(pd_cov,pd_mean);
+    end
+end
+hold on
+
+% h_dig = zeros(4,1);
+for i_dig = 1 : 4
+    cur_dig_mean = squeeze(sessionSummary.mean_dig_endPts(:,i_dig));
+    if iscolumn(cur_dig_mean)
+        cur_dig_mean = cur_dig_mean';
+    end
+    cur_dig_mean(2:3) = fliplr(cur_dig_mean(2:3));   % plot y on the z-axis and z on the y-axes
+    cur_dig_cov = squeeze(sessionSummary.cov_dig_endPts(:,:,i_dig));
+    
+    if all(isnan(cur_dig_cov(:)))
+        % only one valid reach for this session (probably)
+        switch pawPref
+            case 'left'
+                cur_dig_mean(1) = -cur_dig_mean(1);
+            case 'right'
+        end
+        scatter3(cur_dig_mean(:,1),cur_dig_mean(:,2),cur_dig_mean(:,3),...
+            'markerfacecolor',bodypartColor.dig(i_dig,:),'markeredgecolor',bodypartColor.dig(i_dig,:))
+    else
+        cur_dig_cov(2:end,:) = flipud(cur_dig_cov(2:end,:));
+        cur_dig_cov(:,2:end) = fliplr(cur_dig_cov(:,2:end));
+        switch pawPref
+            case 'left'
+                cur_dig_mean(1) = -cur_dig_mean(1);
+                cur_dig_cov(2:end,1) = -cur_dig_cov(2:end,1);
+                cur_dig_cov(2:end,1) = -cur_dig_cov(2:end,1);
+            case 'right'
+        end
+        eigenvals = eig(cur_dig_cov);
+        if all(eigenvals > 0)
+            % sometimes, when there are only a few reaches, the covariance
+            % matrix is barely positive-definite, and matlab gets confused.
+            % For now, just skip these.
+            try
+            h_dig = error_ellipse(cur_dig_cov,cur_dig_mean);
+            catch
+                fprintf('error_ellipse error, digit %d\n',i_dig);
+            end
+        end
+    end
+    
+end
+
+scatter3(0,0,0,25,'marker','*','markerfacecolor','k','markeredgecolor','k');
+set(gca,'zdir','reverse','xlim',x_lim,'ylim',reachEnd_zlim,'zlim',y_lim,...
+    'view',[-70,30])
 
 end

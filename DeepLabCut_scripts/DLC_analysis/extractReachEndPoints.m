@@ -14,6 +14,6 @@ for iTrial = 1 : numTrials
         continue;
     end
     pd_endPts(iTrial,:) = reachData(iTrial).pdEndPoints(1,:);
-    dig2_endPts(iTrial,:) = reachData(iTrial).dig2_endPoints(1,:);
+    dig2_endPts(iTrial,:) = squeeze(reachData(iTrial).dig_endPoints(1,2,:))';
     trialNumbers(iTrial) = reachData(iTrial).trialNumbers(2);
 end

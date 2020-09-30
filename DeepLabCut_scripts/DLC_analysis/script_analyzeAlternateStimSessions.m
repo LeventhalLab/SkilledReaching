@@ -7,7 +7,7 @@ if ~exist(alternatingStimFolder,'dir')
 end
 
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 alternateSessions = identifyAlternateSessions(ratInfo, 'beamBreak', 'vidTrigger+3000', ...

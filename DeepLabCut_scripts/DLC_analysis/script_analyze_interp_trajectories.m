@@ -2,11 +2,13 @@
 
 % template name for viable trajectory files (for searching)
 trajectory_file_name = 'R*3dtrajectory_new.mat';
-
+num_traj_segments = 100;   % number of points into which trajectories will be segmented for averaging
+max_pd_z = 30;   % z-coordinate at which to start paw dorsum analysis
+max_dig_z = 20;  % z-coordinate at which to start digit trajectory analysis
 
 % paramaeters for readReachScores
 csvDateFormat = 'MM/dd/yyyy';
-ratIDs_with_new_date_format = [284];
+ratIDs_with_new_date_format = [284,309,310,311,312];
 
 % calculate the following kinematic parameters:
 % 1. max velocity, by reach type
@@ -17,10 +19,17 @@ ratIDs_with_new_date_format = [284];
 % 6. minimum z, by type
 % 7. number of reaches, by type
 
+sharedX_string = 'SharedX';
+sharedX_root = fullfile('/Volumes',sharedX_string,'Neuro-Leventhal');
+if ~exist(sharedX_root,'dir')
+    sharedX_string = 'SharedX-1';
+    sharedX_root = fullfile('/Volumes',sharedX_string,'Neuro-Leventhal');
+end
+
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
+sharedX_DLCoutput_path = fullfile(sharedX_root,'data','Skilled Reaching','DLC output');
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
@@ -31,10 +40,12 @@ numRatFolders = length(ratFolders);
 
 temp_reachData = initializeReachDataStruct();
 
-for i_rat = 33 : 33%%numRatFolders
+for i_rat = 45 : 45%numRatFolders
     
-    ratID = ratFolders(i_rat).name
+    ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
+    
+    temp_reachData.ratIDnum = ratIDnum;
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
     if isempty(ratInfo_idx)
@@ -73,7 +84,7 @@ for i_rat = 33 : 33%%numRatFolders
     sessionType = determineSessionType(thisRatInfo, allSessionDates);
     
     switch ratID
-        case 'R0186'
+        case 'R0158'
             startSession = 1;
             endSession = numSessions;
         case 'R0159'
@@ -82,11 +93,11 @@ for i_rat = 33 : 33%%numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0191'
-            startSession = 1;
-            endSession = numSessions;
-        case 'R0216'
-            startSession = 1;
+        case 'R0169'
+            startSession = 8;
+            endSession = 8;
+        case 'R0312'
+            startSession = numSessions-2;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -117,6 +128,8 @@ for i_rat = 33 : 33%%numRatFolders
         sessionDate = datetime(sessionDateString,'inputformat','yyyyMMdd');
         allSessionIdx = find(sessionDate == allSessionDates);
         sessionDateNum = datenum(sessionDateString,'yyyymmdd');
+        
+        temp_reachData.sessionDate = sessionDate;
         
         thisSessionType = sessionType(allSessionIdx);
         
@@ -172,11 +185,12 @@ for i_rat = 33 : 33%%numRatFolders
             reachData(iTrial) = scoreTrial(reachData(iTrial),interp_trajectory,bodyparts,all_didPawStartThroughSlot(iTrial),pelletMissingFlag(iTrial),initPellet3D,slot_z_wrt_pellet,pawPref,trialOutcome);
             reachData(iTrial).trialNumbers = trialNumbers(iTrial,:);
             reachData(iTrial).slot_z_wrt_pellet = slot_z_wrt_pellet;
-            sessionSummary = sessionKinematicsSummary(reachData);
+%             sessionSummary = sessionKinematicsSummary(reachData);
         end
+        [sessionSummary,reachData] = sessionKinematicsSummary(reachData,num_traj_segments);
         
-        save(reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
-        save(sharedX_reachDataName,'reachData','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
+        save(reachDataName,'reachData','sessionSummary','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
+        save(sharedX_reachDataName,'reachData','sessionSummary','all_didPawStartThroughSlot','all_frameRange','all_initPellet3D','all_slot_z_wrt_pellet','frameRate','pelletMissingFlag','slot_z','trialNumbers','thisSessionType','curSessionDir','thisRatInfo');
         
     end
     

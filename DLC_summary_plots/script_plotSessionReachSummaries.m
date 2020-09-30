@@ -3,12 +3,21 @@
 ratList = {'R0158','R0159','R0160','R0161','R0169','R0170','R0171','R0183',...
            'R0184','R0186','R0187','R0189','R0190',...
            'R0191','R0192','R0193','R0194','R0195','R0196','R0197','R0198',...
-           'R0216','R0217','R0218','R0219','R0220','R0223','R0225','R0227',...
-           'R0228','R0229'};
+           'R0216','R0217','R0218','R0219','R0220','R0221','R0223','R0225','R0227',...
+           'R0228','R0229','R0230','R0235','R0309','R0310','R0311','R0312'};
 numRats = length(ratList);
 
-firstRat = 31;
-lastRat = 31;
+bodypartColor.dig = [1 0 0;
+                     1 0 1;
+                     0 0 1;
+                     0 1 0];
+bodypartColor.otherPaw = [0 1 1];
+bodypartColor.paw_dorsum = [0 0 0];
+bodypartColor.pellet = [0 1 1];
+bodypartColor.nose = [0 0 0];
+
+firstRat = 45;
+lastRat = 45;%numRats;
 
 x_lim = [-30 10];
 y_lim = [-20 10];
@@ -96,8 +105,15 @@ traj2D_xlim = [250 320];
 
 bp_to_group = {{'mcp','pawdorsum'},{'pip'},{'digit'}};
 
+sharedX_string = 'SharedX';
+sharedX_root = fullfile('/Volumes',sharedX_string,'Neuro-Leventhal');
+if ~exist(sharedX_root,'dir')
+    sharedX_string = 'SharedX-1';
+    sharedX_root = fullfile('/Volumes',sharedX_string,'Neuro-Leventhal');
+end
+
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
-sharedX_plotsDir = '/Volumes/SharedX/Neuro-Leventhal/analysis';
+sharedX_plotsDir = fullfile(sharedX_root,'analysis');
 [plotsDir,~,~] = fileparts(labeledBodypartsFolder);
 plotsDir = fullfile(plotsDir,'DLC output plots');
 if ~exist(plotsDir,'dir')
@@ -107,18 +123,20 @@ if ~exist(sharedX_plotsDir,'dir')
     mkdir(sharedX_plotsDir);
 end
 
+ratFolders = findRatFolders(labeledBodypartsFolder);
+numRatFolders = length(ratFolders);
+
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
-csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
+csvfname = fullfile(xlDir,'rat_info_pawtracking_20200109.csv');
 ratInfo = readRatInfoTable(csvfname);
 
 ratInfo_IDs = [ratInfo.ratID];
 
-ratFolders = findRatFolders(labeledBodypartsFolder);
-numRatFolders = length(ratFolders);
+
 
 for i_rat = firstRat:1:lastRat%:numRatFolders
     
-    ratID = ratList{i_rat}
+    ratID = ratFolders{i_rat}
     ratIDnum = str2double(ratID(2:end));
     
     ratInfo_idx = find(ratInfo_IDs == ratIDnum);
@@ -188,11 +206,11 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
         case 'R0160'
             startSession = 1;
             endSession = 22;
-        case 'R0191'
-            startSession = 1;
+        case 'R0169'
+            startSession = 8;
             endSession = numSessions;
-        case 'R0229'
-            startSession = 30;
+        case 'R0312'
+            startSession = numSessions-2;
             endSession = numSessions;
         otherwise
             startSession = 1;
@@ -264,7 +282,7 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
             pawPref = pawPref{1};
         end
         
-        h_fig = plotSessionReachSummaries(reachData, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType);
+        h_fig = plotSessionReachSummaries(reachData, sessionSummary, all_slot_z_wrt_pellet, thisRatInfo, curSessionDir, thisSessionType, bodypartColor);
         
         savefig(h_fig,figName_sessionSummary);
         print(h_fig,pdfName_sessionSummary,'-dpdf');
@@ -276,4 +294,3 @@ for i_rat = firstRat:1:lastRat%:numRatFolders
     end
     
 end
-        

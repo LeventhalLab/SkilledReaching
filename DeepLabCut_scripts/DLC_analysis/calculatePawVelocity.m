@@ -1,4 +1,21 @@
 function [paw_xyz_v,paw_tangential_v] = calculatePawVelocity(pawPositions,frameRate,varargin)
+%
+% calculate paw velocity along each direction and tangential to the
+% direction of motion
+%
+% INPUTS:
+%   pawPositions - cell array of paw positions for each trial (probably paw
+%       position taken as the paw dorsum)
+%   frameRate - frame rate in fps
+%
+% VARARGINS:
+%   smoothwindow - smoothing window for processing velocity data
+%
+% OUTPUTS:
+%   paw_xyz_v - cell array with an entry for each trial containing the
+%       velocity along x, y, and z directions
+%   paw_tangential_v - cell array with an entry for each trial containing
+%       paw velocity tangential to the direction of motion
 
 smoothWidth = 3;
 

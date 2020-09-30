@@ -1,9 +1,11 @@
 function [frameRange,interp_trajectory] = smoothSingleTrajectory(trajectory, varargin)
 %
 % INPUTS
-%   trajectory
+%   trajectory - 
 %
 % VARARGS
+%   windowlength
+%   smoothmethod
 %
 % OUTPUTS
 %

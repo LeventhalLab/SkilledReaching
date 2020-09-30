@@ -29,8 +29,8 @@ maxPawDorsumReprojError = 10;
 xlDir = '/Users/dan/Box Sync/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
 csvfname = fullfile(xlDir,'rat_info_pawtracking_20191028.csv');
 
-ratInfo = readtable(csvfname);
-ratInfo_IDs = [ratInfo.ratID];
+% ratInfo = readtable(csvfname);
+% ratInfo_IDs = [ratInfo.ratID];
 
 labeledBodypartsFolder = '/Volumes/LL EXHD #2/DLC output';
 calImageDir = '/Volumes/LL EXHD #2/calibration_images';   % where the calibration files are
@@ -57,7 +57,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-for i_rat = 33:33%20:numRatFolders
+for i_rat = 1:1%20:numRatFolders
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -88,6 +88,9 @@ for i_rat = 33:33%20:numRatFolders
         case 'R0159'
             startSession = 5;
             endSession = numSessions;
+        case 'R0158'
+            startSession = 19;
+            endSession = 19;
         otherwise
             startSession = 1;
             endSession = numSessions;
@@ -140,7 +143,7 @@ for i_rat = 33:33%20:numRatFolders
         trajFiles = dir([ratID '_' sessionDate '_*_3dtrajectory_new.mat']);
         numTrajFiles = length(trajFiles);
         
-        for iTrial = 1 : numTrajFiles   
+        for iTrial = 27:27%1 : numTrajFiles   
     
             % ROI info is now saved into the trajectory file
             load(trajFiles(iTrial).name);
@@ -153,8 +156,13 @@ for i_rat = 33:33%20:numRatFolders
 
             [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
             pawDorsum_reproj_error = squeeze(reproj_error(pawDorsumIdx,:,:));
+            % also, any paw dorsum x-values > 1200 should be invalidated
+            temp = squeeze(final_direct_pts(pawDorsumIdx,:,1))';
+            pts_too_far_right = temp > 1200;
+            
             
             pts_to_invalidate = pawDorsum_reproj_error(:,1) > maxPawDorsumReprojError;
+            pts_to_invalidate = pts_to_invalidate | pts_too_far_right;
 
             % check if paw dorsum is far away from the other paw points
             otherPawIdx = [mcpIdx,pipIdx,digIdx];
@@ -220,7 +228,7 @@ for i_rat = 33:33%20:numRatFolders
             isEstimate = isEstimate | isEstimate_new;
             final_direct_pts(:,frames_to_recalculate,:) = final_direct_pts_new(:,frames_to_recalculate,:);
             final_mirror_pts(:,frames_to_recalculate,:) = final_mirror_pts_new(:,frames_to_recalculate,:);
-            [pawTrajectory, bodyparts] = calc3Dpoints(final_direct_pts, final_mirror_pts, isEstimate, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, vidROI, pawPref);
+            [pawTrajectory, bodyparts] = calc3Dpoints(final_direct_pts, final_mirror_pts, isEstimate, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
             
                                   
             [reproj_error,high_p_invalid,low_p_valid] = assessReconstructionQuality(pawTrajectory, final_direct_pts, final_mirror_pts, direct_p, mirror_p, invalid_direct, invalid_mirror, direct_bp, mirror_bp, activeBoxCal, pawPref);
