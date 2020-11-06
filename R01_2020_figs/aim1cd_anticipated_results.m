@@ -1,5 +1,5 @@
 %%
-function aim1_anticipated_results()
+function aim1cd_anticipated_results()
 
 saveFolder = '/Users/dan/Box/Leventhal Lab/Proposals/R01 applications/R01_SR_202010/Figures';
 
@@ -15,7 +15,7 @@ EYFP_M1.marker = 's';
 lineColor = ones(3,1) * 0.5;
 laser_alpha = 0.1;
 
-num_rows = 1;
+num_rows = 2;
 
 z_limits = [-10 10];
 
@@ -32,7 +32,7 @@ z_eyfp_M1 = zeros(length(test_days)+1,1);
 
 i_row = 1;
 z_chr2_str(1) = (-min_z-(2*plot_sep)+max_z*exp(-(0-0)/2));
-z_chr2_str(2:end) = (-min_z-(2*plot_sep)+max_z*exp(-(test_days)/3));
+z_chr2_str(2:end) = (-min_z-(2*plot_sep)+max_z*exp(-(ones(length(test_days),1)-1)/2));
 z_eyfp_str(1) = (-min_z+plot_sep+max_z*exp(-(0-0)/2));
 z_eyfp_str(2:end) = (-min_z+plot_sep+max_z*exp(-(ones(length(test_days),1)-1)/2));
 % 
@@ -43,7 +43,7 @@ z_eyfp_M1(2:end) = (-min_z+max_z*exp(-(ones(length(test_days),1)-1)/2));
 
 z_final = z_chr2_str(end);
 h_fig = figure;
-set(h_fig,'units','inches','position',[1 1 4 2])
+set(h_fig,'units','inches','position',[1 1 4 4])
 
 make_session_plot(i_row, test_days, z_chr2_str, z_eyfp_str, z_chr2_M1, z_eyfp_M1, ChR2_striatum, EYFP_striatum, ChR2_M1, EYFP_M1, num_rows, z_limits,laser_alpha)
 
@@ -67,17 +67,17 @@ z_eyfp_M1_on_off(6:10) = z_eyfp_M1(1);
 
 make_probe_sessions_plot(i_row, num_rows)
 
-subplot(num_rows,2,num_rows*2-1)
+subplot(num_rows,2,1)
 legend('ChR2', 'EYFP','box','off')
 
 
-exportgraphics(h_fig,fullfile(saveFolder,'aim1_anticipated_outcomes.pdf'),'contenttype','vector')
+
 
 %% row 2 - M1 for plasticity, SNc to make it happen
 
 i_row = 2;
 z_chr2_str(1) = (-min_z-(2*plot_sep)+max_z*exp(-(0-0)/2));
-z_chr2_str(2:end) = (-min_z-(2*plot_sep)+max_z*exp(-(ones(length(test_days),1)-1)/3));
+z_chr2_str(2:end) = (-min_z-(2*plot_sep)+max_z*exp(-(test_days)/3));
 z_eyfp_str(1) = (-min_z+plot_sep+max_z*exp(-(0-0)/2));
 z_eyfp_str(2:end) = (-min_z+plot_sep+max_z*exp(-(ones(length(test_days),1)-1)/2));
 % 
@@ -87,6 +87,8 @@ z_eyfp_M1(1) = (-min_z+max_z*exp(-(0-0)/2));
 z_eyfp_M1(2:end) = (-min_z+max_z*exp(-(ones(length(test_days),1)-1)/2));
 
 make_session_plot(i_row, test_days, z_chr2_str, z_eyfp_str, z_chr2_M1, z_eyfp_M1, ChR2_striatum, EYFP_striatum, ChR2_M1, EYFP_M1, num_rows, z_limits,laser_alpha)
+
+make_timing_plot(i_row,num_rows)
 
 z_chr2_str_on_off = zeros(1,10);
 z_chr2_M1_on_off = zeros(1,10);
@@ -103,11 +105,12 @@ z_chr2_M1_on_off(6:10) = z_chr2_M1(1);
 z_eyfp_str_on_off(6:10) = z_eyfp_str(1);
 z_eyfp_M1_on_off(6:10) = z_eyfp_M1(1);
 
+exportgraphics(h_fig,fullfile(saveFolder,'aim1cd_anticipated_outcomes.pdf'),'contenttype','vector')
 
 % make_5_on_off_plot(i_row, z_chr2_str_on_off, z_eyfp_str_on_off, z_chr2_M1_on_off, z_eyfp_M1_on_off, ChR2_striatum, EYFP_striatum, ChR2_M1, EYFP_M1, num_rows, lineColor, z_limits,laser_alpha)
 
-subplot(num_rows,2,num_rows*2-1)
-legend('dSTR, ChR2', 'dSTR, EYFP', 'M1, ChR2', 'M1, EYFP','fontsize',10,'fontname','helvetica')
+% subplot(num_rows,2,num_rows*2-1)
+% legend('dSTR, ChR2', 'dSTR, EYFP', 'M1, ChR2', 'M1, EYFP','fontsize',10,'fontname','helvetica')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -214,8 +217,8 @@ for ii = 1 : 3
 end
 
 histbins = -10:0.2:10;
-plotcolors = ['b','k','g'];
-linestyle = {'-','--','-'};
+plotcolors = ['b','k','b'];
+linestyle = {'-','--',':'};
 for ii = 1 : 3
     z_hist{ii} = histcounts(z_samps{ii}, histbins);
     plot(histbins(2:end),smooth(z_hist{ii}),'color',plotcolors(ii),'linewidth',1.5,'linestyle',linestyle{ii})
@@ -225,5 +228,38 @@ end
 set(gca,'xlim',[-5,10],'ytick',[],'xticklabel',[-5,0,10],'xtick',[-5,0,10])
 xlabel('z_{digit2} endpoint (mm)','fontname','helvetica','fontsize',10)
 
-legend('laser on','laser off','fontsize',10,'fontname','helvetica','box','off')
+legend('post-reach','laser off','pre-reach','fontsize',10,'fontname','helvetica','box','off')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function make_timing_plot(i_row, num_rows)
+
+num_samps = 10000 * [0.3,0.7,0.3];
+
+subplot_p = (i_row-1) * 2 + 2;
+
+subplot(num_rows,2,subplot_p)
+
+z_min = 0;
+z_max = 5;
+
+t = -3 : 0.1 : 3;
+t_center = -01;
+t_spread = 0.7;
+y = normpdf(t, t_center, t_spread);
+z = z_max - (z_max-z_min+5) * (y);
+
+plot(t,z,'b','linewidth',1.5);
+hold on
+plot(t,z_max*ones(1,length(t)),'g','linewidth',1.5);
+line([t(1),t(end)],[0,0],'color','k')
+
+legend('ChR2','EYFP','box','off')
+
+set(gca,'ydir','reverse','ylim',[-10,10],'ytick',[-10,0,10],'xtick',[t(1),0,t(end)])
+ylim = get(gca,'ylim');
+line([0,0],ylim,'linestyle','--','color','k')
+
 end

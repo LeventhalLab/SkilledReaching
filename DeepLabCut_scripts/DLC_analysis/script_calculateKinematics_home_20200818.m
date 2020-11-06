@@ -78,7 +78,7 @@ cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
 numRatFolders = length(ratFolders);
 
-for i_rat = 1:numRatFolders   % change loop limits if only want to analyze specific rats
+for i_rat = 16:16%numRatFolders   % change loop limits if only want to analyze specific rats
 
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -122,9 +122,9 @@ for i_rat = 1:numRatFolders   % change loop limits if only want to analyze speci
         case 'R0158'
             startSession = 1;
             endSession = numSessions;
-        case 'R0159'
-            startSession = 5;
-            endSession = numSessions;
+        case 'R0235'
+            startSession = 1;
+            endSession = 1;
         case 'R0160'
             startSession = 1;
             endSession = 22;
