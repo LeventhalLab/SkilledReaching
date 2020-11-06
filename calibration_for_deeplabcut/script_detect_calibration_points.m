@@ -68,8 +68,25 @@ numBoxes = length(boxList);
 
 for iBox = 1 : numBoxes
     
+<<<<<<< HEAD
+    curDate = dateList{iDate};
+    if ~any(strcmp({'20191115','20191117'}, curDate))
+        continue;
+    end
+    
+    fprintf('processing %s\n',curDate);
+    numFilesPerDate = length(imFiles_from_same_date{iDate});
+    img = cell(1, numFilesPerDate);
+    for iImg = 1 : numFilesPerDate
+
+        curImgName = imFiles_from_same_date{iDate}{iImg};
+        img{iImg} = imread(curImgName);
+        
+    end
+=======
     curBox = boxList(iBox);
     numDatesForBox = length(datesForBox{iBox});
+>>>>>>> 1b20e2abb32572632a5f11e67d51b745b19b7126
     
     for iDate = 1 : numDatesForBox
     
