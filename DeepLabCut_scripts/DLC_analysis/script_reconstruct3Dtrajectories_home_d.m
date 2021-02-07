@@ -105,13 +105,13 @@ for i_rat = 20:20%1 : numRatFolders   % change limits to work on specific rats
     
     switch ratID    % if want to analyze specific sessions for a given rat
         case 'R0221'
-            startSession = 1;
+            startSession = numSessions;
             endSession = numSessions;
         otherwise
             startSession = 1;
             endSession = numSessions;
     end
-    for iSession = startSession : 2: endSession
+    for iSession = startSession : 1 : endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};

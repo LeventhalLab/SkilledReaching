@@ -2,6 +2,36 @@
 
 % script to perform 3D reconstruction on videos
 
+% in addition to a file tree for videos as follows:
+% Raw Data File Structure
+% -	Parent directory
+% o	Rat folder, named with rat identifier (e.g., “R0186”)
+% 	Sessions folders RXXXX_YYYYMMDDz (e.g., “R0186_20170921a” would be the first session recorded on September 21, 2017 for rat R0186)
+% 
+% Each sessions folder contains a .log file (read with readLogData) with session metadata, and videos named with the format RXXXX_YYYYMMDD_HH-MM-DD_nnn.avi, where RXXXX is the rat identifier, YYYYMMDD is the date, HH-MM-DD is the time the video was recorded, and nnn is the number of the video within the session (e.g., 001, 002, etc.). Sometimes the software crashed mid-session, and the numbering restarted. However, each video still has a unique identifier based on the time it was recorded.
+% 
+% Each rat has a RXXXX_sessions.csv file associated with it, which is a table containing metadata for each session (e.g., was laser on/occluded during that session, training vs test session, etc.)
+%
+% DLC Output File Structure
+% Similar to Raw Data File Structure
+% -	Parent directory
+% o	Rat folder, named with rat identifier (e.g., “R0186”)
+% 	Sessions folders RXXXX_YYYYMMDDz (e.g., “R0186_20170921a” would be the first session recorded on September 21, 2017 for rat R0186)
+% •	Subfolders RXXXX_YYYYMMDDz_direct/left/right that contain the actual DLC output files and metadata from cropping (i.e., cropping coordinates, frame rate, etc) that particular view (left mirror, right mirror, or direct view)
+%
+% Calibration Files Directory Structure
+% -	Parent directory
+% o	Year (e.g., ‘2018’)
+% 	YYYYMM_calibration (e.g., ‘201810_calibration’ would contain calibration images/files for October, 2018)
+% •	YYYYMM_all_marked – contains images/.mat files with coordinates of all checkerboard points (automatically detected and manually marked)
+% •	YYYYMM_auto_marked – contains images/.mat files with coordinates of all automatically detected checkerboard points
+% •	YYYYMM_calibration_files – calibration files. These are .mat files containing fundamental, essential matrices, etc.
+% •	YYYYMM_manually_marked – calibration images that have been manually marked in Fiji, as well as .csv files containing checkerboard corner coordinates
+% •	YYYYMM_original_images – original calibration images
+
+% also need: a .csv file with a table containing metadata about each rat
+% ('Bova_Leventhal_2020_rat_database.csv')
+
 % flag for whether to skip calculations if analysis files already exists
 repeatCalculations = false;
 
@@ -22,38 +52,20 @@ maxDistFromNeighbor_invalid = 70;
 % location of the master folder containing DLC .csv output files
 % file struture:
 % labeledBodypartsFolder-->'RXXXX'-->'RXXXX_sessiondate'-->'RXXXX_sessiondate_direct/left'
-labeledBodypartsFolder = '/Volumes/Untitled/for_creating_3d_vids';
+labeledBodypartsFolder = '/Volumes/Untitled/DLC output';
 
-% 
+% read in the rat database table
 xlDir = labeledBodypartsFolder;
-% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
 csvfname = fullfile(xlDir,'SR_rat_database.csv');
-
-% ratInfo = readRatInfoTable(csvfname);   % consider commenting this in and
-% commenting out the readtable version
-% ratInfo = readtable(csvfname);
 ratInfo = readRatInfoTable(csvfname);
 ratInfo_IDs = [ratInfo.ratID];
 
 % for saving a backup to a shared drive
-% sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
+sharedX_DLCoutput_path = '/Volumes/SharedX/Neuro-Leventhal/data/Skilled Reaching/DLC output/';
 
 % directory that contains calibration images
 % file structure: 
-calImageDir = fullfile(labeledBodypartsFolder, 'calibration_images');%'/Volumes/LL EXHD #2/calibration_images';
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CHANGE THESE LINES DEPENDING ON PARAMETERS USED TO EXTRACT VIDEOS
-% change this if the videos were cropped at different coordinates
-% vidROI = [750,450,550,550;
-%           1,450,450,400;
-%           1650,435,390,400];
-% triggerTime = 1;    % seconds
-% frameTimeLimits = [-1,3.3];    % time around trigger to extract frames
-% frameRate = 300;
-% 
-% frameSize = [1024,2040];
-% these are now loaded in from crop metadata files
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+calImageDir = fullfile(labeledBodypartsFolder, 'calibration_images');
       
 cd(labeledBodypartsFolder)
 ratFolders = dir('R*');
@@ -62,18 +74,7 @@ numRatFolders = length(ratFolders);
 vidView = {'direct','right','left'};
 numViews = length(vidView);
 
-% find the list of calibration files
-% cd(calImageDir);
-% calFileList = dir('SR_boxCalibration_*.mat');
-% calDateList = cell(1,length(calFileList));
-% calDateNums = zeros(length(calFileList),1);
-% for iFile = 1 : length(calFileList)
-%     C = textscan(calFileList(iFile).name,'SR_boxCalibration_%8c.mat');
-%     calDateList{iFile} = C{1};
-%     calDateNums(iFile) = str2double(calDateList{iFile});
-% end
-
-for i_rat = 20:20%numRatFolders
+for i_rat = 20:20%1 : numRatFolders   % change limits to work on specific rats
 
     ratID = ratFolders(i_rat).name;
     ratIDnum = str2double(ratID(2:end));
@@ -94,23 +95,23 @@ for i_rat = 20:20%numRatFolders
     end
     
     ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
-%     sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
+    
+    % comment out if not auto-backing up to a shared drive
+    sharedX_ratRootFolder = fullfile(sharedX_DLCoutput_path,ratID);
     
     cd(ratRootFolder);
-    
-%     sessionDirectories = dir([ratID '_*']);
     sessionDirectories = listFolders([ratID '_2*']);
     numSessions = length(sessionDirectories);
     
-    switch ratID
-        case 'R0216'
-            startSession = 1;
+    switch ratID    % if want to analyze specific sessions for a given rat
+        case 'R0221'
+            startSession = 2;
             endSession = numSessions;
         otherwise
             startSession = 2;
             endSession = numSessions;
     end
-    for iSession = startSession : 2 : endSession
+    for iSession = startSession : 2: endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -118,7 +119,7 @@ for i_rat = 20:20%numRatFolders
         sessionMonth = sessionDate(1:6);
         
         calibrationDir = fullfile(calImageDir,sessionYear,[sessionMonth '_calibration'],[sessionMonth '_calibration_files']);
-                % find the list of calibration files
+        % find the list of calibration files
         cd(calibrationDir);
         calFileList = dir('SR_boxCalibration_*.mat');
         calDateList = cell(1,length(calFileList));
@@ -135,15 +136,14 @@ for i_rat = 20:20%numRatFolders
         
         logFiles = dir('*.log');
         
-        % comment below back in for non-corrupted log files
-%         curLog = readLogData(logFiles(1).name);
-%         
-%         if isfield(curLog,'boxnumber')
-%             boxNum = curLog.boxnumber;
-%         else
-%             boxNum = 99;   % used 99 as box number before this was written into .log files 20191126
-%         end
-        boxNum = 99;
+        % read the log file to find out which box this recording was made
+        % in
+        curLog = readLogData(logFiles(1).name);
+        if isfield(curLog,'boxnumber')
+            boxNum = curLog.boxnumber;
+        else
+            boxNum = 99;   % used 99 as box number before this was written into .log files 20191126
+        end
 
         % find the most recent date compared to the current file for which a
         % calibration file exists. Later, write code so files are stored by
@@ -158,20 +158,19 @@ for i_rat = 20:20%numRatFolders
         
         switch pawPref
             case 'right'
-%                 ROIs = vidROI(1:2,:);
                 Pn = squeeze(boxCal.Pn(:,:,2));
                 sf = mean(boxCal.scaleFactor(2,:));
                 F = squeeze(boxCal.F(:,:,2));
                 mirrorView = 'left';
             case 'left'
-%                 ROIs = vidROI([1,3],:);
                 Pn = squeeze(boxCal.Pn(:,:,3));
                 sf = mean(boxCal.scaleFactor(3,:));
                 F = squeeze(boxCal.F(:,:,3));
                 mirrorView = 'right';
         end
     
-%         sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
+        % comment out below if not backing up to shared drive
+        sharedX_fullSessionDir = fullfile(sharedX_ratRootFolder,sessionDirectories{iSession});
         [directViewDir,mirrorViewDir,direct_csvList,mirror_csvList] = getDLC_csvList(fullSessionDir);
 
         if isempty(direct_csvList)
@@ -220,8 +219,9 @@ for i_rat = 20:20%numRatFolders
             trajName = sprintf('R%04d_%s_%s_%03d_3dtrajectory_new.mat', directVid_ratID(i_directcsv),...
                 directVidDate{i_directcsv},directVidTime{i_directcsv},directVidNum(i_directcsv))
             fullTrajName = fullfile(fullSessionDir, trajName);
-%             sharedX_fullTrajName = fullfile(sharedX_fullSessionDir,trajName);
-%             COMMENT THIS BACK IN TO AVOID REPEAT CALCULATIONS
+            
+            % comment out below if not backing up to shared drive
+            sharedX_fullTrajName = fullfile(sharedX_fullSessionDir,trajName);
             
             if exist(fullTrajName,'file')
                 % already did this calculation
@@ -232,6 +232,7 @@ for i_rat = 20:20%numRatFolders
                 end
             end
             
+            % create file names for retrieving metadata
             cd(mirrorViewDir)
             [mirror_bp,mirror_pts,mirror_p] = read_DLC_csv(mirror_csvList(i_mirrorcsv).name);
             mirror_metadataName = get_metadataName(mirror_csvList(i_mirrorcsv).name,pawPref);
@@ -305,6 +306,8 @@ for i_rat = 20:20%numRatFolders
             cd(fullSessionDir)
 
             save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
+            
+            % comment out next line if not backing up to a shared directory
 %             save(sharedX_fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
             clear manually_invalidated_points
             
