@@ -76,8 +76,7 @@ while current_month.Month <= last_month.Month
                                         %       version - Hartley and Zisserman and the rest of the world seem to
                                         %       use the transpose of matlab K)
 
-    dist = [cameraParams.RadialDistortion(1:2), cameraParams.TangentialDistortion];
-    
+                                        
     cb_spacing = 4;   % real world spacing between calibration checkerboard vertices, in mm
     anticipatedBoardSize = [4,5];
 
@@ -228,7 +227,7 @@ while current_month.Month <= last_month.Month
         % write box calibration information to disk
         calibrationFileName = sprintf('SR_boxCalibration_box%02d_%s.mat',boxNum,curDateString);
         calibrationFileName = fullfile(calFileDir,calibrationFileName);
-        save(calibrationFileName,'P','Pn','F','E','K','dist','scaleFactor','directChecks','mirrorChecks','cameraParams','curDate','imFileList');
+        save(calibrationFileName,'P','Pn','F','E','K','scaleFactor','directChecks','mirrorChecks','cameraParams','curDate','imFileList');
 
         % comment in below to draw lines between matching points
 
@@ -255,7 +254,7 @@ while current_month.Month <= last_month.Month
     %                     [epipole(2),directChecks(kk,2,jj,ii)],'color','r');
     %                 line([directChecks(kk,1,jj,ii),mirrorChecks(kk,1,jj,ii)],...
     %                     [directChecks(kk,2,jj,ii),mirrorChecks(kk,2,jj,ii)],'color','b')
-    %             endscr
+    %             end
     %         end
     %     end
 

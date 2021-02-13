@@ -1,0 +1,11 @@
+function load_mat_from_python(filename)
+
+dlc_from_python = load(filename)
+
+num_bp = size(dlc_from_python.direct_bp, 1);
+
+direct_bp = cell(num_bp, 1);
+mirror_bp = cell(num_bp, 1);
+for i_bp = 1 : num_bp
+    
+    direct_bp{i_bp} = dlc_from_python.direct_bp(

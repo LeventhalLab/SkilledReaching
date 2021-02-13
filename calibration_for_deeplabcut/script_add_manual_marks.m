@@ -7,7 +7,7 @@
 % eventually, change directory structure to have a separate set of
 % calibration images for each box
 % rootDir = '/Volumes/LL EXHD #2/calibration_images';
-rootDir = '/Volumes/Untitled/DLC output/calibration_images';
+rootDir = '/Volumes/Untitled/DLC_output/calibration_images';
 
 % camParamFile = '/Users/dan/Documents/Leventhal lab github/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
 camParamFile = '/Users/dan/Documents/GitHub/SkilledReaching/Manual Tracking Analysis/ConvertMarkedPointsToReal/cameraParameters.mat';
