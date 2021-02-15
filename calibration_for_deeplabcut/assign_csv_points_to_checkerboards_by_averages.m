@@ -77,7 +77,8 @@ known_direct_mean_pts = NaN(3,2);
 for i_directBoard = 1 : 3
     known_direct_mean_pts(i_directBoard,:) = mean(squeeze(known_directChecks(:,:,i_directBoard)));
 end
-known_direct_mean_pts = known_direct_mean_pts(~isnan(known_direct_mean_pts));
+
+known_direct_mean_pts(all(isnan(known_direct_mean_pts),2),:)=[];
 all_mean_direct_pts = [new_mean_direct_pts; known_direct_mean_pts];
 
 % is one of the newly checked boards the top checkerboard?

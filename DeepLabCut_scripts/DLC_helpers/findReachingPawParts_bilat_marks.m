@@ -1,4 +1,4 @@
-function [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref,varargin)
+function [mcpIdx,pipIdx,digIdx,pawDorsumIdx] = findReachingPawParts_bilat_marks(bodyparts,pawPref,varargin)
 %
 % find the indices of paw parts from the list output by DLC
 %
@@ -25,7 +25,7 @@ end
 
 mcpString = 'mcp';
 pipString = 'pip';
-digitString = 'dig';
+digitString = 'digit';
 pawDorsumString = 'pawdorsum';
 
 for iarg = 1 : 2 : nargin - 2
@@ -46,13 +46,13 @@ digIdx = zeros(4,1);
 
 for iDigit = 1 : 4
     % find mcp indices
-    testString = sprintf('%s%s%d',pawPref,mcpString,iDigit);
+    testString = sprintf('%s%d',mcpString,iDigit);
     mcpFind = strfind(bodyparts,testString);
     
-    testString = sprintf('%s%s%d',pawPref,pipString,iDigit);
+    testString = sprintf('%s%d',pipString,iDigit);
     pipFind = strfind(bodyparts,testString);
     
-    testString = sprintf('%s%s%d',pawPref,digitString,iDigit);
+    testString = sprintf('%s%d',digitString,iDigit);
     digFind = strfind(bodyparts,testString);
     
     for ii = 1 : length(bodyparts)

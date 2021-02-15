@@ -19,9 +19,9 @@ mcp_idx = zeros(numDigits,1);
 pip_idx = zeros(numDigits,1);
 digit_idx = zeros(numDigits,1);
 for iDigit = 1 : numDigits
-    mcp_string = sprintf('mcp%d',iDigit);
-    pip_string = sprintf('pip%d',iDigit);
-    digit_string = sprintf('digit%d',iDigit);
+    mcp_string = sprintf('%smcp%d',pawPref,iDigit);
+    pip_string = sprintf('%spip%d',pawPref,iDigit);
+    digit_string = sprintf('%sdig%d',pawPref,iDigit);
     
     mcp_idx(iDigit) = find(findStringMatchinCellArray(bodyparts, mcp_string));
     pip_idx(iDigit) = find(findStringMatchinCellArray(bodyparts, pip_string));

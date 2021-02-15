@@ -83,7 +83,7 @@ for ii = 1 : numFrames_to_check
         % the reaching paw dorsum was probably not correctly identified in
         % the current frame
         
-        validDirectPoints = squeeze(direct_pts_ud(~invalid_direct(all_direct_digit_idx,iFrame),iFrame,:));
+        validDirectPoints = squeeze(direct_pts_ud(all_direct_digit_idx(~invalid_direct(all_direct_digit_idx,iFrame)),iFrame,:));
         if iscolumn(validDirectPoints)
             validDirectPoints = validDirectPoints';
         end
