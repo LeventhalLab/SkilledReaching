@@ -150,8 +150,9 @@ for i_rat = 1:length(ratIDs_to_analyze)%1 : numRatFolders   % change limits to w
             dateStr = C{2};
             timeStr = C{3};
 
+            full_mat_from_python_name = fullfile(fullSessionDir, mat_from_python_list(i_vid).name);
             [direct_bp, mirror_bp, direct_p, mirror_p, direct_pts_ud, mirror_pts_ud, pawPref, im_size, video_number, ROIs] = ...
-                load_mat_from_python(mat_from_python_list(i_vid).name);
+                load_mat_from_python(full_mat_from_python_name);
             triggerTime = 1.0;
             frameRate = 300;
             frameTimeLimits = [-1.0,1000/3];

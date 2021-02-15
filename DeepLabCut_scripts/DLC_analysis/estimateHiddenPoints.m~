@@ -81,7 +81,7 @@ for ii = 1 : numFrames
     allMirrorPts = squeeze(final_mirror_pts(allMirrorParts_idx,iFrame,:));
     
     validDirectPoints = allDirectPts(~invalid_direct(allDirectParts_idx,iFrame),:);
-    validMirrorPoints = allMirrorPts(~invalid_mirror(allMirrorParts_idx,iFrame),:);
+    validMirrorPoints = allMirrorPts(allMi~invalid_mirror(allMirrorParts_idx,iFrame),:);
     
     % work on digits first
     for i_digitPart = 1 : 3

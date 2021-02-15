@@ -16,6 +16,8 @@ end
 
 direct_p = dlc_from_python.direct_p;
 mirror_p = dlc_from_python.mirror_p;
+direct_p(direct_p > 1) = 0;
+mirror_p(mirror_p > 1) = 0;   % work arounds because sometimes very small values become very large values (e.g. 10^300). Must be some quirk of the way floating precision numbers are saved by scipy.io.savemat
 direct_pts_ud = dlc_from_python.direct_pts_ud;
 mirror_pts_ud = dlc_from_python.mirror_pts_ud;
 paw_pref = dlc_from_python.paw_pref;

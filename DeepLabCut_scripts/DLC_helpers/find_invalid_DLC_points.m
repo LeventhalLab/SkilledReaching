@@ -59,6 +59,7 @@ num_frames = size(parts_loc, 2);
 num_bodyparts = size(parts_loc, 1);
 
 invalidPoints = p < min_valid_p;   % first pass - anything with p-value too small, ignore
+invalidPoints = invalidPoints | isnan(p);
 certainPoints = p > min_certain_p;
 
 diff_per_frame = zeros(num_bodyparts, num_frames-1);
