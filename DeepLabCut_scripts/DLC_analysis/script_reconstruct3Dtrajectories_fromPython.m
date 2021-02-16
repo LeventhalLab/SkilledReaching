@@ -257,6 +257,12 @@ for i_rat = 1:length(ratIDs_to_analyze)%1 : numRatFolders   % change limits to w
             frameSize = im_size;
             save(fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts_ud','mirror_pts_ud','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
             
+            clear direct_p
+            clear mirror_p
+            clear direct_pts_ud
+            clear mirror_pts_ud
+            clear final_direct_pts
+            clear final_mirror_pts
             % comment out next line if not backing up to a shared directory
 %             save(sharedX_fullTrajName, 'pawTrajectory', 'bodyparts','thisRatInfo','frameRate','frameSize','triggerTime','frameTimeLimits','ROIs','boxCal','activeBoxCal','direct_pts','mirror_pts','mirror_bp','direct_bp','mirror_p','direct_p','lastValidCalDate','final_direct_pts','final_mirror_pts','isEstimate','reproj_error','high_p_invalid','low_p_valid','manually_invalidated_points');
             clear manually_invalidated_points
