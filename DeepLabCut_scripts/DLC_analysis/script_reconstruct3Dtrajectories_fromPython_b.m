@@ -115,7 +115,7 @@ for i_rat = 1:length(ratIDs_to_analyze)%1 : numRatFolders   % change limits to w
             startSession = 1;
             endSession = numSessions;
     end
-    for iSession = 1 : 1: endSession
+    for iSession = 6 : 1: endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};
@@ -184,7 +184,7 @@ for i_rat = 1:length(ratIDs_to_analyze)%1 : numRatFolders   % change limits to w
             end
     
             trajName = sprintf('%s_box%02d_%s_%s_%03d_3dtrajectory.mat', ratID,...
-                boxNum, dateStr, timeStr, vid_num)
+                boxNum, dateStr,timeStr, vid_num)
 
             fullTrajName = fullfile(fullSessionDir, trajName);
             

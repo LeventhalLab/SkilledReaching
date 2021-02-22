@@ -22,6 +22,8 @@ for iTrial = 1 : num_trials
     max_pd_v(iTrial) = max(reachData(iTrial).pd_v{1});
 end
 
+outcomeFlag(:,1) = true;  % work-around for sessions that haven't been scored
+
 for i_outcome = 1 : length(validTrialOutcomes)
     mean_pd_v(i_outcome) = nanmean(max_pd_v(outcomeFlag(:,i_outcome)));
     std_pd_v(i_outcome) = nanstd(max_pd_v(outcomeFlag(:,i_outcome)));

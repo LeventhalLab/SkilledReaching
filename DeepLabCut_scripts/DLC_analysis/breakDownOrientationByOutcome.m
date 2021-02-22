@@ -19,8 +19,13 @@ for iTrial = 1 : num_trials
     if isempty(reachData(iTrial).orientation)
         continue;
     end
+    if isempty(reachData(iTrial).orientation{1})
+        continue;
+    end
     end_orientation(iTrial) = reachData(iTrial).orientation{1}(end);
 end
+
+outcomeFlag(:,1) = true;  % work-around for sessions that haven't been scored
 
 for i_outcome = 1 : length(validTrialOutcomes)
 

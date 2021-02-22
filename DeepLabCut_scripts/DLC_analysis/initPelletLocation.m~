@@ -58,9 +58,8 @@ if preTriggerFrame < 1
     initPellet3D = [];
     return;
 end
-pelletIdx3D = strcmpi(bodyparts,'pellet1');
-% pelletIdx3D = contains(bodyparts,'pellet');    % eventually, account for
-% multiple pellets
+% pelletIdx3D = strcmpi(bodyparts,'pellet');
+pelletIdx3D = contains(bodyparts,'pellet');
 pelletPts = squeeze(pawTrajectory(:,:,pelletIdx3D));
 
 invalidPoints = (pellet_reproj_error(:,1) > maxReprojError)' | (pellet_reproj_error(:,2) > maxReprojError)';

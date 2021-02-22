@@ -19,8 +19,14 @@ for iTrial = 1 : num_trials
     if isempty(reachData(iTrial).aperture)
         continue;
     end
+    if isempty(reachData(iTrial).aperture{1})
+        continue;
+    end
     end_aperture(iTrial) = reachData(iTrial).aperture{1}(end);
+
 end
+
+outcomeFlag(:,1) = true;  % work-around for sessions that haven't been scored
 
 for i_outcome = 1 : length(validTrialOutcomes)
     mean_aperture(i_outcome) = nanmean(end_aperture(outcomeFlag(:,i_outcome)));

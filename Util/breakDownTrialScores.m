@@ -15,6 +15,11 @@ ind_trial_type = zeros(numTrials,1);
 for iTrial = 1 : numTrials
     current_outcome = reachData(iTrial).trialScores;
     
+    if isempty(current_outcome)
+        % workaround for in case session hasn't been scored
+        current_outcome = 0;
+    end
+    
     for i_validType = 1 : length(validTrialTypes)
         if any(ismember(current_outcome,validTrialTypes{i_validType}))
             score_breakdown(i_validType) = score_breakdown(i_validType) + 1;

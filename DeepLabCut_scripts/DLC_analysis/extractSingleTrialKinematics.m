@@ -30,7 +30,7 @@ interp_trajectory = NaN(numFrames,3,num_bodyparts);
 frameRange = zeros(num_bodyparts,2);
 
 % calculate trajectory for each identified "body part"
-for i_part = 1 : 16
+for i_part = 1 : num_bodyparts
     fullTrajectory = squeeze(trajectory(:,:,i_part));
     numValidPoints = sum(~isnan(fullTrajectory(:,1)));
     if numValidPoints < 2

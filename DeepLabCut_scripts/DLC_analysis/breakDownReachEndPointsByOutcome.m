@@ -33,6 +33,8 @@ for iTrial = 1 : num_trials
     
 end
 
+outcomeFlag(:,1) = true;  % work-around for sessions that haven't been scored
+
 for i_outcome = 1 : length(validTrialOutcomes)
     mean_pd_endPt(i_outcome,:) = nanmean(pd_endPts(outcomeFlag(:,i_outcome),:));
     cov_pd_endPts(i_outcome,:,:) = nancov(pd_endPts(outcomeFlag(:,i_outcome),:));

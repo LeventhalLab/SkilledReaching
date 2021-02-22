@@ -104,9 +104,14 @@ while current_month.Month <= last_month.Month
             curDateString = curDate;
         end
 
-    %     if ~any(strcmp({'20170102','20170103','20170105'}, curDateString))
-    %         continue;
-    %     end
+%         if ~any(strcmp({'20201103'}, curDateString))
+%             continue;
+%         end
+
+        testDates = [datetime(2020,11,03)];
+        if ~any(curDate == testDates)
+            continue
+        end
 
         fprintf('working on %s\n',curDateString);
         % allMatchedPoints - totalNumPts x 2 x 2 x numMirrors array. each

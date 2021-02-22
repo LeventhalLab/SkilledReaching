@@ -103,10 +103,10 @@ while current_month.Month <= last_month.Month
 
             curDate = datesForBox{iBox}(iDate);
             curDateString = datestr(curDate,'yyyymmdd');
-    %         comment in if only want to analyze specific boxes from specific dates
-    %         if ~any(strcmp({'20170120'}, curDateString))
-    %             continue;
-    %         end
+%             comment in if only want to analyze specific boxes from specific dates
+            if ~any(strcmp({'20201103'}, curDateString))
+                continue;
+            end
 
             fprintf('processing box %d, %s\n',boxList(iBox),curDateString);
 

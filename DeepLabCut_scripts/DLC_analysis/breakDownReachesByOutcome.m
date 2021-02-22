@@ -19,6 +19,8 @@ for iTrial = 1 : num_trials
     num_reaches(iTrial) = length(reachData(iTrial).reachEnds);
 end
 
+outcomeFlag(:,1) = true;  % work-around for sessions that haven't been scored
+
 for i_outcome = 1 : length(validTrialOutcomes)
     mean_num_reaches(i_outcome) = mean(num_reaches(outcomeFlag(:,i_outcome)));
     std_num_reaches(i_outcome) = std(num_reaches(outcomeFlag(:,i_outcome)));

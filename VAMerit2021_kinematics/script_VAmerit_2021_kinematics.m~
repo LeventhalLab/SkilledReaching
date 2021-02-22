@@ -1,0 +1,80 @@
+% script_VAmerit_2021_kinematics
+
+parent_folder = '/Volumes/Untitled/videos_to_analyze';
+labeledBodypartsFolder = fullfile(parent_folder, 'matlab_readable_dlc');
+xlDir = parent_folder;%'/Users/dan/Box/Leventhal Lab/Skilled Reaching Project/Scoring Sheets';
+% xlfname = fullfile(xlDir,'rat_info_pawtracking_DL.xlsx');
+csvfname = fullfile(xlDir,'SR_rat_database.csv');
+ratInfo = readRatInfoTable(csvfname);
+
+ratSummaryDir = fullfile(labeledBodypartsFolder,'rat_kinematic_summaries');
+
+ratInfo_IDs = [ratInfo.ratID];
+
+cd(labeledBodypartsFolder)
+ratFolders = dir('R*');
+numRatFolders = length(ratFolders);
+
+sessions_grouping = {'training','saline','OHDA1','OHDA2','OHDA3','OHDA4','OHDA5','OHDA6'};
+
+for i_rat = 2:2%1 : numRatFolders
+    
+    ratID = ratFolders(i_rat).name
+    ratIDnum = str2double(ratID(2:end));
+    
+    ratSummaryName = [ratID '_kinematicsSummary.mat'];
+        cd(ratSummaryDir)
+    if exist(ratSummaryName,'file')
+        load(ratSummaryName)
+    else
+        fprintf('no rat summary found for %s\n',ratID)
+    end
+    
+    ratInfo_idx = find(ratInfo_IDs == ratIDnum);
+    if isempty(ratInfo_idx)
+        error('no entry in ratInfo structure for rat %d\n',C{1});
+    end
+    thisRatInfo = ratInfo(ratInfo_idx,:);
+    pawPref = thisRatInfo.pawPref;
+    if iscategorical(pawPref)
+        pawPref = char(pawPref);
+    end
+    if iscell(pawPref)
+        pawPref = pawPref{1};
+    end
+    
+    ratRootFolder = fullfile(labeledBodypartsFolder,ratID);
+    cd(ratRootFolder);
+    sessionDirectories = listFolders([ratID '_2*']);
+    numSessions = length(sessionDirectories);
+    
+    % figure out all the session types
+    sessions_from_table = cellstr(ratSummary.sessions_analyzed.trainingStage);
+    
+    for i_stage = 1 : length(sessions_grouping)
+        
+        current_sessions = ratSummary.sessions_analyzed(strcmpi(sessions_from_table, sessions_grouping{i_stage}),:);
+        
+        current_dates = current_sessions.date;
+        
+        for i_session = 1 : length(current_dates)
+            
+            date_string = datestr(current_dates(i_session), 'yyyymmdd');
+            session_folder_idx = contains(sessionDirectories, date_string);
+            session_folder = fullfile(ratRootFolder, sessionDirectories{session_folder_idx});
+            
+            cd(session_folder)
+            processed_reaches_file = dir('*_processed_reaches.mat');
+            
+            load(processed_reaches_file.name);
+            
+            % collect all trials
+            
+            
+        end
+        
+    end
+        
+    
+end
+    

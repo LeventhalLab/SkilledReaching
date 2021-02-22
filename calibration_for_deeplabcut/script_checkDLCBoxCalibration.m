@@ -42,9 +42,10 @@ while current_month.Month <= last_month.Month
         cd(calFileDir)
         load(matList(iMat).name);
         % curDate is stored in the .mat file
-    %     if ~any(strcmp({'20180319'}, curDate))
-    %         continue;
-    %     end
+        testDates = [datetime(2020,12,17)];
+        if ~any(curDate == testDates)
+            continue
+        end
 
         K = cameraParams.IntrinsicMatrix;
 

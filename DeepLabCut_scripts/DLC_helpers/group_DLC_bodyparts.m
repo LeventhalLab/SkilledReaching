@@ -29,7 +29,7 @@ for iDigit = 1 : numDigits
 end
 
 nose_idx = find(findStringMatchinCellArray(bodyparts, 'nose'));
-pellet_idx = find(findStringMatchinCellArray(bodyparts, 'pellet'));
+pellet_idx = find(findStringMatchinCellArray(bodyparts, 'pellet1'));    % change later to allow for multiple pellets
 
 if iscategorical(pawPref)
     pawPref = char(pawPref);
