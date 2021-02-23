@@ -19,9 +19,16 @@ reachData.dig2_v = {};
 reachData.max_dig2_v = [];
 reachData.dig_endPoints = [];
 reachData.orientation = {};
+reachData.grasp_orientation = {};
 reachData.aperture = {};
+reachData.grasp_aperture = {};
 reachData.trialScores = [];
 reachData.ratIDnum = [];
 reachData.sessionDate = datetime();
 reachData.trialNumbers = [];
 reachData.slot_z_wrt_pellet = [];
+reachData.flexion = {};
+reachData.flexion_grasp = {};
+
+reachData.post_reach_aperture = [];
+reachData.post_reach_orientation = [];

@@ -68,9 +68,7 @@ function reachData = calculateKinematics(reachData,interp_trajectory,bodyparts,s
 %       each trial
 %
 
-num_frames = size(interp_trajectory,1);
-
-frames_past_reach_end = 50;
+frames_past_reach_end = 20;
 
 [~,~,digIdx,pawDorsumIdx] = findReachingPawParts(bodyparts,pawPref);
 pd_trajectory = squeeze(interp_trajectory(:,:,pawDorsumIdx));
@@ -158,7 +156,7 @@ for i_reach = 1 : num_reaches
     [reachData.orientation{i_reach},firstValidFrame] = ...
         determinePawOrientation(interp_trajectory(reachData.slotBreachFrame(i_reach):reach_endFrame,:,:),bodyparts,pawPref);
     if isempty(firstValidFrame)    % no defined paw orientation for this reach
-        reachData.firstDigitKinematicsFrame(i_reach) = [];
+        reachData.firstDigitKinematicsFrame(i_reach) = []
     else
         reachData.firstDigitKinematicsFrame(i_reach) = firstValidFrame + reachData.slotBreachFrame(i_reach) - 1;
     end
@@ -174,8 +172,8 @@ for i_reach = 1 : num_reaches
             determinePawAperture(interp_trajectory(reachData.graspStarts(i_reach):reachData.graspEnds(i_reach),:,:),bodyparts,pawPref);
     end
     
-    if reach_endFrame + frames_past_reach_end - 1 <= num_frames
-        reachData.post_reach_aperture(i_reach,:) = determinePawAperture(interp_trajectory(reach_endFrame:reach_endFrame + frames_past_reach_end-1,:,:), bodyparts, pawPref);
-        reachData.post_reach_orientation(i_reach,:) = determinePawOrientation(interp_trajectory(reach_endFrame:reach_endFrame + frames_past_reach_end-1,:,:), bodyparts, pawPref);
-    end
+    if reach_endFrame
+    reachData.post_reach_aperture(i_reach,:) = determinePawAperture(interp_trajectory(reach_endFrame:reach_endFrame + frames_past_reach_end-1,:,:), bodyparts, pawPref);
+    reachData.post_reach_orientation(i_reach,:) = determinePawOrientation(interp_trajectory(reach_endFrame:reach_endFrame + frames_past_reach_end-1,:,:), bodyparts, pawPref);
+    
 end

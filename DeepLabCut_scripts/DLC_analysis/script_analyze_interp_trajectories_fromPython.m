@@ -182,6 +182,9 @@ for i_rat = 2 : 2%numRatFolders
             interp_trajectory = squeeze(all_interp_traj_wrt_pellet(:,:,:,iTrial));
             
             reachData(iTrial) = identifyReaches(temp_reachData,interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref);
+            
+            reachData(iTrial) = findDigitClose2(reachData(iTrial),interp_trajectory,bodyparts,pawPref,slot_z_wrt_pellet);
+            reachData(iTrial) = findGraspEnd(reachData(iTrial),interp_trajectory,bodyparts,pawPref,slot_z_wrt_pellet);
             try
             reachData(iTrial) = calculateKinematics(reachData(iTrial),interp_trajectory,bodyparts,slot_z_wrt_pellet,pawPref,frameRate);
             catch

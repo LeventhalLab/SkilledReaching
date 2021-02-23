@@ -2,6 +2,7 @@ function [mean_orientations,MRL] = breakDownOrientationByOutcome(reachData,valid
 
 num_trials = length(reachData);
 end_orientation = NaN(num_trials,1);
+grasp_end_orientation = NaN(num_trials,1);
 mean_orientations = NaN(1,length(validTrialOutcomes));
 MRL = NaN(1,length(validTrialOutcomes));
 outcomeFlag = false(num_trials,length(validTrialOutcomes));
@@ -23,6 +24,7 @@ for iTrial = 1 : num_trials
         continue;
     end
     end_orientation(iTrial) = reachData(iTrial).orientation{1}(end);
+
 end
 
 outcomeFlag(:,1) = true;  % work-around for sessions that haven't been scored
