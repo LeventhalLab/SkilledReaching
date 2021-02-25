@@ -152,7 +152,7 @@ for i_rat = 2:2%numRatFolders
             startSession = 1;
             endSession = numSessions;
     end
-    for iSession = startSession : 1 : 1%endSession
+    for iSession = startSession : 1 : endSession
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
@@ -334,7 +334,7 @@ for i_rat = 2:2%numRatFolders
             pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
             
             
-            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame,allPawPartsIdx] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
             
             all_maxDigitReachFrame(iTrial) = maxDigitReachFrame;
             
@@ -507,10 +507,14 @@ for i_rat = 2:2%numRatFolders
         [all_paw_xyz_v,all_paw_tangential_v] = calculatePawVelocity(smoothed_pd_trajectories,frameRate);
         [sessionSummaryName,sessionSummary_exists] = findSessionSummary(ratID,sessionDateString,'dlcdirectory',labeledBodypartsFolder);
 %         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
-        thisSessionType = sessionType(allSessionIdx);
+%         thisSessionType = sessionType(allSessionIdx);
         
+        for ii = 1 : length(digIdx)
+            paw_dig_idx(ii) = find(allPawPartsIdx==digIdx(ii));
+        end
+        all_trialOutcomes = zeros(1, size(allTrajectories,4));   % number of trials
         [all_reachEndPoints,all_numReaches_byPart,all_numReaches,all_reachFrames,all_reach_endPoints] = ...
-            collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,{0:10},all_trialOutcomes,digIdx);
+            collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,{0:10},all_trialOutcomes,paw_dig_idx);
         
         if sessionSummary_exists
             save(sessionSummaryName,'bodyparts','allTrajectories','all_paw_xyz_v','all_paw_tangential_v',...
@@ -522,7 +526,7 @@ for i_rat = 2:2%numRatFolders
                 'pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
                 'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box',...
                 'all_isEstimate','all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','all_firstPawDorsumFrame','all_maxDigitReachFrame',...
-                'trajectoryLengths','thisRatInfo','thisSessionType','slot_z','isEndPtManuallyMarked',...
+                'trajectoryLengths','thisRatInfo','slot_z','isEndPtManuallyMarked',...
                 'all_reachEndPoints','all_numReaches_byPart','all_numReaches','all_reachFrames','all_reach_endPoints','is_paw_through_slot_frame_ManuallyMarked','-append');
         else
             save(sessionSummaryName,'bodyparts','allTrajectories','all_paw_xyz_v','all_paw_tangential_v',...
@@ -534,7 +538,7 @@ for i_rat = 2:2%numRatFolders
                 'pawPartsList','all_initPellet3D','trialNumbers','all_trialOutcomes',...
                 'frameRate','frameTimeLimits','all_paw_through_slot_frame','all_firstSlotBreak','all_first_pawPart_outside_box',...
                 'all_isEstimate','all_endPtFrame','all_final_endPtFrame','all_reachFrameIdx','all_firstPawDorsumFrame','all_maxDigitReachFrame',...
-                'trajectoryLengths','thisRatInfo','thisSessionType','slot_z','isEndPtManuallyMarked',...
+                'trajectoryLengths','thisRatInfo','slot_z','isEndPtManuallyMarked',...
                 'all_reachEndPoints','all_numReaches_byPart','all_numReaches','all_reachFrames','all_reach_endPoints','is_paw_through_slot_frame_ManuallyMarked');
         end
         

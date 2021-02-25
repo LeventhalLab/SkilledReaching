@@ -117,6 +117,13 @@ curPartIdx = curPartIdx + 1;
 pawPartsList{curPartIdx} = bodyparts{pawDorsumIdx};
 allPawPartsIdx(curPartIdx) = pawDorsumIdx;
 
+pd_idx = curPartIdx;
+for ii = 1 : length(digIdx)
+    paw_dig_idx(ii) = find(allPawPartsIdx==digIdx(ii));
+    paw_pip_idx(ii) = find(allPawPartsIdx==pipIdx(ii));
+    paw_mcp_idx(ii) = find(allPawPartsIdx==mcpIdx(ii));
+end
+
 
 if isnan(paw_through_slot_frame)
     % something happened that it couldn't find a clean movement of the paw
@@ -199,31 +206,31 @@ end
 % first choice is the latest frame for one of the digit tips to reach its furthest extension
 % exclude the first digit, which is often obscured. also exclude 4th digit
 % (pinky) which sometimes moves independently of the rest of the digits
-endPtFrame = min(partEndPtFrame(digIdx(2:3)));
+endPtFrame = min(partEndPtFrame(paw_dig_idx(2:3)));
 
-final_endPtFrame = min(partFinalEndPtFrame(digIdx(2:3)));
+final_endPtFrame = min(partFinalEndPtFrame(paw_dig_idx(2:3)));
 % second choice is the most advanced pip frame
 if isnan(endPtFrame)
-    endPtFrame = min(partEndPtFrame(pipIdx(2:3)));
+    endPtFrame = min(partEndPtFrame(paw_pip_idx(2:3)));
 end
 % third choice is the most advanced pip frame
 if isnan(endPtFrame)
-    endPtFrame = min(partEndPtFrame(mcpIdx(2:3)));
+    endPtFrame = min(partEndPtFrame(paw_mcp_idx(2:3)));
 end
 % last choice is paw dorsum
 if isnan(endPtFrame)
-    endPtFrame = min(partEndPtFrame(pawDorsumIdx));
+    endPtFrame = min(partEndPtFrame(pd_idx));
 end
 if isnan(final_endPtFrame)
-    final_endPtFrame = min(partFinalEndPtFrame(pipIdx(2:3)));
+    final_endPtFrame = min(partFinalEndPtFrame(paw_pip_idx(2:3)));
 end
 % third choice is the most advanced pip frame
 if isnan(final_endPtFrame)
-    final_endPtFrame = min(partFinalEndPtFrame(mcpIdx(2:3)));
+    final_endPtFrame = min(partFinalEndPtFrame(paw_mcp_idx(2:3)));
 end
 % last choice is paw dorsum
 if isnan(final_endPtFrame)
-    final_endPtFrame = min(partFinalEndPtFrame(pawDorsumIdx));
+    final_endPtFrame = min(partFinalEndPtFrame(pd_idx));
 end
 
 endPts = zeros(numPawParts,3);

@@ -152,7 +152,7 @@ for i_rat = 2:2%numRatFolders
             startSession = 1;
             endSession = numSessions;
     end
-    for iSession = startSession : 1 : 1%endSession
+    for iSession = startSession : 1 : endSession
         
         fullSessionDir = fullfile(ratRootFolder,sessionDirectories{iSession});
         
@@ -334,7 +334,7 @@ for i_rat = 2:2%numRatFolders
             pawParts = [mcpIdx;pipIdx;digIdx;pawdorsum_idx];
             
             
-            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame] = findPawThroughSlotFrame_old(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
+            [paw_through_slot_frame,firstSlotBreak,first_pawPart_outside_box,maxDigitReachFrame,allPawPartsIdx] = findPawThroughSlotFrame(pawTrajectory, bodyparts, pawPref, invalid_direct, invalid_mirror, reproj_error, 'slot_z',slot_z,'maxReprojError',maxReprojError);
             
             all_maxDigitReachFrame(iTrial) = maxDigitReachFrame;
             
@@ -507,7 +507,7 @@ for i_rat = 2:2%numRatFolders
         [all_paw_xyz_v,all_paw_tangential_v] = calculatePawVelocity(smoothed_pd_trajectories,frameRate);
         [sessionSummaryName,sessionSummary_exists] = findSessionSummary(ratID,sessionDateString,'dlcdirectory',labeledBodypartsFolder);
 %         sessionSummaryName = [ratID '_' sessionDateString '_kinematicsSummary.mat'];
-        thisSessionType = sessionType(allSessionIdx);
+%         thisSessionType = sessionType(allSessionIdx);
         
         [all_reachEndPoints,all_numReaches_byPart,all_numReaches,all_reachFrames,all_reach_endPoints] = ...
             collectall_reachEndPoints(all_reachFrameIdx,allTrajectories,{0:10},all_trialOutcomes,digIdx);
