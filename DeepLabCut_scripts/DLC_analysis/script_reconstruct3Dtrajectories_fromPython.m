@@ -54,7 +54,7 @@ maxDistFromNeighbor_invalid = 70;
 % labeledBodypartsFolder-->'RXXXX'-->'RXXXX_sessiondate'-->'RXXXX_sessiondate_direct/left'
 parent_folder = '/Volumes/Untitled/videos_to_analyze';
 labeledBodypartsFolder = fullfile(parent_folder, 'matlab_readable_dlc');
-ratIDs_to_analyze = [382];
+ratIDs_to_analyze = [383];
 
 % read in the rat database table
 xlDir = parent_folder;
@@ -115,7 +115,7 @@ for i_rat = 1:length(ratIDs_to_analyze)%1 : numRatFolders   % change limits to w
             startSession = 1;
             endSession = numSessions;
     end
-    for iSession = 1 : 1: endSession
+    for iSession = 9 : 1: endSession
         
         C = textscan(sessionDirectories{iSession},[ratID '_%8c']);
         sessionDate = C{1};

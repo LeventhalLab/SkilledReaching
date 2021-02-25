@@ -70,7 +70,11 @@ validPawDorsumIdx = (pawDorsum_p > pThresh) & ... % only accept points identifie
                     (paw_z > slot_z) & ...     % only accept points on the far side of the reaching slot
                     (reproj_error(:,1) < maxReprojError) & ...   % only accept points that are near the epipolar line defined by the direct view observation (if present)
                     (reproj_error(:,2) < maxReprojError);        % only accept points that are near the epipolar line defined by the direct view observation (if present)
-validPawDorsumBorders = findConsecutiveEntries(validPawDorsumIdx);
+try
+    validPawDorsumBorders = findConsecutiveEntries(validPawDorsumIdx);
+catch
+    keyboard
+end
 if isempty(validPawDorsumBorders)
     firstPawDorsumFrame = paw_through_slot_frame;
     return;

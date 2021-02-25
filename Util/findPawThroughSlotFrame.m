@@ -119,8 +119,8 @@ for iPart = 1 : numPawParts
     invalid_reproj = part_reproj_error(:,1) > maxReprojError | ...
                      part_reproj_error(:,2) > maxReprojError;
 
-    z_coords(invalid_direct(iPart,1:numFramesInThisVideo),iPart) = NaN;
-    z_coords(invalid_mirror(iPart,1:numFramesInThisVideo),iPart) = NaN;
+    z_coords(invalid_direct(allPawPartsIdx(iPart),1:numFramesInThisVideo),iPart) = NaN;
+    z_coords(invalid_mirror(allPawPartsIdx(iPart),1:numFramesInThisVideo),iPart) = NaN;
     z_coords(invalid_reproj,iPart) = NaN;
 end
 
@@ -128,15 +128,18 @@ end
 firstSlotBreak = NaN(numPawParts,1);
 first_pawPart_outside_box = NaN(numPawParts,1);
 
-digit_z = z_coords(:,digIdx);
+for ii = 1 : length(digIdx)
+    paw_dig_idx(ii) = find(allPawPartsIdx==digIdx(ii));
+end
+digit_z = z_coords(:,paw_dig_idx);
 % find the farthest z-coordinate of any of the digits
 min_digit_z = min(digit_z(:));
 % assume that one of the digit tips has to be the first visible paw part
 % through the slot, but only after the paw dorsum has been found behind the
 % slot
-for iDigit = 1 : length(digIdx)
+for iDigit = 1 : length(paw_dig_idx)
     
-    temp = z_coords(:,digIdx(iDigit));
+    temp = z_coords(:,paw_dig_idx(iDigit));
     
     if any(temp == min_digit_z)
         maxDigitReachFrame = find(temp == min_digit_z,1);   % only take the first time the paw got out that far, though seems unlikely it would get to the exact same z-coordinate twice
@@ -157,9 +160,9 @@ for iDigit = 1 : length(digIdx)
         streak_idx = find(streakLengths > min_consec_frames,1);
 
         if isempty(streak_idx)
-            firstSlotBreak(digIdx(iDigit)) = find(tempFrame,1);
+            firstSlotBreak(paw_dig_idx(iDigit)) = find(tempFrame,1);
         else
-            firstSlotBreak(digIdx(iDigit)) = through_slot_borders(streak_idx,1);
+            firstSlotBreak(paw_dig_idx(iDigit)) = through_slot_borders(streak_idx,1);
         end
     end
     if ~isempty(past_slot_borders)
@@ -167,9 +170,9 @@ for iDigit = 1 : length(digIdx)
         streak_idx = find(streakLengths > min_consec_frames,1);
 
         if isempty(streak_idx)
-            first_pawPart_outside_box(digIdx(iDigit)) = find(all_tempFrame,1);
+            first_pawPart_outside_box(paw_dig_idx(iDigit)) = find(all_tempFrame,1);
         else
-            first_pawPart_outside_box(digIdx(iDigit)) = past_slot_borders(streak_idx,1);
+            first_pawPart_outside_box(paw_dig_idx(iDigit)) = past_slot_borders(streak_idx,1);
         end
     end
 end
@@ -178,7 +181,7 @@ paw_through_slot_frame = min(firstSlotBreak);
 
 for iPart = 1 : numPawParts
     
-    if ~any(ismember(digIdx,iPart))    % don't redo the digit tips
+    if ~any(ismember(paw_dig_idx,iPart))    % don't redo the digit tips
         
         temp = z_coords(:,iPart);
         tempFrame = temp < slot_z & pastValidDorsum;   % only take frames where a digit tip is already through the slot, and the paw dorsum was found behind the slot
