@@ -128,8 +128,9 @@ for iTrial = 1 : numTrials
         curTrajectory = squeeze(allTrajectories(all_firstPawDorsumFrame(iTrial):all_endPtFrame(iTrial),:,pawdorsum_idx,iTrial));
     end
     
-    if all(isnan(curTrajectory(:)))
-        % no identified points in curTrajectory
+    test_traj = curTrajectory(~isnan(curTrajectory));
+    if all(isnan(curTrajectory(:))) || isvector(test_traj)   
+        % no identified points in curTrajectory or only one valid point in curTrajectory
         normalized_pd_trajectories(:,:,iTrial) = NaN;
         smoothed_pd_trajectories{iTrial} = NaN;
         interp_pd_trajectories{iTrial} = NaN;

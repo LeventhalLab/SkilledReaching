@@ -108,7 +108,7 @@ while current_month.Month <= last_month.Month
 %             continue;
 %         end
 
-        testDates = [datetime(2020,11,03)];
+        testDates = [datetime(2020,11,05)];
         if ~any(curDate == testDates)
             continue
         end

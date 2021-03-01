@@ -25,14 +25,13 @@ for iTrial = 1 : numTrials
 %     traj_limits(iTrial).grasp_aperture_lims = zeros(num_reaches,2);
     
     for i_reach = 1 : num_reaches
-        if i_reach > length(reachData(iTrial).firstDigitKinematicsFrame)
-            traj_limits(iTrial).reach_aperture_lims(i_reach,1) = NaN;
-            traj_limits(iTrial).reach_aperture_lims(i_reach,2) = NaN;
-        else
-            traj_limits(iTrial).reach_aperture_lims(i_reach,1) = ...
-                reachData(iTrial).firstDigitKinematicsFrame(i_reach) - reachData(iTrial).reachStarts(i_reach) + 1;
-            traj_limits(iTrial).reach_aperture_lims(i_reach,2) = ...
-                traj_limits(iTrial).reach_aperture_lims(i_reach,1) + length(reachData(iTrial).orientation{i_reach}) - 1;
+        if i_reach > length(reachData(
+        traj_limits(iTrial).reach_aperture_lims(i_reach,1) = ...
+            reachData(iTrial).firstDigitKinematicsFrame(i_reach) - reachData(iTrial).reachStarts(i_reach) + 1;
+        traj_limits(iTrial).reach_aperture_lims(i_reach,2) = ...
+            traj_limits(iTrial).reach_aperture_lims(i_reach,1) + length(reachData(iTrial).orientation{i_reach}) - 1;
+        catch
+            keyboard
         end
 
 %         traj_limits(iTrial).grasp_aperture_lims(i_reach,1) = ...

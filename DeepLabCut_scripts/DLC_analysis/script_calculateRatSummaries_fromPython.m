@@ -36,7 +36,7 @@ numRatFolders = length(ratFolders);
 
 z_interp_digits = 25:-0.1:-15;  % for interpolating z-coordinates for aperture and orientation calculations
 
-for i_rat = 2:2%1 : numRatFolders
+for i_rat = 3:5%1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));

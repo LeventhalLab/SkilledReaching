@@ -109,7 +109,11 @@ reachData.post_reach_orientation = NaN(num_reaches, frames_past_reach_end);
 
 for i_reach = 1 : num_reaches
 
+    if i_reach > length(reachData.reachStarts)
+        continue
+    end
     reach_startFrame = reachData.reachStarts(i_reach);
+
     grasp_startFrame = reachData.reachStarts(i_reach);
     reach_endFrame = reachData.reachEnds(i_reach);
     
@@ -151,7 +155,12 @@ for i_reach = 1 : num_reaches
     reachData.pdEndPoints(i_reach,:) = pd_trajectory(reach_endFrame,:);
     for i_dig = 1 : 4
         cur_dig_traj = squeeze(reachData.dig_trajectory{i_reach}(:,:,i_dig));
-        reachData.dig_endPoints(i_reach,i_dig,:) = cur_dig_traj(end,:);  
+        if isempty(cur_dig_traj)
+            reachData.dig_endPoints(i_reach,i_dig,:) = NaN; 
+        else
+             reachData.dig_endPoints(i_reach,i_dig,:) = cur_dig_traj(end,:);  
+        end
+
     end
     
     % paw orientation
@@ -175,7 +184,17 @@ for i_reach = 1 : num_reaches
     end
     
     if reach_endFrame + frames_past_reach_end - 1 <= num_frames
-        reachData.post_reach_aperture(i_reach,:) = determinePawAperture(interp_trajectory(reach_endFrame:reach_endFrame + frames_past_reach_end-1,:,:), bodyparts, pawPref);
-        reachData.post_reach_orientation(i_reach,:) = determinePawOrientation(interp_trajectory(reach_endFrame:reach_endFrame + frames_past_reach_end-1,:,:), bodyparts, pawPref);
+        temp = determinePawAperture(interp_trajectory(reach_endFrame:reach_endFrame + frames_past_reach_end-1,:,:), bodyparts, pawPref);
+        if length(temp) ~= size(reachData.post_reach_aperture,2)
+            reachData.post_reach_aperture(i_reach,:) = NaN;
+        else
+            reachData.post_reach_aperture(i_reach,:) = temp;
+        end
+        temp = determinePawOrientation(interp_trajectory(reach_endFrame:reach_endFrame + frames_past_reach_end-1,:,:), bodyparts, pawPref);
+        if length(temp) ~= size(reachData.post_reach_orientation,2)
+            reachData.post_reach_orientation(i_reach,:) = NaN;
+        else
+            reachData.post_reach_orientation(i_reach,:) = temp;
+        end
     end
 end

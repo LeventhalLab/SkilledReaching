@@ -18,6 +18,9 @@ dig4_trajectory = squeeze(interp_trajectory(:,:,digIdx(4)));
 validFrames = ~isnan(dig1_trajectory(:,1)) & ~isnan(dig4_trajectory(:,1));
 firstValidFrame = find(validFrames,1,'first');
 
+% if isempty(firstValidFrame)
+%     aperture = 
+
 app_3D = dig4_trajectory(firstValidFrame:end,:) - dig1_trajectory(firstValidFrame:end,:);
 
 aperture = sqrt(sum(app_3D.^2,2));

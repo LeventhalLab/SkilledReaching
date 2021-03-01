@@ -100,8 +100,9 @@ for i_session = 1 : num_sessions
         group_kinematics.aperture_traj = ratSummary.interp_aperture_traj{current_session_idxs(i_session)};
         group_kinematics.orientation_traj = ratSummary.interp_orientation_traj{current_session_idxs(i_session)};
     else
-        group_kinematics.aperture_traj(end+1:end+num_trials,:) = ratSummary.interp_aperture_traj{current_session_idxs(i_session)};
-        group_kinematics.orientation_traj(end+1:end+num_trials,:) = ratSummary.interp_orientation_traj{current_session_idxs(i_session)};
+        trials_to_add = size(ratSummary.interp_aperture_traj{current_session_idxs(i_session)},1);
+        group_kinematics.aperture_traj(end+1:end+trials_to_add,:) = ratSummary.interp_aperture_traj{current_session_idxs(i_session)};
+        group_kinematics.orientation_traj(end+1:end+trials_to_add,:) = ratSummary.interp_orientation_traj{current_session_idxs(i_session)};
     end
     
     % covariance matrix of pd and digit endpoints
@@ -110,7 +111,7 @@ for i_session = 1 : num_sessions
     
 
     for i_digit = 1 : 4
-        group_kinematics.dig_covar(:,:,i_digit) = cov(squeeze(group_kinematics.dig_endPoints(:,i_digit,:)));
+        group_kinematics.dig_covar(:,:,i_digit) = cov(squeeze(group_kinematics.dig_endPoints(:,i_digit,:)),'omitrows');
         group_kinematics.dig_gen_var(i_digit) = det(squeeze(group_kinematics.dig_covar(:,:,i_digit)));
     end
     

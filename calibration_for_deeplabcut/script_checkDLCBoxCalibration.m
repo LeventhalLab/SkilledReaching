@@ -6,8 +6,8 @@
 rootDir = '/Volumes/Untitled/DLC_output/calibration_images';
 
 % weird that datetime uses 'MM' for month but datestring uses 'mm'
-start_month = datetime('202012','inputformat','yyyyMM');
-last_month = datetime('202012','inputformat','yyyyMM');
+start_month = datetime('202011','inputformat','yyyyMM');
+last_month = datetime('202011','inputformat','yyyyMM');
 current_month = start_month;
 
 while current_month.Month <= last_month.Month
@@ -42,7 +42,7 @@ while current_month.Month <= last_month.Month
         cd(calFileDir)
         load(matList(iMat).name);
         % curDate is stored in the .mat file
-        testDates = [datetime(2020,12,17)];
+        testDates = [datetime(2020,11,05)];
         if ~any(curDate == testDates)
             continue
         end

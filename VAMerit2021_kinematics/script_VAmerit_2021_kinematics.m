@@ -29,7 +29,7 @@ sessions_grouping = {'training','saline','OHDA1','OHDA2','OHDA3','OHDA4','OHDA5'
 if exist('group_kinematics','var')
     clear group_kinematics
 end
-for i_rat = 2:2%1 : numRatFolders
+for i_rat = 2:3%1 : numRatFolders
     
     ratID = ratFolders(i_rat).name
     ratIDnum = str2double(ratID(2:end));
@@ -126,19 +126,24 @@ for i_rat = 2:2%1 : numRatFolders
         post_reach_orientation(ii,:) = nanmean(group_kinematics(ii).post_reach_orientation,1);
     end
     
-    figure;errorbar(max_v, std_v); set(gcf,'name','max v'); set(gca,'xlim', session_lims)
-    figure;errorbar(max_endpt(:,1), std_endpt(:,1)); set(gcf,'name','max x'); set(gca,'xlim', session_lims)
-    figure;errorbar(max_endpt(:,2), std_endpt(:,2)); set(gcf,'name','max y'); set(gca,'xlim', session_lims)
-    figure;errorbar(max_endpt(:,3), std_endpt(:,3)); set(gcf,'name','max z'); set(gca,'xlim', session_lims)
-    figure;errorbar(mean_aperture, std_aperture); set(gcf,'name','aperture'); set(gca,'xlim', session_lims)
-    figure;plot(mean_orientation*180/pi); set(gcf,'name','orientation'); set(gca,'xlim', session_lims)
+    figure;errorbar(max_v(2:end), std_v(2:end)); set(gcf,'name',['max v, ' ratID]); set(gca,'xlim', session_lims)
+    figure;errorbar(max_endpt(2:end,1), std_endpt(2:end,1)); set(gcf,'name',['max x, ' ratID]); set(gca,'xlim', session_lims)
+    figure;errorbar(max_endpt(2:end,2), std_endpt(2:end,2)); set(gcf,'name',['max y, ' ratID]); set(gca,'xlim', session_lims)
+    figure;errorbar(max_endpt(2:end,3), std_endpt(2:end,3)); set(gcf,'name',['max z, ' ratID]); set(gca,'xlim', session_lims)
+    figure;errorbar(mean_aperture(2:end), std_aperture(2:end)); set(gcf,'name',['aperture, ' ratID]); set(gca,'xlim', session_lims)
+    
+    orientation_plot = mean_orientation(2:end)*180/pi;
+    if strcmp(ratID, 'R0382')
+        orientation_plot = 180-orientation_plot;
+    end
+    figure;plot(orientation_plot); set(gcf,'name',['orientation, ' ratID]); set(gca,'xlim', session_lims, 'ylim', [20 100])
 %     figure;plot(mean_grasp_orientation*180/pi); set(gcf,'name','grasp orientation'); set(gca,'xlim', session_lims)
 %     figure;plot(mean_grasp_aperture); set(gcf,'name','grasp aperture'); set(gca,'xlim', session_lims)
 %     figure;plot(mean_reach_duration); set(gcf,'name','reach duration'); set(gca,'xlim', session_lims)
 %     figure;plot(mean_grasp_duration); set(gcf,'name','grasp duration'); set(gca,'xlim', session_lims)
     
-    figure;plot(gen_var_pd_endPt); set(gcf,'name','pd generalized variance');
-    figure;plot(gen_var_dig_endPts); set(gcf,'name','digits generalized variance');
+    figure;plot(gen_var_pd_endPt); set(gcf,'name',['pd generalized variance, ' ratID]);
+    figure;plot(gen_var_dig_endPts); set(gcf,'name',['digits generalized variance, ' ratID]);
     
     h_ap_fig = figure;
     h_or_fig = figure;
@@ -162,9 +167,10 @@ for i_rat = 2:2%1 : numRatFolders
         plot(post_reach_orientation(ii,:)*180/pi,'color',col_list(ii,:));
         hold on
     end
-    set(h_ap_fig,'name','aperture trajectory');
-    set(h_or_fig,'name','orientation trajectory');
-    
+    set(h_ap_fig,'name',['aperture trajectory, ' ratID]);
+    set(h_or_fig,'name',['orientation trajectory, ' ratID]);
+    set(h_ap_post_fig,'name',['post reach aperture trajectory, ' ratID]);
+    set(h_or_post_fig,'name',['post reach orientation trajectory, ' ratID]);
     figure;   % ellipsoid plot
     group_id = 2;
     error_ellipse(group_kinematics(group_id).pd_covar, nanmean(group_kinematics(group_id).pdEndPts));
@@ -177,13 +183,22 @@ for i_rat = 2:2%1 : numRatFolders
     scatter3(0,0,0,pelletMarkerSize,...
         'markerfacecolor',pelletMarkerColor,...
         'markeredgecolor',pelletMarkerColor);
-    set(gcf,'name','saline')
+    set(gcf,'name',['saline, ' ratID])
     set(gca,'ydir','reverse');
     set(gca,'ylim',ylims_3d, 'xlim',xlims_3d, 'zlim', zlims_3d);   
     xlabel('x');ylabel('y');zlabel('z');
     
     figure;   % ellipsoid plot
-    group_id = 8;
+    switch ratID
+        case 'R0382'
+            group_id = 8;
+        case 'R0383'
+            group_id = 5;
+        case 'R0386'
+            group_id = 3;
+        case 'R0387'
+            group_id = 3;
+    end
     error_ellipse(group_kinematics(group_id).pd_covar, nanmean(group_kinematics(group_id).pdEndPts));
     hold on
     for i_digit = 1 : 4
@@ -194,7 +209,7 @@ for i_rat = 2:2%1 : numRatFolders
     scatter3(0,0,0,pelletMarkerSize,...
         'markerfacecolor',pelletMarkerColor,...
         'markeredgecolor',pelletMarkerColor);
-    set(gcf,'name','OHDA6')
+    set(gcf,'name',['last 6OHDA, ' ratID])
     set(gca,'ydir','reverse');
     set(gca,'ylim',ylims_3d, 'xlim',xlims_3d, 'zlim', zlims_3d);
     xlabel('x');ylabel('y');zlabel('z');
